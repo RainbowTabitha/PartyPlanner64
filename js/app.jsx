@@ -72,8 +72,12 @@ PP64.app = new class app {
           );
         }
 
+        let bodyClass = "body";
+        if (this.state.currentAction === $actType.ERASE)
+          bodyClass += " eraser";
+
         return (
-          <div className="body">
+          <div className={bodyClass}>
             <window.PP64.header.Header view={this.state.currentView} romLoaded={this.state.romLoaded} board={this.state.currentBoard} />
             <div className="content">
               {sidebar}

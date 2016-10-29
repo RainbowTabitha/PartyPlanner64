@@ -210,7 +210,7 @@ const LIB_CSS = [
 const SRC_HTML = "*.html";
 const DST_HTML = "dist/*.html";
 
-const SRC_IMG = ["img/**/*.png", "img/**/*.gif", "img/**/*.ico"];
+const SRC_IMG = ["img/**/*.png", "img/**/*.gif", "img/**/*.ico", "img/**/*.cur"];
 const DST_IMG = "dist/img";
 
 const SRC_FONT = ["css/fonts/*"];
@@ -380,7 +380,6 @@ gulp.task("build-prod", function(callback) {
     "copyjs-prod",
   ],
   "version",
-  "createdistzip",
   callback);
 });
 
@@ -393,6 +392,13 @@ gulp.task("build-prod-electron", function(callback) {
   runSequence("copy-electron-boot",
   //"pack-electron",
   callback);
+});
+
+gulp.task("publish", function(callback) {
+  exec("git subtree push --prefix dist origin gh-pages", function(err, stdout, stderr) {
+    // process.stdout.write("describe done, " + err + ", " + stdout + ", " + stderr);
+    callback();
+  });
 });
 
 gulp.task("watch", function() {

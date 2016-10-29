@@ -131,6 +131,9 @@ canvas:focus {
 .editor_space_canvas:active {
   cursor: default;
 }
+.eraser .editor_space_canvas {
+  cursor: url("../img/editor/eraser.cur"), default;
+}
 
 .details {
   display: none;
