@@ -1,7 +1,5 @@
 # ![PartyPlanner64](http://i.imgur.com/ygEasfG.png)
 
-[comment]: <> (bigger: http://i.imgur.com/AqjyvC7.png)
-
 > Mario Party N64 board editor
 
 PartyPlanner64 allows you to create and import boards into a Mario Party N64 ROM for playback in emulators or on real hardware.
@@ -26,7 +24,7 @@ ROMs you have edited with PP64 will also be able to be opened with the editor.
 
 After cloning the repository, you will need to do the following to run your own instance of PP64 locally:
 
-* Install Node.js and a package manager (npm, yarn).
+* Install Node.js and a package manager (npm or yarn).
 * Retrieve the dependencies for the editor and development.
     * `npm install --dev`
     * `yarn install`
@@ -42,7 +40,7 @@ If running from the filesystem with Chrome, you may need to run the `chrome` exe
 
 It would be great to receive pull requests and other contributions.
 
-## [FAQ]([wiki](https://github.com/PartyPlanner64/PartyPlanner64/wiki/FAQ)
+## [FAQ](https://github.com/PartyPlanner64/PartyPlanner64/wiki/FAQ)
 
 ## License
 
