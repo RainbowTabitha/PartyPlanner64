@@ -330,7 +330,7 @@ LIB_JS.forEach(function(lib) {
 gulp.task("copyjslib", jslibtasks);
 
 gulp.task("version", function(callback) {
-  exec("git describe --always", function(err, stdout, stderr) {
+  exec("git describe --tags --long --always", function(err, stdout, stderr) {
     // process.stdout.write("describe done, " + err + ", " + stdout + ", " + stderr);
     if (err || stderr) {
       callback();
