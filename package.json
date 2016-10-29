@@ -1,0 +1,48 @@
+{
+  "name": "PartyPlanner64",
+  "version": "1.0.0",
+  "description": "Mario Party board editor",
+  "private": true,
+  "main": "dist/js/electron.js",
+  "author": "PartyPlanner64",
+  "license": "Public Domain",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"
+  },
+  "dependencies": {
+    "basiccontext": "^3.5.1",
+    "cookies-js": "^1.2.2",
+    "draft-js": "^0.9.1",
+    "es6-shim": "^0.35.1",
+    "filesaver.js": "^0.2.0",
+    "immutable": "^3.8.1",
+    "jszip": "^3.1.3",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "three": "^0.81.2",
+    "three-orbit-controls": "^72.0.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.0.0",
+    "babel-preset-es2015": "^6.0.0",
+    "babel-preset-react": "^6.0.0",
+    "babel-preset-stage-0": "^6.0.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-cached": "^1.1.0",
+    "gulp-clean": "^0.3.2",
+    "gulp-clean-css": "^2.0.6",
+    "gulp-concat": "^2.6.0",
+    "gulp-imagemin": "^3.0.3",
+    "gulp-order": "^1.1.1",
+    "gulp-preprocess": "^2.0.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.5.4",
+    "gulp-sass": "^2.3.1",
+    "gulp-uglify": "^2.0.0",
+    "gulp-watch": "^4.3.5",
+    "gulp-zip": "^3.2.0",
+    "run-sequence": "^1.1.5"
+  }
+}

@@ -1,0 +1,92 @@
+.boardMenuInner {
+  overflow-y: auto;
+  width: 275px;
+  height: 100%;
+  transform: translateZ(0); /* Scroll perf hack */
+}
+
+.boardEntry {
+  // background-color: rgba(255, 255, 255, 0.75);
+  background-color: #FFFFFF;
+  opacity: 0.6;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px #222222;
+  box-sizing: border-box;
+  cursor: pointer;
+  margin: 5px 0;
+  position: relative;
+  overflow: hidden;
+  width: 210px;
+  transform: translateX(5px);
+  transition: transform 0.1s ease-in-out;
+
+  &:hover {
+    transform: translateX(8px);
+  }
+
+  &:focus:active, &.boardEntryCurrent:focus {
+    outline: none;
+  }
+  &:focus:not(.boardEntryCurrent):not(:active) {
+    outline: 1px dotted black;
+    outline-offset: -2px;
+  }
+}
+
+.boardEntry.boardEntryCurrent {
+ // background-color: #FFFFFF;
+ opacity: 1;
+}
+
+.boardEntryImg {
+  margin: 5px 5px 0 5px;
+}
+.boardEntryNoImg {
+  min-height: 25px;
+  height: 25px;
+}
+
+.boardName {
+  padding: 1px 0.25em;
+  margin-right: 15px;
+  font-size: 11pt;
+  color: #222222;
+}
+
+.boardEntryCurrent .boardName {
+  font-weight: bold;
+}
+
+.boardEntryRomIcon {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  height: 26px;
+  width: 26px;
+}
+
+.boardMenuIcon {
+  position: absolute;
+  bottom: 4px;
+  right: 0;
+  height: 16px;
+  width: 16px;
+  opacity: 0;
+}
+.boardEntry:hover .boardMenuIcon {
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Context menu overrides
+
+.basicContext {
+  background-color: #997A73;
+}
+
+.basicContext__item:hover:not(.basicContext__item--disabled) .basicContext__data {
+  background-color: rgba(0, 0, 0, 0.3);
+}

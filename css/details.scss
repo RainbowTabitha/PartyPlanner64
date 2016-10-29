@@ -1,0 +1,100 @@
+#detailsForm {
+  margin: 0 auto;
+  margin-top: 1em;
+  max-width: 675px; // 775px;
+  padding: 1em;
+}
+
+.detailTextContainer, .detailImgContainer, .detailRichTextContainer, .audioDetailsContainer, .difficultyDetailsContainer {
+  float: left;
+  margin: 5px;
+  vertical-align: top;
+}
+
+#detailsForm label {
+  display: block;
+  max-width: 100%;
+  margin: 10px 0 5px 0;
+  color: #EEEEEE;
+  font-weight: 700;
+}
+
+#detailsForm input, #detailsForm textarea {
+  font-size: 14px;
+  border: 1px solid #777777;
+  border-radius: 2px;
+  padding: 5px;
+  color: #222222;
+  background-color: #DDDDDD;
+}
+
+#detailBoardName {
+  width: 200px;
+}
+
+#detailBoardDesc {
+  width: 500px;
+}
+
+#detailsForm input {
+  height: 20px;
+}
+
+.detailImgSelect {
+  position: relative;
+}
+
+.detailImg {
+  background-image: url("../img/transparency.png");
+  box-shadow: 0 0 7px 0 rgba(0, 0, 0, 0.75);
+  display: inline-block;
+}
+
+.detailImgHoverCover {
+  height: 100%;
+  width: 100%;
+}
+
+.detailImgHoverCover {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  box-sizing: border-box;
+  cursor: pointer;
+  position: absolute;
+  /*padding-top: 50%;*/
+  text-align: center;
+  font-weight: bold;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transition: opacity linear 0.1s;
+}
+.detailImgHoverCover:hover {
+  opacity: 1;
+}
+
+.detailImgHoverCoverSize {
+  font-size: smaller;
+  font-weight: normal;
+}
+
+.audioSelect {
+  width: 255px;
+}
+
+.difficultyDetailsLevel {
+  display: inline-block;
+  width: 26px;
+  height: 25px;
+  background-image: url("../img/details/star_empty.png");
+  background-repeat: no-repeat;
+}
+.difficultyDetailsLevel.difficultyLevelCurrent {
+  background-image: url("../img/details/star.png");
+}
+.difficultyDetailsLevels:hover .difficultyDetailsLevel {
+  background-image: url("../img/details/star_hover.png");
+}
+.difficultyDetailsLevels:hover .difficultyLevelFocused {
+  background-image: url("../img/details/star_hover_dark.png");
+}

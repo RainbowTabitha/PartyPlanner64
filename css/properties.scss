@@ -1,0 +1,156 @@
+.properties {
+  max-width: 200px;
+}
+
+.propertiesPadded {
+  padding: 4px;
+}
+
+.propertiesEmptyText {
+  height: 35px;
+  line-height: 35px;
+  font-size: 10pt;
+  color: #39221C;
+  font-style: italic;
+  text-align: center;
+}
+
+.coordLabel {
+  vertical-align: middle;
+}
+
+.coordInput {
+  width: 64px;
+  font-size: 11pt;
+  border: 1px solid #777777;
+  border-radius: 1px;
+  padding: 0 2px;
+  margin: 0 5px;
+  color: #222222;
+  background-color: #DDDDDD;
+  vertical-align: middle;
+}
+
+.spaceToggleContainer {
+  display: inline-block;
+  font-size: 0; // Prevent extra height on buttons
+  margin: 3px 0;
+}
+
+.spaceToggleButton {
+  display: inline-block;
+  margin: 1px;
+  padding: 2px;
+  text-align: center;
+  border-radius: 2px;
+
+  &.selected {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  &:hover:not(.selected) {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.starCheckbox {
+  font-size: 10pt;
+  margin-top: 2px;
+
+  input {
+    vertical-align: middle;
+  }
+}
+
+.propertySectionTitle {
+  background-color: rgba(0, 0, 0, 0.2);
+  cursor: default;
+  padding: 2px 2px;
+  font-size: 10pt;
+  line-height: 14px;
+  display: block;
+}
+
+.eventsList {
+}
+
+.eventEntry {
+  font-size: 10pt;
+  padding: 1px;
+  cursor: default;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.eventEntryName {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventEntryActivationTypeToggle {
+  width: 16px;
+  height: 10px;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.eventEntryDelete {
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+
+  &:hover {
+    font-weight: bold;
+    color: #AA0000;
+    cursor: pointer;
+  }
+}
+
+.eventAddSelect {
+  width: 100%;
+}
+
+.propertiesActionButton {
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  }
+}
+
+.propertiesActionButtonImg {
+  display: inline-block;
+  margin: 2px;
+  margin-right: 0.25em;
+  vertical-align: middle;
+  border-radius: 2px;
+}
+
+.propertiesActionButtonSpan {
+  font-size: 10pt;
+  line-height: 24px;
+  vertical-align: middle;
+}
+
+.animBGEntryDelete {
+  width: 16px;
+  height: 16px;
+  line-height: 26px;
+  margin-right: 0.25em;
+  text-align: center;
+  display: inline-block;
+  float: right;
+
+  &:hover {
+    font-weight: bold;
+    color: #AA0000;
+    cursor: pointer;
+  }
+}

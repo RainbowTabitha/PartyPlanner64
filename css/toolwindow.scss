@@ -1,0 +1,21 @@
+.toolWindow {
+  position: absolute;
+  background-color: #755E59;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 2px #222222;
+  min-width: 200px;
+}
+
+.toolWindowName {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #958883;
+  cursor: default;
+  padding: 3px 2px;
+  font-size: 11pt;
+  font-weight: bold;
+  line-height: 16px;
+
+  .moving & {
+    cursor: move;
+  }
+}

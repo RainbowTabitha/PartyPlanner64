@@ -1,0 +1,33 @@
+#settingsForm {
+  margin: 0 auto;
+  margin-top: 1em;
+  max-width: 775px;
+  padding: 1em;
+  color: white;
+}
+
+#settingsForm h2 {
+  color: white;
+}
+#settingsForm h3 {
+  margin-bottom: 0;
+}
+
+.checkboxSetting {
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+.checkboxSettingChk, .checkboxSettingLines {
+  display: inline-block;
+}
+
+.checkboxSettingChk {
+  vertical-align: top;
+  margin: 2px 4px 0 0;
+}
+
+.checkboxSettingDesc {
+  font-size: 9pt;
+  color: rgba(255, 255, 255, 0.9);
+}

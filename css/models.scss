@@ -1,0 +1,26 @@
+.modelViewerContainer {
+  height: 100%;
+  width: 100%;
+}
+
+.modelRenderContainer {
+  height: calc(100% - 36px);
+  width: 100%;
+}
+
+.modelViewerToolbar {
+  height: 36px;
+  width: 100%;
+  color: white;
+}
+
+.modelSelectContainer {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 5px;
+}
+
+.modelSelectContainer select {
+  vertical-align: middle;
+  margin: 1px 0.5em;
+}
