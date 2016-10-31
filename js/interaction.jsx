@@ -87,16 +87,16 @@ PP64.interaction = (function() {
     } else if (curAction === $actType.MARK_STAR) {
       _toggleHostsStar(curSpace);
     } else {
-      _addSpace(curAction, clickX, clickY, curSpace);
+      _addSpace(curAction, clickX, clickY, curSpace, moved);
     }
   }
 
-  function _addSpace(action, x, y, curSpace) {
+  function _addSpace(action, x, y, curSpace, moved) {
     let spaceType = _getSpaceTypeFromAction(action);
     let spaceSubType = _getSpaceSubTypeFromAction(action);
     if (curSpace) {
       // If we are clicking a space, the only "add" action could be to toggle subtype.
-      if (spaceSubType !== undefined) {
+      if (spaceSubType !== undefined && !moved) {
         if (curSpace.subtype === spaceSubType)
           delete curSpace.subtype;
         else
@@ -432,7 +432,7 @@ PP64.interaction = (function() {
       let currentSpaceIdx = getClickedSpace(clickX, clickY);
       let curBoard = PP64.boards.getCurrentBoard();
       let curSpace = currentSpaceIdx === -1 ? null : curBoard.spaces[currentSpaceIdx];
-      _addSpace(data.action.type, clickX, clickY, curSpace);
+      _addSpace(data.action.type, clickX, clickY, curSpace, false);
     }
   }
   function preventDefault(event) { event.preventDefault(); }

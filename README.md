@@ -6,7 +6,7 @@ PartyPlanner64 allows you to create and import boards into a Mario Party N64 ROM
 
 ## Getting Started
 
-PartyPlanner64 is web-based, so no installation required to try it out. A [running copy](http://partyplanner64.github.io/partyplanner64) is hosted for this repository. Chrome and Firefox are the two supported browsers.
+PartyPlanner64 is web-based, so no installation required to try it out. A [running copy](http://partyplanner64.github.io/PartyPlanner64) is hosted for this repository. Chrome and Firefox are the two supported browsers.
 
 The [wiki](https://github.com/PartyPlanner64/PartyPlanner64/wiki) has been populated with information about how to use the editor, as well as technical documentation on the game itself.
 

@@ -336,8 +336,16 @@ gulp.task("version", function(callback) {
       callback();
     }
     else {
+      var versionNum = stdout.trim();
+      var verRegex = /^(.+)-(\d*)-g([a-z0-9]+)$/;
+      var matchResult = verRegex.exec(versionNum);
+      if (matchResult[0]) {
+        versionNum = matchResult[1] + " (+" + matchResult[2] + " "
+          + "<a href='https://github.com/PartyPlanner64/PartyPlanner64/commit/"
+          + matchResult[3] + "'>" + matchResult[3] + "</a>)";
+      }
       gulp.src(["./dist/js/about.js", "./dist/js/app.min.js"])
-        .pipe(replace("####VERSION####", stdout.trim()))
+        .pipe(replace("####VERSION####", versionNum))
         .pipe(gulp.dest(DST_JS))
         .on("end", callback);
     }

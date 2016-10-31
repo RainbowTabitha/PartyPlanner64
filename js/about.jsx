@@ -13,13 +13,12 @@ PP64.about = (function() {
       else
         mplText = "Visit";
 
-
       return (
         <div id="aboutForm">
           <div className="aboutHeader">
             <img src="img/logoloading.png" alt="PartyPlanner64" />
             <br />
-            <span className="aboutVersion selectable">Version {versionNum}</span>
+            <span className="aboutVersion selectable">Version <span dangerouslySetInnerHTML={{__html: versionNum}}></span></span>
           </div>
           <br />
           <div className="aboutText">
