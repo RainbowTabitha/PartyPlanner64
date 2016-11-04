@@ -6,9 +6,11 @@ PartyPlanner64 allows you to create and import boards into a Mario Party N64 ROM
 
 ## Getting Started
 
-PartyPlanner64 is web-based, so no installation required to try it out. A [running copy](http://partyplanner64.github.io/PartyPlanner64) is hosted for this repository. Chrome and Firefox are the two supported browsers.
+PartyPlanner64 is web-based, so no installation required to try it out. A [running copy](http://partyplanner64.github.io/PartyPlanner64) is hosted from this repository. Chrome and Firefox are the main two supported browsers.
 
-The [wiki](https://github.com/PartyPlanner64/PartyPlanner64/wiki) has been populated with information about how to use the editor, as well as technical documentation on the game itself.
+The main instructions are on the [Creating a Board](https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board) page. It is highly recommended you read this before trying to create a board, or at least take note of the help graphics which highlight some of the common mistakes.
+
+The [wiki](https://github.com/PartyPlanner64/PartyPlanner64/wiki) has been populated with additional information about the editor, as well as technical documentation on the game itself.
 
 ## Limitations
 
@@ -19,6 +21,8 @@ While you can create boards and use the editor without a ROM at all, to play the
 * `Mario Party 3 (U).z64` ROM file (MD5 `76A8BBC81BC2060EC99C9645867237CC`).
 
 ROMs you have edited with PP64 will also be able to be opened with the editor.
+
+A saved ROM must be ran with an Expansion Pak on real hardware, and emulators need to be configured to use 8MB RAM or the game will crash immediately.
 
 ## Building
 
