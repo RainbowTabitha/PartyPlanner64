@@ -43,6 +43,11 @@ PP64.about = (function() {
               <li>Post your creations to the <a href="http://www.mariopartylegacy.com/forum/index.php?action=downloads" target="_blank">downloads page</a>.</li>
             </ul>
           </div>
+          <br />
+          <br />
+          <span className="aboutDisclaimer">PartyPlanner64 is not affiliated with Nintendo or Hudson.</span>
+          <br />
+          <span className="aboutDisclaimer">Mario Party is a registered trademark of Nintendo.</span>
         </div>
       );
 
