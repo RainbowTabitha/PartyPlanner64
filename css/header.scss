@@ -99,7 +99,7 @@ $header-logo-width: 215px;
     color: rgba(0, 0, 0, 0.7);
   }
 
-  &:not(.failed):hover {
+  &:not(.failed):not(.unavailable):hover {
     background-color: rgba(0, 0, 0, 0.2);
   }
 
@@ -109,7 +109,7 @@ $header-logo-width: 215px;
     vertical-align: middle;
   }
 
-  .overwriteBoardWarningIcon {
+  .overwriteBoardIssueIcon {
     display: inline-block;
     margin-right: 4px;
   }
@@ -118,6 +118,10 @@ $header-logo-width: 215px;
     font-size: 10pt;
     white-space: nowrap;
     vertical-align: middle;
+
+    a {
+      color: #001281;
+    }
   }
 }
 

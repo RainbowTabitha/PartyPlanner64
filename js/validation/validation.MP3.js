@@ -2,12 +2,6 @@ PP64.ns("validation");
 
 PP64.validation.MP3 = (function() {
   const commonRules = [
-    PP64.validation.getRule("HASSTART"),
-    PP64.validation.getRule("GAMEVERSION"),
-    PP64.validation.getRule("DEADEND"),
-    PP64.validation.getRule("TOOMANYSPACES"),
-    PP64.validation.getRule("UNSUPPORTEDEVENTS"),
-    PP64.validation.getRule("TOOMANYPATHOPTIONS"),
     PP64.validation.getRule("TOOMANYBOWSERS", { limit: 0 }),
     PP64.validation.getRule("TOOMANYKOOPAS", { limit: 0 }),
   ];

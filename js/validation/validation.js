@@ -5,10 +5,11 @@ PP64.validation = (function() {
     fails: function(board, args) { throw "fails not implemented"; },
   };
 
-  function createRule(id, name) {
+  function createRule(id, name, level) {
     let rule = Object.create(ValidationRuleBase);
     rule.id = id;
     rule.name = name;
+    rule.level = level;
     _rules[id] = rule;
     return rule;
   }
@@ -22,7 +23,7 @@ PP64.validation = (function() {
     return PP64.utils.obj.copy(board.spaces);
   }
 
-  const HasStart = createRule("HASSTART", "Has start space");
+  const HasStart = createRule("HASSTART", "Has start space", $validationLevel.ERROR);
   HasStart.fails = function(board, args) {
     let curIdx = PP64.boards.getStartSpace(board);
     if (curIdx === null)
@@ -30,7 +31,7 @@ PP64.validation = (function() {
     return false;
   };
 
-  const GameVersionMatch = createRule("GAMEVERSION", "Game version mismatch");
+  const GameVersionMatch = createRule("GAMEVERSION", "Game version mismatch", $validationLevel.ERROR);
   GameVersionMatch.fails = function(board, args) {
     let romGame = PP64.romhandler.getGameVersion();
     if (romGame !== board.game)
@@ -38,7 +39,7 @@ PP64.validation = (function() {
     return false;
   };
 
-  const DeadEnd = createRule("DEADEND", "No dead ends");
+  const DeadEnd = createRule("DEADEND", "No dead ends", $validationLevel.ERROR);
   DeadEnd.fails = function(board, args) {
     let curIdx = PP64.boards.getStartSpace(board);
     let spaces = _getSpacesCopy(board);
@@ -70,7 +71,7 @@ PP64.validation = (function() {
     return _checkDeadEnd(curIdx);
   };
 
-  const TooManySpaces = createRule("TOOMANYSPACES", "Too many spaces");
+  const TooManySpaces = createRule("TOOMANYSPACES", "Too many spaces", $validationLevel.ERROR);
   TooManySpaces.fails = function(board, args) {
     if (board.spaces.length > 0xFFFF)
       return "There is a hard limit of 65535 spaces.";
@@ -78,7 +79,7 @@ PP64.validation = (function() {
   };
 
   const _makeTooManyOfSubtypeRule = function(subtype, name) {
-    let rule = createRule(`TOOMANY${name.toUpperCase().replace(/\s+/g, "")}`, `Too many ${name}`);
+    let rule = createRule(`TOOMANY${name.toUpperCase().replace(/\s+/g, "")}`, `Too many ${name}`, $validationLevel.ERROR);
     rule.fails = function(board, args = {}) {
       let limit = args.limit || 0;
       let count = board.spaces.filter(space => {
@@ -96,7 +97,7 @@ PP64.validation = (function() {
   const TooManyBanks = _makeTooManyOfSubtypeRule($spaceSubType.BANK, "Banks");
   const TooManyItemShops = _makeTooManyOfSubtypeRule($spaceSubType.ITEMSHOP, "Item Shops");
 
-  const BadStarCount = createRule("BADSTARCOUNT", "Bad star count");
+  const BadStarCount = createRule("BADSTARCOUNT", "Bad star count", $validationLevel.ERROR);
   BadStarCount.fails = function(board, args = {}) {
     let low = args.low || 1;
     let high = args.high || 1;
@@ -113,7 +114,7 @@ PP64.validation = (function() {
   };
 
   const _makeTooFewOfSpaceTypeRule = function(type, name) {
-    let rule = createRule(`TOOFEW${name.toUpperCase().replace(/\s+/g, "")}SPACES`, `Too few ${name} spaces`);
+    let rule = createRule(`TOOFEW${name.toUpperCase().replace(/\s+/g, "")}SPACES`, `Too few ${name} spaces`, $validationLevel.ERROR);
     rule.fails = function(board, args = {}) {
       let low = args.low || 0;
       let count = board.spaces.filter(space => {
@@ -128,7 +129,7 @@ PP64.validation = (function() {
   _makeTooFewOfSpaceTypeRule($spaceType.BLUE, "Blue");
   _makeTooFewOfSpaceTypeRule($spaceType.RED, "Red");
 
-  const TooManyOfEvent = createRule("TOOMANYOFEVENT", "Too many of event");
+  const TooManyOfEvent = createRule("TOOMANYOFEVENT", "Too many of event", $validationLevel.ERROR);
   TooManyOfEvent.fails = function(board, args) {
     let count = 0;
     board.spaces.forEach(space => {
@@ -153,7 +154,7 @@ PP64.validation = (function() {
     return false;
   };
 
-  const UnsupportedEvents = createRule("UNSUPPORTEDEVENTS", "Unsupported events");
+  const UnsupportedEvents = createRule("UNSUPPORTEDEVENTS", "Unsupported events", $validationLevel.ERROR);
   UnsupportedEvents.fails = function(board, args) {
     let unsupportedEvents = Object.create(null);
     let gameID = PP64.romhandler.getROMGame();
@@ -181,13 +182,43 @@ PP64.validation = (function() {
     return error;
   };
 
-  const TooManyPathOptions = createRule("TOOMANYPATHOPTIONS", "Too many path options");
+  const TooManyPathOptions = createRule("TOOMANYPATHOPTIONS", "Too many path options", $validationLevel.ERROR);
   TooManyPathOptions.fails = function(board, args = {}) {
     let limit = args.limit || 2;
     for (var space in board.links) {
       let links = board.links[space];
       if (Array.isArray(links) && links.length > limit)
         return `A space branches in ${links.length} directions, but the maximum is ${limit}.`;
+    }
+    return false;
+  };
+
+  const CharactersOnPath = createRule("CHARACTERSONPATH", "Characters are on path", $validationLevel.WARNING);
+  CharactersOnPath.fails = function(board, args = {}) {
+    for (var spaceIdx in board.links) {
+      let space = board.spaces[spaceIdx];
+      if (space.hasOwnProperty("subtype"))
+        return "Characters and objects <a href='https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board#special-charactersobjects' target='_blank'>should not be on the player path</a>.";
+    }
+    return false;
+  };
+
+  const SplitAtNonInvisibleSpace = createRule("SPLITATNONINVISIBLESPACE", "Split at non-invisible space", $validationLevel.WARNING);
+  SplitAtNonInvisibleSpace.fails = function(board, args = {}) {
+    const preferredSplitTypes = [
+      $spaceType.OTHER,
+      $spaceType.STAR,
+      $spaceType.START,
+      $spaceType.BLACKSTAR,
+      $spaceType.ARROW,
+    ];
+    for (var spaceIdx in board.links) {
+      let links = board.links[spaceIdx];
+      if (Array.isArray(links) && links.length > 1) {
+        let space = board.spaces[spaceIdx];
+        if (preferredSplitTypes.indexOf(space.type) === -1)
+          return "There is a <a href='https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board#board-flow' target='_blank'>non-conventional path split</a>.";
+      }
     }
     return false;
   };
@@ -200,28 +231,39 @@ PP64.validation = (function() {
     return boardIndex > 7;
   }
 
-  function validateCurrentBoardForOverwrite() {
-    let gameID = PP64.romhandler.getROMGame();
-    if (!gameID)
-      return null;
+  function _getRulesForBoard(gameID, boardIndex) {
+    let rules = [
+      PP64.validation.getRule("HASSTART"),
+      PP64.validation.getRule("GAMEVERSION"),
+      PP64.validation.getRule("DEADEND"),
+      PP64.validation.getRule("TOOMANYSPACES"),
+      PP64.validation.getRule("UNSUPPORTEDEVENTS"),
+      PP64.validation.getRule("TOOMANYPATHOPTIONS"),
+      PP64.validation.getRule("CHARACTERSONPATH"),
+      PP64.validation.getRule("SPLITATNONINVISIBLESPACE"),
+    ];
 
-    let _getRulesForBoard;
     switch(gameID) {
       case $gameType.MP1_USA:
       case $gameType.MP1_JPN:
-        _getRulesForBoard = PP64.validation.MP1.getValidationRulesForBoard;
+        rules = rules.concat(PP64.validation.MP1.getValidationRulesForBoard(boardIndex));
         break;
       case $gameType.MP2_USA:
       case $gameType.MP2_JPN:
-        _getRulesForBoard = PP64.validation.MP2.getValidationRulesForBoard;
+        rules = rules.concat(PP64.validation.MP2.getValidationRulesForBoard(boardIndex));
         break;
       case $gameType.MP3_USA:
       case $gameType.MP3_JPN:
-        _getRulesForBoard = PP64.validation.MP3.getValidationRulesForBoard;
+        rules = rules.concat(PP64.validation.MP3.getValidationRulesForBoard(boardIndex));
         break;
     }
 
-    if (!_getRulesForBoard)
+    return rules;
+  }
+
+  function validateCurrentBoardForOverwrite() {
+    let gameID = PP64.romhandler.getROMGame();
+    if (!gameID)
       return null;
 
     let results = [];
@@ -233,27 +275,30 @@ PP64.validation = (function() {
 
       let unavailable = !_overwriteAvailable(boardIndex);
 
-      let failures = [];
-      if (unavailable) {
-        failures.push("Board cannot be overwritten currently.");
-      }
-      else if (!PP64.settings.get($setting.uiSkipValidation)) {
-        let rules = _getRulesForBoard(boardIndex);
+      let errors = [];
+      let warnings = [];
+      if (!unavailable && !PP64.settings.get($setting.uiSkipValidation)) {
+        let rules = _getRulesForBoard(gameID, boardIndex);
         rules.forEach(rule => {
           let args;
           if (Array.isArray(rule)) {
             [rule, args] = rule;
           }
           let failureResult = rule.fails(currentBoard, args);
-          if (failureResult)
-            failures.push(failureResult);
+          if (failureResult) {
+            if (rule.level === $validationLevel.ERROR)
+              errors.push(failureResult);
+            else if (rule.level === $validationLevel.WARNING)
+              warnings.push(failureResult);
+          }
         });
       }
 
       results.push({
         name: board.name,
         unavailable,
-        failures
+        errors,
+        warnings,
       });
     });
 
@@ -267,6 +312,7 @@ PP64.validation = (function() {
       let newRule = {
         id: rule.id,
         name: rule.name,
+        level: rule.level,
         fails: function(board) {
           return rule.fails(board, args);
         }

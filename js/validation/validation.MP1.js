@@ -1,14 +1,7 @@
 PP64.ns("validation");
 
 PP64.validation.MP1 = (function() {
-  const commonRules = [
-    PP64.validation.getRule("HASSTART"),
-    PP64.validation.getRule("GAMEVERSION"),
-    PP64.validation.getRule("DEADEND"),
-    PP64.validation.getRule("TOOMANYSPACES"),
-    PP64.validation.getRule("UNSUPPORTEDEVENTS"),
-    PP64.validation.getRule("TOOMANYPATHOPTIONS")
-  ];
+  const commonRules = [];
 
   function getValidationRulesForBoard(boardIndex) {
     let rules = commonRules.slice(0);

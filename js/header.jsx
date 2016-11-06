@@ -446,17 +446,28 @@ PP64.header = (function() {
     return validationResults.map(function(result, index) {
       return (
         <HeaderOverwriteBoardDropdownEntry
-          name={result.name} failures={result.failures} unavailable={result.unavailable}
-          closeCallback={closeFn} key={index} boardIndex={index} />
+          name={result.name}
+          errors={result.errors}
+          warnings={result.warnings}
+          unavailable={result.unavailable}
+          closeCallback={closeFn}
+          key={index}
+          boardIndex={index} />
       );
     });
   }
 
   const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntry extends React.Component {
-    boardClicked = () => {
-      this.props.closeCallback();
+    boardClicked = event => {
+      // Links inside the errors messages should not cause overwrites from warnings.
+      if (event.target && event.target.tagName.toUpperCase() === "A") {
+        event.stopPropagation();
+        return;
+      }
 
-      if (!this.failed()) {
+      if (!this.hasErrors() && !this.props.unavailable) {
+        this.props.closeCallback();
+
         let adapter = PP64.adapters.getROMAdapter();
         if (!adapter)
           return;
@@ -472,29 +483,51 @@ PP64.header = (function() {
       }
     }
 
-    failed() {
-      return !!(this.props.failures && this.props.failures.length);
+    hasErrors() {
+      return !!this.props.errors.length;
+    }
+
+    hasWarnings() {
+      return !!this.props.warnings.length;
     }
 
     render() {
       let ddClass = "overwriteBoardEntry";
       let tooltip = `Overwrite ${this.props.name} with the current board.`;
-      if (this.props.unavailable)
+
+      let failNodes = [];
+      if (this.props.unavailable) {
         ddClass += " unavailable";
-      if (this.failed()) {
-        let warningIcon;
-        if (!this.props.unavailable)
-          warningIcon = <img src="../img/header/boardwarning.png" alt="" className="overwriteBoardWarningIcon" />;
-        let failNodes = this.props.failures.map((fail, idx) => {
-          return (
-            <div className="overwriteBoardMessage" key={idx}>
-              {warningIcon}
-              {fail}
-            </div>
-          );
-        });
-        ddClass += " failed";
-        tooltip = "View issues with the current board.";
+        failNodes.push(
+          <div className="overwriteBoardMessage" key="unavailable">Board cannot be overwritten currently.</div>
+        );
+      }
+      else {
+        if (this.hasErrors()) {
+          ddClass += " failed";
+          failNodes = failNodes.concat(this.props.errors.map((fail, idx) => {
+            return (
+              <div className="overwriteBoardMessage" key={idx + "e"}>
+                <img src="../img/header/boarderror.png" alt="" className="overwriteBoardIssueIcon" />
+                <span dangerouslySetInnerHTML={{__html: fail}}></span>
+              </div>
+            );
+          }));
+        }
+        if (this.hasWarnings()) {
+          failNodes = failNodes.concat(this.props.warnings.map((fail, idx) => {
+            return (
+              <div className="overwriteBoardMessage" key={idx + "w"}>
+                <img src="../img/header/boardwarning.png" alt="" className="overwriteBoardIssueIcon" />
+                <span dangerouslySetInnerHTML={{__html: fail}}></span>
+              </div>
+            );
+          }));
+        }
+      }
+
+      if (failNodes.length) {
+        tooltip = "Issues with the current board.";
         return (
           <div className={ddClass} onClick={this.boardClicked} title={tooltip}>
             <span className="overwriteBoardName">{this.props.name}</span>

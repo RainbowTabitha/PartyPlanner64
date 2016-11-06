@@ -113,7 +113,12 @@ PP64.types = {
     "LANDON": 3,
     //"PERTURN": 7,
     "BEGINORWALKOVER": 8,
-  }
+  },
+
+  ValidationLevel: {
+    ERROR: 1,
+    WARNING: 2,
+  },
 };
 
 var $viewType = PP64.types.View;
@@ -122,3 +127,4 @@ var $gameType = PP64.types.Game;
 var $spaceType = PP64.types.Space;
 var $spaceSubType = PP64.types.SpaceSubtype;
 var $activationType = PP64.types.EventActivationType;
+var $validationLevel = PP64.types.ValidationLevel;
