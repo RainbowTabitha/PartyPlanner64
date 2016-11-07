@@ -508,7 +508,7 @@ PP64.header = (function() {
           failNodes = failNodes.concat(this.props.errors.map((fail, idx) => {
             return (
               <div className="overwriteBoardMessage" key={idx + "e"}>
-                <img src="../img/header/boarderror.png" alt="" className="overwriteBoardIssueIcon" />
+                <img src="img/header/boarderror.png" alt="" className="overwriteBoardIssueIcon" />
                 <span dangerouslySetInnerHTML={{__html: fail}}></span>
               </div>
             );
@@ -518,7 +518,7 @@ PP64.header = (function() {
           failNodes = failNodes.concat(this.props.warnings.map((fail, idx) => {
             return (
               <div className="overwriteBoardMessage" key={idx + "w"}>
-                <img src="../img/header/boardwarning.png" alt="" className="overwriteBoardIssueIcon" />
+                <img src="img/header/boardwarning.png" alt="" className="overwriteBoardIssueIcon" />
                 <span dangerouslySetInnerHTML={{__html: fail}}></span>
               </div>
             );
