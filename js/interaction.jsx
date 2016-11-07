@@ -67,10 +67,14 @@ PP64.interaction = (function() {
       return;
 
     let curAction = PP64.app.getCurrentAction();
-    if (moved || curAction === $actType.LINE || curAction === $actType.LINE_STICKY ||
-      curAction === $actType.ASSOCIATE || curAction === $actType.MOVE) {
+    let actionsHandledInEditorUp = [
+      $actType.LINE,
+      $actType.LINE_STICKY,
+      //$actType.ASSOCIATE
+      $actType.MOVE,
+    ];
+    if (actionsHandledInEditorUp.indexOf(curAction) >= 0)
       return;
-    }
 
     let clickX = event.clientX - canvasRect.left;
     let clickY = event.clientY - canvasRect.top;
@@ -87,6 +91,8 @@ PP64.interaction = (function() {
     } else if (curAction === $actType.MARK_STAR) {
       _toggleHostsStar(curSpace);
     } else {
+      if (moved && getClickedSpace(clickX, clickY) >= 0)
+        return; // Avoid placing over an existing space
       _addSpace(curAction, clickX, clickY, curSpace, moved);
     }
   }
@@ -281,7 +287,7 @@ PP64.interaction = (function() {
   function onEditorMouseMove(event) {
     let clickX, clickY;
 
-    if (event.buttons !== 1)
+    if (!canvasRect || event.buttons !== 1)
       return;
 
     clickX = event.clientX - canvasRect.left;
