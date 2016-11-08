@@ -32,7 +32,7 @@ These emulators have been reported to generally work:
 * Mupen64plus
 * Nemu64
 
-These emulators seem to have issues, even with the right sstup (8MB RAM, etc.):
+These emulators seem to have issues, even with the right setup (8MB RAM):
 
 * Project64 1.6
 
