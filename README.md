@@ -24,6 +24,18 @@ ROMs you have edited with PP64 will also be able to be opened with the editor.
 
 A saved ROM must be ran with an Expansion Pak on real hardware, and emulators need to be configured to use 8MB RAM or the game will crash immediately.
 
+### Emulators
+
+These emulators have been reported to generally work:
+
+* Project64 2.3
+* Mupen64plus
+* Nemu64
+
+These emulators seem to have issues, even with the right sstup (8MB RAM, etc.):
+
+* Project64 1.6
+
 ## Building
 
 After cloning the repository, you will need to do the following to run your own instance of PP64 locally:

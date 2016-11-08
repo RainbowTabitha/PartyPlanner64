@@ -385,7 +385,7 @@ PP64.adapters = (function() {
           }
 
           if ($$debug) {
-            if (Object.values($activationType).indexOf(listEntry.activationType) === -1)
+            if (Object.values && Object.values($activationType).indexOf(listEntry.activationType) === -1)
               $$log(`Unknown event activation type ${$$hex(listEntry.activationType)}, boardIndex: ${boardIndex}, spaceIndex: ${$$hex(curSpaceIndex)}`);
           }
         });
