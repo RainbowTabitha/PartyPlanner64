@@ -87,7 +87,7 @@ PP64.adapters.MP3 = (function() {
     onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
       let _spaceTypes = PP64.types.Space;
       let typeMap = {
-        0: _spaceTypes.START,
+        0: _spaceTypes.OTHER, // Sometimes START
         3: _spaceTypes.OTHER,
         5: _spaceTypes.CHANCE,
         6: _spaceTypes.ITEM,
