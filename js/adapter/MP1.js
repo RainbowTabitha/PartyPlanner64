@@ -263,7 +263,7 @@ PP64.adapters.MP1 = (function() {
       return [gameX, gameY, gameZ];
     }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board) {
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
       // Space types match MP1 exactly.
     }
 

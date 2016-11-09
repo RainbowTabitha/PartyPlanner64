@@ -84,7 +84,7 @@ PP64.adapters.MP3 = (function() {
       }
     }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board) {
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
       let _spaceTypes = PP64.types.Space;
       let typeMap = {
         0: _spaceTypes.START,
@@ -105,6 +105,12 @@ PP64.adapters.MP3 = (function() {
         if (newType !== undefined)
           space.type = newType;
       });
+
+      if (chains.length) {
+        let startSpaceIndex = chains[0][0];
+        if (!isNaN(startSpaceIndex))
+          board.spaces[startSpaceIndex].type = _spaceTypes.START;
+      }
     }
 
     onChangeGameSpaceTypesFromBoardSpaceTypes(board) {

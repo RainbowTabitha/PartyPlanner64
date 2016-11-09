@@ -32,7 +32,7 @@ PP64.adapters = (function() {
         delete newBoard._chains;
         $$log(`Board ${i} chains: `, chains);
 
-        this.onChangeBoardSpaceTypesFromGameSpaceTypes(newBoard);
+        this.onChangeBoardSpaceTypesFromGameSpaceTypes(newBoard, chains);
         this._applyPerspective(newBoard, i);
         this._cleanLoadedBoard(newBoard);
 

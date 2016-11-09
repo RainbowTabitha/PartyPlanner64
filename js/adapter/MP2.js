@@ -215,10 +215,10 @@ PP64.adapters.MP2 = (function() {
       }
     }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board) {
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
       let _spaceTypes = PP64.types.Space;
       let typeMap = {
-        0: _spaceTypes.START,
+        0: _spaceTypes.OTHER, // Sometimes START
         3: _spaceTypes.OTHER,
         5: _spaceTypes.CHANCE,
         6: _spaceTypes.ITEM,
@@ -232,10 +232,17 @@ PP64.adapters.MP2 = (function() {
         17: _spaceTypes.OTHER, // Baby Bowser the COHORT
       };
       board.spaces.forEach((space) => {
-        let newType = typeMap[space.type];
+        let oldType = space.type;
+        let newType = typeMap[oldType];
         if (newType !== undefined)
           space.type = newType;
       });
+
+      if (chains.length) {
+        let startSpaceIndex = chains[0][0];
+        if (!isNaN(startSpaceIndex))
+          board.spaces[startSpaceIndex].type = _spaceTypes.START;
+      }
     }
 
     onChangeGameSpaceTypesFromBoardSpaceTypes(board) {
