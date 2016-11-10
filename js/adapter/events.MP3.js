@@ -100,7 +100,7 @@ PP64.adapters.events.MP3 = (function() {
         cacheView.setUint32(0x0C, 0);
         cacheView.setUint32(0x10, 0); // Blank the A1 load.
         cacheView.setUint32(0x14, 0);
-        cacheView.setUint32(0x18, 0); // Blank the A2 load. TODO this could be leaving A2 "dirty"
+        cacheView.setUint32(0x18, 0); // Blank the A2 load.
         cacheView.setUint32(0x20, 0);
       }
 
@@ -127,7 +127,9 @@ PP64.adapters.events.MP3 = (function() {
     dataView.setUint32(0x10, $MIPS.makeInst("LUI", $MIPS.REG.A1, argsAddrUpper));
     dataView.setUint32(0x14, $MIPS.makeInst("ADDIU", $MIPS.REG.A1, $MIPS.REG.A1, argsAddrLower));
 
-    // Leave A2 load blanked since it doesn't seem to be needed, and is complex.
+    // Not sure what A2 is, but it seems to be fine if it is equal to an address containing 0.
+    dataView.setUint32(0x18, $MIPS.makeInst("LUI", $MIPS.REG.A2, 0x8000));
+    dataView.setUint32(0x20, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.A2, 0x00A0));
 
     if (event._reverse) { // Blank out the extra JAL we don't do when reversing.
       dataView.setUint32(0x24, 0);
