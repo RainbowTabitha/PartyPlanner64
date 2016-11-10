@@ -31,11 +31,12 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3_CHILLY.spaceEventsStartAddr = 0x0011E718;
   MP3_CHILLY.spaceEventsStartOffset = 0x00334288;
   MP3_CHILLY.spaceEventTables = [
-    { upper: 0x31DBB8, lower: 0x31DBC0 }, // 0x80108048, 0x80108050
-    { upper: 0x31DBC4, lower: 0x31DBCC }, // 0x80108054, 0x8010805C "Main table" IMO
+    { upper: 0x31DBB8, lower: 0x31DBC0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
+    { upper: 0x31DBC4, lower: 0x31DBCC }, // 0x80108054, 0x8010805C, table 0x8011E718
     // { upper: 0x31DBD0, lower: 0x31DBD8 }, // 0x80108060, 0x80108068 // This is not a table actually, it is sneaky!
-    { upper: 0x31DBDC, lower: 0x31DBE4 }, // 0x8010806C, 0x80108074
-    { upper: 0x31DBE8, lower: 0x31DBF0 }, // 0x80108078, 0x80108080
+    { upper: 0x31DBDC, lower: 0x31DBE4 }, // 0x8010806C, 0x80108074, table 0x8011E344
+    // A table, but if we remove it Poison Shrooms break and probably other things
+    // { upper: 0x31DBE8, lower: 0x31DBF0 }, // 0x80108078, 0x80108080, table 0x8011E4D8
   ];
   MP3_CHILLY.spaceEventsEndOffset = 0x00334428;
   MP3_CHILLY.starSpaceArrOffset = [0x00332E20, 0x00332E90]; // 0x8011D2B0, 0x8011D320
