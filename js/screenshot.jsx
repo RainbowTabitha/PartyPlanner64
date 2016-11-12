@@ -4,7 +4,7 @@ PP64.screenshot = (function() {
     let screenCtx = PP64.utils.canvas.createContext(curBoard.bg.width, curBoard.bg.height);
 
     let bgImage = PP64.renderer.external.getBGImage();
-    screenCtx.drawImage(bgImage, 0, 0);
+    screenCtx.drawImage(bgImage, 0, 0, curBoard.bg.width, curBoard.bg.height);
 
     // Disable debug temporarily for the render
     let origDebug = $$debug;
