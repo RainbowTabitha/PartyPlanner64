@@ -423,9 +423,6 @@ PP64.boards = (function() {
 
       if (!boards.length)
         addBoard(); // Can never be empty.
-
-      PP64.app.boardsChanged();
-      setCurrentBoard(0);
     }
   };
 })();

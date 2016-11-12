@@ -82,16 +82,16 @@ PP64.header = (function() {
       case $actType.ROM_UNLOAD:
         PP64.romhandler.clear();
         PP64.boards.clearBoardsFromROM();
+        PP64.app.boardsChanged();
+        PP64.boards.setCurrentBoard(0);
         PP64.app.romLoadedChanged();
         break;
       case $actType.ROM_SAVE:
         PP64.app.blockUI(true);
-        PP64.romhandler.saveROM();
-        PP64.app.blockUI(false);
-        break;
-      case $actType.BOARD_NEW:
-        //let newBoardIdx = PP64.boards.addBoard();
-        //PP64.boards.setCurrentBoard(newBoardIdx);
+        setTimeout(() => {
+          PP64.romhandler.saveROM();
+          PP64.app.blockUI(false);
+        }, 0);
         break;
       case $actType.BOARD_LOAD:
         PP64.utils.input.openFile(".json", boardSelected);
@@ -100,9 +100,6 @@ PP64.header = (function() {
         let curBoard = PP64.boards.getCurrentBoard(true);
         let boardBlob = new Blob([JSON.stringify(curBoard)]);
         saveAs(boardBlob, curBoard.name + ".json");
-        break;
-      case $actType.BOARD_WRITE:
-        // Shows dropdown.
         break;
       case $actType.BOARD_COPY:
         PP64.boards.copyCurrentBoard();
@@ -475,6 +472,8 @@ PP64.header = (function() {
         let promise = adapter.overwriteBoard(this.props.boardIndex, PP64.boards.getCurrentBoard());
         promise.then(value => {
           $$log("Board overwritten");
+          PP64.boards.clearBoardsFromROM();
+          PP64.boards.loadBoardsFromROM();
           PP64.app.blockUI(false);
         }, reason => {
           $$log(`Error overriding board: ${reason}`);
