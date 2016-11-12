@@ -232,24 +232,59 @@ PP64.adapters.boarddef = (function() {
         chains.push(chain);
     }
 
-    // Returns true if the given space is linked to from another space besides
-    // the previous space.
-    // FIXME: Build out a lookup table for this O(n) slow method.
-    function spaceIsLinkedFromByAnother(spaceIdx, prevIdx) {
-      for (let startIdx in links) {
-        if (startIdx === prevIdx.toString())
-          continue;
-        let ends = links[startIdx];
-        if (Array.isArray(ends) && ends.indexOf(spaceIdx) !== -1)
-          return true;
-        else if (ends === spaceIdx)
-          return true;
+    // Build a reverse lookup of space to _pointing_ spaces.
+    var pointingMap = {};
+    for (let s = 0; s < spaces.length; s++) {
+      if (spaces[s])
+        pointingMap[s] = [];
+    }
+    for (let startIdx in links) {
+      let ends = links[startIdx];
+      if (Array.isArray(ends)) {
+        ends.forEach(end => {
+          pointingMap[end].push(Number(startIdx));
+        });
       }
-
-      return false;
+      else if (!isNaN(ends))
+        pointingMap[ends].push(Number(startIdx));
     }
 
+    // Returns true if the given space is linked to from another space besides
+    // the previous space.
+    function spaceIsLinkedFromByAnother(spaceIdx, prevIdx) {
+      // If no previous index passed, just see if anything points.
+      if (prevIdx === undefined)
+        return !!pointingMap[spaceIdx].length;
+
+      if (!pointingMap[spaceIdx].length)
+        return false;
+      if (pointingMap[spaceIdx].indexOf(Number(prevIdx)) === -1)
+        return true;
+      if (pointingMap[spaceIdx].length > 1)
+        return true; // Assumes prevIdx is not duplicated
+      return false; // length === 1 && only entry is prevIdx
+    }
+
+    // We want to generate chains starting at the start space, and starting
+    // from any space that doesn't have anything pointing at it.
+    // The latter is for dead ends that you can only reach via going in reverse
+    // in MP3, or perhaps in the future if we have warps or something.
+    // Doing start space first is important because MP2/3 assume start space
+    // is first space of first chain.
+
     parseChain(PP64.boards.getStartSpace(board));
+
+    for (let s = 0; s < spaces.length; s++) {
+      if (!spaces[s])
+        continue;
+      if (spaces[s]._seen)
+        continue; // Don't even need to check, we already visited it.
+
+      // The latter condition is not totally necessary, but I don't know that
+      // we want to or can handle single-space chains.
+      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, null, board))
+        parseChain(s);
+    }
 
     $$log("chains: ", chains);
     return chains;

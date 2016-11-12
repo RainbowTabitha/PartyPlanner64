@@ -113,6 +113,22 @@ PP64.boards = (function() {
      return !!board._rom;
   }
 
+  // Tests if there is a connection from startIdx to endIdx.
+  // If endIdx is not passed, test if any connection is outbound from startIdx.
+  function hasConnection(startIdx, endIdx, board = getCurrentBoard()) {
+    if (Array.isArray(board.links[startIdx])) {
+      if (isNaN(endIdx))
+        return true; // Asking if any connections exist out of startIdx
+      return board.links[startIdx].indexOf(endIdx) >= 0;
+    }
+    if (!isNaN(board.links[startIdx])) {
+      if (isNaN(endIdx))
+        return true;
+      return board.links[startIdx] !== endIdx;
+    }
+    return false;
+  }
+
   // Removes all connections to a certain space.
   function _removeConnections(spaceIdx, board) {
     if (!board.links)
@@ -367,19 +383,19 @@ PP64.boards = (function() {
       return subtypeSpaces;
     },
 
+    hasConnection,
+
     addConnection: function(startIdx, endIdx, board = getCurrentBoard()) {
-      if (startIdx === endIdx)
+      if (startIdx === endIdx || hasConnection(startIdx, endIdx, board))
         return;
 
       board.links = board.links || {};
-      if (Array.isArray(board.links[startIdx]) && board.links[startIdx].indexOf(endIdx) === -1) {
+      if (Array.isArray(board.links[startIdx]))
         board.links[startIdx].push(endIdx);
-      }
-      else if (!isNaN(board.links[startIdx]) && board.links[startIdx] !== endIdx) {
+      else if (!isNaN(board.links[startIdx]))
         board.links[startIdx] = [board.links[startIdx], endIdx];
-      } else if (!Array.isArray(board.links[startIdx]) && endIdx >= 0) {
+      else if (endIdx >= 0)
         board.links[startIdx] = endIdx;
-      }
     },
 
     addAssociation: function(startIdx, endIdx, board = getCurrentBoard()) { // TODO: WHAT IS THIS
