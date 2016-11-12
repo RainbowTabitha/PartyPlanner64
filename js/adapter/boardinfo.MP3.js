@@ -50,6 +50,9 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3_CHILLY.booArrOffset = [0x00332F0C]; // 0x8011D39C
   MP3_CHILLY.booCount = 1;
   MP3_CHILLY.audioIndexOffset = 0x0031DB92;
+  MP3_CHILLY.onLoad = function(board) {
+    board.otherbg.largescene = PP64.adapters.hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
+  };
   MP3_CHILLY.onAfterOverwrite = function(romView, board) {
     // Prevent unused event table hydration
     // romView.setUint32(0x0031DBB8, 0); // 0x8011E2CC table

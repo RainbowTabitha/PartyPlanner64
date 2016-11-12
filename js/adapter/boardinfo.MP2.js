@@ -47,7 +47,7 @@ PP64.adapters.boardinfo.MP2 = (function() {
   MP2_WESTERN.booCount = 2;
   MP2_WESTERN.audioIndexOffset = 0x0029AE7A; // 0x80105BA4
   MP2_WESTERN.onLoad = function(board) {
-
+    board.otherbg.largescene = PP64.adapters.hvqfs.readBackground(MP2_WESTERN.bgDir + 2).src;
   };
   MP2_WESTERN.onWriteEvents = function(board) {
 
