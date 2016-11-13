@@ -117,14 +117,14 @@ PP64.boards = (function() {
   // If endIdx is not passed, test if any connection is outbound from startIdx.
   function hasConnection(startIdx, endIdx, board = getCurrentBoard()) {
     if (Array.isArray(board.links[startIdx])) {
-      if (isNaN(endIdx))
+      if (endIdx === null || endIdx === undefined)
         return true; // Asking if any connections exist out of startIdx
       return board.links[startIdx].indexOf(endIdx) >= 0;
     }
-    if (!isNaN(board.links[startIdx])) {
-      if (isNaN(endIdx))
+    if (board.links[startIdx] !== undefined && board.links[startIdx] !== null) {
+      if (endIdx === null || endIdx === undefined)
         return true;
-      return board.links[startIdx] !== endIdx;
+      return board.links[startIdx] === endIdx;
     }
     return false;
   }
