@@ -190,6 +190,12 @@ PP64.renderer = (function() {
           iconY -= startOffset;
         spaceCtx.drawImage(PP64.images.get("starImg"), x - offset - 9, iconY);
       }
+
+      if (space.gate) {
+        let iconX = x - offset - 9;
+        let iconY = y + offset - 5;
+        spaceCtx.drawImage(PP64.images.get("gateImg"), iconX, iconY);
+      }
     }
 
     if ($$debug) {

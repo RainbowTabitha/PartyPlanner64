@@ -49,6 +49,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3_CHILLY.itemShopCount = 2;
   MP3_CHILLY.booArrOffset = [0x00332F0C]; // 0x8011D39C
   MP3_CHILLY.booCount = 1;
+  MP3_CHILLY.gateArrOffset = [0x00332F8C]; // 0x8011D41C
+  MP3_CHILLY.gateCount = 2;
   MP3_CHILLY.audioIndexOffset = 0x0031DB92;
   MP3_CHILLY.onLoad = function(board) {
     board.otherbg.largescene = PP64.adapters.hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
@@ -73,7 +75,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
     //romView.setUint32(0x0031DB14, 0); // Something else important?
     //romView.setUint32(0x0031DB1C, 0);
     //romView.setUint32(0x0031DB24, 0);
-    romView.setUint32(0x0031DB2C, 0); // Skeleton key doors drawing. (I have a note about 0x80107FC4, YMMV)
+    //romView.setUint32(0x0031DB2C, 0); // Skeleton key doors drawing. (I have a note about 0x80107FC4, YMMV)
     //romView.setUint32(0x0031DB34, 0); // Bank resources
     //romView.setUint32(0x0031DB3C, 0); // Item shop assets, draws toad on Z board overview
     //romView.setUint32(0x0031DB44, 0);

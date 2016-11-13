@@ -113,6 +113,22 @@ PP64.validation = (function() {
     return false;
   };
 
+  const BadGateCount = createRule("BADGATECOUNT", "Bad gate count", $validationLevel.ERROR);
+  BadGateCount.fails = function(board, args = {}) {
+    let low = args.low || 0;
+    let high = args.high || 1;
+    let count = board.spaces.filter(space => {
+      return space && space.gate;
+    }).length;
+    if (count < low || count > high) {
+      if (low !== high)
+        return `There are ${count} gates, but the range is ${low}-${high} for this board.`;
+      else
+        return `There are ${count} gates, but the count must be ${low} for this board.`;
+    }
+    return false;
+  };
+
   const _makeTooFewOfSpaceTypeRule = function(type, name) {
     let rule = createRule(`TOOFEW${name.toUpperCase().replace(/\s+/g, "")}SPACES`, `Too few ${name} spaces`, $validationLevel.ERROR);
     rule.fails = function(board, args = {}) {

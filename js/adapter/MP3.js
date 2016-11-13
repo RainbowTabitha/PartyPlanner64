@@ -23,6 +23,7 @@ PP64.adapters.MP3 = (function() {
     onAfterOverwrite(romView, board, boardInfo) {
       this._writeBanks(board, boardInfo);
       this._writeItemShops(board, boardInfo);
+      this._writeGates(board, boardInfo);
 
       // Patch game to use all 8MB.
       romView.setUint16(0x360EE, 0x8040); // Main heap now starts at 0x80400000
@@ -36,17 +37,17 @@ PP64.adapters.MP3 = (function() {
       // it seems to not be adversely affected and also resolves the hang.
       // TODO: Waste time figuring out the exact threshold or the actual cause of the bug.
       // Hang around 0x800FC664
-      let simpleSpaceCount = 0;
-      for (let i = 0; i < board.spaces.length; i++) {
-        let space = board.spaces[i];
-        if (space.type === $spaceType.BLUE || space.type === $spaceType.RED)
-          simpleSpaceCount++;
-      }
-      if (simpleSpaceCount < 20) {
-        // Commented out, didn't work...
-        //romView.setUint32(0xFF3DC, 0); // This is a J in the 0x800EBxxx range... I closed the window and forgot exactly.
-        //$$log("Patching 0xFF3DC for low space count.");
-      }
+      // let simpleSpaceCount = 0;
+      // for (let i = 0; i < board.spaces.length; i++) {
+      //   let space = board.spaces[i];
+      //   if (space.type === $spaceType.BLUE || space.type === $spaceType.RED)
+      //     simpleSpaceCount++;
+      // }
+      // if (simpleSpaceCount < 20) {
+      //   // Commented out, didn't work...
+      //   //romView.setUint32(0xFF3DC, 0); // This is a J in the 0x800EBxxx range... I closed the window and forgot exactly.
+      //   //$$log("Patching 0xFF3DC for low space count.");
+      // }
     }
 
     onOverwritePromises(board, boardInfo) {

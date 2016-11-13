@@ -366,7 +366,8 @@ PP64.adapters = (function() {
             offset: asmOffset,
             board,
             boardIndex,
-            curSpace: curSpaceIndex,
+            curSpace: curSpaceIndex, // TODO: Pass space or get rid of this
+            curSpaceIndex,
             chains,
             game: PP64.romhandler.getROMGame(),
             gameVersion: this.gameVersion,
@@ -432,7 +433,6 @@ PP64.adapters = (function() {
 
     // Adds the star events we abstract in the UI.
     _createStarEvents(board) {
-      // There is either a merge or a split at the end of each chain.
       for (let i = 0; i < board.spaces.length; i++) {
         let space = board.spaces[i];
         if (!space || !space.star)
@@ -441,6 +441,45 @@ PP64.adapters = (function() {
         let hasStarEvent = events.some(e => { e.id === "STAR" }); // Pretty unlikely
         if (!hasStarEvent)
           PP64.boards.addEventToSpace(space, PP64.adapters.events.create("STAR"));
+      }
+    }
+
+    // Adds the gate events we abstract in the UI.
+    _createGateEvents(board) {
+      for (let i = 0; i < board.spaces.length; i++) {
+        let space = board.spaces[i];
+        if (!space || !space.gate)
+          continue;
+
+        // We actually put an event before and after the gate, not actually on it.
+        let prevSpace = board.spaces[getPointingSpaceIndex(i)];
+        if (!prevSpace)
+          throw `Gate did not have preceding space`;
+
+        let endSpace = board.links[i];
+        if (Array.isArray(endSpace))
+          endSpace = endSpace[0];
+        endSpace = board.spaces[endSpace];
+        if (!endSpace)
+          throw `Gate did not have following space`;
+
+        PP64.boards.addEventToSpace(prevSpace, PP64.adapters.events.create("GATE"));
+        PP64.boards.addEventToSpace(endSpace, PP64.adapters.events.create("GATE"));
+      }
+
+      function getPointingSpaceIndex(pointedAtIndex) {
+        for (let startIdx in board.links) {
+          let ends = links[startIdx];
+          if (Array.isArray(ends)) {
+            ends.forEach(end => {
+              if (end === pointedAtIndex)
+                return Number(startIdx);
+            });
+          }
+          else if (!isNaN(ends) && ends === pointedAtIndex)
+            return Number(startIdx);
+        }
+        return -1;
       }
     }
 
@@ -1007,6 +1046,27 @@ PP64.adapters = (function() {
           let ItemShopSpace = itemShopSpaces[i] === undefined ? board._deadSpace : itemShopSpaces[i];
           boardView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace);
           curItemShopSpaceIndexOffset += 2;
+        }
+      }
+    }
+
+    _writeGates(board, boardInfo) {
+      let boardView = PP64.romhandler.getDataView();
+      if (!boardInfo.gateCount)
+        return;
+
+      let gateSpaces = [];
+      for (let i = 0; i < board.spaces.length; i++) {
+        if (board.spaces[i].gate)
+          gateSpaces.push(i);
+      }
+
+      for (let b = 0; b < boardInfo.gateArrOffset.length; b++) {
+        let curGateSpaceIndexOffset = boardInfo.gateArrOffset[b];
+        for (let i = 0; i < boardInfo.gateCount; i++) {
+          let gateSpace = gateSpaces[i] === undefined ? board._deadSpace : gateSpaces[i];
+          boardView.setUint16(curGateSpaceIndexOffset, gateSpace);
+          curGateSpaceIndexOffset += 2;
         }
       }
     }

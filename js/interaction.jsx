@@ -90,6 +90,8 @@ PP64.interaction = (function() {
       }
     } else if (curAction === $actType.MARK_STAR) {
       _toggleHostsStar(curSpace);
+    } else if (curAction === $actType.MARK_GATE) {
+      _toggleGate(curSpace);
     } else {
       if (moved && getClickedSpace(clickX, clickY) >= 0)
         return; // Avoid placing over an existing space
@@ -126,6 +128,17 @@ PP64.interaction = (function() {
     curSpace.star = !curSpace.star;
     PP64.renderer.renderSpaces();
     PP64.app.changeCurrentSpace(curSpace); // Refresh because .star changed
+  }
+
+  function _toggleGate(curSpace) {
+    if (!curSpace)
+      return;
+    if (curSpace.type !== $spaceType.OTHER)
+      return;
+
+    curSpace.gate = !curSpace.gate;
+    PP64.renderer.renderSpaces();
+    PP64.app.changeCurrentSpace(curSpace); // Refresh because .gate changed
   }
 
   function _eraseLines(x, y) {

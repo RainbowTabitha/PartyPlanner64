@@ -382,29 +382,94 @@ PP64.adapters.events.MP3 = (function() {
     if (info.boardIndex === 0) {
       let romView = PP64.romhandler.getDataView();
 
+      let base = 0x003211CC;
       if (curItemShop === 1) {
         // The current space
-        romView.setUint16(0x003211CC + 0xA2, info.curSpaceIndex); // 0x8010B6FC
-        romView.setUint16(0x003211CC + 0xD6, info.curSpaceIndex); // 0x8010B730
+        romView.setUint16(base + 0xA2, info.curSpaceIndex); // 0x8010B6FC
+        romView.setUint16(base + 0xD6, info.curSpaceIndex); // 0x8010B730
 
         // The shop's space
-        romView.setUint16(0x003211CC + 0xBE, bestItemShopIdx); // 0x8010B718
-        romView.setUint16(0x003211CC + 0xCA, bestItemShopIdx); // 0x80801724
+        romView.setUint16(base + 0xBE, bestItemShopIdx); // 0x8010B718
+        romView.setUint16(base + 0xCA, bestItemShopIdx); // 0x80801724
       }
       else if (curItemShop === 2) {
         // The current space
-        romView.setUint16(0x003211CC + 0xAA, info.curSpaceIndex); // 0x8010B704
-        romView.setUint16(0x003211CC + 0xFE, info.curSpaceIndex); // 0x8010B758
+        romView.setUint16(base + 0xAA, info.curSpaceIndex); // 0x8010B704
+        romView.setUint16(base + 0xFE, info.curSpaceIndex); // 0x8010B758
 
         // The shop's space
-        romView.setUint16(0x003211CC + 0xB2, bestItemShopIdx); // 0x8010B70C
-        romView.setUint16(0x003211CC + 0xF2, bestItemShopIdx); // 0x8010B74C
+        romView.setUint16(base + 0xB2, bestItemShopIdx); // 0x8010B70C
+        romView.setUint16(base + 0xF2, bestItemShopIdx); // 0x8010B74C
       }
 
       // Just point to the event because we left it alone.
-      return [0x003211CC, 0];
+      return [base, 0];
     }
 
     throw "Can't write Item Shop to board index " + info.boardIndex;
+  };
+
+  const Gate = PP64.adapters.events.getEvent("GATE");
+  Gate._parse3 = function(dataView, info) {
+    // Chilly Waters 0x80109AD8 - 0x80109E84, enter 0x7B,0x79, exit 0x4C,0x3F, gates at 0x6D,0x93
+    if (info.boardIndex === 0) {
+      if (info.offset !== 0x0031F648)
+        return false;
+
+      // Marking the gate if we find the event on the entering space.
+      if (dataView.getUint16(info.offset + 0x62) === info.curSpaceIndex) {
+        info.board.spaces[dataView.getUint16(info.offset + 0x106)].gate = true;
+        return true;
+      }
+      else if (dataView.getUint16(info.offset + 0x6A) === info.curSpaceIndex) {
+        info.board.spaces[dataView.getUint16(info.offset + 0x10E)].gate = true;
+        return true;
+      }
+    }
+
+    return false;
+  }
+  Gate._write3 = function(dataView, event, info, temp) {
+    let curGate = temp.curGate = temp.curGate || 1;
+    temp.curGate++;
+
+    if (info.boardIndex === 0) {
+      let romView = PP64.romhandler.getDataView();
+
+      let base = 0x0031F648;
+      if (curGate === 1) {
+        // Entering space
+        romView.setUint16(base + 0x62, 0); // 0x80109B38
+        romView.setUint16(base + 0xEE, 0); // 0x80109BC4
+        romView.setUint16(base + 0x22A, 0); // 0x80109D00
+        romView.setUint16(base + 0x326, 0); // 0x80109DFC
+
+        // Gate space
+        romView.setUint16(base + 0x106, 0); // 0x80109BDC
+
+        // Exit space
+        romView.setUint16(base + 0x7A, 0); // 0x80109B50
+        romView.setUint16(base + 0xE6, 0); // 0x80109BBC
+        romView.setUint16(base + 0x216, 0); // 0x80109CEC
+        romView.setUint16(base + 0x312, 0); // 0x80109DE8
+      }
+      else if (curGate === 2) {
+        // Entering space
+        romView.setUint16(base + 0x6A, 0);
+        romView.setUint16(base + 0x206, 0);
+        romView.setUint16(base + 0x2FE, 0);
+
+        // Gate space
+        romView.setUint16(base + 0x10E, 0);
+
+        // Exit space
+        romView.setUint16(base + 0x92, 0);
+      }
+
+      // Just point to the event because we left it alone.
+      return [base, 0];
+    }
+
+    throw "Can't write Gate to board index " + info.boardIndex;
   };
 })();

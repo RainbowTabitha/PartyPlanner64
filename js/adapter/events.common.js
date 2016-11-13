@@ -496,5 +496,40 @@ PP64.adapters.events.common = (function() {
   };
   ItemShop.sizeOf = (n = 1) => 0; // TODO or not TODO
 
+  const Gate = PP64.adapters.events.createEvent("GATE", "Skeleton Key Gate");
+  Gate.activationType = $activationType.WALKOVER;
+  Gate.mystery = 2;
+  Gate.fakeEvent = true;
+  Gate.supportedGameVersions = [3];
+  Gate.supportedGames = [
+    //$gameType.MP2_USA,
+    $gameType.MP3_USA,
+  ];
+  Gate.parse = function(dataView, info) {
+    const eGate = PP64.adapters.events.getEvent(Gate.id);
+    switch (info.gameVersion) {
+      case 1:
+        return false;
+      case 2:
+        return eGate._parse2(dataView, info);
+      case 3:
+        return eGate._parse3(dataView, info);
+    }
+    return false;
+  };
+  Gate.write = function(dataView, event, info, temp) {
+    const eGate = PP64.adapters.events.getEvent(Gate.id);
+    switch (info.gameVersion) {
+      case 1:
+        return false;
+      case 2:
+        return eGate._write2(dataView, event, info, temp);
+      case 3:
+        return eGate._write3(dataView, event, info, temp);
+    }
+    return false;
+  };
+  Gate.sizeOf = (n = 1) => 0; // TODO or not TODO
+
   return {};
 })();
