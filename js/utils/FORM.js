@@ -231,11 +231,19 @@ PP64.utils.FORM = class FORM {
 
   static parseBMP(raw, palette) {
     let rawView = new DataView(raw);
-    let inBpp = 8; // rawView.getUint16(0x11);
-    let outBpp = palette.bpp;
+    let width = rawView.getUint16(0x05);
+    let height = rawView.getUint16(0x07);
     let inBmpSize = rawView.getUint16(0x0F);
+
+    // Doesn't appear to indicate BPP, but we can calculate from size and dimens.
+    let inBpp = 8 / ((width * height) / inBmpSize);
+    let outBpp = palette.bpp;
     let inBmpData = new DataView(raw, 0x11, inBmpSize);
-    return PP64.utils.img.BMP.toRGBA(inBmpData, palette.colors, inBpp, outBpp);
+    return {
+      width,
+      height,
+      src: PP64.utils.img.BMP.toRGBA(inBmpData, palette.colors, inBpp, outBpp)
+    };
   }
 
   static replaceBMP(formObj, bmpIndex, buffer, palette) {

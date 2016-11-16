@@ -106,6 +106,7 @@ PP64.adapters = (function() {
       // Write out the board events to ROM.
       this.onCreateChainEvents(boardCopy, chains);
       this._createStarEvents(boardCopy);
+      this._createGateEvents(boardCopy, boardInfo, chains);
       if (boardInfo.onWriteEvents)
         boardInfo.onWriteEvents(boardCopy);
       this._writeEvents(boardCopy, boardInfo, boardIndex);
@@ -366,7 +367,8 @@ PP64.adapters = (function() {
             offset: asmOffset,
             board,
             boardIndex,
-            curSpace: curSpaceIndex,
+            curSpace: curSpaceIndex, // TODO: Pass space or get rid of this
+            curSpaceIndex,
             chains,
             game: PP64.romhandler.getROMGame(),
             gameVersion: this.gameVersion,
@@ -432,7 +434,6 @@ PP64.adapters = (function() {
 
     // Adds the star events we abstract in the UI.
     _createStarEvents(board) {
-      // There is either a merge or a split at the end of each chain.
       for (let i = 0; i < board.spaces.length; i++) {
         let space = board.spaces[i];
         if (!space || !space.star)
@@ -441,6 +442,100 @@ PP64.adapters = (function() {
         let hasStarEvent = events.some(e => { e.id === "STAR" }); // Pretty unlikely
         if (!hasStarEvent)
           PP64.boards.addEventToSpace(space, PP64.adapters.events.create("STAR"));
+      }
+    }
+
+    // Adds the gate events we abstract in the UI.
+    _createGateEvents(board, boardInfo, chains) {
+      let gateIndex = 0;
+      for (let i = 0; i < board.spaces.length; i++) {
+        let space = board.spaces[i];
+        if (!space || space.subtype !== $spaceSubType.GATE)
+          continue;
+
+        // We actually put an event before and after the gate, not actually on it.
+        let entrySpaceIndex = _getPointingSpaceIndex(i);
+        let entrySpace = board.spaces[entrySpaceIndex];
+        if (!entrySpace)
+          throw `Gate did not have entry space`;
+
+        let prevSpaceIndex = _getPointingSpaceIndex(entrySpaceIndex);
+        let prevSpace = board.spaces[prevSpaceIndex];
+        if (!prevSpace)
+          throw `Gate did not have previous space`;
+
+        let prevChainIndex = _getChainWithSpace(prevSpaceIndex);
+        let prevChainSpaceIndex = chains[prevChainIndex].indexOf(prevSpaceIndex);
+
+        let exitSpaceIndex = _getNextSpaceIndex(i);
+        let exitSpace = board.spaces[exitSpaceIndex];
+        if (!exitSpace)
+          throw `Gate did not have exit space`;
+
+        let nextSpaceIndex = _getNextSpaceIndex(exitSpaceIndex);
+        let nextSpace = board.spaces[nextSpaceIndex];
+        if (!nextSpace)
+          throw `Gate did not have next space`;
+
+        let nextChainIndex = _getChainWithSpace(nextSpaceIndex);
+        let nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
+
+        // Redundant to write event twice, except we need it attached to both spaces.
+        let gateEvent = PP64.adapters.events.create("GATE", {
+          gatePrevChain: [prevChainIndex, prevChainSpaceIndex],
+          gateEntryIndex: entrySpaceIndex,
+          gateSpaceIndex: i,
+          gateExitIndex: exitSpaceIndex,
+          gateNextChain: [nextChainIndex, nextChainSpaceIndex],
+        });
+        PP64.boards.addEventToSpace(entrySpace, gateEvent);
+        PP64.boards.addEventToSpace(exitSpace, gateEvent);
+
+        // Need an additional event to close the gate.
+        PP64.boards.addEventToSpace(space, PP64.adapters.events.create("GATECLOSE", { gateIndex }));
+
+        // There is also a listing of the entry/exit spaces, probably used by the gate animation.
+        if (boardInfo.gateNeighborsOffset) {
+          let romView = PP64.romhandler.getDataView();
+          for (let gateAddrIndex = 0; gateAddrIndex < boardInfo.gateNeighborsOffset.length; gateAddrIndex++) {
+            let gateAddr = boardInfo.gateNeighborsOffset[gateAddrIndex];
+            gateAddr += (gateIndex * 4);
+
+            romView.setUint16(gateAddr, entrySpaceIndex);
+            romView.setUint16(gateAddr + 2, exitSpaceIndex);
+          }
+        }
+
+        gateIndex++;
+      }
+
+      function _getPointingSpaceIndex(pointedAtIndex) {
+        for (let startIdx in board.links) {
+          let ends = board.links[startIdx];
+          if (Array.isArray(ends)) {
+            ends.forEach(end => {
+              if (end === pointedAtIndex)
+                return Number(startIdx);
+            });
+          }
+          else if (!isNaN(ends) && ends === pointedAtIndex)
+            return Number(startIdx);
+        }
+        return -1;
+      }
+
+      function _getNextSpaceIndex(spaceIndex) {
+        let nextSpaceIndex = board.links[spaceIndex];
+        if (Array.isArray(nextSpaceIndex))
+          nextSpaceIndex = nextSpaceIndex[0];
+        return nextSpaceIndex;
+      }
+
+      function _getChainWithSpace(spaceIndex) {
+        for (let c = 0; c < chains.length; c++) {
+          if (chains[c].indexOf(spaceIndex) >= 0)
+            return c;
+        }
       }
     }
 
@@ -1007,6 +1102,27 @@ PP64.adapters = (function() {
           let ItemShopSpace = itemShopSpaces[i] === undefined ? board._deadSpace : itemShopSpaces[i];
           boardView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace);
           curItemShopSpaceIndexOffset += 2;
+        }
+      }
+    }
+
+    _writeGates(board, boardInfo) {
+      let boardView = PP64.romhandler.getDataView();
+      if (!boardInfo.gateCount)
+        return;
+
+      let gateSpaces = [];
+      for (let i = 0; i < board.spaces.length; i++) {
+        if (board.spaces[i].subtype === $spaceSubType.GATE)
+          gateSpaces.push(i);
+      }
+
+      for (let b = 0; b < boardInfo.gateArrOffset.length; b++) {
+        let curGateSpaceIndexOffset = boardInfo.gateArrOffset[b];
+        for (let i = 0; i < boardInfo.gateCount; i++) {
+          let gateSpace = gateSpaces[i] === undefined ? board._deadSpace : gateSpaces[i];
+          boardView.setUint16(curGateSpaceIndexOffset, gateSpace);
+          curGateSpaceIndexOffset += 2;
         }
       }
     }

@@ -23,6 +23,7 @@ PP64.adapters.MP3 = (function() {
     onAfterOverwrite(romView, board, boardInfo) {
       this._writeBanks(board, boardInfo);
       this._writeItemShops(board, boardInfo);
+      this._writeGates(board, boardInfo);
 
       // Patch game to use all 8MB.
       romView.setUint16(0x360EE, 0x8040); // Main heap now starts at 0x80400000
@@ -36,17 +37,17 @@ PP64.adapters.MP3 = (function() {
       // it seems to not be adversely affected and also resolves the hang.
       // TODO: Waste time figuring out the exact threshold or the actual cause of the bug.
       // Hang around 0x800FC664
-      let simpleSpaceCount = 0;
-      for (let i = 0; i < board.spaces.length; i++) {
-        let space = board.spaces[i];
-        if (space.type === $spaceType.BLUE || space.type === $spaceType.RED)
-          simpleSpaceCount++;
-      }
-      if (simpleSpaceCount < 20) {
-        // Commented out, didn't work...
-        //romView.setUint32(0xFF3DC, 0); // This is a J in the 0x800EBxxx range... I closed the window and forgot exactly.
-        //$$log("Patching 0xFF3DC for low space count.");
-      }
+      // let simpleSpaceCount = 0;
+      // for (let i = 0; i < board.spaces.length; i++) {
+      //   let space = board.spaces[i];
+      //   if (space.type === $spaceType.BLUE || space.type === $spaceType.RED)
+      //     simpleSpaceCount++;
+      // }
+      // if (simpleSpaceCount < 20) {
+      //   // Commented out, didn't work...
+      //   //romView.setUint32(0xFF3DC, 0); // This is a J in the 0x800EBxxx range... I closed the window and forgot exactly.
+      //   //$$log("Patching 0xFF3DC for low space count.");
+      // }
     }
 
     onOverwritePromises(board, boardInfo) {
@@ -58,6 +59,7 @@ PP64.adapters.MP3 = (function() {
         this.onWriteBoardSelectImg(board, boardInfo),
         this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
         this.onWriteBoardLogoTextImg(board, boardInfo),
+        this._onWriteGateImg(board, boardInfo),
         this._brandBootSplashscreen(),
       ];
 
@@ -694,6 +696,44 @@ PP64.adapters.MP3 = (function() {
           resolve();
         };
         srcImage.src = board.otherbg.boardlogotext;
+      });
+    }
+
+    // Create generic skeleton key gate.
+    _onWriteGateImg(board, boardInfo) {
+      return new Promise(function(resolve, reject) {
+        let gateIndex = boardInfo.img.gateImg;
+        if (!gateIndex) {
+          resolve();
+          return;
+        }
+
+        // We need to write the image onto a canvas to get the RGBA32 values.
+        let [width, height] = [64, 64];
+        let canvasCtx = PP64.utils.canvas.createContext(width, height);
+        let srcImage = new Image();
+        let failTimer = setTimeout(() => reject(`Failed to write gate image for ${boardInfo.name}`), 45000);
+        srcImage.onload = () => {
+          canvasCtx.drawImage(srcImage, 0, 0, width, height);
+          let imgData = canvasCtx.getImageData(0, 0, width, height);
+
+          // First create a BMP
+          let gateBmp = PP64.utils.img.BMP.fromRGBA(imgData.data.buffer, 32, 8);
+
+          // Now write the BMP back into the FORM.
+          let gateFORM = PP64.adapters.mainfs.get(19, 366); // Always use gate 3 as a base.
+          let gateUnpacked = PP64.utils.FORM.unpack(gateFORM);
+          PP64.utils.FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
+
+          // Now write the FORM.
+          let gatePacked = PP64.utils.FORM.pack(gateUnpacked);
+          //saveAs(new Blob([gatePacked]), "gatePacked");
+          PP64.adapters.mainfs.write(19, gateIndex, gatePacked);
+
+          clearTimeout(failTimer);
+          resolve();
+        };
+        srcImage.src = "img/assets/genericgate.png";
       });
     }
 

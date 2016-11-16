@@ -290,6 +290,7 @@ PP64.utils.compression = (function() {
           compressedSize = decompressedSize;
           for (let i = 0; i < decompressedSize; i++)
             dstView.setUint8(i, srcDataView.getUint8(i));
+          break;
         default:
           $$log(`decompression ${type} not implemented.`);
           break;
@@ -332,10 +333,10 @@ PP64.utils.compression = (function() {
           return decompress02(srcDataView, dstView, decompressedSize);
         case 5:
           return decompress05(srcDataView, dstView, decompressedSize);
-        default:
-          $$log(`getCompressedSize ${type} not implemented.`);
         case 0:
           return decompressedSize;
+        default:
+          $$log(`getCompressedSize ${type} not implemented.`);
       }
     }
   };

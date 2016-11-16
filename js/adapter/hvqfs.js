@@ -102,7 +102,7 @@ PP64.adapters.hvqfs = (function() {
     { upper: 0x00313A1A, lower: 6 },
     { upper: 0x00316A02, lower: 6 },
   ];
-  _HVQFSOffsets[$gameType.MP2_USA] = [
+  _HVQFSOffsets[$gameType.MP2_USA] = [ // Default at 0x01164160
     { upper: 0x00054BD2, lower: 6 }, // Too lazy, lower is space inbetween.
     { upper: 0x00063A36, lower: 6 },
     { upper: 0x00074D6A, lower: 2 },
@@ -114,10 +114,9 @@ PP64.adapters.hvqfs = (function() {
     { upper: 0x00306C42, lower: 6 },
     { upper: 0x0031EEDA, lower: 6 },
     { upper: 0x00329842, lower: 6 },
-    { upper: 0x00329842, lower: 6 },
-    { upper: 0x0032A26E, lower: 6 },
     { upper: 0x0032A26E, lower: 6 },
     { upper: 0x003354E6, lower: 6 },
+    { upper: 0x00343106, lower: 6 },
     { upper: 0x0035860A, lower: 6 },
     { upper: 0x0035C1EE, lower: 6 },
     { upper: 0x0035D1AA, lower: 6 },
@@ -165,7 +164,7 @@ PP64.adapters.hvqfs = (function() {
     let offset = upper | lower;
     if (lower & 0x8000)
       offset = offset - 0x00010000; // Account for signed addition workaround.
-    $$log(`HVQFS.getROMOffset -> ${$$hex(offset)}`);
+    // $$log(`HVQFS.getROMOffset -> ${$$hex(offset)}`);
 
     if ($$debug) { // Assert that the rest of the patch offsets are valid.
       for (let i = 1; i < patchOffsets.length; i++) {

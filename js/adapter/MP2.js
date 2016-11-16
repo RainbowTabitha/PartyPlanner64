@@ -27,6 +27,7 @@ PP64.adapters.MP2 = (function() {
     onAfterOverwrite(romView, board, boardInfo) {
       this._writeBanks(board, boardInfo);
       this._writeItemShops(board, boardInfo);
+      this._writeGates(board, boardInfo);
 
       // Patch game to use all 8MB.
       romView.setUint16(0x41602, 0x8040); // Main heap now starts at 0x80400000

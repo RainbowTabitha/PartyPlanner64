@@ -50,7 +50,10 @@ PP64.adapters.SpaceEventTable = class SpaceEventTable {
 
   forEach(fn) {
     for (let spaceIndex in this._entries) {
-      let entry = { spaceIndex, address: this._entries[spaceIndex] };
+      let entry = {
+        spaceIndex: Number(spaceIndex),
+        address: this._entries[spaceIndex]
+      };
       fn(entry);
     }
   }

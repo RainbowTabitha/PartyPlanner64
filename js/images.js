@@ -18,6 +18,7 @@ PP64.images = (function() {
   addImage("bankcoinImg", "img/editor/bankcoin.png");
   addImage("itemShop2Img", "img/editor/itemshop2.png");
   addImage("itemShop3Img", "img/editor/itemshop.png");
+  addImage("gateImg", "img/editor/gate.png");
 
   addImage("spaceBowser", "img/editor/spaces/bowser.png");
 

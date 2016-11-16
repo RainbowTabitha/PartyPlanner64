@@ -43,6 +43,7 @@ PP64.types = {
     BANK: 5,
     BANKCOIN: 6,
     ITEMSHOP: 7,
+    GATE: 8,
   },
 
   Action: {
@@ -91,6 +92,7 @@ PP64.types = {
     ADD_GAMEGUY: 32,
     ADD_ARROW: 32.2,
     MARK_STAR: 33,
+    MARK_GATE: 33.1,
     ADD_BANK_SUBTYPE: 34,
     ADD_BANKCOIN_SUBTYPE: 35,
     ADD_ITEMSHOP_SUBTYPE: 36,

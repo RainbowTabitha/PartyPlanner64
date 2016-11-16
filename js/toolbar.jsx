@@ -85,6 +85,7 @@ PP64.toolbar = (function() {
     { "name": "Add bank coin stack", "icon": "img/toolbar/bankcoinsubtype.png", "type": $actType.ADD_BANKCOIN_SUBTYPE, draggable: true },
     { "name": "Add item shop", "icon": "img/toolbar/itemshopsubtype.png", "type": $actType.ADD_ITEMSHOP_SUBTYPE, draggable: true },
     { "name": "Mark space as hosting star", "icon": "img/toolbar/markstar.png", "type": $actType.MARK_STAR },
+    { "name": "Mark space as Skeleton Key gate", "icon": "img/toolbar/markgate.png", "type": $actType.MARK_GATE },
   ];
 
   function _getActions(gameVersion) {

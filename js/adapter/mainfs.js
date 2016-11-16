@@ -10,7 +10,7 @@ PP64.adapters.mainfs = (function() {
     { upper: 0x156D6, lower: 0x156DA },
     { upper: 0x3BF32, lower: 0x3BF3A }
   ];
-  _mainFSOffsets[$gameType.MP2_USA] = [
+  _mainFSOffsets[$gameType.MP2_USA] = [ // Default 0x0041DD30
     { upper: 0x416E6, lower: 0x416EE },
   ];
   _mainFSOffsets[$gameType.MP3_USA] = [
