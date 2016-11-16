@@ -24,6 +24,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
     splashLogoImg: 22,
     splashLogoTextImg: 28,
     pauseLogoImg: 125,
+    gateImg: 354, // dir 19
   };
   MP3_CHILLY.mainfsEventFile = [19, 618];
   MP3_CHILLY.eventASMStart = 0x00330000; // ballpark, but this is wrong -> // 0x0031E814;
@@ -49,6 +50,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3_CHILLY.itemShopCount = 2;
   MP3_CHILLY.booArrOffset = [0x00332F0C]; // 0x8011D39C
   MP3_CHILLY.booCount = 1;
+  MP3_CHILLY.gateNeighborsOffset = [0x00332EE4]; // 0x8011D374
   MP3_CHILLY.gateArrOffset = [0x00332F8C]; // 0x8011D41C
   MP3_CHILLY.gateCount = 2;
   MP3_CHILLY.audioIndexOffset = 0x0031DB92;
@@ -104,6 +106,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 73,
     splashLogoImg: 23,
     splashLogoTextImg: 29,
+    gateImg: 359, // dir 19
   };
   // Works, but needs other values to parse right:
   // MP3_BLOOBER.spaceEventTables = [
@@ -129,6 +132,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 74,
     splashLogoImg: 24,
     splashLogoTextImg: 30,
+    gateImg: 366, // dir 19
   };
 
   // Woody Woods - (U) ROM
@@ -146,6 +150,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 75,
     splashLogoImg: 25,
     splashLogoTextImg: 31,
+    gateImg: 373, // dir 19
   };
 
   // Creepy Cavern - (U) ROM

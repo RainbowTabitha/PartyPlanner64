@@ -102,6 +102,15 @@ PP64.adapters.boardinfo.MP2 = (function() {
       PP64.adapters.mainfs.write(charIdx, 221, PP64.adapters.mainfs.get(charIdx, 209));
     }
 
+    // For each character (different than loop above)
+    for (let c = 0; c < 6; c++) {
+      // Replace the 2d model renders of themed characters
+      PP64.adapters.mainfs.write(10, 612 + c, PP64.adapters.mainfs.get(10, 642 + c));
+
+      // Replace the bowser suited 2d renders
+      PP64.adapters.mainfs.write(10, 648 + c, PP64.adapters.mainfs.get(10, 666 + c));
+    }
+
     // Hide some intro scene graphics
     // Bowser sign
     let oldPack = PP64.adapters.mainfs.get(10, 410);

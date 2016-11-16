@@ -43,6 +43,7 @@ PP64.types = {
     BANK: 5,
     BANKCOIN: 6,
     ITEMSHOP: 7,
+    GATE: 8,
   },
 
   Action: {

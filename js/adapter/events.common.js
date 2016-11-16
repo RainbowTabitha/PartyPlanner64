@@ -531,5 +531,41 @@ PP64.adapters.events.common = (function() {
   };
   Gate.sizeOf = (n = 1) => 0; // TODO or not TODO
 
+  // Event that actually occurs on the gate space itself to cause it to close.
+  const GateClose = PP64.adapters.events.createEvent("GATECLOSE", "Skeleton Key Gate Close");
+  GateClose.activationType = $activationType.WALKOVER;
+  GateClose.mystery = 1;
+  GateClose.fakeEvent = true;
+  GateClose.supportedGameVersions = [3];
+  GateClose.supportedGames = [
+    //$gameType.MP2_USA,
+    $gameType.MP3_USA,
+  ];
+  GateClose.parse = function(dataView, info) {
+    const eGateClose = PP64.adapters.events.getEvent(GateClose.id);
+    switch (info.gameVersion) {
+      case 1:
+        return false;
+      case 2:
+        return eGateClose._parse2(dataView, info);
+      case 3:
+        return eGateClose._parse3(dataView, info);
+    }
+    return false;
+  };
+  GateClose.write = function(dataView, event, info, temp) {
+    const eGateClose = PP64.adapters.events.getEvent(GateClose.id);
+    switch (info.gameVersion) {
+      case 1:
+        return false;
+      case 2:
+        return eGateClose._write2(dataView, event, info, temp);
+      case 3:
+        return eGateClose._write3(dataView, event, info, temp);
+    }
+    return false;
+  };
+  GateClose.sizeOf = (n = 1) => 28 * n;
+
   return {};
 })();

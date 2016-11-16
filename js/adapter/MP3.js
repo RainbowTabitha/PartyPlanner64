@@ -59,6 +59,7 @@ PP64.adapters.MP3 = (function() {
         this.onWriteBoardSelectImg(board, boardInfo),
         this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
         this.onWriteBoardLogoTextImg(board, boardInfo),
+        this._onWriteGateImg(board, boardInfo),
         this._brandBootSplashscreen(),
       ];
 
@@ -695,6 +696,44 @@ PP64.adapters.MP3 = (function() {
           resolve();
         };
         srcImage.src = board.otherbg.boardlogotext;
+      });
+    }
+
+    // Create generic skeleton key gate.
+    _onWriteGateImg(board, boardInfo) {
+      return new Promise(function(resolve, reject) {
+        let gateIndex = boardInfo.img.gateImg;
+        if (!gateIndex) {
+          resolve();
+          return;
+        }
+
+        // We need to write the image onto a canvas to get the RGBA32 values.
+        let [width, height] = [64, 64];
+        let canvasCtx = PP64.utils.canvas.createContext(width, height);
+        let srcImage = new Image();
+        let failTimer = setTimeout(() => reject(`Failed to write gate image for ${boardInfo.name}`), 45000);
+        srcImage.onload = () => {
+          canvasCtx.drawImage(srcImage, 0, 0, width, height);
+          let imgData = canvasCtx.getImageData(0, 0, width, height);
+
+          // First create a BMP
+          let gateBmp = PP64.utils.img.BMP.fromRGBA(imgData.data.buffer, 32, 8);
+
+          // Now write the BMP back into the FORM.
+          let gateFORM = PP64.adapters.mainfs.get(19, 366); // Always use gate 3 as a base.
+          let gateUnpacked = PP64.utils.FORM.unpack(gateFORM);
+          PP64.utils.FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
+
+          // Now write the FORM.
+          let gatePacked = PP64.utils.FORM.pack(gateUnpacked);
+          //saveAs(new Blob([gatePacked]), "gatePacked");
+          PP64.adapters.mainfs.write(19, gateIndex, gatePacked);
+
+          clearTimeout(failTimer);
+          resolve();
+        };
+        srcImage.src = "img/assets/genericgate.png";
       });
     }
 

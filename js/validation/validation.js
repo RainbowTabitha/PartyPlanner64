@@ -118,7 +118,7 @@ PP64.validation = (function() {
     let low = args.low || 0;
     let high = args.high || 1;
     let count = board.spaces.filter(space => {
-      return space && space.gate;
+      return space && space.subtype === $spaceSubType.GATE;
     }).length;
     if (count < low || count > high) {
       if (low !== high)
@@ -213,7 +213,7 @@ PP64.validation = (function() {
   CharactersOnPath.fails = function(board, args = {}) {
     for (var spaceIdx in board.links) {
       let space = board.spaces[spaceIdx];
-      if (space.hasOwnProperty("subtype"))
+      if (space.hasOwnProperty("subtype") && space.subtype !== $spaceSubType.GATE)
         return "Characters and objects <a href='https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board#special-charactersobjects' target='_blank'>should not be on the player path</a>.";
     }
     return false;

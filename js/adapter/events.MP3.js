@@ -128,8 +128,9 @@ PP64.adapters.events.MP3 = (function() {
     dataView.setUint32(0x14, $MIPS.makeInst("ADDIU", $MIPS.REG.A1, $MIPS.REG.A1, argsAddrLower));
 
     // Not sure what A2 is, but it seems to be fine if it is equal to an address containing 0.
-    dataView.setUint32(0x18, $MIPS.makeInst("LUI", $MIPS.REG.A2, 0x8000));
-    dataView.setUint32(0x20, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.A2, 0x00A0));
+    // Oops, no it wasn't OK? CPUs wouldn't move. So now I just picked a random existing addr.
+    dataView.setUint32(0x18, $MIPS.makeInst("LUI", $MIPS.REG.A2, 0x8012));
+    dataView.setUint32(0x20, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.A2, 0xD668));
 
     if (event._reverse) { // Blank out the extra JAL we don't do when reversing.
       dataView.setUint32(0x24, 0);
@@ -390,7 +391,7 @@ PP64.adapters.events.MP3 = (function() {
 
         // The shop's space
         romView.setUint16(base + 0xBE, bestItemShopIdx); // 0x8010B718
-        romView.setUint16(base + 0xCA, bestItemShopIdx); // 0x80801724
+        romView.setUint16(base + 0xCA, bestItemShopIdx); // 0x8010B724
       }
       else if (curItemShop === 2) {
         // The current space
@@ -418,11 +419,11 @@ PP64.adapters.events.MP3 = (function() {
 
       // Marking the gate if we find the event on the entering space.
       if (dataView.getUint16(info.offset + 0x62) === info.curSpaceIndex) {
-        info.board.spaces[dataView.getUint16(info.offset + 0x106)].gate = true;
+        info.board.spaces[dataView.getUint16(info.offset + 0x106)].subtype = $spaceSubType.GATE;
         return true;
       }
       else if (dataView.getUint16(info.offset + 0x6A) === info.curSpaceIndex) {
-        info.board.spaces[dataView.getUint16(info.offset + 0x10E)].gate = true;
+        info.board.spaces[dataView.getUint16(info.offset + 0x10E)].subtype = $spaceSubType.GATE;
         return true;
       }
     }
@@ -430,46 +431,140 @@ PP64.adapters.events.MP3 = (function() {
     return false;
   }
   Gate._write3 = function(dataView, event, info, temp) {
+    let baseAddresses = [
+      0x0031F648,
+      // TODO: Other boards of course.
+    ];
+    let base = baseAddresses[info.boardIndex];
+
+    // Since we attach this twice for each gate, we want to be careful with curGate.
+    if (info.curSpaceIndex !== event.gateEntryIndex)
+      return [base, 0];
+
     let curGate = temp.curGate = temp.curGate || 1;
     temp.curGate++;
+    console.log(`temp.curGate ${temp.curGate}`);
 
     if (info.boardIndex === 0) {
       let romView = PP64.romhandler.getDataView();
 
-      let base = 0x0031F648;
       if (curGate === 1) {
+        // Previous space
+        // pre 6D gate
+        // 31F97A    6
+        // 31F982    R0 -> A2
+        romView.setUint16(0x0031F97A, event.gatePrevChain[0]); // 0x80109E08
+        romView.setUint32(0x0031F980, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.R0, event.gatePrevChain[1])); // 0x80109E10
+
         // Entering space
-        romView.setUint16(base + 0x62, 0); // 0x80109B38
-        romView.setUint16(base + 0xEE, 0); // 0x80109BC4
-        romView.setUint16(base + 0x22A, 0); // 0x80109D00
-        romView.setUint16(base + 0x326, 0); // 0x80109DFC
+        romView.setUint16(base + 0x62, event.gateEntryIndex); // 0x80109B38
+        romView.setUint16(base + 0xEE, event.gateEntryIndex); // 0x80109BC4
+        romView.setUint16(base + 0x22A, event.gateEntryIndex); // 0x80109D00
+        romView.setUint16(base + 0x326, event.gateEntryIndex); // 0x80109DFC
+        // OK so the original code is tricksy and does a SLTI 7A in order to check equals to 7B...
+        // We will just patch it to check equality and branch appropriately.
+        romView.setUint32(0x0031F854, $MIPS.makeInst("ADDIU", $MIPS.REG.V0, $MIPS.REG.R0, event.gateEntryIndex)); // 0x80109CE4
+        romView.setUint32(0x0031F858, $MIPS.makeInst("BEQ", $MIPS.REG.S1, $MIPS.REG.V0, 0x0005 << 2)); // 0x80109CE8 // Keep branch to 0x80109D00
+        // There's two!
+        romView.setUint32(0x0031F950, $MIPS.makeInst("ADDIU", $MIPS.REG.V0, $MIPS.REG.R0, event.gateEntryIndex)); // 0x80109DE0
+        romView.setUint32(0x0031F954, $MIPS.makeInst("BEQ", $MIPS.REG.S1, $MIPS.REG.V0, 0x0005 << 2)); // 0x80109DE4 // Keep branch to 0x80109DFC
 
         // Gate space
-        romView.setUint16(base + 0x106, 0); // 0x80109BDC
+        romView.setUint16(base + 0x106, event.gateSpaceIndex); // 0x80109BDC
 
         // Exit space
-        romView.setUint16(base + 0x7A, 0); // 0x80109B50
-        romView.setUint16(base + 0xE6, 0); // 0x80109BBC
-        romView.setUint16(base + 0x216, 0); // 0x80109CEC
-        romView.setUint16(base + 0x312, 0); // 0x80109DE8
+        romView.setUint16(base + 0x7A, event.gateExitIndex); // 0x80109B50
+        romView.setUint16(base + 0xE6, event.gateExitIndex); // 0x80109BBC
+        romView.setUint16(base + 0x216, event.gateExitIndex); // 0x80109CEC
+        romView.setUint16(base + 0x312, event.gateExitIndex); // 0x80109DE8
+
+        // Next space
+        // after 6D gate
+        // 31F962    6
+        // 31F996    4
+        romView.setUint16(0x0031F962, event.gateNextChain[0]);
+        romView.setUint16(0x0031F996, event.gateNextChain[1]);
       }
       else if (curGate === 2) {
+        // Previous space
+        // pre 93 gate
+        // 31F99A    9
+        // 31F9A2    2
+        romView.setUint16(0x0031F99A, event.gatePrevChain[0]); // 0x80109E28
+        romView.setUint16(0x0031F9A2, event.gatePrevChain[1]); // 0x80109E30
+
         // Entering space
-        romView.setUint16(base + 0x6A, 0);
-        romView.setUint16(base + 0x206, 0);
-        romView.setUint16(base + 0x2FE, 0);
+        romView.setUint16(base + 0x6A, event.gateEntryIndex);
+        romView.setUint16(base + 0x206, event.gateEntryIndex);
+        romView.setUint16(base + 0x2FE, event.gateEntryIndex);
 
         // Gate space
-        romView.setUint16(base + 0x10E, 0);
+        romView.setUint16(base + 0x10E, event.gateSpaceIndex);
 
         // Exit space
-        romView.setUint16(base + 0x92, 0);
+        romView.setUint16(base + 0x92, event.gateExitIndex);
+
+        // Next space
+        // after 93 gate
+        // 31F96A    9
+        // 31f9B6    6
+        romView.setUint16(0x0031F96A, event.gateNextChain[0]);
+        romView.setUint16(0x0031F9B6, event.gateNextChain[1]);
+        // after 93 gate also
+        // 31F9B2    9
+        // 31F9B6    6
+        romView.setUint16(0x0031F9B2, event.gateNextChain[0]);
       }
 
       // Just point to the event because we left it alone.
       return [base, 0];
     }
 
+
     throw "Can't write Gate to board index " + info.boardIndex;
+  };
+
+  const GateClose = PP64.adapters.events.getEvent("GATECLOSE");
+  GateClose._parse3 = function(dataView, info) {
+    let fnLen = $MIPS.getFunctionLength(dataView, info.offset);
+    if (fnLen !== 0x1C)
+      return false;
+
+    let gateCloseJALs = [
+      0x0C0422BA, // JAL 0x80108AE8
+    ];
+
+    // Chilly Waters 0x8010F050 - 0x8010F06C
+    if (dataView.getUint32(info.offset + 8) !== gateCloseJALs[info.boardIndex])
+      return false;
+
+    let cacheEntry = EventCache.get(GateClose.id);
+    if (!cacheEntry)
+      cacheEntry = {};
+    if (!cacheEntry[info.game])
+      cacheEntry[info.game] = {};
+    if (!cacheEntry[info.game][info.boardIndex])
+      cacheEntry[info.game][info.boardIndex] = {};
+    if (!cacheEntry[info.game][info.boardIndex].asm)
+      cacheEntry[info.game][info.boardIndex].asm = dataView.buffer.slice(info.offset, info.offset + fnLen);
+
+    EventCache.set(GateClose.id, cacheEntry);
+
+    return true;
+  }
+  GateClose._write3 = function(dataView, event, info, temp) {
+    // Strightforward write, but we need to update the A0 set at 0xC.
+    // I think it is set to the gate index.
+
+    let cacheEntry = EventCache.get(GateClose.id);
+    if (!cacheEntry || !cacheEntry[info.game] || !cacheEntry[info.game][info.boardIndex])
+      throw `Cannot write ${GateClose.id}, missing cache entry.`;
+
+    let asm = cacheEntry[info.game][info.boardIndex].asm;
+    PP64.utils.arrays.copyRange(dataView, asm, 0, 0, asm.byteLength);
+
+    dataView.setUint32(0x0C, $MIPS.makeInst("ADDIU", $MIPS.REG.A0, $MIPS.REG.R0, event.gateIndex));
+
+    return [info.offset, asm.byteLength];
   };
 })();

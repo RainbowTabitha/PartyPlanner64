@@ -66,7 +66,7 @@ PP64.adapters.events = (function() {
   return {
     createEvent,
     EventCache,
-    create: function(id, args) { // This is what happens when you code after work.
+    create: function(id, args) {
       let e = _events[id];
       if (!e)
         throw `Requesting to create invalid event ${id}.`;
@@ -77,7 +77,10 @@ PP64.adapters.events = (function() {
       return event;
     },
     parse: function(romView, info) {
+      let currentGame = PP64.romhandler.getGameVersion();
       for (let event in _events) {
+        if (_events[event].supportedGameVersions.indexOf(currentGame) === -1)
+          continue;
         let args = _events[event].parse(romView, info);
         if (args) {
           if (_events[event].fakeEvent)

@@ -90,8 +90,6 @@ PP64.interaction = (function() {
       }
     } else if (curAction === $actType.MARK_STAR) {
       _toggleHostsStar(curSpace);
-    } else if (curAction === $actType.MARK_GATE) {
-      _toggleGate(curSpace);
     } else {
       if (moved && getClickedSpace(clickX, clickY) >= 0)
         return; // Avoid placing over an existing space
@@ -105,7 +103,10 @@ PP64.interaction = (function() {
     if (curSpace) {
       // If we are clicking a space, the only "add" action could be to toggle subtype.
       if (spaceSubType !== undefined && !moved) {
-        if (curSpace.subtype === spaceSubType)
+        if (curSpace.type !== $spaceType.OTHER && spaceSubType === $spaceSubType.GATE) {
+          // Don't add gate to non-invisible space.
+        }
+        else if (curSpace.subtype === spaceSubType)
           delete curSpace.subtype;
         else
           curSpace.subtype = spaceSubType;
@@ -128,17 +129,6 @@ PP64.interaction = (function() {
     curSpace.star = !curSpace.star;
     PP64.renderer.renderSpaces();
     PP64.app.changeCurrentSpace(curSpace); // Refresh because .star changed
-  }
-
-  function _toggleGate(curSpace) {
-    if (!curSpace)
-      return;
-    if (curSpace.type !== $spaceType.OTHER)
-      return;
-
-    curSpace.gate = !curSpace.gate;
-    PP64.renderer.renderSpaces();
-    PP64.app.changeCurrentSpace(curSpace); // Refresh because .gate changed
   }
 
   function _eraseLines(x, y) {
@@ -218,6 +208,7 @@ PP64.interaction = (function() {
     else if (action === $actType.ADD_BANK_SUBTYPE) spaceSubType = $spaceSubType.BANK;
     else if (action === $actType.ADD_BANKCOIN_SUBTYPE) spaceSubType = $spaceSubType.BANKCOIN;
     else if (action === $actType.ADD_ITEMSHOP_SUBTYPE) spaceSubType = $spaceSubType.ITEMSHOP;
+    else if (action === $actType.MARK_GATE) spaceSubType = $spaceSubType.GATE;
     return spaceSubType;
   }
 

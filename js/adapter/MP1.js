@@ -341,10 +341,10 @@ PP64.adapters.MP1 = (function() {
       let boardSelectFORM = PP64.adapters.mainfs.get(9, boardInfo.img.boardSelectImg);
       let boardSelectUnpacked = PP64.utils.FORM.unpack(boardSelectFORM);
       let boardSelectImgTiles = [
-        new DataView(boardSelectUnpacked.BMP1[0].parsed),
-        new DataView(boardSelectUnpacked.BMP1[1].parsed),
-        new DataView(boardSelectUnpacked.BMP1[2].parsed),
-        new DataView(boardSelectUnpacked.BMP1[3].parsed)
+        new DataView(boardSelectUnpacked.BMP1[0].parsed.src),
+        new DataView(boardSelectUnpacked.BMP1[1].parsed.src),
+        new DataView(boardSelectUnpacked.BMP1[2].parsed.src),
+        new DataView(boardSelectUnpacked.BMP1[3].parsed.src)
       ];
       let boardSelectImg = PP64.utils.img.tiler.fromTiles(boardSelectImgTiles, 2, 2, 64 * 4, 32);
       board.otherbg.boardselect = PP64.utils.arrays.arrayBufferToDataURL(boardSelectImg, 128, 64);

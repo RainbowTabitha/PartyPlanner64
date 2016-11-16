@@ -191,7 +191,7 @@ PP64.renderer = (function() {
         spaceCtx.drawImage(PP64.images.get("starImg"), x - offset - 9, iconY);
       }
 
-      if (space.gate) {
+      if (space.subtype === $spaceSubType.GATE) {
         let iconX = x - offset - 9;
         let iconY = y + offset - 5;
         spaceCtx.drawImage(PP64.images.get("gateImg"), iconX, iconY);

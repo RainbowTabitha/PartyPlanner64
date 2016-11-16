@@ -61,15 +61,28 @@ PP64.utils.dump = class Dump {
       let dirFileCount = PP64.adapters.mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
         try {
-          let imgs = _readImgsFromMainFS(d, f);
-          imgs.forEach((imgInfo, idx) => {
-            let dataUri = PP64.utils.arrays.arrayBufferToDataURL(imgInfo.src, imgInfo.width, imgInfo.height);
-            dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
-          });
-          if (imgs.length > 1) {
-            let tilesBuf = PP64.utils.img.tiler.fromTiles(_readPackedFromMainFS(d, f), imgs.length, 1, imgs[0].width * 4, imgs[0].height);
-            let tilesUrl = PP64.utils.arrays.arrayBufferToDataURL(tilesBuf, imgs[0].width * imgs.length, imgs[0].height);
-            dirFolder.file(`${f}.all.png`, tilesUrl.substr(tilesUrl.indexOf(',') + 1), { base64: true });
+          let fileBuffer = PP64.adapters.mainfs.get(d, f);
+          if (PP64.utils.FORM.isForm(fileBuffer)) {
+            let formUnpacked = PP64.utils.FORM.unpack(fileBuffer);
+            if (formUnpacked.BMP1.length) {
+              formUnpacked.BMP1.forEach((bmpEntry, idx) => {
+                let dataUri = PP64.utils.arrays.arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
+                dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
+              });
+            }
+          }
+          else {
+            // Maybe an ImgPack?
+            let imgs = _readImgsFromMainFS(d, f);
+            imgs.forEach((imgInfo, idx) => {
+              let dataUri = PP64.utils.arrays.arrayBufferToDataURL(imgInfo.src, imgInfo.width, imgInfo.height);
+              dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
+            });
+            if (imgs.length > 1) {
+              let tilesBuf = PP64.utils.img.tiler.fromTiles(_readPackedFromMainFS(d, f), imgs.length, 1, imgs[0].width * 4, imgs[0].height);
+              let tilesUrl = PP64.utils.arrays.arrayBufferToDataURL(tilesBuf, imgs[0].width * imgs.length, imgs[0].height);
+              dirFolder.file(`${f}.all.png`, tilesUrl.substr(tilesUrl.indexOf(',') + 1), { base64: true });
+            }
           }
         }
         catch (e) {}
@@ -109,6 +122,31 @@ PP64.utils.dump = class Dump {
       imgArrIndex = imgArrIndex || 0;
       let imgInfo = imgArr[imgArrIndex];
       return PP64.utils.arrays.arrayBufferToDataURL(imgInfo.src, imgInfo.width, imgInfo.height);
+    }
+  }
+
+  // Dump out all the FORM bitmaps.
+  static formImages() {
+    let mainfsDirCount = PP64.adapters.mainfs.getDirectoryCount();
+    for (let d = 0; d < mainfsDirCount; d++) {
+      let dirFileCount = PP64.adapters.mainfs.getFileCount(d);
+      for (let f = 0; f < dirFileCount; f++) {
+        let fileBuffer = PP64.adapters.mainfs.get(d, f);
+        if (!PP64.utils.FORM.isForm(fileBuffer))
+          continue;
+
+        try {
+          let formUnpacked = PP64.utils.FORM.unpack(fileBuffer);
+          if (formUnpacked.BMP1.length) {
+            formUnpacked.BMP1.forEach(bmpEntry => {
+              let dataUri = PP64.utils.arrays.arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
+              console.log(`${d}/${f}:`);
+              console.log(dataUri);
+            });
+          }
+        }
+        catch (e) {}
+      }
     }
   }
 
