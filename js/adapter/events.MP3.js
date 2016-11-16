@@ -128,9 +128,10 @@ PP64.adapters.events.MP3 = (function() {
     dataView.setUint32(0x14, $MIPS.makeInst("ADDIU", $MIPS.REG.A1, $MIPS.REG.A1, argsAddrLower));
 
     // Not sure what A2 is, but it seems to be fine if it is equal to an address containing 0.
-    // Oops, no it wasn't OK? CPUs wouldn't move. So now I just picked a random existing addr.
+    // Oops, no it wasn't OK? CPUs wouldn't move. So now I just picked a random existing AI addr.
+    // Tried 0x8011D668, maybe causes weird path mess ups going in reverse? Maybe not...
     dataView.setUint32(0x18, $MIPS.makeInst("LUI", $MIPS.REG.A2, 0x8012));
-    dataView.setUint32(0x20, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.A2, 0xD668));
+    dataView.setUint32(0x20, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.A2, 0xD854));
 
     if (event._reverse) { // Blank out the extra JAL we don't do when reversing.
       dataView.setUint32(0x24, 0);
@@ -194,6 +195,86 @@ PP64.adapters.events.MP3 = (function() {
     dataView.setUint32(splitLen + 0x30, $MIPS.makeInst("JAL", jalAddr));
 
     return [info.offset + splitLen, splitLen + asm.byteLength];
+  };
+
+  // Oh look, more ChainSplits!
+  // This is a ChainSplit where one path leads to a gate.
+  // The difference is that it has logic to just send the player in the non-gate
+  // direction automatically if they are coming back from the gate.
+  const GateChainSplit = PP64.adapters.events.createEvent("GATECHAINSPLIT", "");
+  GateChainSplit.fakeEvent = true;
+  GateChainSplit.activationType = $activationType.WALKOVER;
+  GateChainSplit.mystery = 2;
+  GateChainSplit.supportedGameVersions = [3];
+  GateChainSplit.supportedGames = [
+    $gameType.MP3_USA,
+  ];
+  GateChainSplit.parse = function(dataView, info) {
+    // Chilly waters 0x8D space, 0x80108DD0, 0x31E940
+    let hashes = {
+      GATE_FILTER: "A99A70CBC4A1F9509AAB966831FC584E"
+    };
+
+    if (!hashEqual([dataView.buffer, info.offset, 0x44], hashes.GATE_FILTER))
+      return false;
+
+    // We need to parse the chain split I suppose, can't really reuse code
+    // right now but it's the same idea, only different offsets.
+    let upperAddr = dataView.getUint16(info.offset + 0x7E) << 16;
+    let lowerAddr = dataView.getUint16(info.offset + 0x82);
+    let spacesAddr = (upperAddr | lowerAddr) & 0x7FFFFFFF;
+    if (spacesAddr & 0x00008000)
+      spacesAddr = spacesAddr - 0x00010000;
+    let spacesOffset = info.offset - (info.addr - spacesAddr);
+
+    let destinationSpace = dataView.getUint16(spacesOffset);
+    while (destinationSpace !== 0xFFFF) {
+      PP64.boards.addConnection(info.curSpace, destinationSpace, info.board);
+      spacesOffset += 2;
+      destinationSpace = dataView.getUint16(spacesOffset);
+    }
+
+    // Cache the function ASM so we can write this event later for gates
+    let cacheEntry = EventCache.get(GateChainSplit.id) || {};
+    if (!cacheEntry[info.game]) {
+      cacheEntry[info.game] = {
+        asm: dataView.buffer.slice(info.offset, info.offset + $MIPS.getFunctionLength(dataView, info.offset))
+      };
+      let cacheView = new DataView(cacheEntry[info.game].asm);
+      EventCache.set(GateChainSplit.id, cacheEntry);
+    }
+
+    return true;
+  }
+  GateChainSplit.write = function(dataView, event, info, temp) {
+    let cacheEntry = EventCache.get(GateChainSplit.id);
+    if (!cacheEntry || !cacheEntry[info.game] || !cacheEntry[info.game].asm)
+      throw `Cannot write ${GateChainSplit.id}, missing cache entry values.`;
+
+    let asm = cacheEntry[info.game].asm;
+    PP64.utils.arrays.copyRange(dataView, asm, 0, 0, asm.byteLength);
+
+    // Check for the previous space being the gate chain's first space.
+    dataView.setUint16(0x46, event.prevSpace);
+
+    // Send player to other chain if coming from gate.
+    dataView.setUint32(0x5C, $MIPS.makeInst("ADDIU", $MIPS.REG.A1, $MIPS.REG.R0, event.altChain[0])); // Chain index
+    dataView.setUint32(0x68, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.R0, event.altChain[1])); // Index in chain
+
+    // Write the same A0, A1 as ChainSplit, but later in function.
+    let [argsAddrUpper, argsAddrLower] = $MIPS.getRegSetUpperAndLower(info.argsAddr);
+    dataView.setUint32(0x7C, $MIPS.makeInst("LUI", $MIPS.REG.A0, argsAddrUpper));
+    dataView.setUint32(0x80, $MIPS.makeInst("ADDIU", $MIPS.REG.A0, $MIPS.REG.A0, argsAddrLower));
+
+    [argsAddrUpper, argsAddrLower] = $MIPS.getRegSetUpperAndLower(info.argsAddr + 0x14);
+    dataView.setUint32(0x84, $MIPS.makeInst("LUI", $MIPS.REG.A1, argsAddrUpper));
+    dataView.setUint32(0x88, $MIPS.makeInst("ADDIU", $MIPS.REG.A1, $MIPS.REG.A1, argsAddrLower));
+
+    // Well, one of the A2 AI values from a Chilly GateChainSplit is already there in the cache...
+    //dataView.setUint32(0x, $MIPS.makeInst("LUI", $MIPS.REG.A2, 0x8012));
+    //dataView.setUint32(0x, $MIPS.makeInst("ADDIU", $MIPS.REG.A2, $MIPS.REG.A2, 0xD854));
+
+    return [info.offset, asm.byteLength];
   };
 
   const StarEvent = PP64.adapters.events.getEvent("STAR");
@@ -442,8 +523,8 @@ PP64.adapters.events.MP3 = (function() {
       return [base, 0];
 
     let curGate = temp.curGate = temp.curGate || 1;
+    console.log(`curGate ${curGate}`);
     temp.curGate++;
-    console.log(`temp.curGate ${temp.curGate}`);
 
     if (info.boardIndex === 0) {
       let romView = PP64.romhandler.getDataView();

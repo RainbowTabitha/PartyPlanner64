@@ -275,28 +275,24 @@ PP64.adapters.MP3 = (function() {
           inlineArgs.push(0x0000);
           inlineArgs.push(0x0000);
 
-          event = PP64.adapters.events.create("CHAINSPLIT", {
+          let args = {
             args: { inline: inlineArgs },
             chains: chainIndices,
-          });
+          }
+          let chainWithGate = _needsGateChainSplit(chainIndices);
+          if (chainWithGate != null) {
+            args.prevSpace = chains[chainWithGate][0];
+            args.altChain = [
+              chainIndices.find(i => i !== chainWithGate), // Chain index
+              0, // Index in chain
+            ];
+            $$log("GATECHAINSPLIT args ", args);
+            event = PP64.adapters.events.create("GATECHAINSPLIT", args);
+          }
+          else {
+            event = PP64.adapters.events.create("CHAINSPLIT", args);
+          }
           PP64.boards.addEventByIndex(board, lastSpace, event, true);
-
-          // Now add the two reverse events that would take the player back to
-          // the split event space.
-
-          // event = PP64.adapters.events.create("CHAINMERGE", {
-          //   chain: i,
-          //   spaceIndex: chain.length - 1,
-          //   prevSpace: chains[chainIndices[0]][1], // The 2nd space of the chain, which would have been previous when going reverse.
-          // });
-          // PP64.boards.addEventByIndex(board, endLinks[0], event, true);
-
-          // event = PP64.adapters.events.create("CHAINMERGE", {
-          //   chain: i,
-          //   spaceIndex: chain.length - 1,
-          //   prevSpace: chains[chainIndices[1]][1], // The 2nd space of the chain, which would have been previous when going reverse.
-          // });
-          // PP64.boards.addEventByIndex(board, endLinks[1], event, true);
         }
         else {
           event = PP64.adapters.events.create("CHAINMERGE", {
@@ -418,6 +414,25 @@ PP64.adapters.MP3 = (function() {
             pointingSpaces.push(s);
         }
         return pointingSpaces;
+      }
+
+      // Returns space index with gate, or undefined
+      function _chainHasGate(chain) {
+        return chain.find(i => {
+          return board.spaces[i].subtype === $spaceSubType.GATE;
+        });
+      }
+
+      // Returns index of chain with gate.
+      function _needsGateChainSplit(chainIndices) {
+        let chainIndex = null;
+        chainIndices.forEach(index => {
+          let spaceIndexWithGate = _chainHasGate(chains[index]);
+          if (typeof spaceIndexWithGate === "number") {
+            chainIndex = index;
+          }
+        });
+        return chainIndex;
       }
     }
 
