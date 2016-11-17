@@ -68,18 +68,25 @@ PP64.boards = (function() {
     boards = [ _makeDefaultBoard(1) ];
   }
 
-  window.addEventListener("beforeunload", function() {
-    if (!window.localStorage)
-      return;
-    let myBoards = boards.filter(val => {
-      return !boardIsROM(val);
-    });
-    try {
-      localStorage.setItem("boards", JSON.stringify(myBoards));
+  window.addEventListener("beforeunload", function(event) {
+    let failed = true;
+    if (window.localStorage) {
+      let myBoards = boards.filter(val => {
+        return !boardIsROM(val);
+      });
+      try {
+        localStorage.setItem("boards", JSON.stringify(myBoards));
+        failed = false;
+      }
+      catch (e) {
+        // Browsers don't really let you save much...
+      }
     }
-    catch (e) {
-      // Browsers don't really let you save much...
-      // return "The browser won't let PartyPlanner64 save all your boards. Return to the editor and export them?";
+
+    if (failed) {
+      let msg = "Cannot save all your boards. Return to the editor and export them?";
+      event.returnValue = msg;
+      return msg;
     }
   });
 
