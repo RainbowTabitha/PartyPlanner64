@@ -104,6 +104,10 @@ PP64.boards = (function() {
     return board;
   }
 
+  function indexOf(board) {
+    return boards.indexOf(board);
+  }
+
   function setCurrentBoard(index) {
     currentBoard = index;
     PP64.app.currentBoardChanged();
@@ -223,6 +227,8 @@ PP64.boards = (function() {
 
   return {
     getCurrentBoard,
+
+    indexOf,
 
     getCurrentBoardIndex: function() {
       return currentBoard;

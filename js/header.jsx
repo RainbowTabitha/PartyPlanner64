@@ -469,11 +469,19 @@ PP64.header = (function() {
         if (!adapter)
           return;
         PP64.app.blockUI(true);
-        let promise = adapter.overwriteBoard(this.props.boardIndex, PP64.boards.getCurrentBoard());
+        let currentBoard = PP64.boards.getCurrentBoard();
+        let promise = adapter.overwriteBoard(this.props.boardIndex, currentBoard);
         promise.then(value => {
           $$log("Board overwritten");
           PP64.boards.clearBoardsFromROM();
           PP64.boards.loadBoardsFromROM();
+
+          let newBoardIndex = PP64.boards.indexOf(currentBoard);
+          if (newBoardIndex < 0)
+            newBoardIndex = 0;
+
+          PP64.boards.setCurrentBoard(newBoardIndex);
+
           PP64.app.blockUI(false);
         }, reason => {
           $$log(`Error overriding board: ${reason}`);
