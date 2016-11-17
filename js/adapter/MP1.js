@@ -378,7 +378,14 @@ PP64.adapters.MP1 = (function() {
           let boardSelectFORM = PP64.adapters.mainfs.get(9, boardSelectIndex);
           let boardSelectUnpacked = PP64.utils.FORM.unpack(boardSelectFORM);
           for (let i = 0; i < 4; i++) {
-            PP64.utils.FORM.replaceBMP(boardSelectUnpacked, i, boardSelectBmps[i][0], boardSelectBmps[i][1]);
+            let palette = boardSelectBmps[i][1];
+
+            // FIXME: This is padding the palette count a bit.
+            // For some reason, the images get corrupt with very low palette count.
+            while (palette.colors.length < 17) {
+              palette.colors.push(0x00000000);
+            }
+            PP64.utils.FORM.replaceBMP(boardSelectUnpacked, i, boardSelectBmps[i][0], palette);
           }
 
           // Now write the FORM.
