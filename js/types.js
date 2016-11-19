@@ -5,6 +5,7 @@ PP64.types = {
     SETTINGS: 2,
     ABOUT: 3,
     MODELS: 4,
+    PATCHES: 5,
   },
 
   Space: {
@@ -27,8 +28,8 @@ PP64.types = {
   },
 
   isKnownSpaceType: function(type) {
-    for (let typeName in PP64.types.Space) {
-      if (PP64.types.Space[typeName] === type)
+    for (let typeName in $spaceType) {
+      if ($spaceType[typeName] === type)
         return true;
     }
     return false;
@@ -70,6 +71,7 @@ PP64.types = {
     ROM_SAVE: 15,
     SETTINGS: 15.1,
     ABOUT: 15.2,
+    PATCHES: 15.3,
 
     ADD_OTHER: 16,
     ADD_BLUE: 17,

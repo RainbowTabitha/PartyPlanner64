@@ -52,6 +52,11 @@ const JS = [
   "js/interaction.js",
   "js/romhandler.js",
 
+  "js/patches.js",
+  "js/patches/PatchBase.js",
+  "js/patches/Antialias.js",
+  "js/patches/SkipIntro.js",
+
   "js/validation/validation.js",
   "js/validation/validation.MP1.js",
   "js/validation/validation.MP2.js",
@@ -123,6 +128,7 @@ const CSS = [
   "css/settings.css",
   "css/about.css",
   "css/models.css",
+  "css/patches.css",
   // css/fonts.css is not included in prod
 ];
 function MAKE_CSS_ORDER(css) {

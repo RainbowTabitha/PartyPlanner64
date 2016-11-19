@@ -35,6 +35,7 @@ PP64.header = (function() {
       "type": $actType.SCREENSHOT, "details": "Take a screenshot of the current board",
       "dropdownFn": screenshotDropdown
     },
+    { "name": "Patches", "icon": "img/header/rompatch.png", "type": $actType.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
     { "name": "Settings", "icon": "img/header/settings.png", "type": $actType.SETTINGS, "details": "Editor settings" },
     { "name": "About", "icon": "img/header/about.png", "type": $actType.ABOUT, "details": "About PartyPlanner64" },
   ];
@@ -63,6 +64,7 @@ PP64.header = (function() {
       "type": $actType.SCREENSHOT, "details": "Take a screenshot of the current board",
       "dropdownFn": screenshotDropdown
     },
+    { "name": "Patches", "icon": "img/header/rompatch.png", "type": $actType.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
     { "name": "Settings", "icon": "img/header/settings.png", "type": $actType.SETTINGS, "details": "Editor settings" },
     { "name": "About", "icon": "img/header/about.png", "type": $actType.ABOUT, "details": "About PartyPlanner64" },
   ];
@@ -118,6 +120,9 @@ PP64.header = (function() {
         break;
       case $actType.MODEL_VIEWER:
         PP64.app.changeView($viewType.MODELS);
+        break;
+      case $actType.PATCHES:
+        PP64.app.changeView($viewType.PATCHES);
         break;
       case $actType.SET_BG:
         PP64.utils.input.openFile("image/*", bgSelected);
