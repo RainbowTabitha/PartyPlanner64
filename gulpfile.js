@@ -56,6 +56,7 @@ const JS = [
   "js/patches/PatchBase.js",
   "js/patches/Antialias.js",
   "js/patches/SkipIntro.js",
+  "js/patches/DebugMenu.js",
 
   "js/validation/validation.js",
   "js/validation/validation.MP1.js",
