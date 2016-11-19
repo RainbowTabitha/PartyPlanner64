@@ -4,6 +4,7 @@ PP64.validation.MP2 = (function() {
   const commonRules = [
     PP64.validation.getRule("TOOMANYBOWSERS", { limit: 0 }),
     PP64.validation.getRule("TOOMANYKOOPAS", { limit: 0 }),
+    PP64.validation.getRule("TOOMANYGATES", { limit: 0 }), // Someday
   ];
 
   function getValidationRulesForBoard(boardIndex) {

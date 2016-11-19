@@ -96,6 +96,7 @@ PP64.validation = (function() {
   const TooManyKoopas = _makeTooManyOfSubtypeRule($spaceSubType.KOOPA, "Koopas");
   const TooManyBanks = _makeTooManyOfSubtypeRule($spaceSubType.BANK, "Banks");
   const TooManyItemShops = _makeTooManyOfSubtypeRule($spaceSubType.ITEMSHOP, "Item Shops");
+  const TooManyGates = _makeTooManyOfSubtypeRule($spaceSubType.GATE, "Gates");
 
   const BadStarCount = createRule("BADSTARCOUNT", "Bad star count", $validationLevel.ERROR);
   BadStarCount.fails = function(board, args = {}) {
@@ -109,22 +110,6 @@ PP64.validation = (function() {
         return `There are ${count} stars, but the range is ${low}-${high} for this board.`;
       else
         return `There are ${count} stars, but the count must be ${low} for this board.`;
-    }
-    return false;
-  };
-
-  const BadGateCount = createRule("BADGATECOUNT", "Bad gate count", $validationLevel.ERROR);
-  BadGateCount.fails = function(board, args = {}) {
-    let low = args.low || 0;
-    let high = args.high || 1;
-    let count = board.spaces.filter(space => {
-      return space && space.subtype === $spaceSubType.GATE;
-    }).length;
-    if (count < low || count > high) {
-      if (low !== high)
-        return `There are ${count} gates, but the range is ${low}-${high} for this board.`;
-      else
-        return `There are ${count} gates, but the count must be ${low} for this board.`;
     }
     return false;
   };
@@ -228,14 +213,80 @@ PP64.validation = (function() {
       $spaceType.BLACKSTAR,
       $spaceType.ARROW,
     ];
-    for (var spaceIdx in board.links) {
-      let links = board.links[spaceIdx];
-      if (Array.isArray(links) && links.length > 1) {
+    for (let spaceIdx in board.links) {
+      let links = PP64.boards.getConnections(spaceIdx, board);
+      if (links.length > 1) {
         let space = board.spaces[spaceIdx];
         if (preferredSplitTypes.indexOf(space.type) === -1)
           return "There is a <a href='https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board#board-flow' target='_blank'>non-conventional path split</a>.";
       }
     }
+    return false;
+  };
+
+  const GateSetup = createRule("GATESETUP", "Incorrect gate setup", $validationLevel.ERROR);
+  GateSetup.fails = function(board, args = {}) {
+    let gateSpaceIndices = PP64.boards.getSpacesOfSubType($spaceSubType.GATE, board);
+
+    for (let i = 0; i < gateSpaceIndices.length; i++) {
+      let gateSpaceIndex = gateSpaceIndices[i];
+
+      // We want the gate to be on an invisible space.
+      let gateSpace = board.spaces[gateSpaceIndex];
+      if (gateSpace.type !== $spaceType.OTHER)
+        return "Only invisible spaces can have gates."; // UI should prevent this pretty well
+
+      // Check space/link structure after gate space.
+      let exitingSpaces = PP64.boards.getConnections(gateSpaceIndex, board);
+      if (exitingSpaces.length !== 1)
+        return "A single path should leave a gate space.";
+      let exitSpaceIndex = exitingSpaces[0];
+      let exitSpace = board.spaces[exitSpaceIndex];
+      if (!exitSpace || exitSpace.type !== $spaceType.OTHER)
+        return "Space after a gate space must be invisible.";
+      if (exitSpace.subtype === $spaceSubType.GATE)
+        return "Gate spaces must be 2 or more spaces apart.";
+      if (_getPointingSpaceIndices(exitSpaceIndex).length !== 1)
+        return "A single path should connect to the space after a gate space.";
+
+      let nextSpaces = PP64.boards.getConnections(exitSpaceIndex, board);
+      if (nextSpaces.length !== 1)
+        return "A single path should leave the space after a gate space";
+      let nextSpaceIndex = nextSpaces[0];
+      let nextSpace = board.spaces[nextSpaceIndex];
+      if (nextSpace.subtype === $spaceSubType.GATE)
+        return "Gate spaces must be 2 or more spaces apart.";
+
+      // Check space/link structure before gate space.
+      let enteringSpaces = _getPointingSpaceIndices(gateSpaceIndex);
+      if (enteringSpaces.length !== 1)
+        return "A single path should connect to a gate space.";
+      let enteringSpaceIndex = enteringSpaces[0];
+      let enteringSpace = board.spaces[enteringSpaceIndex];
+      if (!enteringSpace || enteringSpace.type !== $spaceType.OTHER)
+        return "Space before a gate space must be invisible.";
+      if (enteringSpace.subtype === $spaceSubType.GATE)
+        return "Gate spaces must be 2 or more spaces apart.";
+
+      let prevSpaces = _getPointingSpaceIndices(enteringSpaceIndex);
+      if (prevSpaces.length !== 1)
+        return "A single path should connect to the space before a gate space.";
+      if (prevSpaces[0].subtype === $spaceSubType.GATE)
+        return "Gate spaces must be 2 or more spaces apart.";
+    };
+
+    function _getPointingSpaceIndices(pointedAtIndex) {
+      let pointingIndices = [];
+      for (let startIdx in board.links) {
+        let ends = PP64.boards.getConnections(startIdx, board);
+        ends.forEach(end => {
+          if (end === pointedAtIndex)
+            pointingIndices.push(Number(startIdx));
+        });
+      }
+      return pointingIndices;
+    }
+
     return false;
   };
 

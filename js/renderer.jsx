@@ -20,23 +20,14 @@ PP64.renderer = (function() {
       let x1 = board.spaces[startSpace].x;
       let y1 = board.spaces[startSpace].y;
 
-      let endLinks = board.links[startSpace];
+      let endLinks = PP64.boards.getConnections(startSpace, board);
       let x2, y2;
       let bidirectional = false;
-      if (Array.isArray(endLinks)) {
-        for (let i = 0; i < endLinks.length; i++) {
-          x2 = board.spaces[endLinks[i]].x;
-          y2 = board.spaces[endLinks[i]].y;
-          bidirectional = _isConnectedTo(board.links, endLinks[i], startSpace);
-          if (bidirectional && startSpace > endLinks[i])
-            continue;
-          drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
-        }
-      } else {
-        x2 = board.spaces[endLinks].x;
-        y2 = board.spaces[endLinks].y;
-        bidirectional = _isConnectedTo(board.links, endLinks, startSpace);
-        if (bidirectional && startSpace > endLinks)
+      for (let i = 0; i < endLinks.length; i++) {
+        x2 = board.spaces[endLinks[i]].x;
+        y2 = board.spaces[endLinks[i]].y;
+        bidirectional = _isConnectedTo(board.links, endLinks[i], startSpace);
+        if (bidirectional && startSpace > endLinks[i])
           continue;
         drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
       }

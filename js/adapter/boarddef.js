@@ -239,14 +239,10 @@ PP64.adapters.boarddef = (function() {
         pointingMap[s] = [];
     }
     for (let startIdx in links) {
-      let ends = links[startIdx];
-      if (Array.isArray(ends)) {
-        ends.forEach(end => {
-          pointingMap[end].push(Number(startIdx));
-        });
-      }
-      else if (!isNaN(ends))
-        pointingMap[ends].push(Number(startIdx));
+      let ends = PP64.boards.getConnections(startIdx, board);
+      ends.forEach(end => {
+        pointingMap[end].push(Number(startIdx));
+      });
     }
 
     // Returns true if the given space is linked to from another space besides
@@ -346,7 +342,7 @@ PP64.adapters.boarddef = (function() {
   }
 
   function trimChains(board, chains) {
-    // TODO
+    // TODO: This would make board parsing not have weird extra spaces.
   }
 
   return {

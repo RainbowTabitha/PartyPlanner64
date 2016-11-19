@@ -398,6 +398,21 @@ PP64.boards = (function() {
 
     hasConnection,
 
+    // Returns array of space indices connected to from a space.
+    getConnections: function(spaceIndex, board = getCurrentBoard()) {
+      if (spaceIndex < 0)
+        return null;
+
+      board.links = board.links || {};
+      if (Array.isArray(board.links[spaceIndex]))
+        return board.links[spaceIndex].slice(0);
+
+      if (typeof board.links[spaceIndex] === "number")
+        return [board.links[spaceIndex]];
+
+      return [];
+    },
+
     addConnection: function(startIdx, endIdx, board = getCurrentBoard()) {
       if (startIdx === endIdx || hasConnection(startIdx, endIdx, board))
         return;
@@ -405,7 +420,7 @@ PP64.boards = (function() {
       board.links = board.links || {};
       if (Array.isArray(board.links[startIdx]))
         board.links[startIdx].push(endIdx);
-      else if (!isNaN(board.links[startIdx]))
+      else if (typeof board.links[startIdx] === "number")
         board.links[startIdx] = [board.links[startIdx], endIdx];
       else if (endIdx >= 0)
         board.links[startIdx] = endIdx;

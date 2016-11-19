@@ -400,9 +400,7 @@ PP64.adapters = (function() {
       for (let i = 0; i < chains.length; i++) {
         let chain = chains[i];
         let lastSpace = chain[chain.length - 1];
-        let links = board.links[lastSpace];
-        if (!Array.isArray(links))
-          links = [links];
+        let links = PP64.boards.getConnections(lastSpace, board);
         let event;
         if (links.length > 1) {
           // A split, figure out the end points.
@@ -510,25 +508,20 @@ PP64.adapters = (function() {
       }
 
       function _getPointingSpaceIndex(pointedAtIndex) {
+        let pointingIndex = -1;
         for (let startIdx in board.links) {
-          let ends = board.links[startIdx];
-          if (Array.isArray(ends)) {
-            ends.forEach(end => {
-              if (end === pointedAtIndex)
-                return Number(startIdx);
-            });
+          let ends = PP64.boards.getConnections(startIdx, board);
+          for (let i = 0; i < ends.length; i++) {
+            if (ends[i] === pointedAtIndex)
+              return Number(startIdx);
           }
-          else if (!isNaN(ends) && ends === pointedAtIndex)
-            return Number(startIdx);
         }
         return -1;
       }
 
       function _getNextSpaceIndex(spaceIndex) {
-        let nextSpaceIndex = board.links[spaceIndex];
-        if (Array.isArray(nextSpaceIndex))
-          nextSpaceIndex = nextSpaceIndex[0];
-        return nextSpaceIndex;
+        let ends = PP64.boards.getConnections(spaceIndex, board);
+        return ends[0];
       }
 
       function _getChainWithSpace(spaceIndex) {

@@ -80,8 +80,9 @@ PP64.adapters.events.common = (function() {
           nextSpace = info.chains[nextChain][dataView.getUint16(info.offset + 0x22)];
 
         // This isn't an event really - write directly to the board links.
-        if (!isNaN(nextSpace))
-          info.board.links[info.curSpace] = nextSpace;
+        if (typeof nextSpace === "number")
+          PP64.boards.addConnection(info.curSpace, nextSpace, info.board);
+          //info.board.links[info.curSpace] = nextSpace;
 
         return true;
       }

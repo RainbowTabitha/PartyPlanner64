@@ -222,9 +222,7 @@ PP64.adapters.MP3 = (function() {
         let secondSpace = chain[1];
         let lastSpace = chain[chain.length - 1];
         let prevSpace = chain[chain.length - 2]; // For MP3
-        let endLinks = board.links[lastSpace];
-        if (!Array.isArray(endLinks))
-          endLinks = [endLinks];
+        let endLinks = PP64.boards.getConnections(lastSpace, board);
         let event;
         if (endLinks.length > 1) {
           // A split, figure out the end points.
@@ -376,10 +374,7 @@ PP64.adapters.MP3 = (function() {
           // way towards the beginning of the chain (start space for example).
           // At the start of these chains, we put a type 8 event to spin them around.
           // It is redundant when going forward on the chain but doesn't hurt.
-          let firstLinks = board.links[firstSpace];
-          if (!Array.isArray(firstLinks))
-            firstLinks = [firstLinks];
-
+          let firstLinks = PP64.boards.getConnections(firstSpace, board);
           if (firstLinks.length > 1) {
             $$log("FIXME: branching isolated chain?");
           }
@@ -407,9 +402,7 @@ PP64.adapters.MP3 = (function() {
       function _getSpacesPointingToSpace(space) {
         let pointingSpaces = [];
         for (let s = 0; s < board.spaces.length; s++) {
-          let spaceLinks = board.links[s];
-          if (!Array.isArray(spaceLinks))
-            spaceLinks = [spaceLinks];
+          let spaceLinks = PP64.boards.getConnections(s, board);
           if (spaceLinks.indexOf(space) >= 0)
             pointingSpaces.push(s);
         }
