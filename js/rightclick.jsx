@@ -185,10 +185,13 @@ PP64.rightclick = (function() {
     switch (PP64.boards.getCurrentBoard().game) {
       case 1:
         types = RCSpaceTypeToggleTypes_1;
+        break;
       case 2:
         types = RCSpaceTypeToggleTypes_2;
+        break;
       case 3:
         types = RCSpaceTypeToggleTypes_3;
+        break;
     }
 
     if (!PP64.settings.get($setting.uiAdvanced)) {
@@ -203,10 +206,13 @@ PP64.rightclick = (function() {
     switch (PP64.boards.getCurrentBoard().game) {
       case 1:
         types = RCSpaceTypeToggleSubTypes_1;
+        break;
       case 2:
         types = RCSpaceTypeToggleSubTypes_2;
+        break;
       case 3:
         types = RCSpaceTypeToggleSubTypes_3;
+        break;
     }
 
     if (!PP64.settings.get($setting.uiAdvanced)) {
