@@ -68,9 +68,15 @@ PP64.adapters.boardinfo.MP1 = (function() {
     romView.setUint32(0x2A959C, 0);
     romView.setUint32(0x2A95A0, 0);
 
-    // Give a little more room to the small table (also _writeEvents)
-    //let old = 0xA0CC;
-    //romView.setUint16(0x24247A, old - 160);
+    // Make Bowser's event text a bit more generic.
+    let bytes = [];
+    bytes = bytes.concat(PP64.adapters.strings._strToBytes("You're looking for Stars?\nHow about this instead..."));
+    bytes.push(0xFF); // PAUSE
+    bytes.push(0x00); // Null byte
+    let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
+    PP64.adapters.strings.write(396, strBuffer);
+    PP64.adapters.strings.write(399, strBuffer);
+    PP64.adapters.strings.write(402, strBuffer);
   };
   MP1_USA_DK.clearSpaceEventTableCalls = function(romView) {
     // Remove extra separated event table reads because we don't use them.
