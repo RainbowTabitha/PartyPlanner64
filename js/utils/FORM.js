@@ -118,7 +118,6 @@ PP64.utils.FORM = class FORM {
   }
 
   static parseType(type, raw) {
-    let rawView = new DataView(raw);
     switch (type) {
       case "COL1":
         return PP64.utils.FORM.parseCOL1(raw);
@@ -178,7 +177,7 @@ PP64.utils.FORM = class FORM {
     let faceCount = rawView.getUint16(0);
     let faceOffset = 8;
     for (let i = 0; i < faceCount; i++) {
-      let sideType = rawView.getUint8(faceOffset);
+      // let sideType = rawView.getUint8(faceOffset);
       //let byteLen = sideType === 0x35 ? 
       let face = {};
       result.faces.push(face);

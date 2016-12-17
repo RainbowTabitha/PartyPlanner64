@@ -63,7 +63,6 @@ PP64.adapters.animationfs = (function() {
   function _createOrderedTiles(imgData, width, height) {
     let tileXCount = width / 64;
     let tileYCount = height / 48;
-    let tileCount = tileXCount * tileYCount;
 
     let tiles32 = PP64.utils.img.tiler.toTiles(imgData.data, tileXCount, tileYCount, 64 * 4, 48);
     let tiles16 = tiles32.map(tile32 => {
@@ -116,7 +115,6 @@ PP64.adapters.animationfs = (function() {
     let tileHeight = 48;
     let tileXCount = width / 64;
     let tileYCount = height / 48;
-    let tileCount = tileXCount * tileYCount;
 
     orderedAnimBgTiles = _unorderTiles(orderedAnimBgTiles, tileXCount, tileYCount);
 

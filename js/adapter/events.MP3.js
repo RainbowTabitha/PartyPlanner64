@@ -161,7 +161,7 @@ PP64.adapters.events.MP3 = (function() {
       return false;
 
     // Get the JAL to the Chain Split.
-    let jalChainSplit = dataView.getUint32(info.offset + 0x30);
+    // let jalChainSplit = dataView.getUint32(info.offset + 0x30);
 
     // Cache the wrapper function ASM so we can write this event later.
     let cacheEntry = EventCache.get(ReverseChainSplit.id) || {};
@@ -169,7 +169,6 @@ PP64.adapters.events.MP3 = (function() {
       cacheEntry[info.game] = {
         asm: dataView.buffer.slice(info.offset, info.offset + $MIPS.getFunctionLength(dataView, info.offset))
       };
-      let cacheView = new DataView(cacheEntry[info.game].asm);
       EventCache.set(ReverseChainSplit.id, cacheEntry);
     }
 
@@ -240,7 +239,6 @@ PP64.adapters.events.MP3 = (function() {
       cacheEntry[info.game] = {
         asm: dataView.buffer.slice(info.offset, info.offset + $MIPS.getFunctionLength(dataView, info.offset))
       };
-      let cacheView = new DataView(cacheEntry[info.game].asm);
       EventCache.set(GateChainSplit.id, cacheEntry);
     }
 
@@ -423,7 +421,7 @@ PP64.adapters.events.MP3 = (function() {
 
   const ItemShop = PP64.adapters.events.getEvent("ITEMSHOP");
   ItemShop._parse3 = function(dataView, info) {
-    let fnLen;
+    // let fnLen;
     let found = false;
 
     // Chilly Waters 0x8010B65C - , spaces 0x7C,0x77 with 0x6E,0x73

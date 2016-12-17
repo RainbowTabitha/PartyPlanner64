@@ -334,7 +334,6 @@ PP64.adapters.boarddef = (function() {
         chain.push(newLink);
 
         // CS classic, insert into linkedish list.
-        let padSpace = spaces[newLink];
         links[lastSpaceIdx] = newLink;
         links[newLink] = oldLinks;
       }

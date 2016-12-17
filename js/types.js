@@ -1,3 +1,5 @@
+// Defines commonly used types.
+
 PP64.types = {
   View: {
     EDITOR: 0,

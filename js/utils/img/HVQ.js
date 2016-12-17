@@ -26,24 +26,24 @@ PP64.utils.img.HVQ = class HVQ {
     return window.PP64.utils.img.HVQ._blackRGB16; // FIXME LOL
 
     // Decode the huffman tree for the first chunk.
-    let firstChunkOffset = HVQ._getChunkOffset(hvqView, 0);
-    let firstChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (firstChunkOffset + 4)));
-    console.log("HVQ Huff 1: ", firstChunkHuffmanResult.node);
-    //console.log("remaining: ", ((firstChunkOffset + 4 + hvqView.getUint32(firstChunkOffset)) * 8) - firstChunkHuffmanResult.nextOffset);
+    // let firstChunkOffset = HVQ._getChunkOffset(hvqView, 0);
+    // let firstChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (firstChunkOffset + 4)));
+    // console.log("HVQ Huff 1: ", firstChunkHuffmanResult.node);
+    // //console.log("remaining: ", ((firstChunkOffset + 4 + hvqView.getUint32(firstChunkOffset)) * 8) - firstChunkHuffmanResult.nextOffset);
 
-    let thirdChunkOffset = HVQ._getChunkOffset(hvqView, 2);
-    let thirdChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (thirdChunkOffset + 4)));
-    console.log("HVQ Huff 3: ", thirdChunkHuffmanResult.node);
+    // let thirdChunkOffset = HVQ._getChunkOffset(hvqView, 2);
+    // let thirdChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (thirdChunkOffset + 4)));
+    // console.log("HVQ Huff 3: ", thirdChunkHuffmanResult.node);
 
-    let fifthChunkOffset = HVQ._getChunkOffset(hvqView, 4);
-    let fifthChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (fifthChunkOffset + 4)));
-    console.log("HVQ Huff 5: ", fifthChunkHuffmanResult.node);
+    // let fifthChunkOffset = HVQ._getChunkOffset(hvqView, 4);
+    // let fifthChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (fifthChunkOffset + 4)));
+    // console.log("HVQ Huff 5: ", fifthChunkHuffmanResult.node);
 
-    let eleventhChunkOffset = HVQ._getChunkOffset(hvqView, 10);
-    let eleventhChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (eleventhChunkOffset + 4)));
-    console.log("HVQ Huff 11: ", eleventhChunkHuffmanResult.node);
+    // let eleventhChunkOffset = HVQ._getChunkOffset(hvqView, 10);
+    // let eleventhChunkHuffmanResult = HVQ._recursiveHuffmanBuild(hvqView, (8 * (eleventhChunkOffset + 4)));
+    // console.log("HVQ Huff 11: ", eleventhChunkHuffmanResult.node);
 
-    return window.PP64.utils.img.HVQ._blackRGB16; // FIXME LOL
+    // return window.PP64.utils.img.HVQ._blackRGB16; // FIXME LOL
   }
 
   static _getChunkOffset(hvqView, chunkIndex) {

@@ -114,15 +114,6 @@ PP64.utils.dump = class Dump {
 
       return imgArr;
     }
-
-    function _readImgFromMainFS(dir, file, imgArrIndex) {
-      let imgPackBuffer = PP64.adapters.mainfs.get(dir, file);
-      let imgArr = _readImgsFromMainFS(dir, file);
-
-      imgArrIndex = imgArrIndex || 0;
-      let imgInfo = imgArr[imgArrIndex];
-      return PP64.utils.arrays.arrayBufferToDataURL(imgInfo.src, imgInfo.width, imgInfo.height);
-    }
   }
 
   // Dump out all the FORM bitmaps.

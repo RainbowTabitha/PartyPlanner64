@@ -306,8 +306,6 @@ PP64.adapters.hvqfs = (function() {
   }
 
   function _getBgDimensions(dir) {
-    let tileCount = _hvqCache[dir].length - 1;
-
     let infoView = new DataView(_hvqCache[dir][0], 0);
     let tile_width = infoView.getUint32(0);
     let tile_height = infoView.getUint32(4);

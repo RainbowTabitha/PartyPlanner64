@@ -304,7 +304,7 @@ PP64.adapters = (function() {
 
       // PP64 sometimes stores board ASM in the main filesystem. We need to
       // be able to parse both that or the stock boards.
-      let buffer, bufferView, spaceTableInfo;
+      let buffer, bufferView;
       let eventTable = new PP64.adapters.SpaceEventTable();
       if (boardInfo.mainfsEventFile) {
         let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
@@ -508,7 +508,6 @@ PP64.adapters = (function() {
       }
 
       function _getPointingSpaceIndex(pointedAtIndex) {
-        let pointingIndex = -1;
         for (let startIdx in board.links) {
           let ends = PP64.boards.getConnections(startIdx, board);
           for (let i = 0; i < ends.length; i++) {
@@ -553,7 +552,6 @@ PP64.adapters = (function() {
       romBytes.fill(0, curEventRedirectOffset, curEventRedirectOffset + 8); // Pad zeros between the two sections.
 
       let eventTemp = {};
-      let sharedAddrs = {};
 
       for (let i = 0; i < board.spaces.length; i++) {
         let space = board.spaces[i];
@@ -675,7 +673,6 @@ PP64.adapters = (function() {
       // Now we know where to start writing the ASM event code.
       // As we go along, we can go back and fill in the space and event lists.
       let eventTemp = {};
-      let sharedAddrs = {};
       let eventListIndex = 0;
       let eventListCurrentOffset = this.EVENT_HEADER_SIZE + tableSize;
       for (let i = 0; i < board.spaces.length; i++) {
@@ -1002,7 +999,7 @@ PP64.adapters = (function() {
       }
       else if (boardInfo.booSpaceInst) { // Just one Boo
         let booSpace = (booSpaces[0] === undefined ? board._deadSpace : booSpaces[0]);
-        boardView.setUint16(boardInfo.booSpaceInst + 2, booSpaces[0]);
+        boardView.setUint16(boardInfo.booSpaceInst + 2, booSpace);
       }
       else if (boardInfo.booCount) {
         for (let b = 0; b < boardInfo.booArrOffset.length; b++) {
@@ -1270,11 +1267,8 @@ PP64.adapters = (function() {
     }
 
     _readImgInfoFromMainFS(dir, file, imgArrIndex) {
-      let imgPackBuffer = PP64.adapters.mainfs.get(dir, file);
       let imgArr = this._readImgsFromMainFS(dir, file);
-
-      imgArrIndex = imgArrIndex || 0;
-      return imgArr[imgArrIndex];
+      return imgArr[imgArrIndex || 0];
     }
 
     _readImgFromMainFS(dir, file, imgArrIndex) {

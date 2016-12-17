@@ -5,7 +5,7 @@ PP64.utils.compression = (function() {
   var WINDOW_SIZE = 1024;
 
   var MIN_MATCH_LEN = 3;
-  var MAX_MATCH_LEN = 0x42;
+  // var MAX_MATCH_LEN = 0x42;
 
   /* Mario Party N64 compression type 01
    *
@@ -323,7 +323,6 @@ PP64.utils.compression = (function() {
       let dstBuffer = new ArrayBuffer(decompressedSize);
       let dstView = new DataView(dstBuffer);
 
-      let compressedSize;
       switch (type) {
         case 1:
           return decompress01(srcDataView, dstView, decompressedSize);
