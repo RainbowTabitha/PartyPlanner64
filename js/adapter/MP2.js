@@ -46,7 +46,7 @@ PP64.adapters.MP2 = (function() {
         this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
         this._writeAnimationBackgrounds(boardInfo.animBgSet, board.bg.src, board.animbg, board.bg.width, board.bg.height),
         this._writeBackground(bgIndex + 2, board.otherbg.largescene, 320, 240), // Game start, end
-        this._writeBackground(bgIndex + 6, board.bg.src, 320, 240), // Overview map
+        this._writeOverviewBackground(bgIndex + 6, board.bg.src), // Overview map
         this.onWriteBoardSelectImg(board, boardInfo), // The board select image
         this._writeBoardSelectIcon(board, boardInfo), // The board select icon
         this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
@@ -642,6 +642,26 @@ PP64.adapters.MP2 = (function() {
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
           PP64.adapters.mainfs.write(10, pauseLogoImg, newPack);
         }
+      });
+    }
+
+    // Same as _writeBackground essentially, but for some reason MP2 overview background
+    // doesn't line up when just shrinking the background naively.
+    // If we shift it up by 1 tile's worth of height, it lines up better.
+    _writeOverviewBackground(bgIndex, src) {
+      return new Promise((resolve, reject) => {
+        let canvasCtx = PP64.utils.canvas.createContext(320, 240);
+        let srcImage = new Image();
+        let failTimer = setTimeout(() => reject(`Failed to write bg ${bgIndex}`), 45000);
+        srcImage.onload = () => {
+          canvasCtx.drawImage(srcImage, 0, -10, 320, 240);
+
+          let imgData = canvasCtx.getImageData(0, 0, 320, 240);
+          PP64.adapters.hvqfs.writeBackground(bgIndex, imgData, 320, 240);
+          clearTimeout(failTimer);
+          resolve();
+        };
+        srcImage.src = src;
       });
     }
 
