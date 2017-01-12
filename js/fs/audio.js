@@ -1,6 +1,6 @@
-PP64.ns("adapters");
+PP64.ns("fs");
 
-PP64.adapters.audio = (function() {
+PP64.fs.audio = (function() {
   const _audioOffsets = {};
   _audioOffsets[$gameType.MP1_USA] = [ // Length 0x7B3DF0
     // 15396A0

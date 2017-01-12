@@ -1,6 +1,6 @@
-PP64.ns("adapters");
+PP64.ns("fs");
 
-PP64.adapters.hvqfs = (function() {
+PP64.fs.hvqfs = (function() {
   let _HVQFSOffsets = {};
   _HVQFSOffsets[$gameType.MP1_USA] = [
     { upper: 0x00057626, lower: 2 }, // Too lazy, lower is space inbetween.

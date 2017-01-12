@@ -1,6 +1,6 @@
-PP64.ns("adapters");
+PP64.ns("fs");
 
-PP64.adapters.strings3 = (function() {
+PP64.fs.strings3 = (function() {
   let _stringOffsets = {};
   _stringOffsets[$gameType.MP3_USA] = {
     "jp": [
@@ -84,7 +84,7 @@ PP64.adapters.strings3 = (function() {
       let entryOffset = this._getDirOffsetFromView(view, dir);
       let entryView = new DataView(view.buffer, view.byteOffset + entryOffset);
       let decompressedDir = this._decompressDir(entryView);
-      return new PP64.adapters.strings.StringTable(new DataView(decompressedDir));
+      return new PP64.fs.strings.StringTable(new DataView(decompressedDir));
     }
 
     _decompressDir(view) {

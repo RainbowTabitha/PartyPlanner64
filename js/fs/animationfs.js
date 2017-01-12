@@ -1,6 +1,6 @@
-PP64.ns("adapters");
+PP64.ns("fs");
 
-PP64.adapters.animationfs = (function() {
+PP64.fs.animationfs = (function() {
   let _animFSOffsets = {};
   _animFSOffsets[$gameType.MP2_USA] = [
     // 0x16EC470

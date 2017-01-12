@@ -47,7 +47,7 @@ PP64.adapters.boardinfo.MP2 = (function() {
   MP2_WESTERN.booCount = 2;
   MP2_WESTERN.audioIndexOffset = 0x0029AE7A; // 0x80105BA4
   MP2_WESTERN.onLoad = function(board) {
-    board.otherbg.largescene = PP64.adapters.hvqfs.readBackground(MP2_WESTERN.bgDir + 2).src;
+    board.otherbg.largescene = PP64.fs.hvqfs.readBackground(MP2_WESTERN.bgDir + 2).src;
   };
   MP2_WESTERN.onWriteEvents = function(board) {
 
@@ -79,72 +79,72 @@ PP64.adapters.boardinfo.MP2 = (function() {
     // Then, make the scared Koopa's message at the endgame be more chill.
     let bytes = [];
     bytes.push(0x0B);
-    bytes = bytes.concat(PP64.adapters.strings._strToBytes("Don't listen to Toad!"));
+    bytes = bytes.concat(PP64.fs.strings._strToBytes("Don't listen to Toad!"));
     bytes.push(0x0A); // \n
-    bytes = bytes.concat(PP64.adapters.strings._strToBytes("I've got the results. Follow me!"));
+    bytes = bytes.concat(PP64.fs.strings._strToBytes("I've got the results. Follow me!"));
     bytes.push(0x00); // Null byte
-    PP64.adapters.strings.write(697, PP64.utils.arrays.arrayToArrayBuffer(bytes));
+    PP64.fs.strings.write(697, PP64.utils.arrays.arrayToArrayBuffer(bytes));
 
     // Use the normal character models, not themed.
     for (let charIdx = 2; charIdx <= 7; charIdx++) {
-      PP64.adapters.mainfs.write(charIdx, 211, PP64.adapters.mainfs.get(charIdx, 209));
-      PP64.adapters.mainfs.write(charIdx, 212, PP64.adapters.mainfs.get(charIdx, 210));
+      PP64.fs.mainfs.write(charIdx, 211, PP64.fs.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 212, PP64.fs.mainfs.get(charIdx, 210));
 
       // TODO: Are one of the following actually western land? This is wiping out all board themes...
-      PP64.adapters.mainfs.write(charIdx, 213, PP64.adapters.mainfs.get(charIdx, 209));
-      PP64.adapters.mainfs.write(charIdx, 214, PP64.adapters.mainfs.get(charIdx, 210));
-      PP64.adapters.mainfs.write(charIdx, 215, PP64.adapters.mainfs.get(charIdx, 209));
-      PP64.adapters.mainfs.write(charIdx, 216, PP64.adapters.mainfs.get(charIdx, 210));
-      PP64.adapters.mainfs.write(charIdx, 217, PP64.adapters.mainfs.get(charIdx, 209));
-      PP64.adapters.mainfs.write(charIdx, 218, PP64.adapters.mainfs.get(charIdx, 210));
-      PP64.adapters.mainfs.write(charIdx, 219, PP64.adapters.mainfs.get(charIdx, 209));
-      PP64.adapters.mainfs.write(charIdx, 220, PP64.adapters.mainfs.get(charIdx, 210));
-      PP64.adapters.mainfs.write(charIdx, 221, PP64.adapters.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 213, PP64.fs.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 214, PP64.fs.mainfs.get(charIdx, 210));
+      PP64.fs.mainfs.write(charIdx, 215, PP64.fs.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 216, PP64.fs.mainfs.get(charIdx, 210));
+      PP64.fs.mainfs.write(charIdx, 217, PP64.fs.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 218, PP64.fs.mainfs.get(charIdx, 210));
+      PP64.fs.mainfs.write(charIdx, 219, PP64.fs.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 220, PP64.fs.mainfs.get(charIdx, 210));
+      PP64.fs.mainfs.write(charIdx, 221, PP64.fs.mainfs.get(charIdx, 209));
     }
 
     // For each character (different than loop above)
     for (let c = 0; c < 6; c++) {
       // Replace the 2d model renders of themed characters
-      PP64.adapters.mainfs.write(10, 612 + c, PP64.adapters.mainfs.get(10, 642 + c));
+      PP64.fs.mainfs.write(10, 612 + c, PP64.fs.mainfs.get(10, 642 + c));
 
       // Replace the bowser suited 2d renders
-      PP64.adapters.mainfs.write(10, 648 + c, PP64.adapters.mainfs.get(10, 666 + c));
+      PP64.fs.mainfs.write(10, 648 + c, PP64.fs.mainfs.get(10, 666 + c));
     }
 
     // Hide some intro scene graphics
     // Bowser sign
-    let oldPack = PP64.adapters.mainfs.get(10, 410);
+    let oldPack = PP64.fs.mainfs.get(10, 410);
     let imgInfoArr = [{ src: new ArrayBuffer(144 * 128 * 4), width: 144, height: 128, bpp: 32 }];
     let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-    PP64.adapters.mainfs.write(10, 410, newPack);
+    PP64.fs.mainfs.write(10, 410, newPack);
 
     // Hole in ground that Bowser sign sticks into
-    oldPack = PP64.adapters.mainfs.get(10, 411);
+    oldPack = PP64.fs.mainfs.get(10, 411);
     imgInfoArr = [{ src: new ArrayBuffer(32 * 16 * 4), width: 32, height: 16, bpp: 32 }];
     newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-    PP64.adapters.mainfs.write(10, 411, newPack);
+    PP64.fs.mainfs.write(10, 411, newPack);
 
     // (unused) Dust in the wind or whatever it is called
-    oldPack = PP64.adapters.mainfs.get(10, 412);
+    oldPack = PP64.fs.mainfs.get(10, 412);
     imgInfoArr = [{ src: new ArrayBuffer(64 * 64 * 4), width: 64, height: 64, bpp: 32 }];
     newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-    PP64.adapters.mainfs.write(10, 412, newPack);
+    PP64.fs.mainfs.write(10, 412, newPack);
 
     // Train that rides across, model files can be blanked out
     // Cannot just blank model, does not work on console.
-    //PP64.adapters.mainfs.write(10, 394, new ArrayBuffer(0x200));
-    let form = PP64.adapters.mainfs.get(10, 394);
+    //PP64.fs.mainfs.write(10, 394, new ArrayBuffer(0x200));
+    let form = PP64.fs.mainfs.get(10, 394);
     let formView = new DataView(form);
     formView.setUint16(0x1FC, 0);
     formView.setUint16(0x1106, 0);
-    PP64.adapters.mainfs.write(10, 394, form);
+    PP64.fs.mainfs.write(10, 394, form);
 
-    //PP64.adapters.mainfs.write(10, 395, new ArrayBuffer(0x200));
-    form = PP64.adapters.mainfs.get(10, 395);
+    //PP64.fs.mainfs.write(10, 395, new ArrayBuffer(0x200));
+    form = PP64.fs.mainfs.get(10, 395);
     formView = new DataView(form);
     formView.setUint16(0x204, 0);
     formView.setUint16(0x616, 0);
-    PP64.adapters.mainfs.write(10, 395, form);
+    PP64.fs.mainfs.write(10, 395, form);
   };
 
   // Pirate Land - (U) ROM

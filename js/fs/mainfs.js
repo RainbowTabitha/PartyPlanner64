@@ -1,6 +1,6 @@
-PP64.ns("adapters");
+PP64.ns("fs");
 
-PP64.adapters.mainfs = (function() {
+PP64.fs.mainfs = (function() {
   let _mainFSOffsets = {};
   _mainFSOffsets[$gameType.MP1_USA] = [
     { upper: 0x157A6, lower: 0x157AA },

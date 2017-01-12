@@ -19,14 +19,14 @@ PP64.adapters = (function() {
       for (let i = 0; i < boardInfos.length; i++) {
         let boardInfo = boardInfos[i];
         let bgDir = boardInfo.bgDir;
-        let background = PP64.adapters.hvqfs.readBackground(bgDir);
+        let background = PP64.fs.hvqfs.readBackground(bgDir);
         let newBoard = {
           "game": this.gameVersion,
           "bg": background,
           "otherbg": {},
         };
 
-        let boardBuffer = PP64.adapters.mainfs.get(this.boardDefDirectory, boardInfo.boardDefFile);
+        let boardBuffer = PP64.fs.mainfs.get(this.boardDefDirectory, boardInfo.boardDefFile);
         PP64.adapters.boarddef.parse(boardBuffer, newBoard);
         let chains = newBoard._chains;
         delete newBoard._chains;
@@ -60,9 +60,9 @@ PP64.adapters = (function() {
 
       if ($$debug) {
         // Debug if audio offsets are right.
-        let audioSectionCount = PP64.adapters.audio.getPatchInfo().length;
+        let audioSectionCount = PP64.fs.audio.getPatchInfo().length;
         for (let i = 0; i < audioSectionCount; i++)
-          PP64.adapters.audio.getROMOffset(i);
+          PP64.fs.audio.getROMOffset(i);
       }
 
       return boards;
@@ -83,7 +83,7 @@ PP64.adapters = (function() {
       this._reversePerspective(boardCopy, boardIndex);
 
       let boarddef = PP64.adapters.boarddef.create(boardCopy, chains);
-      PP64.adapters.mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
+      PP64.fs.mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
       // Wipe out the space event definition array.
       // let spaceEventStart = boardInfo.spaceEventsStartOffset;
@@ -308,8 +308,8 @@ PP64.adapters = (function() {
       let eventTable = new PP64.adapters.SpaceEventTable();
       if (boardInfo.mainfsEventFile) {
         let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
-        if (PP64.adapters.mainfs.has(mainFsDir, mainFsFile)) {
-          buffer = PP64.adapters.mainfs.get(mainFsDir, mainFsFile);
+        if (PP64.fs.mainfs.has(mainFsDir, mainFsFile)) {
+          buffer = PP64.fs.mainfs.get(mainFsDir, mainFsFile);
           bufferView = new DataView(buffer);
 
           eventTable.parse(buffer, 0x10); // TODO: Multi-table.
@@ -735,7 +735,7 @@ PP64.adapters = (function() {
       // We write list blob of ASM/structures into the MainFS, in a location
       // that is not used by the game.
       let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
-      PP64.adapters.mainfs.write(mainFsDir, mainFsFile, eventBuffer);
+      PP64.fs.mainfs.write(mainFsDir, mainFsFile, eventBuffer);
 
       //saveAs(new Blob([eventBuffer]), "eventBuffer");
 
@@ -1127,7 +1127,7 @@ PP64.adapters = (function() {
           canvasCtx.drawImage(srcImage, 0, 0, width, height);
 
           let imgData = canvasCtx.getImageData(0, 0, width, height);
-          PP64.adapters.hvqfs.writeBackground(bgIndex, imgData, width, height);
+          PP64.fs.hvqfs.writeBackground(bgIndex, imgData, width, height);
           clearTimeout(failTimer);
           resolve();
         };
@@ -1189,7 +1189,7 @@ PP64.adapters = (function() {
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 8);
           //saveAs(new Blob([newPack]));
-          PP64.adapters.mainfs.write(this.hudsonLogoFSEntry[0], this.hudsonLogoFSEntry[1], newPack);
+          PP64.fs.mainfs.write(this.hudsonLogoFSEntry[0], this.hudsonLogoFSEntry[1], newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -1199,11 +1199,11 @@ PP64.adapters = (function() {
     }
 
     _combineSplashcreenLogos() {
-      let nintendoPack = PP64.adapters.mainfs.get(this.nintendoLogoFSEntry[0], this.nintendoLogoFSEntry[1]); // (NINTENDO) logo
+      let nintendoPack = PP64.fs.mainfs.get(this.nintendoLogoFSEntry[0], this.nintendoLogoFSEntry[1]); // (NINTENDO) logo
       if ((new Uint8Array(nintendoPack))[0x1A] !== 0x20)
         return; // We already replaced the splashscreen.
 
-      let hudsonPack = PP64.adapters.mainfs.get(this.hudsonLogoFSEntry[0], this.hudsonLogoFSEntry[1]); // Hudson logo
+      let hudsonPack = PP64.fs.mainfs.get(this.hudsonLogoFSEntry[0], this.hudsonLogoFSEntry[1]); // Hudson logo
 
       let nintendoImgInfo = PP64.utils.img.ImgPack.fromPack(nintendoPack)[0];
       let hudsonImgInfo = PP64.utils.img.ImgPack.fromPack(hudsonPack)[0];
@@ -1237,7 +1237,7 @@ PP64.adapters = (function() {
       ];
       let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 8);
       //saveAs(new Blob([newPack]));
-      PP64.adapters.mainfs.write(this.nintendoLogoFSEntry[0], this.nintendoLogoFSEntry[1], newPack);
+      PP64.fs.mainfs.write(this.nintendoLogoFSEntry[0], this.nintendoLogoFSEntry[1], newPack);
     }
 
     _clearOtherBoardNames(boardIndex) {
@@ -1245,7 +1245,7 @@ PP64.adapters = (function() {
     }
 
     _readPackedFromMainFS(dir, file) {
-      let imgPackBuffer = PP64.adapters.mainfs.get(dir, file);
+      let imgPackBuffer = PP64.fs.mainfs.get(dir, file);
       let imgArr = PP64.utils.img.ImgPack.fromPack(imgPackBuffer);
       if (!imgArr || !imgArr.length)
         return;
@@ -1258,7 +1258,7 @@ PP64.adapters = (function() {
     }
 
     _readImgsFromMainFS(dir, file) {
-      let imgPackBuffer = PP64.adapters.mainfs.get(dir, file);
+      let imgPackBuffer = PP64.fs.mainfs.get(dir, file);
       let imgArr = PP64.utils.img.ImgPack.fromPack(imgPackBuffer);
       if (!imgArr || !imgArr.length)
         return;

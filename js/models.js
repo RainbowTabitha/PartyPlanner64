@@ -75,7 +75,7 @@ PP64.models = (function() {
 
       let dotGeometry = new THREE.Geometry();
 
-      let form = PP64.utils.FORM.unpack(PP64.adapters.mainfs.get(dir, file));
+      let form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
       for (let i = 0; i < form.VTX1[0].parsed.vertices.length; i++) {
         let vtx = form.VTX1[0].parsed.vertices[i];
         dotGeometry.vertices.push(new THREE.Vector3(vtx.x, vtx.y, vtx.z));
@@ -148,11 +148,11 @@ PP64.models = (function() {
 
     getModelEntries() {
       let entries = [];
-      let mainfsDirCount = PP64.adapters.mainfs.getDirectoryCount();
+      let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
       for (let d = 0; d < mainfsDirCount; d++) {
-        let dirFileCount = PP64.adapters.mainfs.getFileCount(d);
+        let dirFileCount = PP64.fs.mainfs.getFileCount(d);
         for (let f = 0; f < dirFileCount; f++) {
-          let file = PP64.adapters.mainfs.get(d, f);
+          let file = PP64.fs.mainfs.get(d, f);
           if (PP64.utils.FORM.isForm(file))
             entries.push(d + "/" + f);
         }

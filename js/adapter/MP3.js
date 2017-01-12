@@ -433,7 +433,7 @@ PP64.adapters.MP3 = (function() {
       let strs = boardInfo.str || {};
       if (strs.boardSelect) {
         let idx = strs.boardSelect[0];
-        let str = PP64.adapters.strings3.read("en", idx[0], idx[1]);
+        let str = PP64.fs.strings3.read("en", idx[0], idx[1]);
         let lines = str.split("\n");
 
         // Read the board name and description.
@@ -460,7 +460,7 @@ PP64.adapters.MP3 = (function() {
         bytes.push(0x0B); // Clear?
         bytes.push(0x05); // Start GREEN
         bytes.push(0x0F); // ?
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.name || ""));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.name || ""));
         bytes.push(0x16);
         bytes.push(0x19);
         bytes.push(0x0F);
@@ -468,13 +468,13 @@ PP64.adapters.MP3 = (function() {
         bytes.push(0x16);
         bytes.push(0x03);
         bytes.push(0x0F);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("Difficulty: "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("Difficulty: "));
         let star = 0x3B;
         if (board.difficulty > 5 || board.difficulty < 1) { // Hackers!
           bytes.push(star);
-          bytes = bytes.concat(PP64.adapters.strings._strToBytes(" "));
+          bytes = bytes.concat(PP64.fs.strings._strToBytes(" "));
           bytes.push(0x3E); // Little x
-          bytes = bytes.concat(PP64.adapters.strings._strToBytes(" " + board.difficulty.toString()));
+          bytes = bytes.concat(PP64.fs.strings._strToBytes(" " + board.difficulty.toString()));
         }
         else {
           for (let i = 0; i < board.difficulty; i++)
@@ -483,13 +483,13 @@ PP64.adapters.MP3 = (function() {
         bytes.push(0x16);
         bytes.push(0x19);
         bytes.push(0x0A); // \n
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
 
         let idx = strs.boardSelect[0];
-        PP64.adapters.strings3.write("en", idx[0], idx[1], strBuffer);
+        PP64.fs.strings3.write("en", idx[0], idx[1], strBuffer);
 
         // The second copy is mostly the same, but add a couple more bytes at the end.
         bytes.pop(); // Null byte
@@ -500,69 +500,69 @@ PP64.adapters.MP3 = (function() {
         strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
 
         idx = strs.boardSelect[1];
-        PP64.adapters.strings3.write("en", idx[0], idx[1], strBuffer);
+        PP64.fs.strings3.write("en", idx[0], idx[1], strBuffer);
       }
 
       if (strs.boardGreeting) {
         let bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("You're all here!"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("You're all here!"));
         bytes.push(0x0A); // \n
         bytes = bytes.concat(this._createBoardGreetingBase(board.name));
         bytes.push(0x0B); // ?
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("Now, before we begin, we need\nto determine the turn order."));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("Now, before we begin, we need\nto determine the turn order."));
         bytes.push(0x19); // ?
         bytes.push(0xFF); // ?
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-        PP64.adapters.strings3.write("en", strs.boardGreeting[0], strs.boardGreeting[1], strBuffer);
+        PP64.fs.strings3.write("en", strs.boardGreeting[0], strs.boardGreeting[1], strBuffer);
       }
 
       if (strs.boardGreetingDuel) {
         let bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("I've been waiting for you, "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("I've been waiting for you, "));
         bytes.push(0x11); // ?
         bytes.push(0xC2); // ?
         bytes.push(0x0A); // \n
         bytes = bytes.concat(this._createBoardGreetingBase(board.name));
         bytes.push(0x0B); // ?
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("And just as promised, if you win here..."));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("And just as promised, if you win here..."));
         bytes.push(0x19); // ?
         bytes.push(0xFF); // ?
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-        PP64.adapters.strings3.write("en", strs.boardGreetingDuel[0], strs.boardGreetingDuel[1], strBuffer);
+        PP64.fs.strings3.write("en", strs.boardGreetingDuel[0], strs.boardGreetingDuel[1], strBuffer);
       }
 
       if (strs.boardNames && strs.boardNames.length) {
         let bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.name));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.name));
         bytes.push(0x00); // Null byte
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
 
         for (let i = 0; i < strs.boardNames.length; i++) {
           let idx = strs.boardNames[i];
-          PP64.adapters.strings3.write("en", idx[0], idx[1], strBuffer);
+          PP64.fs.strings3.write("en", idx[0], idx[1], strBuffer);
         }
       }
     }
 
     _createBoardGreetingBase(boardName) {
-      let bytes = PP64.adapters.strings._strToBytes("Welcome to the legendary ");
+      let bytes = PP64.fs.strings._strToBytes("Welcome to the legendary ");
       bytes.push(0x05); // Start GREEN
       bytes.push(0x0F); // ?
-      bytes = bytes.concat(PP64.adapters.strings._strToBytes(boardName));
+      bytes = bytes.concat(PP64.fs.strings._strToBytes(boardName));
       bytes.push(0x16); // ?
       bytes.push(0x19); // ?
       bytes.push(0xC2); // ?
       bytes.push(0x19); // ?
       bytes.push(0xFF); // ?
       bytes.push(0x0B); // ?
-      bytes = bytes.concat(PP64.adapters.strings._strToBytes("Here, you'll battle to become\nthe Superstar."));
+      bytes = bytes.concat(PP64.fs.strings._strToBytes("Here, you'll battle to become\nthe Superstar."));
       bytes.push(0x19); // ?
       bytes.push(0xFF); // ?
       return bytes;
@@ -589,7 +589,7 @@ PP64.adapters.MP3 = (function() {
           let imgBuffer = PP64.utils.img.toArrayBuffer(srcImage, 64, 64);
 
           // First, read the old image pack.
-          let oldPack = PP64.adapters.mainfs.get(20, boardSelectImg);
+          let oldPack = PP64.fs.mainfs.get(20, boardSelectImg);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
@@ -602,7 +602,7 @@ PP64.adapters.MP3 = (function() {
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
           // saveAs(new Blob([newPack]), "imgpack");
-          PP64.adapters.mainfs.write(20, boardSelectImg, newPack);
+          PP64.fs.mainfs.write(20, boardSelectImg, newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -634,7 +634,7 @@ PP64.adapters.MP3 = (function() {
           let imgBuffer = PP64.utils.img.toArrayBuffer(srcImage, 226, 120);
 
           // First, read the old image pack.
-          let oldPack = PP64.adapters.mainfs.get(19, splashLogoImg);
+          let oldPack = PP64.fs.mainfs.get(19, splashLogoImg);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
@@ -647,7 +647,7 @@ PP64.adapters.MP3 = (function() {
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
           // saveAs(new Blob([newPack]), "imgpack");
-          PP64.adapters.mainfs.write(19, splashLogoImg, newPack);
+          PP64.fs.mainfs.write(19, splashLogoImg, newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -657,7 +657,7 @@ PP64.adapters.MP3 = (function() {
         // Just blank out the pause logo, it is not worth replacing.
         let pauseLogoImg = boardInfo.img.pauseLogoImg;
         if (pauseLogoImg) {
-          let oldPack = PP64.adapters.mainfs.get(19, pauseLogoImg);
+          let oldPack = PP64.fs.mainfs.get(19, pauseLogoImg);
           let imgInfoArr = [{
             src: new ArrayBuffer(150 * 50 * 4),
             width: 150,
@@ -665,7 +665,7 @@ PP64.adapters.MP3 = (function() {
             bpp: 32,
           }];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-          PP64.adapters.mainfs.write(19, pauseLogoImg, newPack);
+          PP64.fs.mainfs.write(19, pauseLogoImg, newPack);
         }
       });
     }
@@ -685,7 +685,7 @@ PP64.adapters.MP3 = (function() {
           let imgBuffer = PP64.utils.img.toArrayBuffer(srcImage, 226, 36);
 
           // First, read the old image pack.
-          let oldPack = PP64.adapters.mainfs.get(19, splashLogoTextImg);
+          let oldPack = PP64.fs.mainfs.get(19, splashLogoTextImg);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
@@ -698,7 +698,7 @@ PP64.adapters.MP3 = (function() {
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
           // saveAs(new Blob([newPack]), "imgpack");
-          PP64.adapters.mainfs.write(19, splashLogoTextImg, newPack);
+          PP64.fs.mainfs.write(19, splashLogoTextImg, newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -729,14 +729,14 @@ PP64.adapters.MP3 = (function() {
           let gateBmp = PP64.utils.img.BMP.fromRGBA(imgData.data.buffer, 32, 8);
 
           // Now write the BMP back into the FORM.
-          let gateFORM = PP64.adapters.mainfs.get(19, 366); // Always use gate 3 as a base.
+          let gateFORM = PP64.fs.mainfs.get(19, 366); // Always use gate 3 as a base.
           let gateUnpacked = PP64.utils.FORM.unpack(gateFORM);
           PP64.utils.FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
 
           // Now write the FORM.
           let gatePacked = PP64.utils.FORM.pack(gateUnpacked);
           //saveAs(new Blob([gatePacked]), "gatePacked");
-          PP64.adapters.mainfs.write(19, gateIndex, gatePacked);
+          PP64.fs.mainfs.write(19, gateIndex, gatePacked);
 
           clearTimeout(failTimer);
           resolve();

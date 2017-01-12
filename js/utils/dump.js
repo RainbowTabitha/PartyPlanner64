@@ -8,12 +8,12 @@ PP64.utils.dump = class Dump {
     let zip = new JSZip();
 
     let mainfs = zip.folder("mainfs");
-    let mainfsDirCount = PP64.adapters.mainfs.getDirectoryCount();
+    let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
     for (let d = 0; d < mainfsDirCount; d++) {
       let dirFolder = mainfs.folder(d.toString());
-      let dirFileCount = PP64.adapters.mainfs.getFileCount(d);
+      let dirFileCount = PP64.fs.mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
-        let file = PP64.adapters.mainfs.get(d, f);
+        let file = PP64.fs.mainfs.get(d, f);
         let name = f.toString();
         if (PP64.utils.FORM.isForm(file))
           name += ".form";
@@ -41,7 +41,7 @@ PP64.utils.dump = class Dump {
           return;
         file.async("arraybuffer").then(content => {
           $$log(`Overwriting MainFS ${d}/${f}`);
-          PP64.adapters.mainfs.write(d, f, content);
+          PP64.fs.mainfs.write(d, f, content);
         });
       });
     }, error => {
@@ -55,13 +55,13 @@ PP64.utils.dump = class Dump {
     let zip = new JSZip();
 
     let mainfs = zip.folder("mainfs");
-    let mainfsDirCount = PP64.adapters.mainfs.getDirectoryCount();
+    let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
     for (let d = 0; d < mainfsDirCount; d++) {
       let dirFolder = mainfs.folder(d.toString());
-      let dirFileCount = PP64.adapters.mainfs.getFileCount(d);
+      let dirFileCount = PP64.fs.mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
         try {
-          let fileBuffer = PP64.adapters.mainfs.get(d, f);
+          let fileBuffer = PP64.fs.mainfs.get(d, f);
           if (PP64.utils.FORM.isForm(fileBuffer)) {
             let formUnpacked = PP64.utils.FORM.unpack(fileBuffer);
             if (formUnpacked.BMP1.length) {
@@ -94,7 +94,7 @@ PP64.utils.dump = class Dump {
     });
 
     function _readPackedFromMainFS(dir, file) {
-      let imgPackBuffer = PP64.adapters.mainfs.get(dir, file);
+      let imgPackBuffer = PP64.fs.mainfs.get(dir, file);
       let imgArr = PP64.utils.img.ImgPack.fromPack(imgPackBuffer);
       if (!imgArr || !imgArr.length)
         return;
@@ -107,7 +107,7 @@ PP64.utils.dump = class Dump {
     }
 
     function _readImgsFromMainFS(dir, file) {
-      let imgPackBuffer = PP64.adapters.mainfs.get(dir, file);
+      let imgPackBuffer = PP64.fs.mainfs.get(dir, file);
       let imgArr = PP64.utils.img.ImgPack.fromPack(imgPackBuffer);
       if (!imgArr || !imgArr.length)
         return;
@@ -118,11 +118,11 @@ PP64.utils.dump = class Dump {
 
   // Dump out all the FORM bitmaps.
   static formImages() {
-    let mainfsDirCount = PP64.adapters.mainfs.getDirectoryCount();
+    let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
     for (let d = 0; d < mainfsDirCount; d++) {
-      let dirFileCount = PP64.adapters.mainfs.getFileCount(d);
+      let dirFileCount = PP64.fs.mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
-        let fileBuffer = PP64.adapters.mainfs.get(d, f);
+        let fileBuffer = PP64.fs.mainfs.get(d, f);
         if (!PP64.utils.FORM.isForm(fileBuffer))
           continue;
 
@@ -142,30 +142,30 @@ PP64.utils.dump = class Dump {
   }
 
   static strings3(searchStr = "", raw = false) {
-    let dirCount = PP64.adapters.strings3.getDirectoryCount("en");
+    let dirCount = PP64.fs.strings3.getDirectoryCount("en");
     for (let d = 0; d < dirCount; d++) {
-      let strCount = PP64.adapters.strings3.getStringCount("en", d);
+      let strCount = PP64.fs.strings3.getStringCount("en", d);
       for (let s = 0; s < strCount; s++) {
-        let str = PP64.adapters.strings3.read("en", d, s);
+        let str = PP64.fs.strings3.read("en", d, s);
         if (str.indexOf(searchStr) < 0)
           continue;
         let log = `${d}/${s}:\n` + str;
         if (raw)
-          log += "\n" + PP64.utils.arrays.toHexString(PP64.adapters.strings3.read("en", d, s, true));
+          log += "\n" + PP64.utils.arrays.toHexString(PP64.fs.strings3.read("en", d, s, true));
         console.log(log);
       }
     }
   }
 
   static strings(searchStr = "", raw = false) {
-    let strCount = PP64.adapters.strings.getStringCount();
+    let strCount = PP64.fs.strings.getStringCount();
     for (let s = 0; s < strCount; s++) {
-      let str = PP64.adapters.strings.read(s);
+      let str = PP64.fs.strings.read(s);
       if (str.indexOf(searchStr) < 0)
         continue;
       let log = `${s}:\n` + str;
       if (raw)
-        log += "\n" + PP64.utils.arrays.toHexString(PP64.adapters.strings.read(s, true));
+        log += "\n" + PP64.utils.arrays.toHexString(PP64.fs.strings.read(s, true));
       console.log(log);
     }
   }
@@ -176,7 +176,7 @@ PP64.utils.dump = class Dump {
 
     window.waluigiParts = [];
     for (let f = 0; f < 163; f++) {
-      window.waluigiParts.push(PP64.adapters.mainfs.get(8, f));
+      window.waluigiParts.push(PP64.fs.mainfs.get(8, f));
     }
 
     return window.waluigiParts; // Just to see in console.
@@ -195,7 +195,7 @@ PP64.utils.dump = class Dump {
     }
 
     for (let i = 0; i < window.waluigiParts.length; i++) {
-      PP64.adapters.mainfs.write(character, i, window.waluigiParts[i]);
+      PP64.fs.mainfs.write(character, i, window.waluigiParts[i]);
     }
   }
 
@@ -204,8 +204,8 @@ PP64.utils.dump = class Dump {
       throw `Daisy is not in game ${PP64.romhandler.getGameVersion()}`;
 
     window.daisyParts = [];
-    window.daisyParts.push(PP64.adapters.mainfs.get(9, 1));
-    window.daisyParts.push(PP64.adapters.mainfs.get(9, 3));
+    window.daisyParts.push(PP64.fs.mainfs.get(9, 1));
+    window.daisyParts.push(PP64.fs.mainfs.get(9, 3));
 
     return window.daisyParts; // Just to see in console.
   }
@@ -217,7 +217,7 @@ PP64.utils.dump = class Dump {
     if (!window.daisyParts)
       throw "Need to call saveDaisy first!";
 
-    PP64.adapters.mainfs.write(character, 158, window.daisyParts[0]);
-    PP64.adapters.mainfs.write(character, 159, window.daisyParts[1]);
+    PP64.fs.mainfs.write(character, 158, window.daisyParts[0]);
+    PP64.fs.mainfs.write(character, 159, window.daisyParts[1]);
   }
 }

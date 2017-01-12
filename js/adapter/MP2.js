@@ -37,7 +37,7 @@ PP64.adapters.MP2 = (function() {
 
       // Remove the animations (we might add our own after this though).
       if (!isNaN(boardInfo.animBgSet))
-        PP64.adapters.animationfs.setSetEntryCount(boardInfo.animBgSet, 0);
+        PP64.fs.animationfs.setSetEntryCount(boardInfo.animBgSet, 0);
     }
 
     onOverwritePromises(board, boardInfo) {
@@ -69,7 +69,7 @@ PP64.adapters.MP2 = (function() {
         // if (Array.isArray(idx))
         //   idx = idx[0];
 
-        let str = PP64.adapters.strings.read(idx);
+        let str = PP64.fs.strings.read(idx);
         let lines = str.split("\n");
 
         // Read the board name and description.
@@ -97,32 +97,32 @@ PP64.adapters.MP2 = (function() {
         let bytes = [];
         bytes.push(0x0B); // Clear?
         bytes.push(0x06); // Start BLUE
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.name || ""));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.name || ""));
         bytes.push(0x19);
         bytes.push(0x04); // Start Purple?
         bytes = bytes.concat([0x0E, 0x0E]); // Tabs
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("Difficulty"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("Difficulty"));
         bytes.push(0x19);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(" : "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(" : "));
         let star = 0x3B;
         if (board.difficulty > 5 || board.difficulty < 1) { // Hackers!
           bytes.push(star);
-          bytes = bytes.concat(PP64.adapters.strings._strToBytes(" "));
+          bytes = bytes.concat(PP64.fs.strings._strToBytes(" "));
           bytes.push(0x3E); // Little x
-          bytes = bytes.concat(PP64.adapters.strings._strToBytes(" " + board.difficulty.toString()));
+          bytes = bytes.concat(PP64.fs.strings._strToBytes(" " + board.difficulty.toString()));
         }
         else {
           for (let i = 0; i < board.difficulty; i++)
             bytes.push(star);
         }
         bytes.push(0x0A); // \n
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
 
         let idx = strs.boardSelect;
-        PP64.adapters.strings.write(idx, strBuffer);
+        PP64.fs.strings.write(idx, strBuffer);
       }
 
       // Simple strings that just have the board name
@@ -130,14 +130,14 @@ PP64.adapters.MP2 = (function() {
         let bytes = [];
         bytes.push(0x0B);
         bytes.push(0x06);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.name || ""));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.name || ""));
         bytes.push(0x19);
         bytes.push(0x00); // Null byte
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
 
         for (let i = 0; i < strs.boardNames.length; i++) {
           let idx = strs.boardNames[i];
-          PP64.adapters.strings.write(idx, strBuffer);
+          PP64.fs.strings.write(idx, strBuffer);
         }
       }
 
@@ -146,73 +146,73 @@ PP64.adapters.MP2 = (function() {
       if (strs.boardGreeting && strs.boardGreeting.length) {
         let bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("We're here, everyone!"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("We're here, everyone!"));
         bytes.push(0x0A); // \n
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("This is "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("This is "));
         bytes.push(0x06); // Blue
         bytes.push(0x0F);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes((board.name || "") + "!!!"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes((board.name || "") + "!!!"));
         bytes.push(0x16);
         bytes.push(0x19);
         bytes.push(0xFF);
         // bytes.push(0x0B);
-        // bytes = bytes.concat(PP64.adapters.strings._strToBytes("Your objective this time,"));
+        // bytes = bytes.concat(PP64.fs.strings._strToBytes("Your objective this time,"));
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-        PP64.adapters.strings.write(strs.boardGreeting[0], strBuffer);
+        PP64.fs.strings.write(strs.boardGreeting[0], strBuffer);
 
         bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("Now, before this adventure begins,"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("Now, before this adventure begins,"));
         bytes.push(0x0A); // \n
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("we must decide turn order."));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("we must decide turn order."));
         bytes.push(0xFF);
         bytes.push(0x00); // Null byte
 
         strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-        PP64.adapters.strings.write(strs.boardGreeting[1], strBuffer);
+        PP64.fs.strings.write(strs.boardGreeting[1], strBuffer);
       }
 
       // String congratulating a player for winning
       if (strs.boardWinner) {
         let bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("Well done, "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("Well done, "));
         bytes.push(0x11); // Player
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("!"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("!"));
         bytes.push(0x0A); // \n
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("You are the "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("You are the "));
         bytes.push(0x07); // Yellow
         bytes.push(0x0F);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("Super Star"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("Super Star"));
         bytes.push(0x16);
         bytes.push(0x19);
         bytes.push(0x0A); // \n
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes("of "));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes("of "));
         bytes.push(0x06); // Blue
         bytes.push(0x0F);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes((board.name || "") + "!!!"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes((board.name || "") + "!!!"));
         bytes.push(0x16);
         bytes.push(0x19);
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-        PP64.adapters.strings.write(strs.boardWinner, strBuffer);
+        PP64.fs.strings.write(strs.boardWinner, strBuffer);
       }
 
       // "board name   {0} Time(s)"
       if (strs.boardPlayCount) {
         let bytes = [];
         bytes.push(0x0B);
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(board.name || ""));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(board.name || ""));
         bytes = bytes.concat([0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E]); // Tabs
         bytes.push(0x11); // Play count
-        bytes = bytes.concat(PP64.adapters.strings._strToBytes(" Time(s)"));
+        bytes = bytes.concat(PP64.fs.strings._strToBytes(" Time(s)"));
         bytes.push(0x00); // Null byte
 
         let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-        PP64.adapters.strings.write(strs.boardPlayCount, strBuffer);
+        PP64.fs.strings.write(strs.boardPlayCount, strBuffer);
       }
     }
 
@@ -351,9 +351,9 @@ PP64.adapters.MP2 = (function() {
         return;
 
       // Perf: This is a bit redundant because we read the data URI previously.
-      let mainBgImgData = PP64.adapters.hvqfs.readBackgroundImgData(boardInfo.bgDir);
+      let mainBgImgData = PP64.fs.hvqfs.readBackgroundImgData(boardInfo.bgDir);
 
-      let animBgs = PP64.adapters.animationfs.readAnimationBackgrounds(boardInfo.animBgSet, mainBgImgData, board.bg.width, board.bg.height);
+      let animBgs = PP64.fs.animationfs.readAnimationBackgrounds(boardInfo.animBgSet, mainBgImgData, board.bg.width, board.bg.height);
       if (animBgs && animBgs.length)
         board.animbg = animBgs;
     }
@@ -399,7 +399,7 @@ PP64.adapters.MP2 = (function() {
 
         Promise.all(animPromises).then(value => {
           for (let i = 0; i < animImgData.length; i++) {
-            PP64.adapters.animationfs.writeAnimationBackground(setIndex, i, mainBgImgData, animImgData[i], width, height);
+            PP64.fs.animationfs.writeAnimationBackground(setIndex, i, mainBgImgData, animImgData[i], width, height);
           }
           $$log("Wrote animations");
           clearTimeout(failTimer);
@@ -432,7 +432,7 @@ PP64.adapters.MP2 = (function() {
           let imgBuffer = PP64.utils.img.toArrayBuffer(srcImage, 64, 48);
 
           // First, read the old image pack.
-          let oldPack = PP64.adapters.mainfs.get(9, boardSelectImg);
+          let oldPack = PP64.fs.mainfs.get(9, boardSelectImg);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
@@ -444,7 +444,7 @@ PP64.adapters.MP2 = (function() {
             }
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-          PP64.adapters.mainfs.write(9, boardSelectImg, newPack);
+          PP64.fs.mainfs.write(9, boardSelectImg, newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -514,7 +514,7 @@ PP64.adapters.MP2 = (function() {
           let finalIconSelectThingBuffer = canvasCtx.getImageData(0, 0, bgInfo.width, bgInfo.height).data.buffer;
 
           // Read the old image pack.
-          let oldPack = PP64.adapters.mainfs.get(9, 15);
+          let oldPack = PP64.fs.mainfs.get(9, 15);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
@@ -526,13 +526,13 @@ PP64.adapters.MP2 = (function() {
             }
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-          PP64.adapters.mainfs.write(9, 15, newPack);
+          PP64.fs.mainfs.write(9, 15, newPack);
 
           // Write the hover mask for the new image
           if (boardInfo.img.boardSelectIconMask) {
             let mask = this._createBoardSelectIconHoverMask(newBoardSelectIconImage);
 
-            let oldPack = PP64.adapters.mainfs.get(9, boardInfo.img.boardSelectIconMask);
+            let oldPack = PP64.fs.mainfs.get(9, boardInfo.img.boardSelectIconMask);
 
             // Then, pack the image and write it.
             let imgInfoArr = [
@@ -544,7 +544,7 @@ PP64.adapters.MP2 = (function() {
               }
             ];
             let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-            PP64.adapters.mainfs.write(9, boardInfo.img.boardSelectIconMask, newPack);
+            PP64.fs.mainfs.write(9, boardInfo.img.boardSelectIconMask, newPack);
           }
 
           $$log("Wrote board select icon");
@@ -610,7 +610,7 @@ PP64.adapters.MP2 = (function() {
           let imgBuffer = PP64.utils.img.toArrayBuffer(srcImage, 260, 120);
 
           // First, read the old image pack.
-          let oldPack = PP64.adapters.mainfs.get(10, introLogoImg);
+          let oldPack = PP64.fs.mainfs.get(10, introLogoImg);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
@@ -622,7 +622,7 @@ PP64.adapters.MP2 = (function() {
             }
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-          PP64.adapters.mainfs.write(10, introLogoImg, newPack);
+          PP64.fs.mainfs.write(10, introLogoImg, newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -632,7 +632,7 @@ PP64.adapters.MP2 = (function() {
         // Just blank out the pause logo, it is not worth replacing.
         let pauseLogoImg = boardInfo.img.pauseLogoImg;
         if (pauseLogoImg) {
-          let oldPack = PP64.adapters.mainfs.get(10, pauseLogoImg);
+          let oldPack = PP64.fs.mainfs.get(10, pauseLogoImg);
           let imgInfoArr = [{
             src: new ArrayBuffer(130 * 60 * 4),
             width: 130,
@@ -640,7 +640,7 @@ PP64.adapters.MP2 = (function() {
             bpp: 32,
           }];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 0, oldPack);
-          PP64.adapters.mainfs.write(10, pauseLogoImg, newPack);
+          PP64.fs.mainfs.write(10, pauseLogoImg, newPack);
         }
       });
     }
@@ -657,7 +657,7 @@ PP64.adapters.MP2 = (function() {
           canvasCtx.drawImage(srcImage, 0, -10, 320, 240);
 
           let imgData = canvasCtx.getImageData(0, 0, 320, 240);
-          PP64.adapters.hvqfs.writeBackground(bgIndex, imgData, 320, 240);
+          PP64.fs.hvqfs.writeBackground(bgIndex, imgData, 320, 240);
           clearTimeout(failTimer);
           resolve();
         };

@@ -55,7 +55,7 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3_CHILLY.gateCount = 2;
   MP3_CHILLY.audioIndexOffset = 0x0031DB92;
   MP3_CHILLY.onLoad = function(board) {
-    board.otherbg.largescene = PP64.adapters.hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
+    board.otherbg.largescene = PP64.fs.hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
   };
   MP3_CHILLY.onAfterOverwrite = function(romView, board) {
     // Prevent unused event table hydration

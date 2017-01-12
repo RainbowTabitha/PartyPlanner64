@@ -1,6 +1,6 @@
-PP64.ns("adapters");
+PP64.ns("fs");
 
-PP64.adapters.strings = (function() {
+PP64.fs.strings = (function() {
   let _stringOffsets = {};
   _stringOffsets[$gameType.MP1_USA] = [
     { upper: 0x0001AE6E, lower: 0x0001AE76 },

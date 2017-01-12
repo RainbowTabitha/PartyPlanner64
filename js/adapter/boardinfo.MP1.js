@@ -39,9 +39,9 @@ PP64.adapters.boardinfo.MP1 = (function() {
   MP1_USA_DK.toadSpaceArrOffset = [0x00244BD0, 0x00244BE8];
   MP1_USA_DK.audioIndexOffset = 0x0024245E;
   MP1_USA_DK.onLoad = function(board) {
-    board.otherbg.largescene = PP64.adapters.hvqfs.readBackground(MP1_USA_DK.bgDir + 1).src;
-    board.otherbg.conversation = PP64.adapters.hvqfs.readBackground(MP1_USA_DK.bgDir + 2).src;
-    board.otherbg.splashscreen = PP64.adapters.hvqfs.readBackground(MP1_USA_DK.bgDir + 6).src;
+    board.otherbg.largescene = PP64.fs.hvqfs.readBackground(MP1_USA_DK.bgDir + 1).src;
+    board.otherbg.conversation = PP64.fs.hvqfs.readBackground(MP1_USA_DK.bgDir + 2).src;
+    board.otherbg.splashscreen = PP64.fs.hvqfs.readBackground(MP1_USA_DK.bgDir + 6).src;
   };
   MP1_USA_DK.onWriteEvents = function(board) {
     // Right now this board is always going to put Chance time spaces where Stars were,
@@ -70,13 +70,13 @@ PP64.adapters.boardinfo.MP1 = (function() {
 
     // Make Bowser's event text a bit more generic.
     let bytes = [];
-    bytes = bytes.concat(PP64.adapters.strings._strToBytes("You're looking for Stars?\nHow about this instead..."));
+    bytes = bytes.concat(PP64.fs.strings._strToBytes("You're looking for Stars?\nHow about this instead..."));
     bytes.push(0xFF); // PAUSE
     bytes.push(0x00); // Null byte
     let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(bytes);
-    PP64.adapters.strings.write(396, strBuffer);
-    PP64.adapters.strings.write(399, strBuffer);
-    PP64.adapters.strings.write(402, strBuffer);
+    PP64.fs.strings.write(396, strBuffer);
+    PP64.fs.strings.write(399, strBuffer);
+    PP64.fs.strings.write(402, strBuffer);
   };
   MP1_USA_DK.clearSpaceEventTableCalls = function(romView) {
     // Remove extra separated event table reads because we don't use them.
