@@ -13,7 +13,7 @@
   "dependencies": {
     "basiccontext": "^3.5.1",
     "cookies-js": "^1.2.2",
-    "draft-js": "^0.9.1",
+    "draft-js": "^0.10.0",
     "es6-shim": "^0.35.1",
     "filesaver.js": "^0.2.0",
     "immutable": "^3.8.1",
