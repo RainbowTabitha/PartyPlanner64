@@ -211,10 +211,12 @@ PP64.fs.mainfs = (function() {
     let writeDecompressed = PP64.settings.get($setting.writeDecompressed);
 
     view.setUint32(offset, fileData.decompressedSize || fileData.decompressed.byteLength);
-    view.setUint32(offset + 4, writeDecompressed ? 0 : fileData.compressionType);
+
+    let compressionType = writeDecompressed ? 0 : fileData.compressionType;
+    view.setUint32(offset + 4, compressionType);
 
     let fileStartOffset = offset + 8;
-    if (_getFileHeaderSize(fileData.compressionType) === 12) { // Duplicate decompressed size
+    if (_getFileHeaderSize(compressionType) === 12) { // Duplicate decompressed size
       view.setUint32(offset + 8, fileData.decompressedSize || fileData.decompressed.byteLength);
       fileStartOffset += 4;
     }
@@ -266,7 +268,7 @@ PP64.fs.mainfs = (function() {
 
       for (let f = 0; f < fileCount; f++) {
         // Decompressed size, compression type, and perhaps duplicated decompressed size.
-        byteLen += _getFileHeaderSize(_mainfsCache[d][f].compressionType);
+        byteLen += _getFileHeaderSize(writeDecompressed ? 0 : _mainfsCache[d][f].compressionType);
 
         if (_mainfsCache[d][f].compressed && !writeDecompressed) // We never touched it.
           byteLen += _mainfsCache[d][f].compressed.byteLength;
