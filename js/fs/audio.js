@@ -216,6 +216,221 @@ PP64.fs.audio = (function() {
     throw "Figure out the audio section length for " + gameID;
   }
 
+  class S2 {
+    constructor(dataView) {
+      this.__type = "S2";
+      if (dataView.getUint16(0) !== 0x5332) // "S2"
+        throw "S2 constructor encountered non-S2 structure";
+
+      this._extract(dataView);
+    }
+
+    _extract(view) {
+      let midiCount = view.getUint16(2);
+      let extendedS2TableOffset = 4 + (midiCount * 8);
+
+      // Extract midi buffers
+      this.midis = [];
+      for (let i = 0; i < midiCount; i++) {
+        let midiOffset = view.getUint32(4 + (i * 4 * 2));
+        let midiSize = view.getUint32(8 + (i * 4 * 2));
+
+        let midiStart = view.byteOffset + midiOffset;
+        this.midis.push({
+          buffer: view.buffer.slice(midiStart, midiStart + midiSize),
+          soundbankIndex: view.getUint8(extendedS2TableOffset + (i * 16))
+        });
+      }
+
+      // Extract tbl buffer
+      // Assumption: we know where it begins, and will assume it ends at the first midi offset.
+      let tblOffsetStart = view.getUint32(extendedS2TableOffset + 12);
+      let tblOffsetEnd = view.getUint32(4); // First midi offset
+      this.tbl = view.buffer.slice(view.byteOffset + tblOffsetStart, view.byteOffset + tblOffsetEnd);
+
+      // Extract B1 structure
+      // Assumption: extra S2 table entries all point to same B1
+      let B1offset = view.getUint32(extendedS2TableOffset + 4);
+      let B1view = new DataView(view.buffer, view.byteOffset + B1offset);
+      this.soundbanks = new B1(B1view);
+    }
+  }
+
+  class B1 {
+    constructor(dataView) {
+      this.__type = "B1";
+      if (dataView.getUint16(0) !== 0x4231) // "B1"
+        throw "B1 constructor encountered non-B1 structure";
+
+      this._extract(dataView);
+    }
+
+    _extract(view) {
+      let bankCount = view.getUint16(2);
+      this.banks = [];
+      for (let i = 0; i < bankCount; i++) {
+        let bankOffset = view.getUint32(4 + (i * 4));
+        this.banks.push(new ALBank(view, bankOffset));
+      }
+    }
+  }
+
+  class ALBank {
+    constructor(B1view, bankOffset) {
+      this.__type = "ALBank";
+      this._extract(B1view, bankOffset);
+    }
+
+    _extract(B1view, bankOffset) {
+      this.flags = B1view.getUint16(bankOffset + 2);
+      this.pad = B1view.getUint16(bankOffset + 4);
+      this.sampleRate = B1view.getUint16(bankOffset + 6);
+
+      let percussionOffset = B1view.getUint32(bankOffset + 8);
+      if (percussionOffset)
+        throw `Need to parse percussion at bank offset ${$$hex(B1view.byteOffset + bankOffset)}`;
+
+      let instrumentCount = B1view.getUint16(bankOffset);
+      this.instruments = [];
+      for (let i = 0; i < instrumentCount; i++) {
+        let instrumentOffset = B1view.getUint32(bankOffset + 12 + (i * 4));
+        this.instruments.push(new ALInst(B1view, instrumentOffset));
+      }
+    }
+  }
+
+  class ALInst {
+    constructor(B1view, instOffset) {
+      this.__type = "ALInst";
+      this._extract(B1view, instOffset);
+    }
+
+    _extract(B1view, instOffset) {
+      this.volume = B1view.getUint8(instOffset);
+      this.pan = B1view.getUint8(instOffset + 1);
+      this.priority = B1view.getUint8(instOffset + 2);
+      this.flags = B1view.getUint8(instOffset + 3);
+      this.tremType = B1view.getUint8(instOffset + 4);
+      this.tremRate = B1view.getUint8(instOffset + 5);
+      this.tremDepth = B1view.getUint8(instOffset + 6);
+      this.tremDelay = B1view.getUint8(instOffset + 7);
+      this.vibType = B1view.getUint8(instOffset + 8);
+      this.vibRate = B1view.getUint8(instOffset + 9);
+      this.vibDepth = B1view.getUint8(instOffset + 10);
+      this.vibDelay = B1view.getUint8(instOffset + 11);
+      this.bendRange = B1view.getUint16(instOffset + 12);
+
+      let soundCount = B1view.getUint16(instOffset + 14);
+      this.sounds = [];
+      for (let i = 0; i < soundCount; i++) {
+        let soundOffset = B1view.getUint32(instOffset + 16 + (i * 4));
+        this.sounds.push(new ALSound(B1view, soundOffset));
+      }
+    }
+  }
+
+  class ALSound {
+    constructor(B1view, soundOffset) {
+      this.__type = "ALSound";
+      this._extract(B1view, soundOffset);
+    }
+
+    _extract(B1view, soundOffset) {
+      let envOffset = B1view.getUint32(soundOffset);
+      this.env = new ALEnv(B1view, envOffset);
+
+      let keymapOffset = B1view.getUint32(soundOffset + 4);
+      this.keymap = new ALKey(B1view, keymapOffset);
+
+      let waveOffset = B1view.getUint32(soundOffset + 8);
+      this.wave = new ALWave(B1view, waveOffset);
+
+      this.samplePan = B1view.getUint8(soundOffset + 12);
+      this.sampleVolume = B1view.getUint8(soundOffset + 13);
+      this.flags = B1view.getUint8(soundOffset + 14);
+    }
+  }
+
+  class ALEnv {
+    constructor(B1view, envOffset) {
+      this.__type = "ALEnv";
+      this._extract(B1view, envOffset);
+    }
+
+    _extract(B1view, envOffset) {
+      this.attackTime = B1view.getUint32(envOffset);
+      this.decayTime = B1view.getUint32(envOffset + 4);
+      this.releaseTime = B1view.getUint32(envOffset + 8);
+      this.attackVolume = B1view.getUint8(envOffset + 12);
+      this.decayVolume = B1view.getUint8(envOffset + 13);
+      this.zeroPad = B1view.getUint16(envOffset + 14);
+    }
+  }
+
+  class ALKey {
+    constructor(B1view, keymapOffset) {
+      this.__type = "ALKey";
+      this._extract(B1view, keymapOffset);
+    }
+
+    _extract(B1view, keymapOffset) {
+      this.velocityMin = B1view.getUint8(keymapOffset);
+      this.velocityMax = B1view.getUint8(keymapOffset + 1);
+      this.keyMin = B1view.getUint8(keymapOffset + 2);
+      this.keyMax = B1view.getUint8(keymapOffset + 3);
+      this.keyBase = B1view.getUint8(keymapOffset + 4);
+      this.detune = B1view.getUint8(keymapOffset + 5);
+    }
+  }
+
+  class ALWave {
+    constructor(B1view, waveOffset) {
+      this.__type = "ALWave";
+      this._extract(B1view, waveOffset);
+    }
+
+    _extract(B1view, waveOffset) {
+      this.waveBase = B1view.getUint32(waveOffset); // Offset into TBL
+      this.waveLen = B1view.getUint32(waveOffset + 4);
+      this.type = B1view.getUint8(waveOffset + 8); // ALWaveType
+      this.flags = B1view.getUint8(waveOffset + 9);
+      this.zeroes = B1view.getUint16(waveOffset + 10);
+      this.loopOffset = B1view.getUint32(waveOffset + 12);
+      this.predictorOffset = B1view.getUint32(waveOffset + 16);
+    }
+  }
+
+  const ALWaveType = {
+    AL_ADPCM_WAVE: 0,
+    AL_RAW16_WAVE: 1,
+    AL_VOX_WAVE: 2,
+    AL_MUSYX_WAVE: 3,
+    // AL_SIGNED_RAW8,
+    // AL_SIGNED_RAW16
+  };
+
+  class ALADPCMLoop {
+    constructor(B1view, loopOffset) {
+      this.__type = "ALADPCMLoop";
+      this._extract(B1view, loopOffset);
+    }
+
+    _extract(B1view, loopOffset) {
+      // TODO
+    }
+  }
+
+  class ALADPCMBook {
+    constructor(B1view, loopOffset) {
+      this.__type = "ALADPCMBook";
+      this._extract(B1view, loopOffset);
+    }
+
+    _extract(B1view, loopOffset) {
+      // TODO
+    }
+  }
+
   return {
     read,
     write,

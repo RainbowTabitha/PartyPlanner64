@@ -8,7 +8,7 @@ PP64.fs.strings = (function() {
   _stringOffsets[$gameType.MP1_JPN] = [
     { upper: 0x0001AD9E, lower: 0x0001ADA6 },
   ];
-  _stringOffsets[$gameType.MP2_USA] = [
+  _stringOffsets[$gameType.MP2_USA] = [ // Default at 0x1142DD0
     { upper: 0x0001D22A, lower: 0x0001D232 },
     { upper: 0x00089356, lower: 0x0008935E },
     { upper: 0x0008936A, lower: 0x00089372 },

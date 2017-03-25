@@ -220,4 +220,44 @@ PP64.utils.dump = class Dump {
     PP64.fs.mainfs.write(character, 158, window.daisyParts[0]);
     PP64.fs.mainfs.write(character, 159, window.daisyParts[1]);
   }
+
+  // Helper for finding FS read locations
+  static searchForPatchLocations(offset) {
+    if (!offset) throw "Please pass a ROM offset the game tries to read at runtime";
+
+    let upper = (offset & 0xFFFF0000) >>> 16;
+    let lower = offset & 0x0000FFFF;
+
+    let found = 0;
+
+    let romView = PP64.romhandler.getDataView();
+    let upperLimit = romView.byteLength - 10; // Since we read ahead for every i, just stop early.
+    for (let i = 2; i < upperLimit; i += 2) {
+      let val = romView.getUint16(i);
+      if (val !== upper && (val + 1) !== upper && (val - 1) !== upper) // Desperate times call for desperate measures (and I forget which way to +-1)
+        continue;
+
+      let last = 0;
+      if ( (i > 8 && romView.getUint16((last = i - 8)) === lower)
+        || (i > 4 && romView.getUint16((last = i - 4)) === lower)
+        || romView.getUint16((last = i + 2)) === lower // === offset basically
+        || romView.getUint16((last = i + 3)) === lower // Odd are unlikely unless compressed
+        || romView.getUint16((last = i + 4)) === lower
+        || romView.getUint16((last = i + 5)) === lower
+        || romView.getUint16((last = i + 6)) === lower
+        || romView.getUint16((last = i + 7)) === lower
+        || romView.getUint16((last = i + 8)) === lower
+        || romView.getUint16((last = i + 9)) === lower
+        || romView.getUint16((last = i + 10)) === lower
+        || romView.getUint16((last = i + 12)) === lower
+        || romView.getUint16((last = i + 16)) === lower
+        || romView.getUint16((last = i + 20)) === lower)
+      {
+        console.log(`Found ${$$hex(i)}, ${$$hex(last)} (${last - i}) Lower inst: ${$$hex(romView.getUint16(last - 2))}`);
+        found++;
+      }
+    }
+
+    console.log(`Found ${found} possible locations`);
+  }
 }

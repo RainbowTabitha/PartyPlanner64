@@ -208,9 +208,10 @@ PP64.fs.mainfs = (function() {
 
   function _writeFile(d, f, view, offset) {
     let fileData = _mainfsCache[d][f];
+    let writeDecompressed = PP64.settings.get($setting.writeDecompressed);
 
     view.setUint32(offset, fileData.decompressedSize || fileData.decompressed.byteLength);
-    view.setUint32(offset + 4, fileData.compressionType);
+    view.setUint32(offset + 4, writeDecompressed ? 0 : fileData.compressionType);
 
     let fileStartOffset = offset + 8;
     if (_getFileHeaderSize(fileData.compressionType) === 12) { // Duplicate decompressed size
@@ -219,7 +220,7 @@ PP64.fs.mainfs = (function() {
     }
 
     let bytesToWrite;
-    if (PP64.settings.get($setting.writeDecompressed))
+    if (writeDecompressed)
       bytesToWrite = fileData.decompressed;
     else
       bytesToWrite = fileData.compressed || fileData.decompressed;
@@ -251,8 +252,8 @@ PP64.fs.mainfs = (function() {
 
   function getByteLength() {
     let byteLen = 0;
-
     let dirCount = _mainfsCache.length;
+    let writeDecompressed = PP64.settings.get($setting.writeDecompressed);
 
     byteLen += 4; // Count of directories
     byteLen += 4 * dirCount; // Directory offsets
@@ -267,7 +268,7 @@ PP64.fs.mainfs = (function() {
         // Decompressed size, compression type, and perhaps duplicated decompressed size.
         byteLen += _getFileHeaderSize(_mainfsCache[d][f].compressionType);
 
-        if (_mainfsCache[d][f].compressed && !PP64.settings.get($setting.writeDecompressed)) // We never touched it.
+        if (_mainfsCache[d][f].compressed && !writeDecompressed) // We never touched it.
           byteLen += _mainfsCache[d][f].compressed.byteLength;
         else
           byteLen += _mainfsCache[d][f].decompressed.byteLength;

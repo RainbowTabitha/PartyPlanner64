@@ -2,7 +2,7 @@ PP64.ns("fs");
 
 PP64.fs.hvqfs = (function() {
   let _HVQFSOffsets = {};
-  _HVQFSOffsets[$gameType.MP1_USA] = [
+  _HVQFSOffsets[$gameType.MP1_USA] = [ // Default at 0x00FE2310
     { upper: 0x00057626, lower: 2 }, // Too lazy, lower is space inbetween.
     { upper: 0x0005D012, lower: 2 },
     { upper: 0x000D5416, lower: 6 },
