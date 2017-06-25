@@ -87,19 +87,8 @@ PP64.adapters.boardinfo.MP2 = (function() {
 
     // Use the normal character models, not themed.
     for (let charIdx = 2; charIdx <= 7; charIdx++) {
-      PP64.fs.mainfs.write(charIdx, 211, PP64.fs.mainfs.get(charIdx, 209));
-      PP64.fs.mainfs.write(charIdx, 212, PP64.fs.mainfs.get(charIdx, 210));
-
-      // TODO: Are one of the following actually western land? This is wiping out all board themes...
-      PP64.fs.mainfs.write(charIdx, 213, PP64.fs.mainfs.get(charIdx, 209));
-      PP64.fs.mainfs.write(charIdx, 214, PP64.fs.mainfs.get(charIdx, 210));
-      PP64.fs.mainfs.write(charIdx, 215, PP64.fs.mainfs.get(charIdx, 209));
-      PP64.fs.mainfs.write(charIdx, 216, PP64.fs.mainfs.get(charIdx, 210));
-      PP64.fs.mainfs.write(charIdx, 217, PP64.fs.mainfs.get(charIdx, 209));
-      PP64.fs.mainfs.write(charIdx, 218, PP64.fs.mainfs.get(charIdx, 210));
-      PP64.fs.mainfs.write(charIdx, 219, PP64.fs.mainfs.get(charIdx, 209));
-      PP64.fs.mainfs.write(charIdx, 220, PP64.fs.mainfs.get(charIdx, 210));
-      PP64.fs.mainfs.write(charIdx, 221, PP64.fs.mainfs.get(charIdx, 209));
+      PP64.fs.mainfs.write(charIdx, 212, PP64.fs.mainfs.get(charIdx, 211)); // Western Land - small model
+      PP64.fs.mainfs.write(charIdx, 213, PP64.fs.mainfs.get(charIdx, 209)); // Western Land - big model
     }
 
     // For each character (different than loop above)
