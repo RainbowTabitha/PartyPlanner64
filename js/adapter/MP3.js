@@ -31,6 +31,11 @@ PP64.adapters.MP3 = (function() {
       romView.setUint16(0x36102, 0x001A); // Temp heap fills as much as 0x1A8000 (8000 is ORed in)
       romView.setUint16(0x495D6, 0x001A);
 
+      // gamemasterplc: patch both ROM address 0x50DA60 and 0x50DA80 with the value 0x24020001 to fix character unlocks
+      // gamemasterplc: aka MIPS Instruction ADDIU V0, R0, 0x1
+      romView.setUint32(0x50DA60, 0x24020001);
+      romView.setUint32(0x50DA80, 0x24020001);
+
       // The game will soft hang when the number of plain spaces (red/blue) is
       // less than a certain lowish number.
       // I don't know exactly what it is trying to do, but if we do this patch,
