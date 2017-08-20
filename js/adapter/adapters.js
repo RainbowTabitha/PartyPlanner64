@@ -739,7 +739,7 @@ PP64.adapters = (function() {
 
       //saveAs(new Blob([eventBuffer]), "eventBuffer");
 
-      // TODO: Write the hook
+      // Write the hook
       this._writeEventAsmHook(boardInfo, boardIndex);
     }
 
@@ -768,14 +768,14 @@ PP64.adapters = (function() {
       let offset = boardInfo.eventASMStart;
 
       // Set up the stack (this is a legit function call)
-      romView.setUint32(offset, $MIPS.makeInst("ADDIU", $MIPS.REG.SP, $MIPS.REG.SP, 0xFFE8)); // ADDIU SP, SP, 0xFFE8
-      romView.setUint32(offset += 4, $MIPS.makeInst("SW", $MIPS.REG.RA, $MIPS.REG.SP, 0x0010)); // SW RA, 0x0010(SP)
+      romView.setUint32(offset, MIPSInst.parse("ADDIU SP SP 0xFFE8"));
+      romView.setUint32(offset += 4, MIPSInst.parse("SW RA, 0x0010(SP)"));
 
       // Call for the MainFS to read in the ASM blob.
       let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
-      romView.setUint32(offset += 4, $MIPS.makeInst("LUI", $MIPS.REG.A0, mainFsDir)); // LW A0, [The dir index]
-      romView.setUint32(offset += 4, $MIPS.makeInst("JAL", this.MAINFS_READ_ADDR)); // JAL MainFSRead
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.A0, $MIPS.REG.A0, mainFsFile)); // ADDIU A0, A0, [The file index]
+      romView.setUint32(offset += 4, MIPSInst.parse(`LUI A0 ${mainFsDir}`));
+      romView.setUint32(offset += 4, MIPSInst.parse(`JAL ${this.MAINFS_READ_ADDR}`));
+      romView.setUint32(offset += 4, MIPSInst.parse(`ADDIU A0 A0 ${mainFsFile}`));
 
       // Now, V0 has the location that the MainFSRead put the blob... it isn't
       // where we want it, it is in the heap somewhere, so we will move it.
@@ -785,35 +785,35 @@ PP64.adapters = (function() {
       // T0 = Current dest RAM location
       // T1 = Size of buffer remaining to copy
       // T2 = Temp word register to do the copy
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.T4, $MIPS.REG.V0, $MIPS.REG.R0)); // Copy V0 -> T4
-      romView.setUint32(offset += 4, $MIPS.makeInst("LW", $MIPS.REG.T0, $MIPS.REG.T4, 0x0004)); // LW T0, 0x4(T4) [RAM dest]
-      romView.setUint32(offset += 4, $MIPS.makeInst("LW", $MIPS.REG.T1, $MIPS.REG.T4, 0x0008)); // LW T1, 0x8(T4) [Buffer size]
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU T4 V0 R0")); // Copy V0 -> T4
+      romView.setUint32(offset += 4, MIPSInst.parse("LW T0 0x4(T4)")); // LW T0, 0x4(T4) [RAM dest]
+      romView.setUint32(offset += 4, MIPSInst.parse("LW T1 0x8(T4)")); // LW T1, 0x8(T4) [Buffer size]
       // Loop start:
-      romView.setUint32(offset += 4, $MIPS.makeInst("LW", $MIPS.REG.T2, $MIPS.REG.T4, 0)); // LW T2, 0x0(T4)
-      romView.setUint32(offset += 4, $MIPS.makeInst("SW", $MIPS.REG.T2, $MIPS.REG.T0, 0)); // SW T2, 0x0(T0)
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.T4, $MIPS.REG.T4, 4)); // ADDIU T4, T4, 4
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.T0, $MIPS.REG.T0, 4)); // ADDIU T0, T0, 4
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.T1, $MIPS.REG.T1, 0xFFFC)); // ADDIU T1, T1, -4
-      romView.setUint32(offset += 4, $MIPS.makeInst("BGTZ", $MIPS.REG.T1, 0xFFFFFFE8)); // BGTZ T1, -5 instructions
+      romView.setUint32(offset += 4, MIPSInst.parse("LW T2 0(T4)"));
+      romView.setUint32(offset += 4, MIPSInst.parse("SW T2 0(T0)"));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDIU T4 T4 4"));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDIU T0 T0 4"));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDIU T1 T1 -4"));
+      romView.setUint32(offset += 4, MIPSInst.parse("BGTZ T1 -6")); // BGTZ T1, -5 instructions 0xFFE8
       romView.setUint32(offset += 4, 0); // NOP
 
       // Now we can hydrate the table.
       // T9 = V0 copy (least likely to be overwritten by an uncontrolled JAL)
       // T4 = Dest buffer addr + 0x10, where the table really starts
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.T9, $MIPS.REG.V0, $MIPS.REG.R0)); // Copy V0 -> T9
-      romView.setUint32(offset += 4, $MIPS.makeInst("LW", $MIPS.REG.T4, $MIPS.REG.T9, 0x0004)); // LW T4, 0x4(T9) [RAM dest]
-      romView.setUint32(offset += 4, $MIPS.makeInst("JAL", this.TABLE_HYDRATE_ADDR)); // JAL TableHydrate
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.A0, $MIPS.REG.T4, 0x10)); // ADDIU A0, T4, 16
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU T9 V0 R0")); // Copy V0 -> T9
+      romView.setUint32(offset += 4, MIPSInst.parse("LW T4 4(T9)")); // LW T4, 0x4(T9) [RAM dest]
+      romView.setUint32(offset += 4, MIPSInst.parse(`JAL ${this.TABLE_HYDRATE_ADDR}`));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDIU A0 T4 16")); // ADDIU A0, T4, 16
 
       // Well, we copied the buffer... now we should "free" it with this magic JAL...
       // Free our T9 reference, which theoretically could be corrupted, but in practice not.
-      romView.setUint32(offset += 4, $MIPS.makeInst("JAL", this.HEAP_FREE_ADDR)); // JAL HeapFree
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.A0, $MIPS.REG.T9, $MIPS.REG.R0)); // ADDIU A0, T9, R0
+      romView.setUint32(offset += 4, MIPSInst.parse(`JAL ${this.HEAP_FREE_ADDR}`));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU A0 T9 R0"));
 
       // End the call stack
-      romView.setUint32(offset += 4, $MIPS.makeInst("LW", $MIPS.REG.RA, $MIPS.REG.SP, 0x0010)); // LW RA, 0x0010(SP)
-      romView.setUint32(offset += 4, $MIPS.makeInst("JR", $MIPS.REG.RA)); // JR RA
-      romView.setUint32(offset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.SP, $MIPS.REG.SP, 0x0018)); // ADDIU SP, SP, 0x0018
+      romView.setUint32(offset += 4, MIPSInst.parse("LW RA 0x10(SP)"));
+      romView.setUint32(offset += 4, MIPSInst.parse("JR RA"));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDIU SP SP 0x18"));
     }
 
     _clearSpaceEventTableCalls(romView, boardInfo) {

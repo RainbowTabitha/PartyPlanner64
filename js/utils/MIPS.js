@@ -46,34 +46,12 @@ PP64.utils.MIPS = class MIPS {
     for (let i = 1; i < arguments.length; i++)
       args[i - 1] = arguments[i];
 
-    switch (inst.toUpperCase()) {
-      case "ADDIU":
-        return MIPS._addiu.apply(MIPS, args);
-      case "ADDU":
-        return MIPS._addu.apply(MIPS, args);
-      case "BEQ":
-        return MIPS._beq.apply(MIPS, args);
-      case "BNE":
-        return MIPS._bne.apply(MIPS, args);
-      case "BGTZ":
-        return MIPS._bgtz.apply(MIPS, args);
-      case "BLEZ":
-        return MIPS._blez.apply(MIPS, args);
-      case "J":
-        return MIPS._j.apply(MIPS, args);
-      case "JR":
-        return MIPS._jr.apply(MIPS, args);
-      case "JAL":
-        return MIPS._jal.apply(MIPS, args);
-      case "LUI":
-        return MIPS._lui.apply(MIPS, args);
-      case "LW":
-        return MIPS._lw.apply(MIPS, args);
-      case "SW":
-        return MIPS._sw.apply(MIPS, args);
-      default:
-        throw `MIPS.makeInst: Invalid instruction ${inst}`;
+    const method = "_" + inst.toLowerCase();
+    if (typeof MIPS[method] === "function") {
+      return MIPS[method].apply(MIPS, args);
     }
+
+    throw `MIPS.makeInst: Unrecognized instruction ${inst}`;
   }
 
   static getJALAddr(word) {
@@ -169,6 +147,38 @@ PP64.utils.MIPS = class MIPS {
     return base | (addr >>> 2);
   }
 
+  // dst = MEM[reg + offset]
+  static _lb(dst, reg, offset) {
+    let base = 0x80000000;
+    base = base | reg << 21;
+    base = base | dst << 16;
+    return base | (offset & 0xFFFF);
+  }
+
+  // MEM[dst + offset] = (0xff & src);
+  static _sb(src, dst, offset) {
+    let base = 0xA0000000;
+    base = base | dst << 21;
+    base = base | src << 16;
+    return base | (offset & 0xFFFF);
+  }
+
+  // dst = MEM[reg + offset]
+  static _lh(dst, reg, offset) {
+    let base = 0x84000000;
+    base = base | reg << 21;
+    base = base | dst << 16;
+    return base | (offset & 0xFFFF);
+  }
+
+  // MEM[dst + offset] = (0xffff & src);
+  static _sh(src, dst, offset) {
+    let base = 0xA4000000;
+    base = base | dst << 21;
+    base = base | src << 16;
+    return base | (offset & 0xFFFF);
+  }
+
   static _lui(dst, imm) {
     let base = 0x3C000000;
     base = base | dst << 16;
@@ -189,6 +199,14 @@ PP64.utils.MIPS = class MIPS {
     base = base | dst << 21;
     base = base | src << 16;
     return base | (offset & 0xFFFF);
+  }
+
+  // r1 = r2 | imm
+  static _ori(r1, r2, imm) {
+    let base = 0x34000000;
+    base = base | r1 << 21;
+    base = base | r2 << 16;
+    return base | (imm & 0xFFFF);
   }
 };
 

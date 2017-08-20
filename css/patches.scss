@@ -32,3 +32,27 @@
   font-size: 9pt;
   color: rgba(255, 255, 255, 0.95);
 }
+
+#gamesharkView {
+  margin: 0 auto;
+  margin-top: 1em;
+  max-width: 400px;
+  padding: 1em;
+}
+
+#gamesharkView textarea {
+  width: 100%;
+}
+
+#gamesharkView button {
+  display: block;
+  margin-top: 0.5em;
+}
+
+#gamesharkView :not(textarea) {
+  color: white;
+}
+
+.gsApplied {
+  font-style: italic;
+}

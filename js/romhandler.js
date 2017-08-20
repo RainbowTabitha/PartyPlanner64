@@ -61,6 +61,8 @@ PP64.romhandler = new class RomHandler {
       return false;
     }
 
+    PP64.patches.gameshark.reset();
+
     let gameVersion = this.getGameVersion();
 
     // A crude async attempt to hopefully free the UI thread a bit.
@@ -105,6 +107,8 @@ PP64.romhandler = new class RomHandler {
     let newROMBuffer = new ArrayBuffer(initialLen + mainLen + strsLen + hvqLen + animationLen + audioLen);
 
     PP64.utils.arrays.copyRange(newROMBuffer, this._rom, 0, 0, initialLen);
+
+    PP64.patches.gameshark.hook.apply(newROMBuffer); // Before main fs is packed
 
     PP64.fs.mainfs.pack(newROMBuffer, initialLen);
     PP64.fs.mainfs.setROMOffset(initialLen, newROMBuffer);

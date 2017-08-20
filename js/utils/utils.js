@@ -32,19 +32,19 @@ PP64.utils.arrays = {
     return PP64.utils.arrays.hash.apply(this, hashArgs).toLowerCase() === expected.toLowerCase();
   },
 
-  toHexString: function toHexString(buffer, len = buffer.byteLength) {
+  toHexString: function toHexString(buffer, len = buffer.byteLength, lineLen = 0) {
     let output = "";
     let view = buffer;
     if (buffer instanceof ArrayBuffer)
       view = new DataView(buffer);
     for (var i = 0; i < len; i++) {
-      output += $$hex(view.getUint8(i), "") + " ";
+      output += $$hex(view.getUint8(i), "") + ((i && lineLen && ((i + 1) % lineLen === 0)) ? "\n" : " ");
     }
     return output;
   },
 
-  print: function printArrayBuffer(buffer, len = buffer.byteLength) {
-    console.log(PP64.utils.arrays.toHexString(buffer, len));
+  print: function printArrayBuffer(buffer, len = buffer.byteLength, lineLen = 0) {
+    console.log(PP64.utils.arrays.toHexString(buffer, len, lineLen));
   },
 
   readBitAtOffset: function readBitAtOffset(buffer, bitOffset) {
@@ -99,6 +99,18 @@ PP64.utils.arrays = {
     }
     return true;
   },
+
+  // Joins two ArrayBuffers
+  join: function join(buffer1, buffer2) {
+    if (!buffer1 || !buffer2) {
+      return buffer1 || buffer2;
+    }
+
+    var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+    tmp.set(new Uint8Array(buffer1), 0);
+    tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+    return tmp.buffer;
+  }
 };
 
 PP64.ns("utils.img");

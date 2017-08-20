@@ -44,36 +44,36 @@ PP64.adapters.MP1 = (function() {
       // Patch HVQ decode RAM 0x4a3a4 to redirect to raw decode hook.
       let romStartOffset = 0xCBFD0;
       let asmStartOffset = 0xCB3D0;
-      romView.setUint32(0x4AFD4, $MIPS.makeInst("J", asmStartOffset));
+      romView.setUint32(0x4AFD4, MIPSInst.parse(`J ${asmStartOffset}`));
 
       // Patch over some debug strings with logic to handle raw images.
-      romView.setUint32(romStartOffset, $MIPS.makeInst("LW", $MIPS.REG.S5, $MIPS.REG.A0, 0)); // LW S5, 0x0(A0)
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("LUI", $MIPS.REG.S6, 0x4856)); // LW S6, 0x4856 "HV"
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.S6, $MIPS.REG.S6, 0x5120)); // ADDIU S6, S6, 0x5120 "Q "
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("BEQ", $MIPS.REG.S5, $MIPS.REG.S6, 4 * 12)); // BEQ S5, S6, +12 instructions
+      romView.setUint32(romStartOffset, MIPSInst.parse("LW S5, 0x0(A0)"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("LUI S6, 0x4856")); // "HV"
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDIU S6, S6, 0x5120")); // "Q "
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse(`BEQ S5, S6, 12`)); // +12 instructions
       romView.setUint32(romStartOffset += 4, 0); // NOP
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S5, $MIPS.REG.R0, $MIPS.REG.A1)); // ADDU S5, R0, A1
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.S6, $MIPS.REG.S5, 0x1800)); // ADDIU S6, S5, 0x1800 (64 x 48 tile)
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S7, $MIPS.REG.R0, $MIPS.REG.A0)); // ADDU S7, R0, A0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("LW", $MIPS.REG.GP, $MIPS.REG.S7, 0)); // LW GP, 0x0(S7)
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("SW", $MIPS.REG.GP, $MIPS.REG.S5, 0)); // SW GP, 0x0(S5)
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.S5, $MIPS.REG.S5, 4)); // ADDIU S5, S5, 4
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDIU", $MIPS.REG.S7, $MIPS.REG.S7, 4)); // ADDIU S7, S7, 4
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("BEQ", $MIPS.REG.S5, $MIPS.REG.S6, 36)); // BEQ S5, S6, +9 instructions
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S5, R0, A1"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDIU S6, S5, 0x1800")); // (64 x 48 tile)
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S7, R0, A0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("LW GP, 0(S7)"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("SW GP, 0(S5)"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDIU S5, S5, 4"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDIU S7, S7, 4")); // ADDIU S7, S7, 4
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("BEQ S5, S6, 9")); // +9 instructions
       romView.setUint32(romStartOffset += 4, 0); // NOP
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("J", asmStartOffset + 0x20)); // J back to LW
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse(`J ${asmStartOffset + 0x20}`)); // J back to LW
       romView.setUint32(romStartOffset += 4, 0); // NOP
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S5, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU S5, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S6, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU S6, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S7, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU S7, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.GP, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU GP, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("JAL", 0x7F54C)); // JAL HVQDecode
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S5, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S6, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S7, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU GP, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("JAL 0x7F54C")); // JAL HVQDecode
       romView.setUint32(romStartOffset += 4, 0); // NOP
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S5, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU S5, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S6, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU S6, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.S7, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU S7, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("ADDU", $MIPS.REG.GP, $MIPS.REG.R0, $MIPS.REG.R0)); // ADDU GP, R0, R0
-      romView.setUint32(romStartOffset += 4, $MIPS.makeInst("J", 0x4A3DC)); // J back into original function, skipping HVQDecode
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S5, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S6, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU S7, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("ADDU GP, R0, R0"));
+      romView.setUint32(romStartOffset += 4, MIPSInst.parse("J 0x4A3DC")); // J back into original function, skipping HVQDecode
       romView.setUint32(romStartOffset += 4, 0); // NOP
     }
 

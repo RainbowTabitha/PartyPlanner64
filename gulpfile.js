@@ -53,6 +53,11 @@ const JS = [
   "js/romhandler.js",
 
   "js/patches.js",
+  "js/gameshark.js",
+  "js/patches/gameshark/parser.js",
+  "js/patches/gameshark/compiler.js",
+  "js/patches/gameshark/hook.js",
+  "js/patches/gameshark/hook.MP1.U.js",
   "js/patches/PatchBase.js",
   "js/patches/Antialias.js",
   "js/patches/SkipIntro.js",
@@ -147,6 +152,9 @@ const SRC_CSS = ["css/**/*.css", "css/*.scss"];
 const SRC_PROD_CSS = ["!css/font.css", "css/**/*.css", "css/*.scss"];
 const DST_CSS = "dist/css";
 
+const CSS_LIB_DEST = "css/lib";
+const JS_LIB_DEST = "js/lib";
+
 function GET_LIB_CDN(lib) {
   var name = GET_LIB_NAME(lib);
   var version = packageJson.dependencies[name];
@@ -164,55 +172,54 @@ function GET_LIB_PATH(lib) {
 }
 
 function GET_LIB_FILE(lib) {
-  return lib.dst.substr(lib.dst.lastIndexOf("/") + 1);
-}
-
-function GET_LIB_DEST(lib) {
-  return lib.dst.substring(0, lib.dst.lastIndexOf("/"));
+  return lib.dst;
 }
 
 const LIB_JS = [
   { src: "node_modules/es6-shim/es6-shim.min.js",
-    dst: "js/lib/es6-shim.min.js",
+    dst: "es6-shim.min.js",
   },
   { src: "node_modules/react/dist/react.min.js",
-    dst: "js/lib/react.min.js",
+    dst: "react.min.js",
   },
   { src: "node_modules/react-dom/dist/react-dom.min.js",
-    dst: "js/lib/react-dom.min.js"
+    dst: "react-dom.min.js"
   },
   { src: "node_modules/immutable/dist/immutable.min.js",
-    dst: "js/lib/immutable.min.js"
+    dst: "immutable.min.js"
   },
   { src: "node_modules/draft-js/dist/Draft.min.js",
-    dst: "js/lib/Draft.min.js"
+    dst: "Draft.min.js"
   },
   { src: "node_modules/jszip/dist/jszip.min.js",
-    dst: "js/lib/jszip.min.js"
+    dst: "jszip.min.js"
   },
   { src: "node_modules/basiccontext/dist/basicContext.min.js",
-    dst: "js/lib/basicContext.min.js"
+    dst: "basicContext.min.js"
   },
   { src: "node_modules/filesaver.js/FileSaver.min.js",
-    dst: "js/lib/FileSaver.min.js"
+    dst: "FileSaver.min.js"
   },
   { src: "node_modules/cookies-js/dist/cookies.min.js",
-    dst: "js/lib/cookies.min.js"
+    dst: "cookies.min.js"
   },
   { src: "node_modules/three/build/three.min.js",
-    dst: "js/lib/three.min.js"
+    dst: "three.min.js"
+  },
+  { src: "node_modules/mips-inst/dist/bundle.js",
+    dst: "mips-inst.min.js"
   },
 ];
 
 const LIB_CSS = [
   { src: "node_modules/draft-js/dist/Draft.css",
-    dst: "css/lib/Draft.css"
+    dst: "Draft.css"
   },
   { src: "node_modules/basiccontext/dist/basicContext.min.css",
-    dst: "css/lib/basicContext.min.css"
+    dst: "basicContext.min.css"
   },
   { src: "node_modules/basiccontext/dist/themes/default.min.css",
-    dst: "css/lib/default.min.css"
+    dst: "default.min.css"
   },
 ];
 
@@ -230,8 +237,8 @@ gulp.task("cleanhtml", function() {
     .pipe(clean());
 });
 gulp.task("copyhtml", function() {
-  var JSLIB = LIB_JS.map(function(lib) { return lib.dst });
-  var CSSLIB = LIB_CSS.map(function(lib) { return lib.dst });
+  var JSLIB = LIB_JS.map(function(lib) { return JS_LIB_DEST + "/" + lib.dst });
+  var CSSLIB = LIB_CSS.map(function(lib) { return CSS_LIB_DEST + "/" + lib.dst });
 
   return gulp.src(SRC_HTML, { base: "." })
     .pipe(cache("html"))
@@ -246,7 +253,7 @@ gulp.task("copyhtml", function() {
 });
 gulp.task("copyhtml-prod", function() {
   var JSLIB = LIB_JS.map(function(lib) { return GET_LIB_CDN(lib) });
-  var CSSLIB = LIB_CSS.map(function(lib) { return lib.dst });
+  var CSSLIB = LIB_CSS.map(function(lib) { return CSS_LIB_DEST + "/" + lib.dst });
 
   return gulp.src(SRC_HTML, { base: "." })
     .pipe(preprocess({context: {
@@ -297,7 +304,7 @@ var csslibtasks = [];
 LIB_CSS.forEach(function(lib) {
   var name = "copycsslib-" + GET_LIB_FILE(lib);
   gulp.task(name, function() {
-    return gulp.src(lib.src).pipe(gulp.dest(GET_LIB_DEST(lib), { cwd: "dist" }));
+    return gulp.src(lib.src).pipe(gulp.dest(CSS_LIB_DEST, { cwd: "dist" }));
   })
   csslibtasks.push(name);
 });
@@ -332,7 +339,9 @@ var jslibtasks = [];
 LIB_JS.forEach(function(lib) {
   var name = "copyjslib-" + GET_LIB_FILE(lib);
   gulp.task(name, function() {
-    return gulp.src(lib.src).pipe(gulp.dest(GET_LIB_DEST(lib), { cwd: "dist" }));
+    return gulp.src(lib.src)
+      .pipe(rename(lib.dst))
+      .pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));
   })
   jslibtasks.push(name);
 });
