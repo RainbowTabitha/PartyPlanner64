@@ -260,4 +260,35 @@ PP64.utils.dump = class Dump {
 
     console.log(`Found ${found} possible locations`);
   }
+
+  static printSceneTable() {
+    const adapter = PP64.adapters.getROMAdapter();
+    const offset = adapter && adapter.SCENE_TABLE_ROM;
+    if (!offset) {
+      console.log("ROM is not loaded, or scene table location is unknown");
+      return;
+    }
+
+    let romView = PP64.romhandler.getDataView();
+    let table = [];
+    let curOffset = offset;
+    while (romView.getUint32(curOffset) !== 0x44200000) {
+      table.push({
+        i: $$hex(table.length),
+        rom_start: $$hex(romView.getUint32(curOffset)),
+        rom_end: $$hex(romView.getUint32(curOffset + 4)),
+        //ram_start: $$hex(romView.getUint32(curOffset + 8)),
+        code_start: $$hex(romView.getUint32(curOffset + 12)),
+        //code_end: $$hex(romView.getUint32(curOffset + 16)),
+        rodata_start: $$hex(romView.getUint32(curOffset + 20)),
+        //rodata_end: $$hex(romView.getUint32(curOffset + 24)),
+        bss_start: $$hex(romView.getUint32(curOffset + 28)),
+        bss_end: $$hex(romView.getUint32(curOffset + 32)),
+      });
+
+      curOffset += (9 * 4);
+    }
+
+    console.table(table);
+  }
 }

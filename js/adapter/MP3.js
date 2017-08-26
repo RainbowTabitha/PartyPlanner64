@@ -13,6 +13,8 @@ PP64.adapters.MP3 = (function() {
       this.MAINFS_READ_ADDR = 0x00009C10;
       this.HEAP_FREE_ADDR = 0x00009E6C;
       this.TABLE_HYDRATE_ADDR = 0x000EBA60;
+
+      this.SCENE_TABLE_ROM = 0x00096EF4;
     }
 
     onLoad(board, boardInfo) {

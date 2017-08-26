@@ -13,6 +13,8 @@ PP64.adapters.MP2 = (function() {
       this.MAINFS_READ_ADDR = 0x00017680;
       this.HEAP_FREE_ADDR = 0x00017800;
       this.TABLE_HYDRATE_ADDR = 0x0005568C;
+
+      this.SCENE_TABLE_ROM = 0x000C9474;
     }
 
     onLoad(board, boardInfo) {

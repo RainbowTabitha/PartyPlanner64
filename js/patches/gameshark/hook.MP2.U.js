@@ -1,28 +1,26 @@
 PP64.ns("patches.gameshark.hook");
 
-//// MP3 80078E9C 
+// Example
+// Double Walk Speed (plc)
+// 810657EE 0005
 
-
-// [11:50 AM] gamemasterplc: 80078E9C is the end of the controller routine in MP3
-
-
-// Installs a Gameshark hook for MP1 (U)
-PP64.patches.gameshark.hook.MP1U = new class MP1UHook extends PP64.patches.gameshark.HookBase {
+// Installs a Gameshark hook for MP2 (U)
+PP64.patches.gameshark.hook.MP2U = new class MP2UHook extends PP64.patches.gameshark.HookBase {
   constructor() {
     super();
 
     // File to store the cheat routine.
-    this.MAINFS_CHEAT_FILE = [0, 137];
+    this.MAINFS_CHEAT_FILE = [0, 140];
 
     // Location safe to write a small set of hooking code
-    this.HOOK_ROM_START_OFFSET = 0xCB500;
-    this.HOOK_RAM_START_OFFSET = 0xCA900;
+    this.HOOK_ROM_START_OFFSET = 0xD2BC0;
+    this.HOOK_RAM_START_OFFSET = 0xD1FC0;
 
-    // Use controller routine 0x80013E74 (ROM 0x14A74) to reach the hook
-    this.HOOK_JUMP_ROM_OFFSET = 0x14A74; // 0x80013E74
+    // Use controller routine 0x800A2038 (ROM 0xA2C38) to reach the hook
+    this.HOOK_JUMP_ROM_OFFSET = 0xA2C38;
 
     // Value initially in the spot we cache the hook routine.
-    this.HOOK_CACHE_DEFAULT_VALUE = 0x76657221;
+    this.HOOK_CACHE_DEFAULT_VALUE = 0x4661756C;
   }
 
   apply(romBuffer) {
@@ -43,12 +41,10 @@ PP64.patches.gameshark.hook.MP1U = new class MP1UHook extends PP64.patches.games
       romView.getUint32(this.HOOK_JUMP_ROM_OFFSET),
       romView.getUint32(this.HOOK_JUMP_ROM_OFFSET + 4),
       romView.getUint32(this.HOOK_JUMP_ROM_OFFSET + 8),
-      romView.getUint32(this.HOOK_JUMP_ROM_OFFSET + 12),
     ];
     romView.setUint32(this.HOOK_JUMP_ROM_OFFSET, hookJ);
     romView.setUint32(this.HOOK_JUMP_ROM_OFFSET + 4, 0);
     romView.setUint32(this.HOOK_JUMP_ROM_OFFSET + 8, 0);
-    romView.setUint32(this.HOOK_JUMP_ROM_OFFSET + 12, 0);
 
     const cheatRoutine = PP64.patches.gameshark.getCheatRoutineBuffer({ endInsts });
     PP64.fs.mainfs.write(this.MAINFS_CHEAT_FILE[0], this.MAINFS_CHEAT_FILE[1], cheatRoutine);

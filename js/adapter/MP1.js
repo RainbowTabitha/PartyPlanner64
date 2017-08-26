@@ -13,6 +13,8 @@ PP64.adapters.MP1 = (function() {
       this.MAINFS_READ_ADDR = 0x000145B0;
       this.HEAP_FREE_ADDR = 0x00014730;
       this.TABLE_HYDRATE_ADDR = 0x0004C900;
+
+      this.SCENE_TABLE_ROM = 0x000C2874;
     }
 
     // Gives a new space the default things it would need.
