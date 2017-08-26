@@ -59,6 +59,7 @@ const JS = [
   "js/patches/gameshark/hook.js",
   "js/patches/gameshark/hook.MP1.U.js",
   "js/patches/gameshark/hook.MP2.U.js",
+  "js/patches/gameshark/hook.MP3.U.js",
   "js/patches/PatchBase.js",
   "js/patches/Antialias.js",
   "js/patches/SkipIntro.js",

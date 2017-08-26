@@ -18,6 +18,9 @@ PP64.patches.gameshark.hook.apply = function(romBuffer) {
       break;
 
     case $gameType.MP3_USA:
+      PP64.patches.gameshark.hook.MP3U.apply(romBuffer);
+      break;
+
     case $gameType.MP1_JPN:
     default:
       console.warn("Cannot write cheats for this game");
@@ -32,9 +35,9 @@ PP64.patches.gameshark.romSupportsCheats = function() {
   switch(gameID) {
     case $gameType.MP1_USA:
     case $gameType.MP2_USA:
+    case $gameType.MP3_USA:
       return true;
 
-    case $gameType.MP3_USA:
     case $gameType.MP1_JPN:
     default:
       return false;
