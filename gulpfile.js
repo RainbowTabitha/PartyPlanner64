@@ -71,6 +71,7 @@ const JS = [
   "js/validation/validation.MP2.js",
   "js/validation/validation.MP3.js",
 
+  "js/fs/scenes.js",
   "js/fs/mainfs.js",
   "js/fs/strings.js",
   "js/fs/strings3.js",

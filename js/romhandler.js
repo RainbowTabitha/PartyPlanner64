@@ -30,6 +30,7 @@ PP64.romhandler = new class RomHandler {
     this._gameId = null;
     this._gameVersion = null;
 
+    PP64.fs.scenes.clearCache();
     PP64.fs.mainfs.clearCache();
     PP64.fs.strings.clear();
     PP64.fs.strings3.clear();
@@ -67,6 +68,7 @@ PP64.romhandler = new class RomHandler {
 
     // A crude async attempt to hopefully free the UI thread a bit.
     let promises = [];
+    promises.push(PP64.fs.scenes.extractAsync());
     promises.push(PP64.fs.mainfs.extractAsync());
     if (gameVersion === 3)
       promises.push(PP64.fs.strings3.extractAsync());
