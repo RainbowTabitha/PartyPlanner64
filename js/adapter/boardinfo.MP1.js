@@ -13,6 +13,8 @@ PP64.adapters.boardinfo.MP1 = (function() {
   };
   MP1_USA_DK.img = {
     boardSelectImg: 17,
+
+    //gamemasterplc: overwrite ROM offset 0x25FA08 with 0x006B0226 to hide the comic sans board logo far off the bottom of the screen
     pauseLogoImg: 276,
     introLogoImg: [356, 357],
     introLogoImgDimens: [272, 112],
