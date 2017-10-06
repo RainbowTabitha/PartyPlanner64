@@ -18,9 +18,9 @@
     "filesaver.js": "^0.2.0",
     "immutable": "^3.8.1",
     "jszip": "^3.1.3",
-    "mips-inst": "^1.0.0",
-    "react": "^15.3.2",
-    "react-dom": "^15.3.2",
+    "mips-inst": "1.2.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
     "three": "^0.86.0",
     "three-orbit-controls": "^82.1.0"
   },

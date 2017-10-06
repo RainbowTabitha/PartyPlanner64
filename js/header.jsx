@@ -243,22 +243,31 @@ PP64.header = (function() {
     constructor(props) {
       super(props);
 
+      const actions = getActions(props.view, props.board, props.romLoaded);
       this.state = {
-        actions: getActions(props.view, props.board, props.romLoaded),
+        actions: actions,
+        totalActions: actions, // Array of actions that never changes despite overflow
         overflow: []
       };
     }
 
     componentWillReceiveProps = (nextProps) => {
-      this.state = {
-        actions: getActions(nextProps.view, nextProps.board, nextProps.romLoaded),
-        overflow: []
-      };
+      const newActions = getActions(nextProps.view, nextProps.board, nextProps.romLoaded);
+
+      if (!PP64.utils.arrays.equal(this.state.totalActions, newActions)) {
+        this.setState({
+          actions: newActions,
+          totalActions: newActions,
+          overflow: []
+        });
+      }
     }
 
     refresh() {
+      const actions = getActions(this.props.view, this.props.board, this.props.romLoaded);
       this.setState({
-        actions: getActions(this.props.view, this.props.board, this.props.romLoaded),
+        actions: actions,
+        totalActions: actions,
         overflow: []
       });
     }
@@ -283,7 +292,7 @@ PP64.header = (function() {
       return (
         <div className="header" role="toolbar">
           <HeaderLogo />
-          <div className="headerActions">
+          <div className="headerActions" ref={(actionsEl => { this.actionsEl = actionsEl; })}>
             {actions}
             {overflowAction}
           </div>
@@ -305,7 +314,7 @@ PP64.header = (function() {
     }
 
     componentWillUnmount() {
-      $$log("Why did Toolbar unmount?");
+      $$log("Why did Header unmount?");
     }
 
     handleOverflow() {
@@ -313,7 +322,7 @@ PP64.header = (function() {
       let hasOverflow = this.state.overflow.length;
       let overflow = this.state.overflow.slice();
       let el = ReactDOM.findDOMNode(this);
-      let actionsEl = el.querySelector(".headerActions");
+      let actionsEl = this.actionsEl;
       while (actionsEl.offsetWidth > (el.offsetWidth - 215 - (hasOverflow ? 0 : 80))) { // Cut out logo and more if existing
         let lastAction = actionsEl.children[actions.length - (hasOverflow ? 2 : 1)]; // Skip more
         if (!lastAction)

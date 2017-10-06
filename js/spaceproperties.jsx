@@ -316,9 +316,9 @@ PP64.properties.SpaceProperties = (function() {
     }
 
     componentWillReceiveProps = (nextProps) => {
-      this.state = {
+      this.setState({
         checked: nextProps.checked
-      };
+      });
     }
 
     render() {

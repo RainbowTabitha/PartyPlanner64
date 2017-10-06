@@ -35,6 +35,7 @@ PP64.fs.scenes = new class Scenes {
 
     const SIZEOF_SCENE_TABLE_ENTRY = (9 * 4);
 
+    this._sceneCache = [];
     const romView = PP64.romhandler.getDataView();
     let curOffset = sceneTableOffset;
     while (romView.getUint32(curOffset) !== 0x44200000) {
