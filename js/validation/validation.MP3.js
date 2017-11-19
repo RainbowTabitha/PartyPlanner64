@@ -19,9 +19,9 @@ PP64.validation.MP3 = (function() {
       rules.push(PP64.validation.getRule("TOOMANYGATES", { limit: 2 }));
       rules.push(PP64.validation.getRule("BADSTARCOUNT", { low: 8, high: 8 }));
 
-      // Until the soft hang is fixed, this will help avoid disappointment.
-      rules.push(PP64.validation.getRule("TOOFEWBLUESPACES", { low: 14 }));
-      rules.push(PP64.validation.getRule("TOOFEWREDSPACES", { low: 1 }));
+      // No longer needed? See MP3 onAfterOverwrite.
+      //rules.push(PP64.validation.getRule("TOOFEWBLUESPACES", { low: 14 }));
+      //rules.push(PP64.validation.getRule("TOOFEWREDSPACES", { low: 1 }));
     }
     return rules;
   }

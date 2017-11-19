@@ -38,23 +38,26 @@ PP64.adapters.MP3 = (function() {
       romView.setUint32(0x50DA60, 0x24020001);
       romView.setUint32(0x50DA80, 0x24020001);
 
-      // The game will soft hang when the number of plain spaces (red/blue) is
-      // less than a certain lowish number.
-      // I don't know exactly what it is trying to do, but if we do this patch,
-      // it seems to not be adversely affected and also resolves the hang.
-      // TODO: Waste time figuring out the exact threshold or the actual cause of the bug.
+      // The game will soft hang on the first player's turn when the number of plain spaces
+      // (red/blue) is less than a certain lowish number.
+      // gamemasterplc says it is related to some save flag check.
+      // TODO: Waste time figuring out the exact low space threshold or the detailed cause of the bug.
       // Hang around 0x800FC664
-      // let simpleSpaceCount = 0;
-      // for (let i = 0; i < board.spaces.length; i++) {
-      //   let space = board.spaces[i];
-      //   if (space.type === $spaceType.BLUE || space.type === $spaceType.RED)
-      //     simpleSpaceCount++;
-      // }
-      // if (simpleSpaceCount < 20) {
-      //   // Commented out, didn't work...
-      //   //romView.setUint32(0xFF3DC, 0); // This is a J in the 0x800EBxxx range... I closed the window and forgot exactly.
-      //   //$$log("Patching 0xFF3DC for low space count.");
-      // }
+      let blueSpaceCount = 0;
+      let redSpaceCount = 0;
+      for (let i = 0; i < board.spaces.length; i++) {
+        let space = board.spaces[i];
+        if (space.type === $spaceType.BLUE)
+          blueSpaceCount++;
+        if (space.type === $spaceType.RED)
+          redSpaceCount++;
+      }
+      if (blueSpaceCount < 14 || redSpaceCount < 1) {
+        // Fix low spaces issues
+        // gamemasterplc: patch ROM offset 0x1101C4 with 0x10000085 to fix low space hangs
+        romView.setUint32(0x001101C4, 0x10000085); // Something like BEQ R0 R0 0x85, so it always branches
+        $$log("Patching for low space count.");
+      }
     }
 
     onOverwritePromises(board, boardInfo) {
@@ -74,10 +77,9 @@ PP64.adapters.MP3 = (function() {
     }
 
     onAfterSave(romView) {
-      // TRIGGERED! This is some sort of debug hang loop that triggers as a
-      // result of overwriting the ROM. It has something to do with loading the
-      // strings structures. If I knew what I was doing wrong, I would fixed it,
-      // but for now it actually doesn't seem to be a problem to just NOP it.
+      // This patch makes it so the game will boot if the emulator is misconfigured
+      // with something other than 16K EEPROM save type. Obviously users should
+      // set the correct save type, but this will let them play at least (with broken saving)
       // gamemasterplc: @PartyPlanner64 the jump you had to overwrite at 8000C2C0 is due
       // to the game needing 16k eeprom and emulators not setting it for modded roms
       romView.setUint32(0x0000CEC0, 0);
