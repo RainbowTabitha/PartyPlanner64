@@ -36,6 +36,8 @@ These emulators seem to have issues, even with the right setup (8MB RAM):
 
 * Project64 1.6
 
+See the [emulator setup](https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup) page.
+
 ## Building
 
 After cloning the repository, you will need to do the following to run your own instance of PP64 locally:
