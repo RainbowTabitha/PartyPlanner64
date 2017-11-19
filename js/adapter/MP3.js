@@ -78,6 +78,8 @@ PP64.adapters.MP3 = (function() {
       // result of overwriting the ROM. It has something to do with loading the
       // strings structures. If I knew what I was doing wrong, I would fixed it,
       // but for now it actually doesn't seem to be a problem to just NOP it.
+      // gamemasterplc: @PartyPlanner64 the jump you had to overwrite at 8000C2C0 is due
+      // to the game needing 16k eeprom and emulators not setting it for modded roms
       romView.setUint32(0x0000CEC0, 0);
 
       // The release ROM has debugger checks in it, which can cause some

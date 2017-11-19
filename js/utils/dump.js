@@ -291,4 +291,25 @@ PP64.utils.dump = class Dump {
 
     console.table(table);
   }
+
+  // Prints region of ROM as assembly instructions
+  static printAsm(start, end) {
+    let romView = PP64.romhandler.getDataView();
+    let curOffset = start;
+    let insts = [];
+    while (curOffset <= end) {
+      let value = romView.getUint32(curOffset);
+      let asm = "? " + $$hex(value);
+      try {
+        asm = MIPSInst.print(value);
+      }
+      catch(e) {
+        console.log("UNRECOGNIZED: " + $$hex(value));
+      }
+      insts.push($$hex(curOffset) + ": " + asm);
+      curOffset += 4;
+    }
+
+    console.log(insts.join("\n"));
+  }
 }

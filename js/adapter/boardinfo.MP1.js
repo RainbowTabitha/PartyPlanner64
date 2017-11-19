@@ -20,6 +20,10 @@ PP64.adapters.boardinfo.MP1 = (function() {
     introLogoImgDimens: [272, 112],
     titleScreenImg: 385,
   };
+
+  // scene 0x36? code 0x2418A0, 0x244B50
+  // PP64.utils.dump.printAsm(0x2418A0, 0x244B50)
+
   MP1_USA_DK.mainfsEventFile = [10, 422];
   MP1_USA_DK.eventASMStart = 0x00242CDC;
   MP1_USA_DK.eventASMEnd = 0x00244AFC; // 0x00244AC4
