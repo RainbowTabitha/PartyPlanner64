@@ -11,6 +11,7 @@ PP64.app = new class app {
         currentSpace: null,
         blocked: false,
         message: "",
+        messageHTML: "",
       }
 
       render() {
@@ -55,10 +56,18 @@ PP64.app = new class app {
         let blocked;
         if (this.state.blocked) {
           let content;
-          if (this.state.message) {
+          if (this.state.message || this.state.messageHTML) {
+            let messageSpan;
+            if (this.state.message) {
+              messageSpan = <span className="loadingMsgTxt selectable">{this.state.message}</span>
+            }
+            else { // messageHTML
+              messageSpan = <span className="loadingMsgTxt selectable" dangerouslySetInnerHTML={{ __html: this.state.messageHTML }}></span>
+            }
+
             content = (
               <div className="loadingMsg">
-                <span className="loadingMsgTxt selectable">{this.state.message}</span>
+                {messageSpan}
                 <br /><br />
                 <button onClick={() => { PP64.app.showMessage(); }}>OK</button>
               </div>
@@ -156,7 +165,11 @@ PP64.app = new class app {
   }
 
   showMessage = (message) => {
-    this._instance.setState({ blocked: !!message, message: message || "" });
+    this._instance.setState({ blocked: !!message, message: message || "", messageHTML: "" });
+  }
+
+  showMessageHTML = (html) => {
+    this._instance.setState({ blocked: !!html, message: "", messageHTML: html || "" });
   }
 
   refresh() {

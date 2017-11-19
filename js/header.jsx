@@ -93,6 +93,11 @@ PP64.header = (function() {
         setTimeout(() => {
           PP64.romhandler.saveROM();
           PP64.app.blockUI(false);
+
+          setTimeout(() => {
+            PP64.app.showMessageHTML(`Before trying the game, review
+              <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup" target="_blank">emulator setup instructions</a>.`);
+          }, 0);
         }, 0);
         break;
       case $actType.BOARD_LOAD:
