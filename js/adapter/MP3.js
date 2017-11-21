@@ -89,6 +89,10 @@ PP64.adapters.MP3 = (function() {
       romView.setUint32(0x0007FC58, 0); // Don't check if KMC worked...
       romView.setUint32(0x0007FC60, 0); // Don't do KMC success action...
       // The "return;" is just hit after this and the rest of the checks are skipped.
+
+      // This generally fixes duels on happening spaces.
+      // gamemasterplc: try making 0x00111F04 in ROM 0x10800009 for a temporary fix for question space duels until we figure out events better
+      romView.setUint32(0x00111F04, 0x10800009); // 800FE2E4
     }
 
     hydrateSpace(space) {

@@ -27,14 +27,14 @@ PP64.adapters.boardinfo.MP3 = (function() {
     gateImg: 354, // dir 19
   };
   MP3_CHILLY.mainfsEventFile = [19, 618];
-  MP3_CHILLY.eventASMStart = 0x00330000; // ballpark, but this is wrong -> // 0x0031E814;
+  MP3_CHILLY.eventASMStart = 0x00330000; // ballpark, but this is wrong -> // 0x0031E814; // is this 0x8011A490 ?
   MP3_CHILLY.eventASMEnd = 0x003320FC; // 0x8011C58C
   MP3_CHILLY.spaceEventsStartAddr = 0x0011E718;
   MP3_CHILLY.spaceEventsStartOffset = 0x00334288;
   MP3_CHILLY.spaceEventTables = [
     { upper: 0x31DBB8, lower: 0x31DBC0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
     { upper: 0x31DBC4, lower: 0x31DBCC }, // 0x80108054, 0x8010805C, table 0x8011E718
-    // { upper: 0x31DBD0, lower: 0x31DBD8 }, // 0x80108060, 0x80108068 // This is not a table actually, it is sneaky!
+    // { upper: 0x31DBD0, lower: 0x31DBD8 }, // 0x80108060, 0x80108068 // This is not a table actually, it is related to the happening spaces
     { upper: 0x31DBDC, lower: 0x31DBE4 }, // 0x8010806C, 0x80108074, table 0x8011E344
     // A table, but if we remove it Poison Shrooms break and probably other things
     // { upper: 0x31DBE8, lower: 0x31DBF0 }, // 0x80108078, 0x80108080, table 0x8011E4D8
@@ -58,19 +58,12 @@ PP64.adapters.boardinfo.MP3 = (function() {
     board.otherbg.largescene = PP64.fs.hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
   };
   MP3_CHILLY.onAfterOverwrite = function(romView, board) {
-    // Prevent unused event table hydration
-    // romView.setUint32(0x0031DBB8, 0); // 0x8011E2CC table
-    // romView.setUint32(0x0031DBBC, 0);
-    // romView.setUint32(0x0031DBC0, 0);
-    romView.setUint32(0x0031DBD0, 0); // This is not a table but it might be some sort of dynamic related BS
+    // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
+    // Since we don't use any default events, we can overwrite it.
+    romView.setUint32(0x0031DBD0, 0);
     romView.setUint32(0x0031DBD4, 0);
-    romView.setUint32(0x0031DBD8, 0);
-    // romView.setUint32(0x0031DBDC, 0); // 0x8011E344 table
-    // romView.setUint32(0x0031DBE0, 0);
-    // romView.setUint32(0x0031DBE4, 0);
-    // romView.setUint32(0x0031DBE8, 0); // 0x8011E4D8 table
-    // romView.setUint32(0x0031DBEC, 0);
-    // romView.setUint32(0x0031DBF0, 0);
+    romView.setUint32(0x0031DBD8, 0); // Could also try to set this to 2484B960, and bump up eventASMStart past 8011A8D8
+    // This current approach only works because of another patch in onAfterSave
 
     // Board specific calls
     //romView.setUint32(0x0031DB0C, 0); // Millenium star?
