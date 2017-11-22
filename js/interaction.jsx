@@ -46,11 +46,17 @@ PP64.interaction = (function() {
 
     let curSpaceIdx = currentSpaceIdx;
     currentSpaceIdx = -1;
+
     startX = lastX = -1;
     startY = lastY = -1;
 
+    let clickX = event.clientX - canvasRect.left;
+    let clickY = event.clientY - canvasRect.top;
+    let clickedSpaceIdx = getClickedSpace(clickX, clickY);
+
     let curBoard = PP64.boards.getCurrentBoard();
     let curSpace = curSpaceIdx === -1 ? null : curBoard.spaces[curSpaceIdx];
+    let clickedSpace = clickedSpaceIdx === -1 ? null : curBoard.spaces[clickedSpaceIdx];
 
     PP64.app.changeCurrentSpace(curSpace);
 
@@ -76,12 +82,9 @@ PP64.interaction = (function() {
     if (actionsHandledInEditorUp.indexOf(curAction) >= 0)
       return;
 
-    let clickX = event.clientX - canvasRect.left;
-    let clickY = event.clientY - canvasRect.top;
-
     if (curAction === $actType.DELETE || curAction === $actType.ERASE) {
-      if (curSpace && curSpace.type !== $spaceType.START) {
-        PP64.boards.removeSpace(curSpaceIdx);
+      if (clickedSpace && clickedSpace.type !== $spaceType.START) {
+        PP64.boards.removeSpace(clickedSpaceIdx);
         PP64.app.changeCurrentSpace(null);
         PP64.renderer.render();
       }
@@ -91,7 +94,7 @@ PP64.interaction = (function() {
     } else if (curAction === $actType.MARK_STAR) {
       _toggleHostsStar(curSpace);
     } else {
-      if (moved && getClickedSpace(clickX, clickY) >= 0)
+      if (moved && clickedSpace)
         return; // Avoid placing over an existing space
       _addSpace(curAction, clickX, clickY, curSpace, moved);
     }
