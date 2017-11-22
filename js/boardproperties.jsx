@@ -91,9 +91,20 @@ PP64.properties.BoardProperties = (function() {
             onAnimBgsChanged={this.onAnimBgsChanged} />
         );
       });
+
+      let playButton;
+      if (bgs.length) {
+        playButton = (
+          <AnimationPlayButton />
+        );
+      }
+
       return (
         <div className="propertiesAnimationBGList">
-          <span className="propertySectionTitle">Animation Backgrounds</span>
+          <span className="propertySectionTitle">
+            Animation Backgrounds
+            {playButton}
+          </span>
           {entries}
           <AnimationBGAddButton onAnimBgsChanged={this.onAnimBgsChanged} />
         </div>
@@ -105,11 +116,13 @@ PP64.properties.BoardProperties = (function() {
     state = { }
 
     onMouseDown = () => {
-      PP64.renderer.external.setBGImage(this.props.bg);
+      if (!PP64.renderer.animationPlaying())
+        PP64.renderer.external.setBGImage(this.props.bg);
     }
 
     restoreMainBG = () => {
-      PP64.renderer.renderBG();
+      if (!PP64.renderer.animationPlaying())
+        PP64.renderer.renderBG();
     }
 
     onRemove = () => {
@@ -156,6 +169,36 @@ PP64.properties.BoardProperties = (function() {
           <span className="propertiesActionButtonSpan">Add background</span>
         </div>
       );
+    }
+  };
+
+  const AnimationPlayButton = class AnimationPlayButton extends React.Component {
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        playing: PP64.renderer.animationPlaying()
+      }
+    }
+
+    render() {
+      let icon = this.state.playing ? "▮▮" : "►";
+      return (
+        <div className="animPlayBtn" onClick={this.onClick}>{icon}</div>
+      );
+    }
+
+    onClick = () => {
+      this.setState({ playing: !this.state.playing });
+
+      if (!this.state.playing)
+        PP64.renderer.playAnimation();
+      else
+        PP64.renderer.stopAnimation();
+    }
+
+    componentWillUnmount() {
+      PP64.renderer.stopAnimation();
     }
   };
 

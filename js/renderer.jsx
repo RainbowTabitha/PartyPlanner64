@@ -369,6 +369,48 @@ PP64.renderer = (function() {
     }
   };
 
+  let _animInterval;
+  let _currentFrame = -1;
+
+  function _startAnimation() {
+    if (!_animInterval) {
+      _animInterval = setInterval(_animationStep, 800);
+    }
+  }
+
+  function _stopAnimation() {
+    if (_animInterval) {
+      clearInterval(_animInterval);
+    }
+
+    _animInterval = null;
+    _currentFrame = -1;
+
+    PP64.renderer.renderBG(); // Reset image
+  }
+
+  function _animationStep() {
+    const board = PP64.boards.getCurrentBoard();
+    const animbgs = board.animbg;
+    if (!_boardBG || !animbgs || !animbgs.length) {
+      _stopAnimation();
+      return;
+    }
+
+    else if (_currentFrame >= 0 && _currentFrame < animbgs.length) {
+      _boardBG.setSource(animbgs[_currentFrame]);
+      _currentFrame++;
+    }
+    else {
+      _currentFrame = -1;
+    }
+
+    if (_currentFrame === -1) {
+      _boardBG.setSource(board.bg.src);
+      _currentFrame++;
+    }
+  }
+
   let _boardLines;
   let BoardLines = class BoardLines extends React.Component {
     state = {}
@@ -605,6 +647,13 @@ PP64.renderer = (function() {
       drawConnection(lineCtx, x1, y1, x2, y2);
     },
     drawAssociation,
+
+    playAnimation: _startAnimation,
+    stopAnimation: _stopAnimation,
+    animationPlaying: function() {
+      return !!_animInterval;
+    },
+
     external: {
       getBGImage: function() {
         return _boardBG.getImage();
@@ -615,6 +664,7 @@ PP64.renderer = (function() {
       renderConnections: renderConnections,
       renderSpaces: renderSpaces
     },
+
     Editor,
   };
 })();
