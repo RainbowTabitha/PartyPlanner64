@@ -177,12 +177,36 @@ PP64.utils.FORM = class FORM {
     let faceCount = rawView.getUint16(0);
     let faceOffset = 8;
     for (let i = 0; i < faceCount; i++) {
-      // let sideType = rawView.getUint8(faceOffset);
-      //let byteLen = sideType === 0x35 ? 
-      let face = {};
+      let faceType = rawView.getUint8(faceOffset);
+
+      if (faceType !== 0x35 && faceType !== 0x16)
+        throw new Error(`Unrecognized faceType in FAC1: ${$$hex(faceType)}`);
+
+      let face = {
+        vtxEntries: [],
+      };
       result.faces.push(face);
 
-      faceOffset += 0; // TODO
+      faceOffset += 1; // Start after face_type
+      const vtxEntryCount = faceType === 0x35 ? 4 : 3;
+      for (let j = 0; j < vtxEntryCount; j++) {
+        face.vtxEntries[j] = {
+          vertexIndex: rawView.getUint16(faceOffset),
+          mystery1: rawView.getUint16(faceOffset + 2),
+          mystery2: rawView.getFloat32(faceOffset + 4),
+          mystery3: rawView.getFloat32(faceOffset + 8),
+        }
+        faceOffset += 12; // sizeof(FAC1VtxEntry)
+      }
+
+      face.mystery1 = rawView.getInt16(faceOffset);
+      face.mystery2 = rawView.getInt16(faceOffset + 2);
+      face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
+
+      if (face.mystery3 !== 0x36)
+        throw new Error(`Unexpected mystery3 in FAC1 ${$$hex(face.mystery3)}`);
+
+      faceOffset += 5;
     }
     return result;
   }
