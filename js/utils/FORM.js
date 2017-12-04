@@ -119,6 +119,8 @@ PP64.utils.FORM = class FORM {
 
   static parseType(type, raw) {
     switch (type) {
+      case "OBJ1":
+        return PP64.utils.FORM.parseOBJ1(raw);
       case "COL1":
         return PP64.utils.FORM.parseCOL1(raw);
       case "VTX1":
@@ -132,6 +134,77 @@ PP64.utils.FORM = class FORM {
     }
 
     return null;
+  }
+
+  static parseOBJ1(raw) {
+    let rawView = new DataView(raw);
+    let result = {
+      objects: [],
+      mystery1: rawView.getUint16(2),
+    };
+
+    let objCount = rawView.getUint16(0);
+    let objectOffset = 4;
+    for (let i = 0; i < objCount; i++) {
+      let objSize = rawView.getUint16(objectOffset);
+      let objType = rawView.getUint8(objectOffset + 2);
+
+      let objIndex = rawView.getUint16(objectOffset + 3);
+
+      objectOffset += 5;
+
+      let obj;
+      switch (objType) {
+        case 0x3D:
+          obj = {
+            children: [],
+          };
+          const subObjCount = rawView.getUint16(objectOffset);
+          for (let j = 0; j < subObjCount; j++) {
+            obj.children.push(rawView.getUint16(objectOffset + 2 + (2 * j)));
+          }
+          obj.mystery1 = rawView.getFloat32(objectOffset + 2 + (2 * subObjCount));
+          obj.mystery2 = rawView.getFloat32(objectOffset + 2 + (2 * subObjCount) + 4);
+          obj.mystery3 = rawView.getFloat32(objectOffset + 2 + (2 * subObjCount) + 8);
+          // TODO: More mysteries
+          break;
+
+        case 0x3A:
+          obj = {
+            mystery1: rawView.getUint8(objectOffset),
+            faceIndex: rawView.getUint16(objectOffset + 1),
+            faceCount: rawView.getUint16(objectOffset + 3),
+            // TODO: More mysteries
+          };
+          break;
+
+        case 0x3E:
+          // TODO
+          obj = {};
+          break;
+
+        case 0x61:
+          obj = {};
+          // TODO
+          break;
+
+        case 0x10: // TODO never seen this
+          obj = {};
+          // TODO
+          break;
+
+        default:
+          throw `Unrecognized object type ${$$hex(objType)}`;
+      }
+
+      obj.objType = objType;
+
+      result.objects[objIndex] = obj;
+
+      objectOffset += objSize - 3; // -3 because +5 above included 3 from objSize
+    }
+
+    return result;
   }
 
   static parseCOL1(raw) {
@@ -150,6 +223,7 @@ PP64.utils.FORM = class FORM {
     let rawView = new DataView(raw);
     let result = {
       vertices: [],
+      scale: rawView.getFloat32(4),
     };
     let vertexCount = rawView.getUint16(0);
     let vertexOffset = 8;
@@ -203,7 +277,7 @@ PP64.utils.FORM = class FORM {
       face.mystery2 = rawView.getInt16(faceOffset + 2);
       face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
 
-      if (face.mystery3 !== 0x36)
+      if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37)
         throw new Error(`Unexpected mystery3 in FAC1 ${$$hex(face.mystery3)}`);
 
       faceOffset += 5;
