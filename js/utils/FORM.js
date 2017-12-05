@@ -178,6 +178,11 @@ PP64.utils.FORM = class FORM {
           };
           break;
 
+        case 0x3B:
+          // TODO mp3 25/2
+          obj = {};
+          break;
+
         case 0x3E:
           // TODO
           obj = {};
@@ -186,6 +191,11 @@ PP64.utils.FORM = class FORM {
         case 0x61:
           obj = {};
           // TODO
+          break;
+
+        case 0x5D:
+          obj = {};
+          // TODO mp3 13/0
           break;
 
         case 0x10: // TODO never seen this
@@ -253,7 +263,7 @@ PP64.utils.FORM = class FORM {
     for (let i = 0; i < faceCount; i++) {
       let faceType = rawView.getUint8(faceOffset);
 
-      if (faceType !== 0x35 && faceType !== 0x16)
+      if (faceType !== 0x35 && faceType !== 0x16 && faceType !== 0x30) // 0x30 in mainfs 9/81 mp1
         throw new Error(`Unrecognized faceType in FAC1: ${$$hex(faceType)}`);
 
       let face = {
@@ -262,22 +272,29 @@ PP64.utils.FORM = class FORM {
       result.faces.push(face);
 
       faceOffset += 1; // Start after face_type
-      const vtxEntryCount = faceType === 0x35 ? 4 : 3;
-      for (let j = 0; j < vtxEntryCount; j++) {
-        face.vtxEntries[j] = {
-          vertexIndex: rawView.getUint16(faceOffset),
-          mystery1: rawView.getUint16(faceOffset + 2),
-          mystery2: rawView.getFloat32(faceOffset + 4),
-          mystery3: rawView.getFloat32(faceOffset + 8),
+
+      if (faceType === 0x30) {
+        faceOffset += 6; // TODO: What is 0x30 type? VTX num VTX?
+      }
+      else {
+        const vtxEntryCount = faceType === 0x35 ? 4 : 3;
+        for (let j = 0; j < vtxEntryCount; j++) {
+          face.vtxEntries[j] = {
+            vertexIndex: rawView.getUint16(faceOffset),
+            mystery1: rawView.getUint16(faceOffset + 2),
+            mystery2: rawView.getFloat32(faceOffset + 4),
+            mystery3: rawView.getFloat32(faceOffset + 8),
+          }
+          faceOffset += 12; // sizeof(FAC1VtxEntry)
         }
-        faceOffset += 12; // sizeof(FAC1VtxEntry)
       }
 
       face.mystery1 = rawView.getInt16(faceOffset);
       face.mystery2 = rawView.getInt16(faceOffset + 2);
       face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
 
-      if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37 && face.mystery3 !== 0x30)
+      // TODO 0x38 in mp2 31/5
+      if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37 && face.mystery3 !== 0x38 && face.mystery3 !== 0x30)
         throw new Error(`Unexpected mystery3 in FAC1 ${$$hex(face.mystery3)}`);
 
       faceOffset += 5;

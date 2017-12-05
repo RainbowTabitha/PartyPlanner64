@@ -4,8 +4,9 @@
 }
 
 .modelRenderContainer {
-  height: calc(100% - 36px);
+  height: calc(100% - 50px);
   width: 100%;
+  position: relative;
 }
 
 .modelViewerToolbar {
@@ -23,4 +24,5 @@
 .modelSelectContainer select {
   vertical-align: middle;
   margin: 1px 0.5em;
+  color: initial;
 }

@@ -65,8 +65,8 @@ PP64.models = (function() {
 
       let container = ReactDOM.findDOMNode(this);
 
-      let height = window.innerHeight - 48 - 40; // - headerHeight
-      let width = window.innerWidth - 2;
+      let height = container.offsetHeight;
+      let width = container.offsetWidth;
 
       scene = new THREE.Scene();
 
@@ -131,7 +131,7 @@ PP64.models = (function() {
         for (let i = obj.faceIndex; i < obj.faceIndex + obj.faceCount; i++) {
           let face = form.FAC1[0].parsed.faces[i];
 
-          if (vtxBase === undefined) {
+          if (vtxBase === undefined && face.vtxEntries.length) {
             vtxBase = face.vtxEntries[0].vertexIndex;
           }
 
