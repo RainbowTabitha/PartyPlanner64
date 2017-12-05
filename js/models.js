@@ -73,19 +73,26 @@ PP64.models = (function() {
       camera = new THREE.PerspectiveCamera(75, width / height, 1, 20000);
       camera.position.z = 500;
 
-      let geometry = new THREE.Geometry();
+      let geometries = [];
+
+      $$log(`Rendering model ${dir}/${file}`);
       let form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
-      this.populateGeometry(geometry, form);
 
-      $$log("Displaying geometry", geometry);
+      this.populateGeometry(geometries, form);
 
-      let dotMaterial = new THREE.PointsMaterial({ size: 3, sizeAttenuation: true });
-      let dots = new THREE.Points(geometry, dotMaterial);
-      scene.add(dots);
+      $$log("Displaying geometries", geometries);
 
-      let wireframeMaterial = new THREE.MeshBasicMaterial({ wireframe: true });
-      let wireframe = new THREE.Mesh(geometry, wireframeMaterial);
-      scene.add(wireframe);
+      geometries.forEach((geometry) => {
+        let dotMaterial = new THREE.PointsMaterial({ size: 3, sizeAttenuation: true });
+        let dots = new THREE.Points(geometry, dotMaterial);
+        scene.add(dots);
+
+        //let wireframeMaterial = new THREE.MeshBasicMaterial({ wireframe: false, color: 0xFFAA00 });
+        let wireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 1 } );
+        //let wireframe = new THREE.Mesh(geometry, wireframeMaterial);
+        let wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), wireframeMaterial);
+        scene.add(wireframe);
+      });
 
       renderer = new THREE.WebGLRenderer();
       renderer.setSize(width, height);
@@ -97,11 +104,11 @@ PP64.models = (function() {
       this.animate();
     }
 
-    populateGeometry(geometry, form) {
-      this.populateGeometryWithObject(geometry, form, 0, { x: 0, y: 0, z: 0 });
+    populateGeometry(geometries, form) {
+      this.populateGeometryWithObject(geometries, form, 0, { x: 0, y: 0, z: 0 });
     }
 
-    populateGeometryWithObject(geometry, form, objIndex, coords) {
+    populateGeometryWithObject(geometries, form, objIndex, coords) {
       var obj = form.OBJ1[0].parsed.objects[objIndex];
       if (obj.objType === 0x3D) {
         // Recurse to child objs
@@ -113,12 +120,20 @@ PP64.models = (function() {
         };
 
         for (let i = 0; i < obj.children.length; i++) {
-          this.populateGeometryWithObject(geometry, form, obj.children[i], newCoords);
+          this.populateGeometryWithObject(geometries, form, obj.children[i], newCoords);
         }
       }
       else if (obj.objType === 0x3A) {
+        let geometry = new THREE.Geometry();
+        geometries.push(geometry);
+
+        let vtxBase;
         for (let i = obj.faceIndex; i < obj.faceIndex + obj.faceCount; i++) {
           let face = form.FAC1[0].parsed.faces[i];
+
+          if (vtxBase === undefined) {
+            vtxBase = face.vtxEntries[0].vertexIndex;
+          }
 
           const newCoords = {
             x: coords.x,
@@ -126,12 +141,12 @@ PP64.models = (function() {
             z: coords.z,
           };
 
-          this.populateGeometryWithFace(geometry, form, face, newCoords)
+          this.populateGeometryWithFace(geometry, form, face, vtxBase, newCoords);
         }
       }
     }
 
-    populateGeometryWithFace(geometry, form, face, coords) {
+    populateGeometryWithFace(geometry, form, face, vtxBase, coords) {
       const scale = form.VTX1[0].parsed.scale;
 
       for (let i = 0; i < face.vtxEntries.length; i++) {
@@ -145,25 +160,27 @@ PP64.models = (function() {
       }
 
       if (face.vtxEntries.length === 3) {
-        // const tri = new THREE.Face3();
-        // tri.a = face.vtxEntries[0].vertexIndex;
-        // tri.b = face.vtxEntries[1].vertexIndex;
-        // tri.c = face.vtxEntries[2].vertexIndex;
-        // tri.color = new THREE.Color(0xffaa00);
-        // geometry.faces.push(tri);
+        const tri = new THREE.Face3();
+        tri.a = face.vtxEntries[0].vertexIndex - vtxBase;
+        tri.b = face.vtxEntries[1].vertexIndex - vtxBase;
+        tri.c = face.vtxEntries[2].vertexIndex - vtxBase;
+        tri.color = new THREE.Color(0xaa9900);
+        geometry.faces.push(tri);
       }
       else if (face.vtxEntries.length === 4) {
-        // const tri1 = new THREE.Face3();
-        // tri1.a = face.vtxEntries[0].vertexIndex;
-        // tri1.b = face.vtxEntries[1].vertexIndex;
-        // tri1.c = face.vtxEntries[2].vertexIndex;
-        // geometry.faces.push(tri1);
+        const tri1 = new THREE.Face3();
+        tri1.a = face.vtxEntries[0].vertexIndex - vtxBase;
+        tri1.b = face.vtxEntries[1].vertexIndex - vtxBase;
+        tri1.c = face.vtxEntries[2].vertexIndex - vtxBase;
+        tri1.color = new THREE.Color(0xaa9900);
+        geometry.faces.push(tri1);
 
-        // const tri2 = new THREE.Face3();
-        // tri2.a = face.vtxEntries[0].vertexIndex;
-        // tri2.b = face.vtxEntries[3].vertexIndex;
-        // tri2.c = face.vtxEntries[2].vertexIndex;
-        // geometry.faces.push(tri2);
+        const tri2 = new THREE.Face3();
+        tri2.a = face.vtxEntries[0].vertexIndex - vtxBase;
+        tri2.b = face.vtxEntries[3].vertexIndex - vtxBase;
+        tri2.c = face.vtxEntries[2].vertexIndex - vtxBase;
+        tri2.color = new THREE.Color(0xaa9900);
+        geometry.faces.push(tri2);
       }
     }
 

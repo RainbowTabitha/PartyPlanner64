@@ -277,7 +277,7 @@ PP64.utils.FORM = class FORM {
       face.mystery2 = rawView.getInt16(faceOffset + 2);
       face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
 
-      if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37)
+      if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37 && face.mystery3 !== 0x30)
         throw new Error(`Unexpected mystery3 in FAC1 ${$$hex(face.mystery3)}`);
 
       faceOffset += 5;
