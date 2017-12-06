@@ -242,9 +242,9 @@ PP64.utils.FORM = class FORM {
         x: rawView.getInt16(vertexOffset),
         y: rawView.getInt16(vertexOffset + 2),
         z: rawView.getInt16(vertexOffset + 4),
-        mystery1: rawView.getUint8(vertexOffset + 6),
-        mystery2: rawView.getUint8(vertexOffset + 7),
-        mystery3: rawView.getUint8(vertexOffset + 8),
+        normalX: rawView.getInt8(vertexOffset + 6),
+        normalY: rawView.getInt8(vertexOffset + 7),
+        normalZ: rawView.getInt8(vertexOffset + 8),
       };
       result.vertices.push(vertex);
 

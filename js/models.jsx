@@ -87,11 +87,16 @@ PP64.models = (function() {
         let dots = new THREE.Points(geometry, dotMaterial);
         scene.add(dots);
 
-        //let wireframeMaterial = new THREE.MeshBasicMaterial({ wireframe: false, color: 0xFFAA00 });
+        let meshMaterial = new THREE.MeshBasicMaterial({ wireframe: false, color: 0xFFAA00 });
+        let mesh = new THREE.Mesh(geometry, meshMaterial);
+        //scene.add(mesh);
+
         let wireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 1 } );
-        //let wireframe = new THREE.Mesh(geometry, wireframeMaterial);
         let wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), wireframeMaterial);
         scene.add(wireframe);
+
+        var normalsHelper = new THREE.VertexNormalsHelper(mesh, 8, 0x00ff00, 1);
+        scene.add(normalsHelper);
       });
 
       renderer = new THREE.WebGLRenderer();
@@ -159,29 +164,52 @@ PP64.models = (function() {
         ));
       }
 
-      if (face.vtxEntries.length === 3) {
+      const vtxEntries = face.vtxEntries;
+      if (vtxEntries.length === 3) {
         const tri = new THREE.Face3();
-        tri.a = face.vtxEntries[0].vertexIndex - vtxBase;
-        tri.b = face.vtxEntries[1].vertexIndex - vtxBase;
-        tri.c = face.vtxEntries[2].vertexIndex - vtxBase;
-        tri.color = new THREE.Color(0xaa9900);
+        tri.a = vtxEntries[0].vertexIndex - vtxBase;
+        tri.b = vtxEntries[1].vertexIndex - vtxBase;
+        tri.c = vtxEntries[2].vertexIndex - vtxBase;
+        tri.vertexNormals = this.makeVertexNormals(form, tri.a, tri.b, tri.c);
+        //tri.color = new THREE.Color(0xaa9900);
         geometry.faces.push(tri);
       }
-      else if (face.vtxEntries.length === 4) {
+      else if (vtxEntries.length === 4) {
         const tri1 = new THREE.Face3();
-        tri1.a = face.vtxEntries[0].vertexIndex - vtxBase;
-        tri1.b = face.vtxEntries[1].vertexIndex - vtxBase;
-        tri1.c = face.vtxEntries[2].vertexIndex - vtxBase;
-        tri1.color = new THREE.Color(0xaa9900);
+        tri1.a = vtxEntries[0].vertexIndex - vtxBase;
+        tri1.b = vtxEntries[1].vertexIndex - vtxBase;
+        tri1.c = vtxEntries[2].vertexIndex - vtxBase;
+        tri1.vertexNormals = this.makeVertexNormals(form, tri1.a, tri1.b, tri1.c);
+        //tri1.color = new THREE.Color(0xaa9900);
+
         geometry.faces.push(tri1);
 
         const tri2 = new THREE.Face3();
-        tri2.a = face.vtxEntries[0].vertexIndex - vtxBase;
-        tri2.b = face.vtxEntries[3].vertexIndex - vtxBase;
-        tri2.c = face.vtxEntries[2].vertexIndex - vtxBase;
-        tri2.color = new THREE.Color(0xaa9900);
+        tri2.a = vtxEntries[0].vertexIndex - vtxBase;
+        tri2.b = vtxEntries[3].vertexIndex - vtxBase;
+        tri2.c = vtxEntries[2].vertexIndex - vtxBase;
+        tri2.vertexNormals = this.makeVertexNormals(form, tri2.a, tri2.b, tri2.c);
+        //tri2.color = new THREE.Color(0xaa9900);
+
         geometry.faces.push(tri2);
       }
+    }
+
+    makeVertexNormals(form, vtxIndex1, vtxIndex2, vtxIndex3) {
+      return [
+        this.makeVertexNormal(form, vtxIndex1),
+        this.makeVertexNormal(form, vtxIndex2),
+        this.makeVertexNormal(form, vtxIndex3),
+      ];
+    }
+
+    makeVertexNormal(form, vtxIndex) {
+      let vtx = form.VTX1[0].parsed.vertices[vtxIndex];
+      return new THREE.Vector3(
+        (vtx.normalX) / (127 + (vtx.normalX < 0 ? 1 : 0)),
+        (vtx.normalY) / (127 + (vtx.normalY < 0 ? 1 : 0)),
+        (vtx.normalZ) / (127 + (vtx.normalZ < 0 ? 1 : 0)),
+      );
     }
 
     renderModel() {
