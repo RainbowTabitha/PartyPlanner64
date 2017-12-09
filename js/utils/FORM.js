@@ -1,6 +1,6 @@
 PP64.ns("utils");
 
-// This is most likely a packaging format for 3D models.
+// Extracts a FORM file into a usable format.
 PP64.utils.FORM = class FORM {
   static unpack(formView) {
     if (!(formView instanceof DataView))
@@ -43,14 +43,9 @@ PP64.utils.FORM = class FORM {
 
     // With all BMPs and PALs parsed, now we can decode the BMPs.
     if (formObj.BMP1 && formObj.PAL1) {
-      if (formObj.BMP1.length !== formObj.PAL1.length) {
-        $$log("FORM: BMP1 and PAL1 counts don't match.");
-      }
-      else {
-        for (let i = 0; i < formObj.BMP1.length; i++) {
-          let bmpEntry = formObj.BMP1[i];
-          bmpEntry.parsed = PP64.utils.FORM.parseBMP(bmpEntry.raw, formObj.PAL1[i].parsed);
-        }
+      for (let i = 0; i < formObj.BMP1.length; i++) {
+        let bmpEntry = formObj.BMP1[i];
+        bmpEntry.parsed = PP64.utils.FORM.parseBMP(bmpEntry.raw, formObj.PAL1);
       }
     }
 
@@ -123,6 +118,8 @@ PP64.utils.FORM = class FORM {
         return PP64.utils.FORM.parseOBJ1(raw);
       case "COL1":
         return PP64.utils.FORM.parseCOL1(raw);
+      case "MAT1":
+        return PP64.utils.FORM.parseMAT1(raw);
       case "VTX1":
         return PP64.utils.FORM.parseVTX1(raw);
       case "FAC1":
@@ -229,6 +226,28 @@ PP64.utils.FORM = class FORM {
     return colors;
   }
 
+  static parseMAT1(raw) {
+    let rawView = new DataView(raw);
+    let result = {
+      materials: [],
+    };
+    let materialCount = rawView.getUint16(0);
+    let materialOffset = 2;
+    for (let i = 0; i < materialCount; i++) {
+      let material = {
+        mystery1: rawView.getUint16(materialOffset),
+        colorIndex: rawView.getUint16(materialOffset + 2),
+        mystery3: rawView.getUint16(materialOffset + 4),
+        mystery4: rawView.getFloat32(materialOffset + 6),
+        mystery5: rawView.getUint16(materialOffset + 10),
+      };
+      result.materials.push(material);
+
+      materialOffset += 12;
+    }
+    return result;
+  }
+
   static parseVTX1(raw) {
     let rawView = new DataView(raw);
     let result = {
@@ -307,6 +326,7 @@ PP64.utils.FORM = class FORM {
     let result = {
       colors: [],
       bpp: 0,
+      globalIndex: rawView.getUint16(0),
     };
     let colorCount = rawView.getUint16(2);
     result.bpp = Math.floor((raw.byteLength - 4) / colorCount) * 8;
@@ -343,21 +363,50 @@ PP64.utils.FORM = class FORM {
     return strings;
   }
 
-  static parseBMP(raw, palette) {
+  static parseBMP(raw, PAL1) {
     let rawView = new DataView(raw);
+    let format = rawView.getUint16(0x2);
     let width = rawView.getUint16(0x05);
     let height = rawView.getUint16(0x07);
-    let inBmpSize = rawView.getUint16(0x0F);
 
-    // Doesn't appear to indicate BPP, but we can calculate from size and dimens.
-    let inBpp = 8 / ((width * height) / inBmpSize);
-    let outBpp = palette.bpp;
-    let inBmpData = new DataView(raw, 0x11, inBmpSize);
-    return {
-      width,
-      height,
-      src: PP64.utils.img.BMP.toRGBA(inBmpData, palette.colors, inBpp, outBpp)
-    };
+    if (format === 0x128) {
+      let paletteGlobalIndex = rawView.getUint16(0x09);
+      let inBmpSize = rawView.getUint16(0x0F);
+
+      // Find associated palette by global index
+      let palette;
+      for (let i = 0; i < PAL1.length; i++) {
+        if (PAL1[i].parsed.globalIndex === paletteGlobalIndex) {
+          palette = PAL1[i].parsed;
+          break;
+        }
+      }
+      if (!palette) {
+        throw `Could not locate palette at global index ${paletteGlobalIndex}`;
+      }
+
+      // Doesn't appear to indicate BPP, but we can calculate from size and dimens.
+      let inBpp = 8 / ((width * height) / inBmpSize);
+      let outBpp = palette.bpp;
+      let inBmpData = new DataView(raw, 0x11, inBmpSize);
+
+      return {
+        globalIndex: rawView.getUint16(0),
+        width,
+        height,
+        src: PP64.utils.img.BMP.toRGBA(inBmpData, palette.colors, inBpp, outBpp),
+      };
+    }
+    else {
+      // TODO: 0x127 is some partially non-paletted format.
+      $$log(`Could not parse BMP format ${$$hex(format)}`);
+      return {
+        globalIndex: rawView.getUint16(0),
+        width,
+        height,
+        src: new ArrayBuffer(width * height * 4),
+      };
+    }
   }
 
   static replaceBMP(formObj, bmpIndex, buffer, palette) {
