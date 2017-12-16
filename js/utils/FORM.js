@@ -120,6 +120,8 @@ PP64.utils.FORM = class FORM {
         return PP64.utils.FORM.parseCOL1(raw);
       case "MAT1":
         return PP64.utils.FORM.parseMAT1(raw);
+      case "ATR1":
+        return PP64.utils.FORM.parseATR1(raw);
       case "VTX1":
         return PP64.utils.FORM.parseVTX1(raw);
       case "FAC1":
@@ -249,6 +251,30 @@ PP64.utils.FORM = class FORM {
       result.materials.push(material);
 
       materialOffset += 12;
+    }
+    return result;
+  }
+
+  static parseATR1(raw) {
+    let rawView = new DataView(raw);
+    let result = {
+      atrs: [],
+    };
+    let atrCount = rawView.getUint16(0);
+    let atrOffset = 2;
+    for (let i = 0; i < atrCount; i++) {
+      let atr = {
+        size: rawView.getUint16(atrOffset),
+        // 2A
+        // FF FF
+        xBehavior: rawView.getUint8(atrOffset + 0x5),
+        yBehavior: rawView.getUint8(atrOffset + 0x6),
+        // 2F 2F 01
+        bmpGlobalIndex: rawView.getUint16(atrOffset + 0xA),
+      };
+      result.atrs.push(atr);
+
+      atrOffset += atr.size + 2;
     }
     return result;
   }
@@ -432,11 +458,35 @@ PP64.utils.FORM = class FORM {
         src: raw.slice(0xD, imageByteLength),
       };
     }
+    else if (format === 0x125) {
+      // Grayscale?
+      // TODO: I don't think this is right? Some sort of shadow mask?
+      const imageByteLength = rawView.getUint16(0xB);
+
+      const outBuffer = new ArrayBuffer(imageByteLength * 4);
+      const outView = new DataView(outBuffer);
+      for (let i = 0; i < imageByteLength; i++) {
+        let outValue = 0;
+        const inByte = rawView.getUint8(0xD + i);
+        const alpha = (inByte & 0x0F) | ((inByte & 0x0F) << 4);
+        const grayscale = (inByte & 0xF0) | ((inByte & 0xF0) >>> 4);
+        const rgba32 = (grayscale << 24) | (grayscale << 16) | (grayscale << 8) | alpha;
+        const outIndex = i * 4;
+        outView.setUint32(outIndex, rgba32);
+      }
+
+      return {
+        globalIndex: rawView.getUint16(0),
+        width,
+        height,
+        src: outBuffer,
+      };
+    }
     else {
       // TODO: Other formats
       // 0x228 mp1 0/93
       // 0x125 mp1 9/30
-      $$log(`Could not parse BMP format ${$$hex(format)}`);
+      console.warn(`Could not parse BMP format ${$$hex(format)}`);
       return {
         globalIndex: rawView.getUint16(0),
         width,

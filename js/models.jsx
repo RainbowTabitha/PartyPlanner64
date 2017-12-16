@@ -127,16 +127,55 @@ PP64.models = (function() {
           throw "sorting BMPs: global indices cannot be equal";
         });
 
+        const atrsByBitmap = {};
+        if (form.ATR1 && form.ATR1[0]) {
+          const atrs = form.ATR1[0].parsed.atrs;
+          for (let i = 0; i < atrs.length; i++) {
+            atrsByBitmap[atrs[i].bmpGlobalIndex] = atrs[i];
+          }
+        }
+
         for (let i = 0; i < sortedBMPs.length; i++) {
           if (sortedBMPs[i] && sortedBMPs[i].parsed) {
-            const dataUri = PP64.utils.arrays.arrayBufferToDataURL(sortedBMPs[i].parsed.src, sortedBMPs[i].parsed.width, sortedBMPs[i].parsed.height);
-            $$log("Texture", dataUri)
-            const loader = new THREE.TextureLoader()
-            loader.crossOrigin="";
+            const bmp = sortedBMPs[i].parsed;
+            const dataUri = PP64.utils.arrays.arrayBufferToDataURL(bmp.src, bmp.width, bmp.height);
+            $$log("Texture", dataUri);
+            const loader = new THREE.TextureLoader();
+            loader.crossOrigin = "";
             const texture = loader.load(dataUri);
             texture.flipY = false;
-            //texture.wrapS = THREE.RepeatWrapping;
-            //texture.wrapT = THREE.RepeatWrapping;
+
+            const atr = atrsByBitmap[bmp.globalIndex];
+            if (atr) {
+              switch (atr.xBehavior) {
+                case 0x2C:
+                  texture.wrapS = THREE.MirroredRepeatWrapping;
+                  break;
+                case 0x2D:
+                  texture.wrapS = THREE.RepeatWrapping;
+                  break;
+                case 0x2E:
+                  break; // THREE.ClampToEdgeWrapping, default
+                default:
+                  console.warn(`Unknown xBehavior ${$$hex(atr.xBehavior)} in BMP ${i}`);
+                  break;
+              }
+
+              switch (atr.yBehavior) {
+                case 0x2C:
+                  texture.wrapT = THREE.MirroredRepeatWrapping;
+                  break;
+                case 0x2D:
+                  texture.wrapT = THREE.RepeatWrapping;
+                  break;
+                case 0x2E:
+                  break; // THREE.ClampToEdgeWrapping, default
+                default:
+                  console.warn(`Unknown yBehavior ${$$hex(atr.yBehavior)} in BMP ${i}`);
+                  break;
+              }
+            }
+
             const textureMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
             materials.push(textureMaterial);
           }
