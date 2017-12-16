@@ -20,27 +20,55 @@ PP64.models = (function() {
 
   let _modelRenderer, camera, scene, renderer, controls, animateTimer;
   const ModelRenderer = class ModelRenderer extends React.Component {
-    state = {}
+    state = {
+      hasError: false
+    }
 
     render() {
+      if (this.state.hasError) {
+        return (
+          <p>An error occurred during rendering, see the browser console.</p>
+        );
+      }
+
       return (
         <div className="modelRenderContainer"></div>
       );
     }
 
+    componentDidCatch(error, info) {
+      this.setState({ hasError: true });
+      console.error(error, info);
+    }
+
     componentDidMount() {
-      _modelRenderer = this;
-      this.initModel();
+      try {
+        _modelRenderer = this;
+        this.initModel();
+      }
+      catch (e) {
+        console.error(e);
+      }
     }
 
     componentWillUnmount() {
-      _modelRenderer = null;
-      this.clearViewer();
+      try {
+        _modelRenderer = null;
+        this.clearViewer();
+      }
+      catch (e) {
+        console.error(e);
+      }
     }
 
     componentDidUpdate() {
-      this.clearViewer();
-      this.initModel();
+      try {
+        this.clearViewer();
+        this.initModel();
+      }
+      catch (e) {
+        console.error(e);
+      }
     }
 
     clearViewer() {
@@ -78,9 +106,9 @@ PP64.models = (function() {
 
       let geometries = [];
 
-      let form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
-
       $$log(`Rendering model ${dir}/${file}`, form);
+
+      let form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
 
       this.populateGeometry(geometries, form);
 
