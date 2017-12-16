@@ -126,6 +126,8 @@ PP64.utils.FORM = class FORM {
         return PP64.utils.FORM.parseFAC1(raw);
       case "PAL1":
         return PP64.utils.FORM.parsePAL1(raw);
+      case "SKL1":
+        return PP64.utils.FORM.parseSKL1(raw);
       case "STRG":
         return PP64.utils.FORM.parseSTRG(raw);
     }
@@ -175,6 +177,12 @@ PP64.utils.FORM = class FORM {
           };
           break;
 
+        case 0x10: // Points to skeleton entry // 9/11 mp1
+          obj = {
+            skeletonGlobalIndex: rawView.getUint16(objectOffset),
+          };
+          break;
+
         case 0x3B:
           // TODO mp3 25/2
           obj = {};
@@ -195,13 +203,10 @@ PP64.utils.FORM = class FORM {
           // TODO mp3 13/0
           break;
 
-        case 0x10: // TODO never seen this
-          obj = {};
-          // TODO
-          break;
-
         default:
-          throw `Unrecognized object type ${$$hex(objType)}`;
+          console.warn(`Unrecognized object type ${$$hex(objType)}`);
+          obj = {};
+          break;
       }
 
       obj.objType = objType;
@@ -313,8 +318,12 @@ PP64.utils.FORM = class FORM {
       face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
 
       // TODO 0x38 in mp2 31/5
-      if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37 && face.mystery3 !== 0x38 && face.mystery3 !== 0x30)
-        throw new Error(`Unexpected mystery3 in FAC1 ${$$hex(face.mystery3)}`);
+      //if (face.mystery3 !== 0x36 && face.mystery3 !== 0x37 && face.mystery3 !== 0x38 && face.mystery3 !== 0x30)
+      //  throw new Error(`Unexpected mystery3 in FAC1 ${$$hex(face.mystery3)}`);
+
+      // mp3 81/2 flip x, 0x37 ?
+      if (face.mystery3 !== 0x36)
+        console.warn("Unsupported FAC1 mystery3 ", $$hex(face.mystery3));
 
       faceOffset += 5;
     }
@@ -346,6 +355,21 @@ PP64.utils.FORM = class FORM {
     return result;
   }
 
+  static parseSKL1(raw) {
+    let rawView = new DataView(raw);
+
+    // console.log("SKL1");
+    // PP64.utils.arrays.print(rawView, 30);
+
+    return {
+      globalIndex: rawView.getUint16(0),
+      mystery1: rawView.getUint8(2),
+      mystery2: rawView.getUint8(3),
+      objIndex: rawView.getUint16(4),
+      // There are other floats, very similar to OBJ1
+    };
+  }
+
   static parseSTRG(raw) {
     let rawView = new DataView(raw);
     let strings = [];
@@ -370,6 +394,7 @@ PP64.utils.FORM = class FORM {
     let height = rawView.getUint16(0x07);
 
     if (format === 0x128) {
+      // Traditional bitmap format
       let paletteGlobalIndex = rawView.getUint16(0x09);
       let inBmpSize = rawView.getUint16(0x0F);
 
@@ -397,8 +422,20 @@ PP64.utils.FORM = class FORM {
         src: PP64.utils.img.BMP.toRGBA(inBmpData, palette.colors, inBpp, outBpp),
       };
     }
+    else if (format === 0x127) {
+      // Just raw RGBA already
+      const imageByteLength = rawView.getUint16(0xB);
+      return {
+        globalIndex: rawView.getUint16(0),
+        width,
+        height,
+        src: raw.slice(0xD, imageByteLength),
+      };
+    }
     else {
-      // TODO: 0x127 is some partially non-paletted format.
+      // TODO: Other formats
+      // 0x228 mp1 0/93
+      // 0x125 mp1 9/30
       $$log(`Could not parse BMP format ${$$hex(format)}`);
       return {
         globalIndex: rawView.getUint16(0),

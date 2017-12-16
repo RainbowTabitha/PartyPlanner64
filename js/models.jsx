@@ -107,9 +107,10 @@ PP64.models = (function() {
             loader.crossOrigin="";
             const texture = loader.load(dataUri);
             texture.flipY = false;
-            // texture.wrapS = THREE.RepeatWrapping;
-            // texture.wrapT = THREE.RepeatWrapping;
-            materials.push(new THREE.MeshBasicMaterial({ map: texture }));
+            //texture.wrapS = THREE.RepeatWrapping;
+            //texture.wrapT = THREE.RepeatWrapping;
+            const textureMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
+            materials.push(textureMaterial);
           }
         }
       }
@@ -166,6 +167,24 @@ PP64.models = (function() {
 
         for (let i = 0; i < obj.children.length; i++) {
           this.populateGeometryWithObject(geometries, form, obj.children[i], newCoords);
+        }
+      }
+      if (obj.objType === 0x10) {
+        // Look into SKL1, which should point back to an OBJ1 entry.
+
+        const newCoords = { // TODO: there are probably floats to include here
+          x: coords.x,
+          y: coords.y,
+          z: coords.z,
+        };
+
+        const skl1GlobalIndex = obj.skeletonGlobalIndex;
+        for (let i = 0; i < form.SKL1.length; i++) {
+          if (form.SKL1[i].parsed.globalIndex === skl1GlobalIndex) {
+            const nextObjIndex = form.SKL1[i].parsed.objIndex;
+            this.populateGeometryWithObject(geometries, form, nextObjIndex, newCoords);
+            break;
+          }
         }
       }
       else if (obj.objType === 0x3A) {
