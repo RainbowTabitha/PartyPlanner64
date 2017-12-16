@@ -131,7 +131,10 @@ PP64.models = (function() {
         if (form.ATR1 && form.ATR1[0]) {
           const atrs = form.ATR1[0].parsed.atrs;
           for (let i = 0; i < atrs.length; i++) {
-            atrsByBitmap[atrs[i].bmpGlobalIndex] = atrs[i];
+            // TODO: Why are there sometimes duplicate atrs? ex mp3 49/3
+            // Going with the first one for now.
+            if (!atrsByBitmap[atrs[i].bmpGlobalIndex])
+              atrsByBitmap[atrs[i].bmpGlobalIndex] = atrs[i];
           }
         }
 
@@ -186,7 +189,7 @@ PP64.models = (function() {
 
       materials[-1] = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors });
 
-      //$$log(materials);
+      $$log(materials);
 
       geometries.forEach((geometry) => {
         // let dotMaterial = new THREE.PointsMaterial({ size: 3, sizeAttenuation: true });
