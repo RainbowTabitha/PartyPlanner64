@@ -420,58 +420,68 @@ PP64.models = (function() {
     }
 
     populateGeometryWithObject(geometries, form, objIndex, coords) {
-      var obj = form.OBJ1[0].parsed.objects[objIndex];
-      if (obj.objType === 0x3D) {
-        // Recurse to child objs
+      let objs = PP64.utils.FORM.getByGlobalIndex(form, "OBJ1", objIndex);
+      if (objs === null)
+        throw `Attempted to get unavailable OBJ ${objIndex}`;
 
-        const newCoords = {
-          x: coords.x + obj.mystery1,
-          y: coords.y + obj.mystery2,
-          z: coords.z + obj.mystery3,
-        };
-
-        for (let i = 0; i < obj.children.length; i++) {
-          this.populateGeometryWithObject(geometries, form, obj.children[i], newCoords);
-        }
+      if (!Array.isArray(objs)) {
+        objs = [objs];
       }
-      if (obj.objType === 0x10) {
-        // Look into SKL1, which should point back to an OBJ1 entry.
 
-        const newCoords = { // TODO: there are probably floats to include here
-          x: coords.x,
-          y: coords.y,
-          z: coords.z,
-        };
+      for (let o = 0; o < objs.length; o++) {
+        const obj = objs[o];
 
-        const skl1GlobalIndex = obj.skeletonGlobalIndex;
-        for (let i = 0; i < form.SKL1.length; i++) {
-          if (form.SKL1[i].parsed.globalIndex === skl1GlobalIndex) {
-            const nextObjIndex = form.SKL1[i].parsed.objIndex;
-            this.populateGeometryWithObject(geometries, form, nextObjIndex, newCoords);
-            break;
-          }
-        }
-      }
-      else if (obj.objType === 0x3A) {
-        let geometry;
-        if (this.separateGeometries || !geometries.length) {
-          geometry = new THREE.Geometry();
-          geometries.push(geometry);
-        }
-        else {
-          geometry = geometries[0];
-        }
-
-        for (let i = obj.faceIndex; i < obj.faceIndex + obj.faceCount; i++) {
-          let face = form.FAC1[0].parsed.faces[i];
+        if (obj.objType === 0x3D) {
+          // Recurse to child objs
 
           const newCoords = {
+            x: coords.x + obj.mystery1,
+            y: coords.y + obj.mystery2,
+            z: coords.z + obj.mystery3,
+          };
+
+          for (let i = 0; i < obj.children.length; i++) {
+            this.populateGeometryWithObject(geometries, form, obj.children[i], newCoords);
+          }
+        }
+        if (obj.objType === 0x10) {
+          // Look into SKL1, which should point back to an OBJ1 entry.
+
+          const newCoords = { // TODO: there are probably floats to include here
             x: coords.x,
             y: coords.y,
             z: coords.z,
           };
 
-          this.populateGeometryWithFace(geometry, form, face, newCoords);
+          const skl1GlobalIndex = obj.skeletonGlobalIndex;
+          const sklMatch = PP64.utils.FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
+          if (sklMatch === null || Array.isArray(sklMatch))
+            throw "Unexpected SKL1 search result";
+
+          const nextObjIndex = sklMatch.objIndex;
+          this.populateGeometryWithObject(geometries, form, nextObjIndex, newCoords);
+        }
+        else if (obj.objType === 0x3A) {
+          let geometry;
+          if (this.separateGeometries || !geometries.length) {
+            geometry = new THREE.Geometry();
+            geometries.push(geometry);
+          }
+          else {
+            geometry = geometries[0];
+          }
+
+          for (let i = obj.faceIndex; i < obj.faceIndex + obj.faceCount; i++) {
+            let face = form.FAC1[0].parsed.faces[i];
+
+            const newCoords = {
+              x: coords.x,
+              y: coords.y,
+              z: coords.z,
+            };
+
+            this.populateGeometryWithFace(geometry, form, face, newCoords);
+          }
         }
       }
     }

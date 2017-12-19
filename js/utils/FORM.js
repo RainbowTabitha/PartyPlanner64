@@ -150,7 +150,7 @@ PP64.utils.FORM = class FORM {
       let objSize = rawView.getUint16(objectOffset);
       let objType = rawView.getUint8(objectOffset + 2);
 
-      let objIndex = rawView.getUint16(objectOffset + 3);
+      let globalIndex = rawView.getUint16(objectOffset + 3);
 
       objectOffset += 5;
 
@@ -215,8 +215,9 @@ PP64.utils.FORM = class FORM {
       }
 
       obj.objType = objType;
+      obj.globalIndex = globalIndex;
 
-      result.objects[objIndex] = obj;
+      result.objects.push(obj);
 
       objectOffset += objSize - 3; // -3 because +5 above included 3 from objSize
     }
@@ -545,5 +546,48 @@ PP64.utils.FORM = class FORM {
       newPaletteView.setUint32(curOutOffset, palette.colors[i]);
       curOutOffset += 4;
     }
+  }
+
+  // Retrieves a value (or possibly multiple values) by global index.
+  static getByGlobalIndex(form, section, globalIndex) {
+    if (!form[section])
+      return null;
+
+    const values = [];
+    for (var s = 0; s < form[section].length; s++) {
+      const parsedValue = form[section][s].parsed;
+      if (!parsedValue)
+        throw `No parsed value for ${section}`;
+
+      if (parsedValue.hasOwnProperty("globalIndex")) {
+        if (parsedValue.globalIndex === globalIndex)
+          values.push(parsedValue);
+      }
+      else {
+        let arrToSearch = parsedValue;
+
+        switch (section) {
+          case "OBJ1":
+            arrToSearch = parsedValue.objects;
+            break;
+        }
+
+        for (let i = 0; i < arrToSearch.length; i++) {
+          const val = arrToSearch[i];
+
+          if (!val.hasOwnProperty("globalIndex"))
+            throw new Error(`globalIndex is not a property of the searched ${section} array in getByGlobalIndex`);
+
+          if (val.globalIndex === globalIndex)
+            values.push(val);
+        }
+      }
+    }
+
+    if (!values.length)
+      return null;
+    if (values.length === 1)
+      return values[0];
+    return values;
   }
 };
