@@ -13,6 +13,10 @@
   height: 45px;
   width: 100%;
   color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5em;
+  box-sizing: border-box;
 }
 
 .modelSelectContainer {
@@ -25,4 +29,8 @@
   vertical-align: middle;
   margin: 1px 0.5em;
   color: initial;
+}
+
+.modelViewerToolbarSpacer {
+  flex-grow: 1;
 }

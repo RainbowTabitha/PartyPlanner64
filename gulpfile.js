@@ -22,6 +22,7 @@ var packageJson = JSON.parse(fs.readFileSync("./package.json"));
 
 const JS = [
   "js/lib/js-spark-md5/spark-md5.js",
+  "js/lib/ThreeJS-export-OBJ/three-js-export-obj.js",
   "js/lib/ThreeOrbitControls.js",
 
   "js/boot.js",

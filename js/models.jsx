@@ -1,20 +1,58 @@
 PP64.models = (function() {
   const ModelViewer = class ModelViewer extends React.Component {
-    state = {
-      selectedModel: "",
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        selectedModel: "",
+        selectedModelDir: null,
+        selectedModelFile: null,
+      };
+
+      // Set first model, start at dir 2 so it's Mario.
+      let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
+      for (let d = 2; d < mainfsDirCount; d++) {
+        let dirFileCount = PP64.fs.mainfs.getFileCount(d);
+        for (let f = 0; f < dirFileCount; f++) {
+          let file = PP64.fs.mainfs.get(d, f);
+          if (PP64.utils.FORM.isForm(file)) {
+            const name = d + "/" + f;
+            this.state.selectedModel = name;
+            this.state.selectedModelDir = d;
+            this.state.selectedModelFile = f;
+            return;
+          }
+        }
+      }
     }
 
     render() {
       return (
         <div className="modelViewerContainer">
-          <ModelToolbar selectedModel={this.state.selectedModel} onModelSelected={this.onModelSelected} />
-          <ModelRenderer selectedModel={this.state.selectedModel} />
+          <ModelToolbar
+            selectedModel={this.state.selectedModel}
+            onModelSelected={this.onModelSelected}
+            selectedModelDir={this.state.selectedModelDir}
+            selectedModelFile={this.state.selectedModelFile} />
+          <ModelRenderer
+            selectedModelDir={this.state.selectedModelDir}
+            selectedModelFile={this.state.selectedModelFile} />
         </div>
       );
     }
 
     onModelSelected = (model) => {
-      this.setState({selectedModel: model});
+      const pieces = model.match(/^(\d+)\/(\d+)/);
+      if (!pieces)
+        throw `Could not parse selected model string ${this.props.selectedModel}`;
+
+      const [, dir, file] = pieces;
+
+      this.setState({
+        selectedModel: model,
+        selectedModelDir: dir,
+        selectedModelFile: file,
+      });
     }
   };
 
@@ -84,31 +122,174 @@ PP64.models = (function() {
     }
 
     initModel() {
-      if (!this.props.selectedModel) {
+      if (this.props.selectedModelDir === null) {
         return;
       }
 
-      let pieces = this.props.selectedModel.match(/^(\d+)\/(\d+)/);
-      if (!pieces)
-        throw `Could not parse selected model string ${this.props.selectedModel}`;
+      const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
 
-      let [, dir, file] = pieces;
-
-      let container = ReactDOM.findDOMNode(this);
-
-      let height = container.offsetHeight;
-      let width = container.offsetWidth;
+      const container = ReactDOM.findDOMNode(this);
+      const height = container.offsetHeight;
+      const width = container.offsetWidth;
 
       scene = new THREE.Scene();
 
       camera = new THREE.PerspectiveCamera(75, width / height, 1, 20000);
       camera.position.z = 500;
 
+      $$log(`Rendering model ${dir}/${file}`);
+
+      const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
+
+      const meshes = (new FormToThreeJs()).createMeshes(form);
+      meshes.forEach(mesh => {
+        scene.add(mesh);
+      });
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(width, height);
+
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+      this.animate();
+    }
+
+    renderModel() {
+      renderer.render(scene, camera);
+    }
+
+    animate() {
+      if (!_modelRenderer)
+        return;
+			controls.update();
+			_modelRenderer.renderModel();
+      animateTimer = setTimeout(_modelRenderer.animate, 100);
+		}
+  };
+
+  const ModelToolbar = class ModelToolbar extends React.Component {
+    state = {}
+
+    render() {
+      return (
+        <div className="modelViewerToolbar">
+          <ModelSelect
+            selectedModel={this.props.selectedModel}
+            onModelSelected={this.props.onModelSelected} />
+          <div className="modelViewerToolbarSpacer" />
+          <ModelExportObjButton
+            selectedModelDir={this.props.selectedModelDir}
+            selectedModelFile={this.props.selectedModelFile} />
+        </div>
+      );
+    }
+  };
+
+  const ModelSelect = class ModelSelect extends React.Component {
+    state = {}
+
+    render() {
+      let entries = this.getModelEntries();
+      let options = entries.map(entry => {
+        return (
+          <option value={entry} key={entry}>{entry}</option>
+        );
+      });
+      return (
+        <div className="modelSelectContainer">
+          Model:
+          <select value={this.props.selectedModel} onChange={this.modelSelected}>
+            {options}
+          </select>
+        </div>
+      );
+    }
+
+    modelSelected = (e) => {
+      if (this.props.onModelSelected)
+        this.props.onModelSelected(e.target.value);
+    }
+
+    getModelEntries() {
+      let entries = [];
+      let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
+      for (let d = 0; d < mainfsDirCount; d++) {
+        let dirFileCount = PP64.fs.mainfs.getFileCount(d);
+        for (let f = 0; f < dirFileCount; f++) {
+          let file = PP64.fs.mainfs.get(d, f);
+          if (PP64.utils.FORM.isForm(file)) {
+            let name = d + "/" + f;
+            try {
+              // let form = PP64.utils.FORM.unpack(file);
+              // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
+              //   name += ` (${form.STRG[0].parsed[0]})`;
+              entries.push(name);
+            }
+            catch (e) {
+              console.error(`Could not parse FORM ${d}/${f}`, e);
+            }
+          }
+        }
+      }
+      return entries;
+    }
+  };
+
+  const ModelExportObjButton = class ModelExportObjButton extends React.Component {
+    state = {}
+
+    render() {
+      return (
+        <Button onClick={this.export} css="nbCreate">Export OBJ</Button>
+      );
+    }
+
+    export = () => {
+      const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
+
+      const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
+
+      const converter = new FormToThreeJs();
+      converter.separateGeometries = false;
+
+      const meshes = converter.createMeshes(form);
+      THREEToOBJ.fromMesh(meshes[0]).then(blob => {
+        saveAs(blob, `model-${dir}-${file}.obj`);
+      })
+    }
+  };
+
+  // TODO: Consolidate from newboard.jsx
+  const Button = class Button extends React.Component {
+    state = {}
+
+    onClick = () => {
+      this.props.onClick(this.props.id);
+    }
+
+    render() {
+      let css = "nbButton";
+      if (this.props.css)
+        css += " " + this.props.css;
+      return (
+        <div className={css} onClick={this.onClick}>
+          {this.props.children}
+        </div>
+      );
+    }
+  };
+
+  class FormToThreeJs {
+    constructor() {
+      this.separateGeometries = true;
+    }
+
+    createMeshes(form) {
       let geometries = [];
 
-      $$log(`Rendering model ${dir}/${file}`, form);
-
-      let form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
+      $$log("Form ", form);
 
       this.populateGeometry(geometries, form);
 
@@ -191,13 +372,15 @@ PP64.models = (function() {
 
       $$log(materials);
 
+      var meshes = []
+
       geometries.forEach((geometry) => {
         // let dotMaterial = new THREE.PointsMaterial({ size: 3, sizeAttenuation: true });
         // let dots = new THREE.Points(geometry, dotMaterial);
         // scene.add(dots);
 
-        let mesh = new THREE.Mesh(geometry, materials);
-        scene.add(mesh);
+        meshes.push(new THREE.Mesh(geometry, materials));
+        //scene.add(mesh);
         //$$log(mesh);
 
         // let wireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 1 } );
@@ -210,14 +393,7 @@ PP64.models = (function() {
         //geometry.computeFaceNormals();
       });
 
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(width, height);
-
-      container.appendChild(renderer.domElement);
-
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-      this.animate();
+      return meshes;
     }
 
     populateGeometry(geometries, form) {
@@ -258,8 +434,14 @@ PP64.models = (function() {
         }
       }
       else if (obj.objType === 0x3A) {
-        let geometry = new THREE.Geometry();
-        geometries.push(geometry);
+        let geometry;
+        if (this.separateGeometries || !geometries.length) {
+          geometry = new THREE.Geometry();
+          geometries.push(geometry);
+        }
+        else {
+          geometry = geometries[0];
+        }
 
         for (let i = obj.faceIndex; i < obj.faceIndex + obj.faceCount; i++) {
           let face = form.FAC1[0].parsed.faces[i];
@@ -382,82 +564,7 @@ PP64.models = (function() {
       //   return form.COL1[0].parsed[index] >>> 8;
       // if (form.COL1 && form.COL1[0] && form.COL1[0].parsed)
       //   return form.COL1[0].parsed[index] >>> 8;
-      $$log("Tried to get COL1 entry, but no COL1 was parsed");
-    }
-
-    renderModel() {
-      renderer.render(scene, camera);
-    }
-
-    animate() {
-      if (!_modelRenderer)
-        return;
-			controls.update();
-			_modelRenderer.renderModel();
-      animateTimer = setTimeout(_modelRenderer.animate, 100);
-		}
-  };
-
-  const ModelToolbar = class ModelToolbar extends React.Component {
-    state = {}
-
-    render() {
-      return (
-        <div className="modelViewerToolbar">
-          <ModelSelect selectedModel={this.props.selectedModel}
-            onModelSelected={this.props.onModelSelected} />
-        </div>
-      );
-    }
-  };
-
-  const ModelSelect = class ModelSelect extends React.Component {
-    state = {}
-
-    render() {
-      let entries = this.getModelEntries();
-      let options = entries.map(entry => {
-        return (
-          <option value={entry} key={entry}>{entry}</option>
-        );
-      });
-      return (
-        <div className="modelSelectContainer">
-          Model:
-          <select value={this.props.selectedModel} onChange={this.modelSelected}>
-            {options}
-          </select>
-        </div>
-      );
-    }
-
-    modelSelected = (e) => {
-      if (this.props.onModelSelected)
-        this.props.onModelSelected(e.target.value);
-    }
-
-    getModelEntries() {
-      let entries = [];
-      let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
-      for (let d = 0; d < mainfsDirCount; d++) {
-        let dirFileCount = PP64.fs.mainfs.getFileCount(d);
-        for (let f = 0; f < dirFileCount; f++) {
-          let file = PP64.fs.mainfs.get(d, f);
-          if (PP64.utils.FORM.isForm(file)) {
-            let name = d + "/" + f;
-            try {
-              // let form = PP64.utils.FORM.unpack(file);
-              // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
-              //   name += ` (${form.STRG[0].parsed[0]})`;
-              entries.push(name);
-            }
-            catch (e) {
-              console.error(`Could not parse FORM ${d}/${f}`, e);
-            }
-          }
-        }
-      }
-      return entries;
+      console.warn("Tried to get COL1 entry, but no COL1 was parsed");
     }
   };
 
