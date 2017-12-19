@@ -330,13 +330,14 @@ gulp.task("cleanjs", function() {
 gulp.task("copyjs", function() {
   return gulp.src(SRC_JS, { base: "./js" })
     .pipe(cache("js"))
-    .pipe(babel({ presets: ["es2015", "react", "stage-0"], ignore: "*lib/*" }))
+    .pipe(babel({ presets: ["es2015", "react", "stage-0"] }))
     .pipe(gulp.dest(DST_JS));
 });
 gulp.task("copyjs-prod", function() {
   return gulp.src(SRC_JS, { base: "./js" })
-    .pipe(babel({ presets: ["es2015", "react", "stage-0"], ignore: "*lib/*" }))
+    .pipe(babel({ presets: ["es2015", "react", "stage-0"] }))
     .pipe(uglify())
+      .on("error", function (err) { console.error(err.toString()); })
     .pipe(order(ORDER_PROD_JS))
     .pipe(concat("app.min.js"))
     .pipe(gulp.dest(DST_JS));
