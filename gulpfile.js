@@ -346,6 +346,18 @@ var jslibtasks = [];
 LIB_JS.forEach(function(lib) {
   var name = "copyjslib-" + GET_LIB_FILE(lib);
   gulp.task(name, function() {
+    // Speculatively try to find the map file.
+    var mapfile = lib.src.replace(".min.js", ".map");
+    if (mapfile !== lib.src) {
+      gulp.src(mapfile).pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));
+
+      // OK, then might need the original src too.
+      var srcjs = lib.src.replace(".min.js", ".js");
+      if (srcjs !== lib.src)
+        gulp.src(srcjs).pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));
+    }
+
+    // Copy from node_modules into js/lib
     return gulp.src(lib.src)
       .pipe(rename(lib.dst))
       .pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));

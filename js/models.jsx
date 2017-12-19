@@ -317,7 +317,8 @@ PP64.models = (function() {
 
       $$log("Displaying geometries", geometries);
 
-      let materials = [];
+      let materials = [new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors })];
+
       if (form.BMP1) {
         const sortedBMPs = form.BMP1.slice().sort((a, b) => {
           if (!a.parsed || !b.parsed)
@@ -387,10 +388,6 @@ PP64.models = (function() {
           }
         }
       }
-      if (!materials.length)
-        materials = [new THREE.MeshBasicMaterial()];
-
-      materials[-1] = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors });
 
       $$log(materials);
 
@@ -509,7 +506,7 @@ PP64.models = (function() {
         tri.b = vtxIndices[1];
         tri.c = vtxIndices[2];
         tri.vertexNormals = this.makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
-        tri.materialIndex = face.mystery2;
+        tri.materialIndex = face.mystery2 + 1;
         tri.color = new THREE.Color(this.getColorBytes(form, face.mystery1));
 
         geometry.faceVertexUvs[0].push(this.makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]));
@@ -521,7 +518,7 @@ PP64.models = (function() {
         tri1.b = vtxIndices[1];
         tri1.c = vtxIndices[2];
         tri1.vertexNormals = this.makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
-        tri1.materialIndex = face.mystery2;
+        tri1.materialIndex = face.mystery2 + 1;
         tri1.color = new THREE.Color(this.getColorBytes(form, face.mystery1));
 
         geometry.faceVertexUvs[0].push(this.makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]));
@@ -532,7 +529,7 @@ PP64.models = (function() {
         tri2.b = vtxIndices[4];
         tri2.c = vtxIndices[5];
         tri2.vertexNormals = this.makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[2].vertexIndex, vtxEntries[3].vertexIndex);
-        tri2.materialIndex = face.mystery2;
+        tri2.materialIndex = face.mystery2 + 1;
         tri2.color = new THREE.Color(this.getColorBytes(form, face.mystery1));
 
         geometry.faceVertexUvs[0].push(this.makeVertexUVs(vtxEntries[0], vtxEntries[2], vtxEntries[3]));

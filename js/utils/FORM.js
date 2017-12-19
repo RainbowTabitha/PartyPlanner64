@@ -188,21 +188,24 @@ PP64.utils.FORM = class FORM {
         case 0x3B:
           // TODO mp3 25/2
           obj = {};
+          console.warn("Object type 0x3B");
           break;
 
         case 0x3E:
           // TODO
           obj = {};
+          console.warn("Object type 0x3E");
           break;
 
         case 0x61:
           obj = {};
-          // TODO
+          // TODO this is common, don't know what it is
           break;
 
         case 0x5D:
-          obj = {};
           // TODO mp3 13/0
+          obj = {};
+          console.warn("Object type 0x5D");
           break;
 
         default:
@@ -458,6 +461,30 @@ PP64.utils.FORM = class FORM {
         src: raw.slice(0xD, imageByteLength),
       };
     }
+    else if (format === 0x126) {
+      // 24 bits per color
+      // TODO: Are the bits right, or is there alpha?
+      const imageByteLength = rawView.getUint16(0xB);
+
+      const outBuffer = new ArrayBuffer(width * height * 4);
+      const outView = new DataView(outBuffer);
+      for (let i = 0; i < (imageByteLength / 3); i++) {
+        let outValue = 0;
+        const inByte1 = rawView.getUint8(0xD + i);
+        const inByte2 = rawView.getUint8(0xD + i + 1);
+        const inByte3 = rawView.getUint8(0xD + i + 2);
+        const rgba32 = (inByte1 << 24) | (inByte2 << 16) | (inByte3 << 8) | 0xFF;
+        const outIndex = i * 4;
+        outView.setUint32(outIndex, rgba32);
+      }
+
+      return {
+        globalIndex: rawView.getUint16(0),
+        width,
+        height,
+        src: outBuffer,
+      };
+    }
     else if (format === 0x125) {
       // Grayscale?
       // TODO: I don't think this is right? Some sort of shadow mask?
@@ -485,7 +512,7 @@ PP64.utils.FORM = class FORM {
     else {
       // TODO: Other formats
       // 0x228 mp1 0/93
-      // 0x125 mp1 9/30
+      // 0x126 mp1 9/25
       console.warn(`Could not parse BMP format ${$$hex(format)}`);
       return {
         globalIndex: rawView.getUint16(0),
