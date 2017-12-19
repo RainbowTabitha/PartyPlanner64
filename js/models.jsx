@@ -7,6 +7,7 @@ PP64.models = (function() {
         selectedModel: "",
         selectedModelDir: null,
         selectedModelFile: null,
+        bgColor: 0x000000,
       };
 
       // Set first model, start at dir 2 so it's Mario.
@@ -33,10 +34,13 @@ PP64.models = (function() {
             selectedModel={this.state.selectedModel}
             onModelSelected={this.onModelSelected}
             selectedModelDir={this.state.selectedModelDir}
-            selectedModelFile={this.state.selectedModelFile} />
+            selectedModelFile={this.state.selectedModelFile}
+            bgColor={this.state.bgColor}
+            onBgColorChange={this.onBgColorChange} />
           <ModelRenderer
             selectedModelDir={this.state.selectedModelDir}
-            selectedModelFile={this.state.selectedModelFile} />
+            selectedModelFile={this.state.selectedModelFile}
+            bgColor={this.state.bgColor} />
         </div>
       );
     }
@@ -52,6 +56,12 @@ PP64.models = (function() {
         selectedModel: model,
         selectedModelDir: dir,
         selectedModelFile: file,
+      });
+    }
+
+    onBgColorChange = (color) => {
+      this.setState({
+        bgColor: color,
       });
     }
   };
@@ -133,6 +143,7 @@ PP64.models = (function() {
       const width = container.offsetWidth;
 
       scene = new THREE.Scene();
+      scene.background = new THREE.Color(this.props.bgColor);
 
       camera = new THREE.PerspectiveCamera(75, width / height, 1, 20000);
       camera.position.z = 500;
@@ -178,6 +189,9 @@ PP64.models = (function() {
           <ModelSelect
             selectedModel={this.props.selectedModel}
             onModelSelected={this.props.onModelSelected} />
+          <ModelBGColorSelect
+            selectedColor={this.props.bgColor}
+            onColorChange={this.props.onBgColorChange} />
           <div className="modelViewerToolbarSpacer" />
           <ModelExportObjButton
             selectedModelDir={this.props.selectedModelDir}
@@ -237,10 +251,38 @@ PP64.models = (function() {
     }
   };
 
+  const ModelBGColorSelect = class ModelBGColorSelect extends React.Component {
+    state = {}
+
+    render() {
+      const ToggleButton = PP64.controls.ToggleButton;
+      return (
+        <div className="modelViewerColorPicker">
+          <ToggleButton id={0x000000} key={0} allowDeselect={false} onToggled={this.onColorChange}
+            pressed={this.props.selectedColor === 0x000000}>
+            <span className="colorSwatch" title="Change background to black"
+              style={{backgroundColor: "#000000"}}></span>
+          </ToggleButton>
+          <ToggleButton id={0xFFFFFF} key={1} allowDeselect={false} onToggled={this.onColorChange}
+            pressed={this.props.selectedColor === 0xFFFFFF}>
+            <span className="colorSwatch" title="Change background to white"
+              style={{backgroundColor: "#FFFFFF"}}></span>
+          </ToggleButton>
+        </div>
+      );
+    }
+
+    onColorChange = (id, pressed) => {
+      this.setState({ color: id });
+      this.props.onColorChange(id);
+    }
+  };
+
   const ModelExportObjButton = class ModelExportObjButton extends React.Component {
     state = {}
 
     render() {
+      const Button = PP64.controls.Button;
       return (
         <Button onClick={this.export} css="nbCreate">Export OBJ</Button>
       );
@@ -258,26 +300,6 @@ PP64.models = (function() {
       THREEToOBJ.fromMesh(meshes[0]).then(blob => {
         saveAs(blob, `model-${dir}-${file}.obj`);
       })
-    }
-  };
-
-  // TODO: Consolidate from newboard.jsx
-  const Button = class Button extends React.Component {
-    state = {}
-
-    onClick = () => {
-      this.props.onClick(this.props.id);
-    }
-
-    render() {
-      let css = "nbButton";
-      if (this.props.css)
-        css += " " + this.props.css;
-      return (
-        <div className={css} onClick={this.onClick}>
-          {this.props.children}
-        </div>
-      );
     }
   };
 

@@ -50,6 +50,7 @@ PP64.screenshot = (function() {
     }
 
     render() {
+      const Button = PP64.controls.Button;
       return (
         <div className="screenshotContainer">
           <label className="nbLabel">Screenshot Options</label>
@@ -86,26 +87,6 @@ PP64.screenshot = (function() {
           <input type="checkbox" onChange={this.onChange} checked={this.props.checked} />
           {this.props.text}
         </label>
-      );
-    }
-  };
-
-  // TODO: Consolidate from newboard.jsx
-  const Button = class Button extends React.Component {
-    state = {}
-
-    onClick = () => {
-      this.props.onClick(this.props.id);
-    }
-
-    render() {
-      let css = "nbButton";
-      if (this.props.css)
-        css += " " + this.props.css;
-      return (
-        <div className={css} onClick={this.onClick}>
-          {this.props.children}
-        </div>
       );
     }
   };

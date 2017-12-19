@@ -34,6 +34,7 @@ const JS = [
   "js/types.js",
   "js/settings.js",
   "js/images.js",
+  "js/controls.js",
   "js/boards.js",
   "js/boardmenu.js",
   "js/newboard.js",

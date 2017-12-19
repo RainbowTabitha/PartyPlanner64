@@ -24,6 +24,7 @@ PP64.newboard = (function() {
     }
 
     render() {
+      const Button = PP64.controls.Button;
       return (
         <div className="newBoardContainer">
           <NewBoardVersionSelect onVersionChange={this.onVersionChange} />
@@ -45,6 +46,8 @@ PP64.newboard = (function() {
     }
 
     render() {
+      const ToggleButton = PP64.controls.ToggleButton;
+
       let gameVersions = (
         [
           <ToggleButton id={1} key={1} allowDeselect={false} onToggled={this.onVersionChange}
@@ -86,6 +89,8 @@ PP64.newboard = (function() {
     }
 
     render() {
+      const ToggleButton = PP64.controls.ToggleButton;
+
       let themeEntries = Themes.map((theme, i) => {
         let previewUrl = `img/themes/${theme.id}/preview.png`;
         return (
@@ -103,46 +108,6 @@ PP64.newboard = (function() {
           <label className="nbLabel">Theme</label>
           <br />
           {themeEntries}
-        </div>
-      );
-    }
-  };
-
-  const ToggleButton = class ToggleButton extends React.Component {
-    state = {}
-
-    onClick = () => {
-      if (!this.props.allowDeselect && this.props.pressed)
-        return;
-      this.props.onToggled(this.props.id, !this.props.pressed);
-    }
-
-    render() {
-      let css = "toggleButton" + (this.props.pressed ? " pressed" : "");
-      if (this.props.css)
-        css += " " + this.props.css;
-      return (
-        <div className={css} onClick={this.onClick}>
-          {this.props.children}
-        </div>
-      );
-    }
-  };
-
-  const Button = class Button extends React.Component {
-    state = {}
-
-    onClick = () => {
-      this.props.onClick(this.props.id);
-    }
-
-    render() {
-      let css = "nbButton";
-      if (this.props.css)
-        css += " " + this.props.css;
-      return (
-        <div className={css} onClick={this.onClick}>
-          {this.props.children}
         </div>
       );
     }

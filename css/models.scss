@@ -22,7 +22,7 @@
 .modelSelectContainer {
   display: inline-block;
   vertical-align: middle;
-  margin: 5px;
+  margin: 5px 0;
 }
 
 .modelSelectContainer select {
@@ -33,4 +33,17 @@
 
 .modelViewerToolbarSpacer {
   flex-grow: 1;
+}
+
+.colorSwatch {
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  border: 2px solid #444444;
+  border-radius: 1px;
+  cursor: pointer;
+}
+
+.modelViewerColorPicker .toggleButton {
+  max-height: 24px;
 }
