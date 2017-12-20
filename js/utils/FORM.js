@@ -42,7 +42,7 @@ PP64.utils.FORM = class FORM {
     }
 
     // With all BMPs and PALs parsed, now we can decode the BMPs.
-    if (formObj.BMP1 && formObj.PAL1) {
+    if (formObj.BMP1) {
       for (let i = 0; i < formObj.BMP1.length; i++) {
         let bmpEntry = formObj.BMP1[i];
         bmpEntry.parsed = PP64.utils.FORM.parseBMP(bmpEntry.raw, formObj.PAL1);
@@ -391,13 +391,25 @@ PP64.utils.FORM = class FORM {
     // console.log("SKL1");
     // PP64.utils.arrays.print(rawView, 30);
 
-    return {
+    const sklCount = rawView.getUint8(2);
+    const result = {
       globalIndex: rawView.getUint16(0),
-      mystery1: rawView.getUint8(2),
       mystery2: rawView.getUint8(3),
-      objIndex: rawView.getUint16(4),
-      // There are other floats, very similar to OBJ1
+      skls: [],
     };
+
+    let sklOffset = 4;
+    for (let i = 0; i < sklCount; i++) {
+      result.skls.push({
+        objGlobalIndex: rawView.getUint16(sklOffset),
+        mystery1: rawView.getFloat32(sklOffset + 0x2),
+        mystery2: rawView.getFloat32(sklOffset + 0x6),
+        mystery3: rawView.getFloat32(sklOffset + 0xA),
+      });
+      sklOffset += 56; // sizeof(SKL1Entry)
+    }
+
+    return result;
   }
 
   static parseSTRG(raw) {
@@ -418,15 +430,18 @@ PP64.utils.FORM = class FORM {
   }
 
   static parseBMP(raw, PAL1) {
-    let rawView = new DataView(raw);
-    let format = rawView.getUint16(0x2);
-    let width = rawView.getUint16(0x05);
-    let height = rawView.getUint16(0x07);
+    const rawView = new DataView(raw);
+    const format = rawView.getUint16(0x2);
+    const width = rawView.getUint16(0x05);
+    const height = rawView.getUint16(0x07);
 
     if (format === 0x128) {
       // Traditional bitmap format
-      let paletteGlobalIndex = rawView.getUint16(0x09);
-      let inBmpSize = rawView.getUint16(0x0F);
+      if (!PAL1)
+        throw "Palette needed for BMP format 0x128";
+
+      const paletteGlobalIndex = rawView.getUint16(0x09);
+      const inBmpSize = rawView.getUint16(0x0F);
 
       // Find associated palette by global index
       let palette;
@@ -441,9 +456,9 @@ PP64.utils.FORM = class FORM {
       }
 
       // Doesn't appear to indicate BPP, but we can calculate from size and dimens.
-      let inBpp = 8 / ((width * height) / inBmpSize);
-      let outBpp = palette.bpp;
-      let inBmpData = new DataView(raw, 0x11, inBmpSize);
+      const inBpp = 8 / ((width * height) / inBmpSize);
+      const outBpp = palette.bpp;
+      const inBmpData = new DataView(raw, 0x11, inBmpSize);
 
       return {
         globalIndex: rawView.getUint16(0),
@@ -510,10 +525,40 @@ PP64.utils.FORM = class FORM {
         src: outBuffer,
       };
     }
+    else if (format === 0x124) { // 0x124 mp3 11/51
+      // Grayscale?
+      // TODO: I don't think this is right? Some sort of shadow mask?
+      const imageByteLength = rawView.getUint16(0xB);
+
+      const outBuffer = new ArrayBuffer(imageByteLength * 8);
+      const outView = new DataView(outBuffer);
+      let outLoc = 0;
+      for (let i = 0; i < imageByteLength; i++) {
+        const inByte = rawView.getUint8(0xD + i);
+
+        let out1byte = (inByte & 0xF0) >>> 4;
+        out1byte |= (inByte & 0xF0);
+        outView.setUint32(outLoc, (out1byte << 24) | (out1byte << 16) | (out1byte << 8) | 0xFF);
+        outLoc += 4;
+
+        let out2byte = (inByte & 0x0F);
+        out2byte |= (out2byte << 4);
+        outView.setUint32(outLoc, (out2byte << 24) | (out2byte << 16) | (out2byte << 8) | 0xFF);
+        outLoc += 4;
+      }
+
+      return {
+        globalIndex: rawView.getUint16(0),
+        width,
+        height,
+        src: outBuffer,
+      };
+    }
     else {
       // TODO: Other formats
       // 0x228 mp1 0/93
       // 0x126 mp1 9/25
+      
       console.warn(`Could not parse BMP format ${$$hex(format)}`);
       return {
         globalIndex: rawView.getUint16(0),

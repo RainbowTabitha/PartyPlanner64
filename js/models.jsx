@@ -445,21 +445,24 @@ PP64.models = (function() {
           }
         }
         if (obj.objType === 0x10) {
-          // Look into SKL1, which should point back to an OBJ1 entry.
-
-          const newCoords = { // TODO: there are probably floats to include here
-            x: coords.x,
-            y: coords.y,
-            z: coords.z,
-          };
-
+          // Look into SKL1, which should point back to OBJ1.
           const skl1GlobalIndex = obj.skeletonGlobalIndex;
           const sklMatch = PP64.utils.FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
           if (sklMatch === null || Array.isArray(sklMatch))
             throw "Unexpected SKL1 search result";
 
-          const nextObjIndex = sklMatch.objIndex;
-          this.populateGeometryWithObject(geometries, form, nextObjIndex, newCoords);
+          const skls = sklMatch.skls;
+          for (let s = 0; s < skls.length; s++) {
+            const nextObjIndex = skls[s].objGlobalIndex;
+
+            const newCoords = {
+              x: coords.x + skls[s].mystery1,
+              y: coords.y + skls[s].mystery2,
+              z: coords.z + skls[s].mystery3,
+            };
+
+            this.populateGeometryWithObject(geometries, form, nextObjIndex, newCoords);
+          }
         }
         else if (obj.objType === 0x3A) {
           let geometry;
