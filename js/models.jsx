@@ -145,7 +145,7 @@ PP64.models = (function() {
       scene = new THREE.Scene();
       scene.background = new THREE.Color(this.props.bgColor);
 
-      camera = new THREE.PerspectiveCamera(75, width / height, 1, 20000);
+      camera = new THREE.PerspectiveCamera(75, width / height, 1, 999999);
       camera.position.z = 500;
 
       $$log(`Rendering model ${dir}/${file}`);
