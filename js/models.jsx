@@ -409,6 +409,7 @@ PP64.models = (function() {
       newObj.rotation.x = $$number.degreesToRadians(obj.rotX);
       newObj.rotation.y = $$number.degreesToRadians(obj.rotY);
       newObj.rotation.z = $$number.degreesToRadians(obj.rotZ);
+      newObj.rotation.order = "ZYX";
 
       newObj.scale.x = obj.scaleX;
       newObj.scale.y = obj.scaleY;
