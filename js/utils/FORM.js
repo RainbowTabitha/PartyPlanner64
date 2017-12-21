@@ -472,19 +472,22 @@ PP64.utils.FORM = class FORM {
 
       return {
         globalIndex: rawView.getUint16(0),
+        origFormat: format,
+        paletteGlobalIndex,
         width,
         height,
         src: PP64.utils.img.BMP.toRGBA(inBmpData, palette.colors, inBpp, outBpp),
       };
     }
-    else if (format === 0x127) {
+    else if (format === 0x127) { // mp1 9/138
       // Just raw RGBA already
       const imageByteLength = rawView.getUint16(0xB);
       return {
         globalIndex: rawView.getUint16(0),
+        origFormat: format,
         width,
         height,
-        src: raw.slice(0xD, imageByteLength),
+        src: raw.slice(0xD, 0xD + imageByteLength),
       };
     }
     else if (format === 0x126) {
@@ -506,6 +509,7 @@ PP64.utils.FORM = class FORM {
 
       return {
         globalIndex: rawView.getUint16(0),
+        origFormat: format,
         width,
         height,
         src: outBuffer,
@@ -530,6 +534,7 @@ PP64.utils.FORM = class FORM {
 
       return {
         globalIndex: rawView.getUint16(0),
+        origFormat: format,
         width,
         height,
         src: outBuffer,
@@ -559,6 +564,7 @@ PP64.utils.FORM = class FORM {
 
       return {
         globalIndex: rawView.getUint16(0),
+        origFormat: format,
         width,
         height,
         src: outBuffer,
@@ -572,6 +578,7 @@ PP64.utils.FORM = class FORM {
       console.warn(`Could not parse BMP format ${$$hex(format)}`);
       return {
         globalIndex: rawView.getUint16(0),
+        origFormat: format,
         width,
         height,
         src: new ArrayBuffer(width * height * 4),
@@ -586,21 +593,39 @@ PP64.utils.FORM = class FORM {
     // Just write over the bitmap data directly.
     PP64.utils.arrays.copyRange(formObj.BMP1[bmpIndex].raw, buffer, 0x11, 0, buffer.byteLength);
 
-    // Update the parsed BMP just to keep the obj state consistent.
-    //formObj.BMP1[bmpIndex].parsed = PP64.utils.FORM.parseBMP(buffer, palette);
-
     // Write the palette, which needs some care.
     formObj.PAL1[bmpIndex].parsed = palette;
-    let oldNumThing = (new DataView(formObj.PAL1[bmpIndex].raw)).getUint16(0);
+    let oldPalGlobalIndex = (new DataView(formObj.PAL1[bmpIndex].raw)).getUint16(0);
     let newRaw = formObj.PAL1[bmpIndex].raw = new ArrayBuffer(4 + (palette.colors.length * 4));
     let newPaletteView = new DataView(newRaw);
-    newPaletteView.setUint16(0, oldNumThing); // Write the number that is mysterious
+    newPaletteView.setUint16(0, oldPalGlobalIndex);
     newPaletteView.setUint16(2, palette.colors.length);
     let curOutOffset = 4;
     for (let i = 0; i < palette.colors.length; i++) {
       newPaletteView.setUint32(curOutOffset, palette.colors[i]);
       curOutOffset += 4;
     }
+
+    // TODO: This was another implementation: write raw RGBA with type 0x127.
+    // But the board select wouldn't show up when I tried this.
+    // const oldBmpView = new DataView(formObj.BMP1[bmpIndex].raw);
+    // const oldGlobalIndex = oldBmpView.getUint16(0);
+
+    // const newBmpEntry = new ArrayBuffer(buffer.byteLength + 0xD);
+    // const bmpView = new DataView(newBmpEntry);
+
+    // bmpView.setUint16(0, oldGlobalIndex);
+    // bmpView.setUint16(0x2, 0x0127); // RGBA
+    // bmpView.setUint8(0x4, 0x20); // 32-bit?
+    // bmpView.setUint16(0x5, width);
+    // bmpView.setUint16(0x7, height);
+    // bmpView.setUint32(0x9, buffer.byteLength);
+    // PP64.utils.arrays.copyRange(bmpView, buffer, 0xD, 0, buffer.byteLength);
+
+    // formObj.BMP1[bmpIndex].raw = newBmpEntry;
+
+    // // Update the parsed BMP just to keep the obj state consistent.
+    // formObj.BMP1[bmpIndex].parsed = PP64.utils.FORM.parseBMP(newBmpEntry, null);
   }
 
   // Retrieves a value (or possibly multiple values) by global index.
