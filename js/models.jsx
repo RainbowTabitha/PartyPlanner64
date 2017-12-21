@@ -152,10 +152,10 @@ PP64.models = (function() {
 
       const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
 
-      const meshes = (new FormToThreeJs()).createMeshes(form);
-      meshes.forEach(mesh => {
-        scene.add(mesh);
-      });
+      $$log("form", form);
+
+      const modelObj = (new FormToThreeJs()).createModel(form);
+      scene.add(modelObj);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(width, height);
@@ -192,10 +192,10 @@ PP64.models = (function() {
           <ModelBGColorSelect
             selectedColor={this.props.bgColor}
             onColorChange={this.props.onBgColorChange} />
-          <div className="modelViewerToolbarSpacer" />
+          {/* <div className="modelViewerToolbarSpacer" />
           <ModelExportObjButton
             selectedModelDir={this.props.selectedModelDir}
-            selectedModelFile={this.props.selectedModelFile} />
+            selectedModelFile={this.props.selectedModelFile} /> */}
         </div>
       );
     }
@@ -296,10 +296,10 @@ PP64.models = (function() {
       const converter = new FormToThreeJs();
       converter.separateGeometries = false;
 
-      const meshes = converter.createMeshes(form);
-      THREEToOBJ.fromMesh(meshes[0]).then(blob => {
-        saveAs(blob, `model-${dir}-${file}.obj`);
-      })
+      // const meshes = converter.createMeshes(form);
+      // THREEToOBJ.fromMesh(meshes[0]).then(blob => {
+      //   saveAs(blob, `model-${dir}-${file}.obj`);
+      // })
     }
   };
 
@@ -308,16 +308,177 @@ PP64.models = (function() {
       this.separateGeometries = true;
     }
 
-    createMeshes(form) {
-      let geometries = [];
+    createModel(form) {
+      const materials = this._parseMaterials(form);
+      return this._parseForm(form, materials);
+    }
 
-      $$log("Form ", form);
+    _parseForm(form, materials) {
+      const childObjs = this._parseFormObj(form, materials, 0);
+      if (childObjs.length !== 1)
+        console.warn(`Expected 1 return object from _parseForm, got ${childObjs.length}`);
+      return childObjs[0];
+    }
 
-      this.populateGeometry(geometries, form);
+    _parseFormObj(form, materials, objIndex) {
+      let objs = PP64.utils.FORM.getByGlobalIndex(form, "OBJ1", objIndex);
+      if (objs === null) {
+        if (objIndex === 0) { // mp2 62/2 doesn't have 0 obj?
+          objs = form.OBJ1[0].parsed.objects[0];
+          console.warn("Using first object rather than global index 0 object");
+        }
 
-      $$log("Displaying geometries", geometries);
+        if (!objs)
+          throw `Attempted to get unavailable OBJ ${objIndex}`;
+      }
 
-      let materials = [new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors })];
+      if (!Array.isArray(objs)) {
+        objs = [objs];
+      }
+
+      const newObjs = [];
+
+      for (let o = 0; o < objs.length; o++) {
+        const obj = objs[o];
+
+        if (obj.objType === 0x3D) { // Just references other objects, can transform them.
+          const newObj = this._createObject3DFromOBJ1Entry(obj);
+
+          for (let i = 0; i < obj.children.length; i++) {
+            const childObjs = this._parseFormObj(form, materials, obj.children[i]);
+            if (childObjs && childObjs.length) {
+              childObjs.forEach(childObj => {
+                newObj.add(childObj);
+              });
+            }
+          }
+
+          newObjs.push(newObj);
+        }
+        else if (obj.objType === 0x10) { // References a SKL1, which will point back to other objects.
+          const newObj = this._createObject3DFromOBJ1Entry(obj);
+
+          const skl1GlobalIndex = obj.skeletonGlobalIndex;
+          const sklMatch = PP64.utils.FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
+          if (sklMatch === null || Array.isArray(sklMatch))
+            throw "Unexpected SKL1 search result";
+
+          const skls = sklMatch.skls;
+          for (let s = 0; s < skls.length; s++) {
+            const sklObj = this._createObject3DFromOBJ1Entry(skls[s]);
+
+            const nextObjIndex = skls[s].objGlobalIndex;
+
+            const childObjs = this._parseFormObj(form, materials, nextObjIndex);
+            if (childObjs && childObjs.length) {
+              childObjs.forEach(childObj => {
+                sklObj.add(childObj);
+              });
+              newObj.add(sklObj);
+            }
+          }
+
+          newObjs.push(newObj);
+        }
+        else if (obj.objType === 0x3A) {
+          const newObj = this._createObject3DFromOBJ1Entry(obj);
+
+          const geometry = new THREE.Geometry();
+
+          for (let f = obj.faceIndex; f < obj.faceIndex + obj.faceCount; f++) {
+            const face = form.FAC1[0].parsed.faces[f];
+            this._populateGeometryWithFace(form, geometry, face);
+          }
+
+          newObj.add(new THREE.Mesh(geometry, materials));
+
+          newObjs.push(newObj);
+        }
+      }
+
+      return newObjs;
+    }
+
+    _createObject3DFromOBJ1Entry(obj) {
+      const newObj = new THREE.Object3D();
+
+      newObj.position.x = obj.posX;
+      newObj.position.y = obj.posY;
+      newObj.position.z = obj.posZ;
+
+      newObj.rotation.x = $$number.degreesToRadians(obj.rotX);
+      newObj.rotation.y = $$number.degreesToRadians(obj.rotY);
+      newObj.rotation.z = $$number.degreesToRadians(obj.rotZ);
+
+      newObj.scale.x = obj.scaleX;
+      newObj.scale.y = obj.scaleY;
+      newObj.scale.z = obj.scaleZ;
+
+      return newObj;
+    }
+
+    _populateGeometryWithFace(form, geometry, face) {
+      if (!face.vtxEntries.length)
+        return;
+
+      const scale = form.VTX1[0].parsed.scale;
+
+      const vtxEntries = face.vtxEntries;
+      let vtxIndices = [];
+      for (let i = 0; i < 3; i++) {
+        const vtxEntry = vtxEntries[i];
+        let vtx = form.VTX1[0].parsed.vertices[vtxEntry.vertexIndex];
+        vtxIndices.push(geometry.vertices.length);
+        geometry.vertices.push(this._makeVertex(vtx, scale));
+      }
+      if (vtxEntries.length === 4) {
+        for (let i = 0; i < 4; i++) {
+          if (i === 1) continue; // 0, 2, 3
+          const vtxEntry = vtxEntries[i];
+          let vtx = form.VTX1[0].parsed.vertices[vtxEntry.vertexIndex];
+          vtxIndices.push(geometry.vertices.length);
+          geometry.vertices.push(this._makeVertex(vtx, scale));
+        }
+      }
+
+      if (vtxEntries.length === 3) {
+        this._addFace(geometry, form, face,
+          [vtxIndices[0], vtxIndices[1], vtxIndices[2]],
+          [vtxEntries[0], vtxEntries[1], vtxEntries[2]]
+        );
+      }
+      else if (vtxEntries.length === 4) {
+        this._addFace(geometry, form, face,
+          [vtxIndices[0], vtxIndices[1], vtxIndices[2]],
+          [vtxEntries[0], vtxEntries[1], vtxEntries[2]]
+        );
+
+        this._addFace(geometry, form, face,
+          [vtxIndices[3], vtxIndices[4], vtxIndices[5]],
+          [vtxEntries[0], vtxEntries[2], vtxEntries[3]]
+        );
+      }
+    }
+
+    _addFace(geometry, form, face, indices, vtxEntries) {
+      const tri = new THREE.Face3();
+      tri.a = indices[0];
+      tri.b = indices[1];
+      tri.c = indices[2];
+      tri.vertexNormals = this._makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
+      tri.materialIndex = this._getMaterialIndex(face);
+      tri.color = new THREE.Color(this._getColorBytes(form, face));
+      tri.vertexColors = this._makeVertexColors(form, face, vtxEntries[0], vtxEntries[1], vtxEntries[2]);
+
+      geometry.faceVertexUvs[0].push(this._makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]));
+      geometry.faces.push(tri);
+    }
+
+    _parseMaterials(form) {
+      const materials = [
+        new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors }),
+        new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors }),
+      ];
 
       if (form.BMP1) {
         const sortedBMPs = form.BMP1.slice().sort((a, b) => {
@@ -345,228 +506,63 @@ PP64.models = (function() {
         for (let i = 0; i < sortedBMPs.length; i++) {
           if (sortedBMPs[i] && sortedBMPs[i].parsed) {
             const bmp = sortedBMPs[i].parsed;
-            const dataUri = PP64.utils.arrays.arrayBufferToDataURL(bmp.src, bmp.width, bmp.height);
-            $$log("Texture", dataUri);
-            const loader = new THREE.TextureLoader();
-            loader.crossOrigin = "";
-            const texture = loader.load(dataUri);
-            texture.flipY = false;
-
-            const atr = atrsByBitmap[bmp.globalIndex];
-            if (atr) {
-              switch (atr.xBehavior) {
-                case 0x2C:
-                  texture.wrapS = THREE.MirroredRepeatWrapping;
-                  break;
-                case 0x2D:
-                  texture.wrapS = THREE.RepeatWrapping;
-                  break;
-                case 0x2E:
-                  break; // THREE.ClampToEdgeWrapping, default
-                default:
-                  console.warn(`Unknown xBehavior ${$$hex(atr.xBehavior)} in BMP ${i}`);
-                  break;
-              }
-
-              switch (atr.yBehavior) {
-                case 0x2C:
-                  texture.wrapT = THREE.MirroredRepeatWrapping;
-                  break;
-                case 0x2D:
-                  texture.wrapT = THREE.RepeatWrapping;
-                  break;
-                case 0x2E:
-                  break; // THREE.ClampToEdgeWrapping, default
-                default:
-                  console.warn(`Unknown yBehavior ${$$hex(atr.yBehavior)} in BMP ${i}`);
-                  break;
-              }
-            }
-
-            const textureMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
+            const textureMaterial = this._createTextureMaterial(bmp, atrsByBitmap);
             materials.push(textureMaterial);
           }
         }
       }
 
-      $$log(materials);
-
-      var meshes = []
-
-      geometries.forEach((geometry) => {
-        // let dotMaterial = new THREE.PointsMaterial({ size: 3, sizeAttenuation: true });
-        // let dots = new THREE.Points(geometry, dotMaterial);
-        // scene.add(dots);
-
-        meshes.push(new THREE.Mesh(geometry, materials));
-        //scene.add(mesh);
-        //$$log(mesh);
-
-        // let wireframeMaterial = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 1 } );
-        // let wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), wireframeMaterial);
-        // scene.add(wireframe);
-
-        // var normalsHelper = new THREE.VertexNormalsHelper(mesh, 8, 0x00ff00, 1);
-        // scene.add(normalsHelper);
-
-        //geometry.computeFaceNormals();
-      });
-
-      return meshes;
+      return materials;
     }
 
-    populateGeometry(geometries, form) {
-      this.populateGeometryWithObject(geometries, form, 0, { x: 0, y: 0, z: 0 });
-    }
+    _createTextureMaterial(bmp, atrsByBitmap) {
+      const dataUri = PP64.utils.arrays.arrayBufferToDataURL(bmp.src, bmp.width, bmp.height);
+      $$log("Texture", dataUri);
+      const loader = new THREE.TextureLoader();
+      loader.crossOrigin = "";
+      const texture = loader.load(dataUri);
+      texture.flipY = false;
 
-    populateGeometryWithObject(geometries, form, objIndex, coords) {
-      let objs = PP64.utils.FORM.getByGlobalIndex(form, "OBJ1", objIndex);
-      if (objs === null)
-        throw `Attempted to get unavailable OBJ ${objIndex}`;
-
-      if (!Array.isArray(objs)) {
-        objs = [objs];
+      const atr = atrsByBitmap[bmp.globalIndex];
+      if (atr) {
+        texture.wrapS = this._getWrappingBehavior(atr.xBehavior);
+        texture.wrapT = this._getWrappingBehavior(atr.yBehavior);
       }
 
-      for (let o = 0; o < objs.length; o++) {
-        const obj = objs[o];
+      return new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
+    }
 
-        if (obj.objType === 0x3D) {
-          // Recurse to child objs
-
-          const newCoords = {
-            x: coords.x + obj.mystery1,
-            y: coords.y + obj.mystery2,
-            z: coords.z + obj.mystery3,
-          };
-
-          for (let i = 0; i < obj.children.length; i++) {
-            this.populateGeometryWithObject(geometries, form, obj.children[i], newCoords);
-          }
-        }
-        if (obj.objType === 0x10) {
-          // Look into SKL1, which should point back to OBJ1.
-          const skl1GlobalIndex = obj.skeletonGlobalIndex;
-          const sklMatch = PP64.utils.FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
-          if (sklMatch === null || Array.isArray(sklMatch))
-            throw "Unexpected SKL1 search result";
-
-          const skls = sklMatch.skls;
-          for (let s = 0; s < skls.length; s++) {
-            const nextObjIndex = skls[s].objGlobalIndex;
-
-            const newCoords = {
-              x: coords.x + skls[s].mystery1,
-              y: coords.y + skls[s].mystery2,
-              z: coords.z + skls[s].mystery3,
-            };
-
-            this.populateGeometryWithObject(geometries, form, nextObjIndex, newCoords);
-          }
-        }
-        else if (obj.objType === 0x3A) {
-          let geometry;
-          if (this.separateGeometries || !geometries.length) {
-            geometry = new THREE.Geometry();
-            geometries.push(geometry);
-          }
-          else {
-            geometry = geometries[0];
-          }
-
-          for (let i = obj.faceIndex; i < obj.faceIndex + obj.faceCount; i++) {
-            let face = form.FAC1[0].parsed.faces[i];
-
-            const newCoords = {
-              x: coords.x,
-              y: coords.y,
-              z: coords.z,
-            };
-
-            this.populateGeometryWithFace(geometry, form, face, newCoords);
-          }
-        }
+    _getWrappingBehavior(behavior) {
+      switch (behavior) {
+        case 0x2C:
+          return THREE.MirroredRepeatWrapping;
+        case 0x2D:
+          return THREE.RepeatWrapping;
+        case 0x2E:
+          return THREE.ClampToEdgeWrapping; // default
+        default:
+          console.warn(`Unknown behavior ${$$hex(behavior)}`);
+          return THREE.ClampToEdgeWrapping; // default
       }
     }
 
-    populateGeometryWithFace(geometry, form, face, coords) {
-      if (!face.vtxEntries.length)
-        return;
-
-      const scale = form.VTX1[0].parsed.scale;
-
-      const vtxEntries = face.vtxEntries;
-      let vtxIndices = [];
-      for (let i = 0; i < 3; i++) {
-        const vtxEntry = vtxEntries[i];
-        let vtx = form.VTX1[0].parsed.vertices[vtxEntry.vertexIndex];
-        vtxIndices.push(geometry.vertices.length);
-        geometry.vertices.push(this.makeVertex(vtx, coords, scale));
-      }
-      if (vtxEntries.length === 4) {
-        for (let i = 0; i < 4; i++) {
-          if (i === 1) continue; // 0, 2, 3
-          const vtxEntry = vtxEntries[i];
-          let vtx = form.VTX1[0].parsed.vertices[vtxEntry.vertexIndex];
-          vtxIndices.push(geometry.vertices.length);
-          geometry.vertices.push(this.makeVertex(vtx, coords, scale));
-        }
-      }
-
-      if (vtxEntries.length === 3) {
-        const tri = new THREE.Face3();
-        tri.a = vtxIndices[0];
-        tri.b = vtxIndices[1];
-        tri.c = vtxIndices[2];
-        tri.vertexNormals = this.makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
-        tri.materialIndex = face.mystery2 + 1;
-        tri.color = new THREE.Color(this.getColorBytes(form, face.mystery1));
-
-        geometry.faceVertexUvs[0].push(this.makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]));
-        geometry.faces.push(tri);
-      }
-      else if (vtxEntries.length === 4) {
-        const tri1 = new THREE.Face3();
-        tri1.a = vtxIndices[0];
-        tri1.b = vtxIndices[1];
-        tri1.c = vtxIndices[2];
-        tri1.vertexNormals = this.makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
-        tri1.materialIndex = face.mystery2 + 1;
-        tri1.color = new THREE.Color(this.getColorBytes(form, face.mystery1));
-
-        geometry.faceVertexUvs[0].push(this.makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]));
-        geometry.faces.push(tri1);
-
-        const tri2 = new THREE.Face3();
-        tri2.a = vtxIndices[3];
-        tri2.b = vtxIndices[4];
-        tri2.c = vtxIndices[5];
-        tri2.vertexNormals = this.makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[2].vertexIndex, vtxEntries[3].vertexIndex);
-        tri2.materialIndex = face.mystery2 + 1;
-        tri2.color = new THREE.Color(this.getColorBytes(form, face.mystery1));
-
-        geometry.faceVertexUvs[0].push(this.makeVertexUVs(vtxEntries[0], vtxEntries[2], vtxEntries[3]));
-        geometry.faces.push(tri2);
-      }
-    }
-
-    makeVertex(vtx, baseCoords, scale) {
+    _makeVertex(vtx, scale) {
       return new THREE.Vector3(
-        baseCoords.x + (vtx.x * scale),
-        baseCoords.y + (vtx.y * scale),
-        baseCoords.z + (vtx.z * scale)
-      )
+        (vtx.x * scale),
+        (vtx.y * scale),
+        (vtx.z * scale)
+      );
     }
 
-    makeVertexNormals(form, vtxIndex1, vtxIndex2, vtxIndex3) {
+    _makeVertexNormals(form, vtxIndex1, vtxIndex2, vtxIndex3) {
       return [
-        this.makeVertexNormal(form, vtxIndex1),
-        this.makeVertexNormal(form, vtxIndex2),
-        this.makeVertexNormal(form, vtxIndex3),
+        this._makeVertexNormal(form, vtxIndex1),
+        this._makeVertexNormal(form, vtxIndex2),
+        this._makeVertexNormal(form, vtxIndex3),
       ];
     }
 
-    makeVertexNormal(form, vtxIndex) {
+    _makeVertexNormal(form, vtxIndex) {
       let vtx = form.VTX1[0].parsed.vertices[vtxIndex];
       return new THREE.Vector3(
         (vtx.normalX) / (127 + (vtx.normalX < 0 ? 1 : 0)),
@@ -575,28 +571,69 @@ PP64.models = (function() {
       );
     }
 
-    makeVertexUVs(vtxEntry1, vtxEntry2, vtxEntry3) {
+    _makeVertexUVs(vtxEntry1, vtxEntry2, vtxEntry3) {
       return [
-        this.makeVertexUV(vtxEntry1),
-        this.makeVertexUV(vtxEntry2),
-        this.makeVertexUV(vtxEntry3),
+        this._makeVertexUV(vtxEntry1),
+        this._makeVertexUV(vtxEntry2),
+        this._makeVertexUV(vtxEntry3),
       ];
     }
 
-    makeVertexUV(vtxEntry) {
-      return new THREE.Vector2(vtxEntry.mystery2, vtxEntry.mystery3);
+    _makeVertexUV(vtxEntry) {
+      return new THREE.Vector2(vtxEntry.u, vtxEntry.v);
     }
 
-    getColorBytes(form, index) {
-      if (form.MAT1 && form.MAT1[0] && form.MAT1[0].parsed) {
-        const colorIndex = form.MAT1[0].parsed.materials[index].colorIndex;
-        if (form.COL1 && form.COL1[0] && form.COL1[0].parsed)
-          return form.COL1[0].parsed[colorIndex] >>> 8;
+    _getMaterialIndex(face) {
+      if (face.bmpIndex >= 0 || face.mystery3 === 0x36) { // Face colors, or maybe bitmap
+        // If it is 0xFFFF (-1) -> THREE.FaceColors material
+        // If greater, it'll be a bitmap material
+        return face.bmpIndex + 2;
       }
-      //   return form.COL1[0].parsed[index] >>> 8;
-      // if (form.COL1 && form.COL1[0] && form.COL1[0].parsed)
-      //   return form.COL1[0].parsed[index] >>> 8;
-      console.warn("Tried to get COL1 entry, but no COL1 was parsed");
+      else if (face.mystery3 === 0x37) { // Vertex colors?
+        return 0; // Vertex colors
+      }
+    }
+
+    _getColorBytes(form, face) {
+      if (face.mystery3 === 0x36) {
+        const materialIndex = face.materialIndex;
+        return this._getColorFromMaterial(form, materialIndex);
+      }
+      else if (face.mystery3 === 0x37) { // Vertex colors?
+        return 0xFFFC00; // Puke green, shouldn't see this
+      }
+
+      console.warn("Could not determine color for face");
+    }
+
+    _getColorFromMaterial(form, materialIndex) {
+      if (form.MAT1 && form.MAT1[0] && form.MAT1[0].parsed) {
+        const colorIndex = form.MAT1[0].parsed.materials[materialIndex].colorIndex;
+        if (form.COL1 && form.COL1[0] && form.COL1[0].parsed) {
+          if (form.COL1[0].parsed.hasOwnProperty(colorIndex))
+            return form.COL1[0].parsed[colorIndex] >>> 8;
+        }
+      }
+
+      console.warn(`Could not find color ${colorIndex} specified by material ${materialIndex}`);
+      return 0xFFFC00; // Puke green
+    }
+
+    _makeVertexColors(form, face, vtxEntry1, vtxEntry2, vtxEntry3) {
+      if (face.mystery3 !== 0x37)
+        return [];
+
+      return [
+        this._makeVertexColor(form, vtxEntry1),
+        this._makeVertexColor(form, vtxEntry2),
+        this._makeVertexColor(form, vtxEntry3),
+      ];
+    }
+
+    _makeVertexColor(form, vtxEntry) {
+      if (vtxEntry.materialIndex < 0)
+        return null;
+      return new THREE.Color(this._getColorFromMaterial(form, vtxEntry.materialIndex));
     }
   };
 

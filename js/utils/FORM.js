@@ -149,7 +149,6 @@ PP64.utils.FORM = class FORM {
     for (let i = 0; i < objCount; i++) {
       let objSize = rawView.getUint16(objectOffset);
       let objType = rawView.getUint8(objectOffset + 2);
-
       let globalIndex = rawView.getUint16(objectOffset + 3);
 
       objectOffset += 5;
@@ -164,10 +163,7 @@ PP64.utils.FORM = class FORM {
           for (let j = 0; j < subObjCount; j++) {
             obj.children.push(rawView.getUint16(objectOffset + 2 + (2 * j)));
           }
-          obj.mystery1 = rawView.getFloat32(objectOffset + 2 + (2 * subObjCount));
-          obj.mystery2 = rawView.getFloat32(objectOffset + 2 + (2 * subObjCount) + 4);
-          obj.mystery3 = rawView.getFloat32(objectOffset + 2 + (2 * subObjCount) + 8);
-          // TODO: More mysteries
+          Object.assign(obj, PP64.utils.FORM._parseOBJ1Transforms(rawView, objectOffset + 2 + (2 * subObjCount)));
           break;
 
         case 0x3A:
@@ -175,14 +171,15 @@ PP64.utils.FORM = class FORM {
             mystery1: rawView.getUint8(objectOffset),
             faceIndex: rawView.getUint16(objectOffset + 1),
             faceCount: rawView.getUint16(objectOffset + 3),
-            // TODO: More mysteries
           };
+          Object.assign(obj, PP64.utils.FORM._parseOBJ1Transforms(rawView, objectOffset + 5));
           break;
 
         case 0x10: // Points to skeleton entry // 9/11 mp1
           obj = {
             skeletonGlobalIndex: rawView.getUint16(objectOffset),
           };
+          Object.assign(obj, PP64.utils.FORM._parseOBJ1Transforms(rawView, objectOffset + 2));
           break;
 
         case 0x3B:
@@ -223,6 +220,20 @@ PP64.utils.FORM = class FORM {
     }
 
     return result;
+  }
+
+  static _parseOBJ1Transforms(rawView, offset) {
+    return {
+      posX: rawView.getFloat32(offset),
+      posY: rawView.getFloat32(offset + 4),
+      posZ: rawView.getFloat32(offset + 8),
+      rotX: rawView.getFloat32(offset + 12),
+      rotY: rawView.getFloat32(offset + 16),
+      rotZ: rawView.getFloat32(offset + 20),
+      scaleX: rawView.getFloat32(offset + 24),
+      scaleY: rawView.getFloat32(offset + 28),
+      scaleZ: rawView.getFloat32(offset + 32),
+    };
   }
 
   static parseCOL1(raw) {
@@ -328,6 +339,7 @@ PP64.utils.FORM = class FORM {
       faceOffset += 1; // Start after face_type
 
       if (faceType === 0x30) {
+        console.warn("Unsupported face type 0x30");
         faceOffset += 6; // TODO: What is 0x30 type? VTX num VTX?
       }
       else {
@@ -335,16 +347,16 @@ PP64.utils.FORM = class FORM {
         for (let j = 0; j < vtxEntryCount; j++) {
           face.vtxEntries[j] = {
             vertexIndex: rawView.getUint16(faceOffset),
-            mystery1: rawView.getUint16(faceOffset + 2),
-            mystery2: rawView.getFloat32(faceOffset + 4),
-            mystery3: rawView.getFloat32(faceOffset + 8),
+            materialIndex: rawView.getInt16(faceOffset + 2),
+            u: rawView.getFloat32(faceOffset + 4),
+            v: rawView.getFloat32(faceOffset + 8),
           }
           faceOffset += 12; // sizeof(FAC1VtxEntry)
         }
       }
 
-      face.mystery1 = rawView.getInt16(faceOffset);
-      face.mystery2 = rawView.getInt16(faceOffset + 2);
+      face.materialIndex = rawView.getInt16(faceOffset);
+      face.bmpIndex = rawView.getInt16(faceOffset + 2);
       face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
 
       // TODO 0x38 in mp2 31/5
@@ -386,10 +398,7 @@ PP64.utils.FORM = class FORM {
   }
 
   static parseSKL1(raw) {
-    let rawView = new DataView(raw);
-
-    // console.log("SKL1");
-    // PP64.utils.arrays.print(rawView, 30);
+    const rawView = new DataView(raw);
 
     const sklCount = rawView.getUint8(2);
     const result = {
@@ -400,12 +409,11 @@ PP64.utils.FORM = class FORM {
 
     let sklOffset = 4;
     for (let i = 0; i < sklCount; i++) {
-      result.skls.push({
+      const skl = {
         objGlobalIndex: rawView.getUint16(sklOffset),
-        mystery1: rawView.getFloat32(sklOffset + 0x2),
-        mystery2: rawView.getFloat32(sklOffset + 0x6),
-        mystery3: rawView.getFloat32(sklOffset + 0xA),
-      });
+      };
+      Object.assign(skl, PP64.utils.FORM._parseOBJ1Transforms(rawView, sklOffset + 2));
+      result.skls.push(skl);
       sklOffset += 56; // sizeof(SKL1Entry)
     }
 
@@ -558,7 +566,7 @@ PP64.utils.FORM = class FORM {
       // TODO: Other formats
       // 0x228 mp1 0/93
       // 0x126 mp1 9/25
-      
+
       console.warn(`Could not parse BMP format ${$$hex(format)}`);
       return {
         globalIndex: rawView.getUint16(0),

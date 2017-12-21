@@ -276,7 +276,15 @@ var $$number = PP64.utils.number = {
 
   makeDivisibleBy: function(num, by) {
     return by * Math.ceil(num / by);
-  }
+  },
+
+  degreesToRadians: function(degrees) {
+    return degrees * Math.PI / 180;
+  },
+
+  radiansToDegrees: function(radians) {
+    return radians * 180 / Math.PI;
+  },
 };
 
 PP64.utils.debug = {
