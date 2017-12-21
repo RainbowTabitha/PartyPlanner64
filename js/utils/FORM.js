@@ -358,7 +358,7 @@ PP64.utils.FORM = class FORM {
       }
 
       face.materialIndex = rawView.getInt16(faceOffset);
-      face.bmpIndex = rawView.getInt16(faceOffset + 2);
+      face.atrIndex = rawView.getInt16(faceOffset + 2);
       face.mystery3 = rawView.getUint8(faceOffset + 4); // 0x36
 
       // TODO 0x38 in mp2 31/5
@@ -445,10 +445,13 @@ PP64.utils.FORM = class FORM {
     const width = rawView.getUint16(0x05);
     const height = rawView.getUint16(0x07);
 
-    if (format === 0x128) {
+    if (format === 0x128 || format === 0x228) {
       // Traditional bitmap format
+      // 0x128 is just a bitmap
+      // 0x228 starts out the same, but TODO it also has some sort of extra RGBA data appended.
+      //   mp1 0/93, 0/94, 0/95, 46/2, 48/15, 54/5, 57/3
       if (!PAL1)
-        throw "Palette needed for BMP format 0x128";
+        throw `Palette needed for BMP format ${$$hex(format)}`;
 
       const paletteGlobalIndex = rawView.getUint16(0x09);
       const inBmpSize = rawView.getUint16(0x0F);
@@ -490,7 +493,7 @@ PP64.utils.FORM = class FORM {
         src: raw.slice(0xD, 0xD + imageByteLength),
       };
     }
-    else if (format === 0x126) {
+    else if (format === 0x126) { // 0x126 mp1 9/25
       // 24 bits per color
       // TODO: Are the bits right, or is there alpha?
       const imageByteLength = rawView.getUint16(0xB);
@@ -572,8 +575,6 @@ PP64.utils.FORM = class FORM {
     }
     else {
       // TODO: Other formats
-      // 0x228 mp1 0/93
-      // 0x126 mp1 9/25
 
       console.warn(`Could not parse BMP format ${$$hex(format)}`);
       return {

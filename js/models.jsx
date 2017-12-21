@@ -481,53 +481,37 @@ PP64.models = (function() {
       ];
 
       if (form.BMP1) {
-        const sortedBMPs = form.BMP1.slice().sort((a, b) => {
-          if (!a.parsed || !b.parsed)
-            return 0; // Eh?
-
-          if (a.parsed.globalIndex < b.parsed.globalIndex)
-            return -1;
-          if (a.parsed.globalIndex > b.parsed.globalIndex)
-            return 1;
-          throw "sorting BMPs: global indices cannot be equal";
-        });
-
-        const atrsByBitmap = {};
         if (form.ATR1 && form.ATR1[0]) {
           const atrs = form.ATR1[0].parsed.atrs;
           for (let i = 0; i < atrs.length; i++) {
-            // TODO: Why are there sometimes duplicate atrs? ex mp3 49/3
-            // Going with the first one for now.
-            if (!atrsByBitmap[atrs[i].bmpGlobalIndex])
-              atrsByBitmap[atrs[i].bmpGlobalIndex] = atrs[i];
-          }
-        }
+            const atr = atrs[i];
+            const bmp = PP64.utils.FORM.getByGlobalIndex(form, "BMP1", atr.bmpGlobalIndex);
+            if (bmp === null || Array.isArray(bmp)) {
+              console.warn("Unexpected bitmap result from global index lookup");
+              continue;
+            }
 
-        for (let i = 0; i < sortedBMPs.length; i++) {
-          if (sortedBMPs[i] && sortedBMPs[i].parsed) {
-            const bmp = sortedBMPs[i].parsed;
-            const textureMaterial = this._createTextureMaterial(bmp, atrsByBitmap);
+            const textureMaterial = this._createTextureMaterial(atr, bmp);
             materials.push(textureMaterial);
           }
+        }
+        else {
+          console.warn("BMPs, but no ATRs");
         }
       }
 
       return materials;
     }
 
-    _createTextureMaterial(bmp, atrsByBitmap) {
+    _createTextureMaterial(atr, bmp) {
       const dataUri = PP64.utils.arrays.arrayBufferToDataURL(bmp.src, bmp.width, bmp.height);
       $$log("Texture", dataUri);
       const loader = new THREE.TextureLoader();
       loader.crossOrigin = "";
       const texture = loader.load(dataUri);
       texture.flipY = false;
-
-      const atr = atrsByBitmap[bmp.globalIndex];
-      if (atr) {
-        texture.wrapS = this._getWrappingBehavior(atr.xBehavior);
-        texture.wrapT = this._getWrappingBehavior(atr.yBehavior);
-      }
+      texture.wrapS = this._getWrappingBehavior(atr.xBehavior);
+      texture.wrapT = this._getWrappingBehavior(atr.yBehavior);
 
       return new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
     }
@@ -584,10 +568,10 @@ PP64.models = (function() {
     }
 
     _getMaterialIndex(face) {
-      if (face.bmpIndex >= 0 || face.mystery3 === 0x36) { // Face colors, or maybe bitmap
+      if (face.atrIndex >= 0 || face.mystery3 === 0x36) { // Face colors, or maybe bitmap
         // If it is 0xFFFF (-1) -> THREE.FaceColors material
         // If greater, it'll be a bitmap material
-        return face.bmpIndex + 2;
+        return face.atrIndex + 2;
       }
       else if (face.mystery3 === 0x37) { // Vertex colors?
         return 0; // Vertex colors
