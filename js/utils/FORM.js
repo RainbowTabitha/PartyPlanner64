@@ -195,12 +195,14 @@ PP64.utils.FORM = class FORM {
           break;
 
         case 0x61:
+          // TODO this is common, don't know what it is, just has transform
           obj = {};
-          // TODO this is common, don't know what it is
+          Object.assign(obj, PP64.utils.FORM._parseOBJ1Transforms(rawView, objectOffset));
           break;
 
         case 0x5D:
           // TODO mp3 13/0
+          // Refers to objects of type 0x61
           obj = {};
           console.warn("Object type 0x5D");
           break;
