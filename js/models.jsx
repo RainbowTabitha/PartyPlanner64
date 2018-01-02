@@ -8,6 +8,9 @@ PP64.models = (function() {
         selectedModelDir: null,
         selectedModelFile: null,
         bgColor: 0x000000,
+        showTextures: true,
+        showWireframe: false,
+        showVertexNormals: false,
       };
 
       // Set first model, start at dir 2 so it's Mario.
@@ -36,11 +39,18 @@ PP64.models = (function() {
             selectedModelDir={this.state.selectedModelDir}
             selectedModelFile={this.state.selectedModelFile}
             bgColor={this.state.bgColor}
-            onBgColorChange={this.onBgColorChange} />
+            onBgColorChange={this.onBgColorChange}
+            showTextures={this.state.showTextures}
+            showWireframe={this.state.showWireframe}
+            showVertexNormals={this.state.showVertexNormals}
+            onFeatureChange={this.onFeatureChange} />
           <ModelRenderer
             selectedModelDir={this.state.selectedModelDir}
             selectedModelFile={this.state.selectedModelFile}
-            bgColor={this.state.bgColor} />
+            bgColor={this.state.bgColor}
+            showTextures={this.state.showTextures}
+            showWireframe={this.state.showWireframe}
+            showVertexNormals={this.state.showVertexNormals} />
         </div>
       );
     }
@@ -63,6 +73,10 @@ PP64.models = (function() {
       this.setState({
         bgColor: color,
       });
+    }
+
+    onFeatureChange = (features) => {
+      this.setState(features);
     }
   };
 
@@ -120,14 +134,73 @@ PP64.models = (function() {
     }
 
     clearViewer() {
-      if (!renderer)
-        return;
-      let container = ReactDOM.findDOMNode(this);
-      if (renderer.domElement.offsetParent)
-        container.removeChild(renderer.domElement);
+      this.disposeTHREERenderer();
+      this.disposeTHREEObj(scene);
+      scene = null;
+
       if (animateTimer) {
         clearTimeout(animateTimer);
         animateTimer = null;
+      }
+    }
+
+    disposeTHREERenderer() {
+      if (!renderer)
+        return;
+
+      renderer.dispose();
+      renderer.forceContextLoss();
+
+      let container = ReactDOM.findDOMNode(this);
+      if (renderer.domElement.offsetParent)
+        container.removeChild(renderer.domElement);
+
+      renderer.context = undefined;
+      renderer.domElement = undefined;
+      renderer = null;
+    }
+
+    disposeTHREEObj(obj) {
+      if (!obj) {
+        return;
+      }
+
+      for (let i = 0; i < obj.children.length; i++) {
+        this.disposeTHREEObj(obj.children[i]);
+      }
+
+      if (obj.geometry) {
+        obj.geometry.dispose();
+        obj.geometry = undefined;
+      }
+      if (obj.material) {
+        let materialArray;
+        if (obj.material instanceof THREE.MeshFaceMaterial || obj.material instanceof THREE.MultiMaterial) {
+          materialArray = obj.material.materials;
+        }
+        else if (obj.material instanceof Array) {
+          materialArray = obj.material;
+        }
+        if (materialArray) {
+          materialArray.forEach(function (mtrl, idx) {
+            if (mtrl.map) mtrl.map.dispose();
+            if (mtrl.lightMap) mtrl.lightMap.dispose();
+            if (mtrl.bumpMap) mtrl.bumpMap.dispose();
+            if (mtrl.normalMap) mtrl.normalMap.dispose();
+            if (mtrl.specularMap) mtrl.specularMap.dispose();
+            if (mtrl.envMap) mtrl.envMap.dispose();
+            mtrl.dispose();
+          });
+        }
+        else {
+          if (obj.material.map) obj.material.map.dispose();
+          if (obj.material.lightMap) obj.material.lightMap.dispose();
+          if (obj.material.bumpMap) obj.material.bumpMap.dispose();
+          if (obj.material.normalMap) obj.material.normalMap.dispose();
+          if (obj.material.specularMap) obj.material.specularMap.dispose();
+          if (obj.material.envMap) obj.material.envMap.dispose();
+          obj.material.dispose();
+        }
       }
     }
 
@@ -154,8 +227,19 @@ PP64.models = (function() {
 
       $$log("form", form);
 
-      const modelObj = (new FormToThreeJs()).createModel(form);
+      const converter = new FormToThreeJs();
+      converter.bgColor = this.props.bgColor;
+      converter.showTextures = this.props.showTextures;
+      converter.showWireframe = this.props.showWireframe;
+      converter.showVertexNormals = this.props.showVertexNormals;
+
+      const modelObj = converter.createModel(form);
       scene.add(modelObj);
+
+      if (this.props.showVertexNormals) {
+        const normalsHelper = new THREE.VertexNormalsHelper(modelObj, 8, 0x00FF00, 1);
+        scene.add(normalsHelper);
+      }
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(width, height);
@@ -172,7 +256,7 @@ PP64.models = (function() {
     }
 
     animate() {
-      if (!_modelRenderer)
+      if (!_modelRenderer || !renderer)
         return;
 			controls.update();
 			_modelRenderer.renderModel();
@@ -192,6 +276,10 @@ PP64.models = (function() {
           <ModelBGColorSelect
             selectedColor={this.props.bgColor}
             onColorChange={this.props.onBgColorChange} />
+          <ModelFeatureSelect
+            showTextures={this.props.showTextures}
+            showWireframe={this.props.showWireframe}
+            onFeatureChange={this.props.onFeatureChange} />
           {/* <div className="modelViewerToolbarSpacer" />
           <ModelExportObjButton
             selectedModelDir={this.props.selectedModelDir}
@@ -278,6 +366,75 @@ PP64.models = (function() {
     }
   };
 
+  const ModelFeatureSelect = class ModelFeatureSelect extends React.Component {
+    state = {}
+
+    render() {
+      let advancedFeatures;
+      if (PP64.settings.get($setting.uiAdvanced)) {
+        advancedFeatures = [
+          <label>
+            <input type="checkbox" key="modelFeatureSelectShowVertexNormals"
+              checked={this.props.showVertexNormals} onChange={this.onShowNormalsChange} />
+            Vertex Normals
+          </label>
+        ];
+      }
+      return (
+        <div className="modelFeatureSelectContainer">
+          <label>
+            <input type="checkbox" key="modelFeatureSelectShowTextures"
+              checked={this.props.showTextures} onChange={this.onShowTextureChange} />
+            Textures
+          </label>
+          <label>
+            <input type="checkbox" key="modelFeatureSelectShowWireframe"
+              checked={this.props.showWireframe} onChange={this.onShowWireframeChange} />
+            Wireframe
+          </label>
+          {advancedFeatures}
+        </div>
+      );
+    }
+
+    onShowTextureChange = (event) => {
+      const pressed = event.target.checked;
+      if (!pressed && !this.props.showWireframe) {
+        this.props.onFeatureChange({
+          showTextures: pressed,
+          showWireframe: true,
+        });
+      }
+      else {
+        this.props.onFeatureChange({
+          showTextures: pressed,
+        });
+      }
+    }
+
+    onShowWireframeChange = (event) => {
+      const pressed = event.target.checked;
+      if (!pressed && !this.props.showTextures) {
+        this.props.onFeatureChange({
+          showTextures: true,
+          showWireframe: pressed,
+        });
+      }
+      else {
+        this.props.onFeatureChange({
+          showWireframe: pressed,
+        });
+      }
+    }
+
+    onShowNormalsChange = (event) => {
+      const pressed = event.target.checked;
+      this.props.onFeatureChange({
+        showVertexNormals: pressed,
+      });
+    }
+  };
+
   const ModelExportObjButton = class ModelExportObjButton extends React.Component {
     state = {}
 
@@ -306,6 +463,10 @@ PP64.models = (function() {
   class FormToThreeJs {
     constructor() {
       this.separateGeometries = true;
+      this.bgColor = 0x000000;
+      this.showTextures = true;
+      this.showWireframe = false;
+      this.showVertexNormals = false;
     }
 
     createModel(form) {
@@ -390,7 +551,24 @@ PP64.models = (function() {
             this._populateGeometryWithFace(form, geometry, face);
           }
 
-          newObj.add(new THREE.Mesh(geometry, materials));
+          if (this.showTextures) {
+            const textureMesh = new THREE.Mesh(geometry, materials);
+            newObj.add(textureMesh);
+          }
+
+          if (this.showWireframe) {
+            const wireframeMaterial = new THREE.LineBasicMaterial({
+              color: PP64.utils.img.invertColor(this.bgColor),
+              linewidth: this.showTexture ? 2 : 1
+            });
+            const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), wireframeMaterial);
+            newObj.add(wireframe);
+          }
+
+          if (this.showVertexNormals) {
+            const normalsHelper = new THREE.VertexNormalsHelper(new THREE.Mesh(geometry, materials), 8, 0x00FF00, 1);
+            newObj.add(normalsHelper);
+          }
 
           newObjs.push(newObj);
         }

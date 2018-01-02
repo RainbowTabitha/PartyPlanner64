@@ -154,6 +154,16 @@ PP64.utils.img.toArrayBuffer = function toArrayBuffer(image, width, height) {
   return canvasCtx.getImageData(0, 0, width, height).data.buffer;
 };
 
+PP64.utils.img.invertColor = function invertColor(hex) {
+  if (hex === 0x000000) {
+    return 0xFFFFFF;
+  }
+  else if (hex === 0xFFFFFF) {
+    return 0x000000;
+  }
+  throw `PP64.utils.img.invertColor must be enhanced to support ${hex}`;
+}
+
 PP64.utils.browser = {
   updateWindowTitle: function updateWindowTitle(boardName) {
     boardName = boardName || PP64.boards.getCurrentBoard().name;

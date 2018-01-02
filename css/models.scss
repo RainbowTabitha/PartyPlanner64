@@ -47,3 +47,14 @@
 .modelViewerColorPicker .toggleButton {
   max-height: 24px;
 }
+
+.modelFeatureSelectContainer {
+  label {
+    margin: 0 0.5em;
+  }
+
+  input {
+    vertical-align: sub;
+    margin-right: 0.25em;
+  }
+}
