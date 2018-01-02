@@ -323,5 +323,18 @@ PP64.utils.react = {
   }
 };
 
+PP64.utils.analytics = {
+  recordEvent: function(eventName, params) {
+    try {
+      if (gtag) {
+        gtag("event", eventName, params);
+      }
+    }
+    catch (e) {
+      console.error(e); // But don't crash for analytics.
+    }
+  }
+};
+
 var $$log = PP64.utils.debug.log;
 var $$hex = PP64.utils.debug.hex;

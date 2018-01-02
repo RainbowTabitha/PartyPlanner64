@@ -501,6 +501,8 @@ PP64.header = (function() {
 
           PP64.boards.setCurrentBoard(newBoardIndex);
 
+          PP64.utils.analytics.recordEvent("board_write", { name: currentBoard.name });
+
           PP64.app.blockUI(false);
         }, reason => {
           $$log(`Error overriding board: ${reason}`);
