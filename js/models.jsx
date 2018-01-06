@@ -11,6 +11,7 @@ PP64.models = (function() {
         showTextures: true,
         showWireframe: false,
         showVertexNormals: false,
+        useCamera: false,
       };
 
       // Set first model, start at dir 2 so it's Mario.
@@ -43,6 +44,7 @@ PP64.models = (function() {
             showTextures={this.state.showTextures}
             showWireframe={this.state.showWireframe}
             showVertexNormals={this.state.showVertexNormals}
+            useCamera={this.state.useCamera}
             onFeatureChange={this.onFeatureChange} />
           <ModelRenderer
             selectedModelDir={this.state.selectedModelDir}
@@ -50,7 +52,8 @@ PP64.models = (function() {
             bgColor={this.state.bgColor}
             showTextures={this.state.showTextures}
             showWireframe={this.state.showWireframe}
-            showVertexNormals={this.state.showVertexNormals} />
+            showVertexNormals={this.state.showVertexNormals}
+            useCamera={this.state.useCamera} />
         </div>
       );
     }
@@ -218,9 +221,6 @@ PP64.models = (function() {
       scene = new THREE.Scene();
       scene.background = new THREE.Color(this.props.bgColor);
 
-      camera = new THREE.PerspectiveCamera(75, width / height, 1, 999999);
-      camera.position.z = 500;
-
       $$log(`Rendering model ${dir}/${file}`);
 
       const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
@@ -232,6 +232,7 @@ PP64.models = (function() {
       converter.showTextures = this.props.showTextures;
       converter.showWireframe = this.props.showWireframe;
       converter.showVertexNormals = this.props.showVertexNormals;
+      converter.useFormCamera = this.props.useCamera;
 
       const modelObj = converter.createModel(form);
       scene.add(modelObj);
@@ -241,10 +242,14 @@ PP64.models = (function() {
         scene.add(normalsHelper);
       }
 
+      $$log("Scene", scene);
+
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(width, height);
 
       container.appendChild(renderer.domElement);
+
+      camera = converter.createCamera(form, width, height);
 
       controls = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -279,11 +284,13 @@ PP64.models = (function() {
           <ModelFeatureSelect
             showTextures={this.props.showTextures}
             showWireframe={this.props.showWireframe}
+            showVertexNormals={this.props.showVertexNormals}
+            useCamera={this.props.useCamera}
             onFeatureChange={this.props.onFeatureChange} />
-          {/* <div className="modelViewerToolbarSpacer" />
+          <div className="modelViewerToolbarSpacer" />
           <ModelExportObjButton
             selectedModelDir={this.props.selectedModelDir}
-            selectedModelFile={this.props.selectedModelFile} /> */}
+            selectedModelFile={this.props.selectedModelFile} />
         </div>
       );
     }
@@ -392,6 +399,11 @@ PP64.models = (function() {
               checked={this.props.showWireframe} onChange={this.onShowWireframeChange} />
             Wireframe
           </label>
+          <label title="Use the camera defined by the model">
+            <input type="checkbox" key="modelFeatureSelectUseCamera"
+              checked={this.props.useCamera} onChange={this.onUseCameraChange} />
+            Camera
+          </label>
           {advancedFeatures}
         </div>
       );
@@ -433,6 +445,13 @@ PP64.models = (function() {
         showVertexNormals: pressed,
       });
     }
+
+    onUseCameraChange = (event) => {
+      const pressed = event.target.checked;
+      this.props.onFeatureChange({
+        useCamera: pressed,
+      });
+    }
   };
 
   const ModelExportObjButton = class ModelExportObjButton extends React.Component {
@@ -441,7 +460,10 @@ PP64.models = (function() {
     render() {
       const Button = PP64.controls.Button;
       return (
-        <Button onClick={this.export} css="nbCreate">Export OBJ</Button>
+        <Button onClick={this.export} css="btnModelExport">
+          <img src="img/model/export.png" height="16" width="16" />
+          glTF
+        </Button>
       );
     }
 
@@ -451,22 +473,29 @@ PP64.models = (function() {
       const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
 
       const converter = new FormToThreeJs();
-      converter.separateGeometries = false;
+
+      const modelObj = converter.createModel(form);
+
+      GLTFUtils.exportGLTF(GLTFUtils.glTFAssetFromTHREE(modelObj), {
+        jsZip: JSZip,
+      }).then(blob => {
+        saveAs(blob, `model-${dir}-${file}.zip`);
+      });
 
       // const meshes = converter.createMeshes(form);
       // THREEToOBJ.fromMesh(meshes[0]).then(blob => {
       //   saveAs(blob, `model-${dir}-${file}.obj`);
-      // })
+      // });
     }
   };
 
   class FormToThreeJs {
     constructor() {
-      this.separateGeometries = true;
       this.bgColor = 0x000000;
       this.showTextures = true;
       this.showWireframe = false;
       this.showVertexNormals = false;
+      this.useFormCamera = false;
     }
 
     createModel(form) {
@@ -520,24 +549,8 @@ PP64.models = (function() {
           const newObj = this._createObject3DFromOBJ1Entry(obj);
 
           const skl1GlobalIndex = obj.skeletonGlobalIndex;
-          const sklMatch = PP64.utils.FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
-          if (sklMatch === null || Array.isArray(sklMatch))
-            throw "Unexpected SKL1 search result";
-
-          const skls = sklMatch.skls;
-          for (let s = 0; s < skls.length; s++) {
-            const sklObj = this._createObject3DFromOBJ1Entry(skls[s]);
-
-            const nextObjIndex = skls[s].objGlobalIndex;
-
-            const childObjs = this._parseFormObj(form, materials, nextObjIndex);
-            if (childObjs && childObjs.length) {
-              childObjs.forEach(childObj => {
-                sklObj.add(childObj);
-              });
-              newObj.add(sklObj);
-            }
-          }
+          const sklObj = this._parseFormSkl(form, materials, skl1GlobalIndex);
+          newObj.add(sklObj);
 
           newObjs.push(newObj);
         }
@@ -572,6 +585,17 @@ PP64.models = (function() {
 
           newObjs.push(newObj);
         }
+        // else if (obj.objType === 0x3E) {
+        //   if ($$debug) {
+        //     const newObj = new THREE.Object3D();
+        //     const geometry = new THREE.Geometry();
+        //     geometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        //     const dotMaterial = new THREE.PointsMaterial( { color: 0xFF0000, size: 40 } );
+        //     const dot = new THREE.Points( geometry, dotMaterial );
+        //     newObj.add(dot);
+        //     newObjs.push(newObj);
+        //   }
+        // }
       }
 
       return newObjs;
@@ -594,6 +618,45 @@ PP64.models = (function() {
       newObj.scale.z = obj.scaleZ;
 
       return newObj;
+    }
+
+    _parseFormSkl(form, materials, skl1GlobalIndex) {
+      const sklMatch = PP64.utils.FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
+      if (sklMatch === null || Array.isArray(sklMatch))
+        throw "Unexpected SKL1 search result";
+
+      return this._parseFormSklNode(form, materials, sklMatch.skls, 0);
+    }
+
+    _parseFormSklNode(form, materials, skls, index) {
+      const skl = skls[index];
+      const sklObj = this._createObject3DFromOBJ1Entry(skl);
+
+      const objIndex = skl.objGlobalIndex;
+      const childObjs = this._parseFormObj(form, materials, objIndex);
+      if (childObjs && childObjs.length) {
+        childObjs.forEach(childObj => {
+          sklObj.add(childObj);
+        });
+      }
+
+      if (skl.isParentNode) {
+        let currentChildIndex = index + 1;
+        while (currentChildIndex) {
+          const childSkl = skls[currentChildIndex];
+          const childSklObj = this._parseFormSklNode(form, materials, skls, currentChildIndex);
+          sklObj.add(childSklObj);
+
+          if (childSkl.nextSiblingRelativeIndex) {
+            currentChildIndex += childSkl.nextSiblingRelativeIndex;
+          }
+          else {
+            break;
+          }
+        }
+      }
+
+      return sklObj;
     }
 
     _populateGeometryWithFace(form, geometry, face) {
@@ -692,7 +755,12 @@ PP64.models = (function() {
       texture.wrapS = this._getWrappingBehavior(atr.xBehavior);
       texture.wrapT = this._getWrappingBehavior(atr.yBehavior);
 
-      return new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.5 });
+      return new THREE.MeshBasicMaterial({
+        alphaTest: 0.5,
+        map: texture,
+        transparent: true,
+        vertexColors: THREE.VertexColors,
+      });
     }
 
     _getWrappingBehavior(behavior) {
@@ -797,6 +865,34 @@ PP64.models = (function() {
       if (vtxEntry.materialIndex < 0)
         return null;
       return new THREE.Color(this._getColorFromMaterial(form, vtxEntry.materialIndex));
+    }
+
+    createCamera(form, width, height) {
+      const camera = new THREE.PerspectiveCamera(75, width / height, 1, 999999);
+      if (this.useFormCamera) {
+        const cameraObjs = PP64.utils.FORM.getObjectsByType(form, 0x61);
+        if (cameraObjs.length === 3) {
+          const cameraEyeObj = cameraObjs[0];
+          const cameraInterestObj = cameraObjs[1];
+          camera.position.set(
+            cameraEyeObj.posX,
+            cameraEyeObj.posY,
+            cameraEyeObj.posZ
+          );
+          camera.lookAt(new THREE.Vector3(
+            cameraInterestObj.posX,
+            cameraInterestObj.posY,
+            cameraInterestObj.posZ)
+          );
+          return camera;
+        }
+        else {
+          console.warn(`Unexpected camera object count: ${cameraObjs.length}`);
+        }
+      }
+
+      camera.position.z = 500;
+      return camera;
     }
   };
 

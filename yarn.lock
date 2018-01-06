@@ -2,6 +2,16 @@
 # yarn lockfile v1
 
 
+"@types/three@^0.84.35":
+  version "0.84.37"
+  resolved "https://registry.yarnpkg.com/@types/three/-/three-0.84.37.tgz#30ddd17a59a970ef21d252c08ae1cdd7b8b57cff"
+  dependencies:
+    "@types/webvr-api" "*"
+
+"@types/webvr-api@*":
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/@types/webvr-api/-/webvr-api-0.0.31.tgz#f6061fe88a035d34a8b6a0c55f8758901ec8a08e"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -1975,6 +1985,12 @@ glogg@^1.0.0:
   resolved "https://registry.yarnpkg.com/glogg/-/glogg-1.0.0.tgz#7fe0f199f57ac906cf512feead8f90ee4a284fc5"
   dependencies:
     sparkles "^1.0.0"
+
+gltf-js-utils@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/gltf-js-utils/-/gltf-js-utils-1.0.0.tgz#26df90e24dc9b46af8df28317f447b724a3e42c0"
+  dependencies:
+    "@types/three" "^0.84.35"
 
 got@^5.0.0:
   version "5.7.1"

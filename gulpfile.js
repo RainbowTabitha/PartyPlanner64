@@ -213,6 +213,9 @@ const LIB_JS = [
   { src: "node_modules/three/build/three.min.js",
     dst: "three.min.js"
   },
+  { src: "node_modules/gltf-js-utils/dist/gltfutils.js",
+    dst: "gltfjsutils.min.js"
+  },
   { src: "node_modules/mips-inst/dist/bundle.js",
     dst: "mips-inst.min.js"
   },

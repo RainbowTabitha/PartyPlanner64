@@ -114,6 +114,8 @@ PP64.utils.FORM = class FORM {
 
   static parseType(type, raw) {
     switch (type) {
+      case "HBINMODE":
+      return PP64.utils.FORM.parseHBINMODE(raw);
       case "OBJ1":
         return PP64.utils.FORM.parseOBJ1(raw);
       case "COL1":
@@ -135,6 +137,21 @@ PP64.utils.FORM = class FORM {
     }
 
     return null;
+  }
+
+  static parseHBINMODE(raw) {
+    let rawView = new DataView(raw);
+    const result = {
+      E: rawView.getUint8(0x14),
+      F: rawView.getUint8(0x15),
+      G: rawView.getUint8(0x16),
+    };
+
+    if (result.E !== 0x45 || result.F !== 0x46 || result.G !== 0x47) {
+      console.warn("HBINMODE unexpected EFG => ", result); // Corresponds to ZYX rotation?
+    }
+
+    return result;
   }
 
   static parseOBJ1(raw) {
@@ -191,7 +208,7 @@ PP64.utils.FORM = class FORM {
         case 0x3E:
           // TODO
           obj = {};
-          console.warn("Object type 0x3E");
+          //console.warn("Object type 0x3E");
           break;
 
         case 0x61:
@@ -405,16 +422,19 @@ PP64.utils.FORM = class FORM {
     const sklCount = rawView.getUint8(2);
     const result = {
       globalIndex: rawView.getUint16(0),
-      mystery2: rawView.getUint8(3),
       skls: [],
     };
 
-    let sklOffset = 4;
+    let sklOffset = 3;
     for (let i = 0; i < sklCount; i++) {
       const skl = {
-        objGlobalIndex: rawView.getUint16(sklOffset),
+        mystery1: rawView.getUint8(sklOffset),
+        objGlobalIndex: rawView.getUint16(sklOffset + 1),
+        nextSiblingRelativeIndex: rawView.getUint16(sklOffset + 0x33),
+        isParentNode: rawView.getUint16(sklOffset + 0x35),
+        mystery2: rawView.getUint8(sklOffset + 0x36),
       };
-      Object.assign(skl, PP64.utils.FORM._parseOBJ1Transforms(rawView, sklOffset + 2));
+      Object.assign(skl, PP64.utils.FORM._parseOBJ1Transforms(rawView, sklOffset + 3));
       result.skls.push(skl);
       sklOffset += 56; // sizeof(SKL1Entry)
     }
@@ -670,5 +690,16 @@ PP64.utils.FORM = class FORM {
     if (values.length === 1)
       return values[0];
     return values;
+  }
+
+  static getObjectsByType(form, type) {
+    const OBJs = form.OBJ1[0].parsed.objects;
+    const objsOfType = [];
+    for (let i = 0; i < OBJs.length; i++) {
+      if (OBJs[i].objType === type) {
+        objsOfType.push(OBJs[i]);
+      }
+    }
+    return objsOfType;
   }
 };
