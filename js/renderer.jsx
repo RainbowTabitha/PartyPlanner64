@@ -321,6 +321,25 @@ PP64.renderer = (function() {
     }
   }
 
+  function highlightSpaces(canvas, context, spaces) {
+    const currentBoard = PP64.boards.getCurrentBoard();
+    let radius = currentBoard.game === 3 ? 18 : 12;
+
+    for (let i = 0; i < spaces.length; i++) {
+      const space = currentBoard.spaces[spaces[i]];
+      if (space) {
+        context.save();
+        context.beginPath();
+        context.arc(space.x, space.y, radius, 0, 2 * Math.PI);
+        context.shadowColor = "rgba(225, 225, 225, 1)";
+        context.shadowBlur = 2;
+        context.fillStyle = "rgba(255, 0, 0, 0.85)";
+        context.fill();
+        context.restore();
+      }
+    }
+  }
+
   let _boardBG;
   const BoardBG = class BoardBG extends React.Component {
     state = {}
@@ -468,16 +487,21 @@ PP64.renderer = (function() {
 
     renderContent() {
       // Update the current space indication
-      let currentSpaceCanvas = ReactDOM.findDOMNode(this);
-      let editor = currentSpaceCanvas.parentElement;
-      let board = this.props.board;
-      let transformStyle = getEditorContentTransform(board, editor);
+      const currentSpaceCanvas = ReactDOM.findDOMNode(this);
+      const editor = currentSpaceCanvas.parentElement;
+      const board = this.props.board;
+      const transformStyle = getEditorContentTransform(board, editor);
       currentSpaceCanvas.style.transform = transformStyle;
       if (currentSpaceCanvas.width !== board.bg.width || currentSpaceCanvas.height !== board.bg.height) {
         currentSpaceCanvas.width = board.bg.width;
         currentSpaceCanvas.height = board.bg.height;
       }
       renderCurrentSpace(currentSpaceCanvas, currentSpaceCanvas.getContext("2d"), this.props.currentSpace);
+    }
+
+    highlightSpaces(spaces) {
+      const currentSpaceCanvas = ReactDOM.findDOMNode(this);
+      highlightSpaces(currentSpaceCanvas, currentSpaceCanvas.getContext("2d"), spaces);
     }
 
     render() {
@@ -647,6 +671,10 @@ PP64.renderer = (function() {
       drawConnection(lineCtx, x1, y1, x2, y2);
     },
     drawAssociation,
+    highlightSpaces: function(spaces) {
+      if (_boardCurrentSpace)
+        _boardCurrentSpace.highlightSpaces(spaces);
+    },
 
     playAnimation: _startAnimation,
     stopAnimation: _stopAnimation,

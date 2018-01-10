@@ -16,10 +16,18 @@ PP64.properties.BoardProperties = (function() {
         )
       }
 
+      let deadEndCheck;
+      if (!romBoard) {
+        deadEndCheck = (
+          <CheckDeadEnds board={this.props.currentBoard} />
+        );
+      }
+
       return (
         <div className="properties">
           <EditDetails romBoard={romBoard} />
           <BGSelect />
+          {deadEndCheck}
           {animationBGList}
         </div>
       );
@@ -68,6 +76,52 @@ PP64.properties.BoardProperties = (function() {
       return (
         <div className="propertiesActionButton" onClick={this.onEditDetails}>
           <img src="img/header/editdetails.png" className="propertiesActionButtonImg" width="24" height="24" />
+          <span className="propertiesActionButtonSpan">{text}</span>
+        </div>
+      );
+    }
+  };
+
+  const CheckDeadEnds = class CheckDeadEnds extends React.Component {
+    state = {
+      noDeadEnds: false, // Set to true briefly after running
+    }
+
+    checkForDeadEnds = () => {
+      const deadEnds = PP64.boards.getDeadEnds(this.props.board);
+      $$log("Dead ends", deadEnds);
+
+      if (deadEnds.length) {
+        PP64.renderer.highlightSpaces(deadEnds);
+      }
+      else {
+        this.setState({ noDeadEnds: true });
+        this._noDeadEndsTimeout = setTimeout(() => {
+          delete this._noDeadEndsTimeout;
+          this.setState({ noDeadEnds: false });
+        }, 1000);
+      }
+    }
+
+    componentWillUnmount() {
+      if (this._noDeadEndsTimeout) {
+        delete this._noDeadEndsTimeout;
+        clearTimeout(this._noDeadEndsTimeout);
+      }
+    }
+
+    render() {
+      let text, handler;
+      if (this.state.noDeadEnds) {
+        text = "✓ No dead ends";
+      }
+      else {
+        text = "Check for dead ends";
+        handler = this.checkForDeadEnds;
+      }
+      return (
+        <div className="propertiesActionButton" onClick={handler}>
+          <img src="img/editor/boardproperties/deadend.png" className="propertiesActionButtonImg" width="24" height="24" />
           <span className="propertiesActionButtonSpan">{text}</span>
         </div>
       );
