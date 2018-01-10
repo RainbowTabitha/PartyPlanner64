@@ -232,6 +232,88 @@ PP64.boards = (function() {
     }
   }
 
+  function getDeadEnds(board) {
+    const deadEnds = [];
+    let spaces = _getSpacesCopy(board);
+
+    function _getSpacesCopy(board) {
+      return PP64.utils.obj.copy(board.spaces);
+    }
+
+    function _checkDeadEnd(spaceIndex) {
+      if (spaces[spaceIndex]._seen)
+        return false; // We have reached a previous space - no dead end.
+      if (!board.links.hasOwnProperty(spaceIndex)) {
+        deadEnds.push(spaceIndex);
+        return true;
+      }
+
+      spaces[spaceIndex]._seen = true;
+      let nextSpaces = board.links[spaceIndex];
+      let result;
+      if (Array.isArray(nextSpaces)) {
+        for (var i = 0; i < nextSpaces.length; i++) {
+          result = _checkDeadEnd(nextSpaces[i]);
+          if (result)
+            return result;
+        }
+      }
+      else {
+        result = _checkDeadEnd(nextSpaces);
+        if (result)
+          return result;
+      }
+    }
+
+    // Build a reverse lookup of space to _pointing_ spaces.
+    var pointingMap = {};
+    for (let s = 0; s < spaces.length; s++) {
+      if (spaces[s])
+        pointingMap[s] = [];
+    }
+    for (let startIdx in board.links) {
+      let ends = PP64.boards.getConnections(startIdx, board);
+      ends.forEach(end => {
+        pointingMap[end].push(Number(startIdx));
+      });
+    }
+
+    // Returns true if the given space is linked to from another space besides
+    // the previous space.
+    function spaceIsLinkedFromByAnother(spaceIdx, prevIdx) {
+      // If no previous index passed, just see if anything points.
+      if (prevIdx === undefined)
+        return !!pointingMap[spaceIdx].length;
+
+      if (!pointingMap[spaceIdx].length)
+        return false;
+      if (pointingMap[spaceIdx].indexOf(Number(prevIdx)) === -1)
+        return true;
+      if (pointingMap[spaceIdx].length > 1)
+        return true; // Assumes prevIdx is not duplicated
+      return false; // length === 1 && only entry is prevIdx
+    }
+
+    let startIdx = PP64.boards.getStartSpace(board);
+
+    _checkDeadEnd(startIdx);
+
+    for (let s = 0; s < spaces.length; s++) {
+      if (!spaces[s])
+        continue;
+      if (spaces[s]._seen)
+        continue; // Don't even need to check, we already visited it.
+
+      // The latter condition is not totally necessary, but I don't know that
+      // we want to or can handle single-space chains.
+      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, null, board)) {
+        _checkDeadEnd(s);
+      }
+    }
+
+    return deadEnds;
+  }
+
   return {
     getCurrentBoard,
 
@@ -444,6 +526,8 @@ PP64.boards = (function() {
     addEventToSpace,
 
     removeEventFromSpace,
+
+    getDeadEnds,
 
     loadBoardsFromROM: function() {
       let adapter = PP64.adapters.getROMAdapter();

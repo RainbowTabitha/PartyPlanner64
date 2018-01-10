@@ -336,7 +336,7 @@ PP64.utils.react = {
 PP64.utils.analytics = {
   recordEvent: function(eventName, params) {
     try {
-      if (gtag) {
+      if (window.gtag) {
         gtag("event", eventName, params);
       }
     }

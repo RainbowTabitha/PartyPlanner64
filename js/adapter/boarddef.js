@@ -215,7 +215,7 @@ PP64.adapters.boarddef = (function() {
         }
 
         if (typeof nextSpaceIdx !== "number")
-          throw "_determineChains.parseChain hit a dead end at " + curSpaceIdx;
+          throw `_determineChains.parseChain hit a dead end at ${$$hex(curSpaceIdx)} (${curSpaceIdx})`;
 
         // Must break the chain if a chain intersects the next space.
         if (spaceIsLinkedFromByAnother(nextSpaceIdx, curSpaceIdx)) {

@@ -19,10 +19,6 @@ PP64.validation = (function() {
     
   // };
 
-  function _getSpacesCopy(board) {
-    return PP64.utils.obj.copy(board.spaces);
-  }
-
   const HasStart = createRule("HASSTART", "Has start space", $validationLevel.ERROR);
   HasStart.fails = function(board, args) {
     let curIdx = PP64.boards.getStartSpace(board);
@@ -41,34 +37,16 @@ PP64.validation = (function() {
 
   const DeadEnd = createRule("DEADEND", "No dead ends", $validationLevel.ERROR);
   DeadEnd.fails = function(board, args) {
-    let curIdx = PP64.boards.getStartSpace(board);
-    let spaces = _getSpacesCopy(board);
-    if (!board.links.hasOwnProperty(curIdx))
+    const deadEnds = PP64.boards.getDeadEnds(board);
+
+    const startIndex = PP64.boards.getStartSpace(board);
+    if (deadEnds.indexOf(startIndex) >= 0)
       return "Start space does not lead anywhere.";
 
-    function _checkDeadEnd(spaceIndex) {
-      if (spaces[spaceIndex]._seen)
-        return false; // We have reached a previous space - no dead end.
-      if (!board.links.hasOwnProperty(spaceIndex))
-        return "There is a dead end on the board.";
-      spaces[spaceIndex]._seen = true;
-      var nextSpaces = board.links[spaceIndex];
-      var result;
-      if (Array.isArray(nextSpaces)) {
-        for (var i = 0; i < nextSpaces.length; i++) {
-          result = _checkDeadEnd(nextSpaces[i]);
-          if (result)
-            return result;
-        }
-      }
-      else {
-        result = _checkDeadEnd(nextSpaces);
-        if (result)
-          return result;
-      }
-    }
+    if (deadEnds.length)
+      return "There is a dead end on the board.";
 
-    return _checkDeadEnd(curIdx);
+    return false;
   };
 
   const TooManySpaces = createRule("TOOMANYSPACES", "Too many spaces", $validationLevel.ERROR);
