@@ -26,7 +26,7 @@ PP64.properties.BoardProperties = (function() {
       return (
         <div className="properties">
           <EditDetails romBoard={romBoard} />
-          <BGSelect />
+          <BGSelect gameVersion={gameVersion} />
           {deadEndCheck}
           {animationBGList}
         </div>
@@ -55,8 +55,9 @@ PP64.properties.BoardProperties = (function() {
     }
 
     render() {
+      let title = this.props.gameVersion === 1 ? "960 x 720" : "1152 x 864";
       return (
-        <div className="propertiesActionButton" onClick={this.onChangeBg}>
+        <div className="propertiesActionButton" onClick={this.onChangeBg} title={title}>
           <img src="img/header/setbg.png" className="propertiesActionButtonImg" width="24" height="24" />
           <span className="propertiesActionButtonSpan">Change main background</span>
         </div>
