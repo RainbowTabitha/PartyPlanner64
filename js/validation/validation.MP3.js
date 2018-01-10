@@ -5,6 +5,7 @@ PP64.validation.MP3 = (function() {
     PP64.validation.getRule("TOOMANYBOWSERS", { limit: 0 }),
     PP64.validation.getRule("TOOMANYKOOPAS", { limit: 0 }),
     PP64.validation.getRule("GATESETUP"),
+    PP64.validation.getRule("OVERRECOMMENDEDSPACES", { max: 128 }),
   ];
 
   function getValidationRulesForBoard(boardIndex) {

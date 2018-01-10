@@ -78,6 +78,14 @@ PP64.validation = (function() {
     return false;
   };
 
+  const OverRecommendedSpaces = createRule("OVERRECOMMENDEDSPACES", "Over recommended spaces", $validationLevel.WARNING);
+  OverRecommendedSpaces.fails = function(board, args) {
+    const spaceCount = board.spaces.length;
+    if (spaceCount > args.max)
+      return `${spaceCount} spaces present, more than ${args.max} spaces can be unstable.`;
+    return false;
+  };
+
   const _makeTooManyOfSubtypeRule = function(subtype, name) {
     let rule = createRule(`TOOMANY${name.toUpperCase().replace(/\s+/g, "")}`, `Too many ${name}`, $validationLevel.ERROR);
     rule.fails = function(board, args = {}) {
