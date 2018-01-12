@@ -504,14 +504,30 @@ PP64.utils.FORM = class FORM {
     }
     else if (format === 0x127) { // mp1 9/138
       // Just raw RGBA already
+      const bpp = rawView.getUint8(0x4);
       const imageByteLength = rawView.getUint16(0xB);
-      return {
-        globalIndex: rawView.getUint16(0),
-        origFormat: format,
-        width,
-        height,
-        src: raw.slice(0xD, 0xD + imageByteLength),
-      };
+      switch (bpp) {
+        case 16:
+          return {
+            globalIndex: rawView.getUint16(0),
+            origFormat: format,
+            width,
+            height,
+            src: PP64.utils.img.RGBA5551.toRGBA32(raw.slice(0xD, 0xD + imageByteLength), width, height),
+          };
+
+        case 32:
+          return {
+            globalIndex: rawView.getUint16(0),
+            origFormat: format,
+            width,
+            height,
+            src: raw.slice(0xD, 0xD + imageByteLength),
+          };
+
+        default:
+          console.warn(`BMP1 0x127 had unsupported bpp ${bpp}`);
+      }
     }
     else if (format === 0x126) { // 0x126 mp1 9/25
       // 24 bits per color
@@ -593,18 +609,17 @@ PP64.utils.FORM = class FORM {
         src: outBuffer,
       };
     }
-    else {
-      // TODO: Other formats
 
-      console.warn(`Could not parse BMP format ${$$hex(format)}`);
-      return {
-        globalIndex: rawView.getUint16(0),
-        origFormat: format,
-        width,
-        height,
-        src: new ArrayBuffer(width * height * 4),
-      };
-    }
+    // TODO: Other formats
+
+    console.warn(`Could not parse BMP format ${$$hex(format)}`);
+    return {
+      globalIndex: rawView.getUint16(0),
+      origFormat: format,
+      width,
+      height,
+      src: new ArrayBuffer(width * height * 4),
+    };
   }
 
   static replaceBMP(formObj, bmpIndex, buffer, palette) {
