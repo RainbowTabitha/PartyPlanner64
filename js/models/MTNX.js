@@ -86,7 +86,7 @@ PP64.utils.MTNX = class MTNX {
     return {
       Transform: 0x17,
       Rotation: 0x4C,
-      // Scale: 0x1B, // TODO
+      Scale: 0x1B,
     };
   }
 

@@ -31,10 +31,11 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
         return this._createTransformTrack(track);
       case TrackType.Rotation:
         return this._createRotationTrack(track);
-
+      case TrackType.Scale:
+        return this._createScaleTrack(track);
     }
 
-    console.warn(`Unsupported track type ${track.type}`);
+    console.warn(`Unsupported track type ${$$hex(track.type)}`);
   }
 
   _createTransformTrack(track) {
@@ -105,6 +106,28 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
     return quaternion;
   }
 
+  _createScaleTrack(track) {
+    const name = this._createScaleTrackName(track);
+    const keyframes = this._createKeyframeSecsArr(track.keyframes);
+    const data = this._createScaleTrackData(track);
+    return new THREE.VectorKeyframeTrack(name, keyframes, data);
+  }
+
+  _createScaleTrackName(track) {
+    const nodeName = this._getObjNameFromIndex(track.objIndex);
+    const dimension = this._getDimensionProperty(track.dimension);
+    return `${nodeName}.scale[${dimension}]`;
+  }
+
+  _createScaleTrackData(track) {
+    const data = [];
+    for (let frame in track.keyframes) {
+      let pos = track.keyframes[frame].value1;
+      data.push(pos);
+    }
+    return data;
+  }
+
   _createKeyframeSecsArr(keyframesObj) {
     const arr = [];
     for (let frame in keyframesObj) {
@@ -143,7 +166,7 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
   }
 
   _framesToSeconds(frames) {
-    return frames / 30;
+    return frames / 60;
   }
 
   _adjustTrackOrder(tracks) {
