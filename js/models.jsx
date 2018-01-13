@@ -147,6 +147,7 @@ PP64.models = (function() {
 
     componentDidMount() {
       try {
+        window.addEventListener("resize", this.onWindowResize);
         _modelRenderer = this;
         this.initModel();
       }
@@ -157,6 +158,7 @@ PP64.models = (function() {
 
     componentWillUnmount() {
       try {
+        window.removeEventListener("resize", this.onWindowResize);
         _modelRenderer = null;
         this.clearViewer();
       }
@@ -172,6 +174,19 @@ PP64.models = (function() {
       }
       catch (e) {
         console.error(e);
+      }
+    }
+
+    onWindowResize = () => {
+      if (renderer && camera) {
+        const container = ReactDOM.findDOMNode(this);
+        const height = container.offsetHeight;
+        const width = container.offsetWidth;
+
+        camera.aspect = width / height;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(width, height);
       }
     }
 
