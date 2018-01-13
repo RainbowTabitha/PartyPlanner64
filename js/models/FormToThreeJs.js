@@ -116,6 +116,10 @@ PP64.utils.FormToThreeJs = class FormToThreeJs {
   _createObject3DFromOBJ1Entry(obj) {
     const newObj = new THREE.Object3D();
 
+    // Name the nodes for animation - see MtnxToThreeJs
+    if (obj.hasOwnProperty("globalIndex"))
+      newObj.name = this._getObjNameFromId(obj.globalIndex);
+
     newObj.position.x = obj.posX;
     newObj.position.y = obj.posY;
     newObj.position.z = obj.posZ;
@@ -130,6 +134,10 @@ PP64.utils.FormToThreeJs = class FormToThreeJs {
     newObj.scale.z = obj.scaleZ;
 
     return newObj;
+  }
+
+  _getObjNameFromId(id) {
+    return $$hex(id);
   }
 
   _parseFormSkl(form, materials, skl1GlobalIndex) {

@@ -7,6 +7,9 @@ PP64.models = (function() {
         selectedModel: "",
         selectedModelDir: null,
         selectedModelFile: null,
+        selectedAnim: "",
+        selectedAnimDir: null,
+        selectedAnimFile: null,
         bgColor: 0x000000,
         showTextures: true,
         showWireframe: false,
@@ -39,6 +42,10 @@ PP64.models = (function() {
             onModelSelected={this.onModelSelected}
             selectedModelDir={this.state.selectedModelDir}
             selectedModelFile={this.state.selectedModelFile}
+            selectedAnim={this.state.selectedAnim}
+            onAnimSelected={this.onAnimSelected}
+            selectedAnimDir={this.state.selectedAnimDir}
+            selectedAnimFile={this.state.selectedAnimFile}
             bgColor={this.state.bgColor}
             onBgColorChange={this.onBgColorChange}
             showTextures={this.state.showTextures}
@@ -49,6 +56,8 @@ PP64.models = (function() {
           <ModelRenderer
             selectedModelDir={this.state.selectedModelDir}
             selectedModelFile={this.state.selectedModelFile}
+            selectedAnimDir={this.state.selectedAnimDir}
+            selectedAnimFile={this.state.selectedAnimFile}
             bgColor={this.state.bgColor}
             showTextures={this.state.showTextures}
             showWireframe={this.state.showWireframe}
@@ -69,6 +78,35 @@ PP64.models = (function() {
         selectedModel: model,
         selectedModelDir: dir,
         selectedModelFile: file,
+
+        // Clear the animation
+        selectedAnim: "",
+        selectedAnimDir: null,
+        selectedAnimFile: null,
+      });
+    }
+
+    onAnimSelected = (anim) => {
+      if (!anim) {
+        this.setState({
+          selectedAnim: "",
+          selectedAnimDir: null,
+          selectedAnimFile: null,
+        });
+        return;
+      }
+
+      const pieces = anim.match(/^(\d+)\/(\d+)/);
+      if (!pieces) {
+        throw `Error parsing anim string ${anim}`;
+      }
+
+      const [, dir, file] = pieces;
+
+      this.setState({
+        selectedAnim: anim,
+        selectedAnimDir: dir,
+        selectedAnimFile: file,
       });
     }
 
@@ -83,7 +121,8 @@ PP64.models = (function() {
     }
   };
 
-  let _modelRenderer, camera, scene, renderer, controls, animateTimer;
+  let _modelRenderer;
+  let camera, scene, renderer, controls, clock, mixer;
   const ModelRenderer = class ModelRenderer extends React.Component {
     state = {
       hasError: false
@@ -140,10 +179,13 @@ PP64.models = (function() {
       this.disposeTHREERenderer();
       this.disposeTHREEObj(scene);
       scene = null;
-
-      if (animateTimer) {
-        clearTimeout(animateTimer);
-        animateTimer = null;
+      if (mixer) {
+        mixer.stopAllAction();
+        mixer = null;
+      }
+      if (clock) {
+        clock.stop();
+        clock = null;
       }
     }
 
@@ -244,6 +286,22 @@ PP64.models = (function() {
 
       $$log("Scene", scene);
 
+      if (this.props.selectedAnimDir !== null) {
+        const [dir, file] = [this.props.selectedAnimDir, this.props.selectedAnimFile];
+        const mtnx = PP64.utils.MTNX.unpack(PP64.fs.mainfs.get(dir, file));
+        $$log("mtnx", mtnx);
+
+        const animConverter = new PP64.utils.MtnxToThreeJs();
+        const clip = animConverter.createClip(mtnx);
+        $$log("mtnxClip", clip);
+
+        mixer = new THREE.AnimationMixer(scene);
+        const mtnxClipAction = mixer.clipAction(clip);
+        mtnxClipAction.play();
+
+        clock = new THREE.Clock();
+      }
+
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(width, height);
 
@@ -263,9 +321,18 @@ PP64.models = (function() {
     animate() {
       if (!_modelRenderer || !renderer)
         return;
-			controls.update();
-			_modelRenderer.renderModel();
-      animateTimer = setTimeout(_modelRenderer.animate, 100);
+
+      controls.update();
+
+      if (clock) {
+        const delta = clock.getDelta();
+        if (mixer) {
+          mixer.update(delta);
+        }
+      }
+
+      _modelRenderer.renderModel();
+      requestAnimationFrame(_modelRenderer.animate);
 		}
   };
 
@@ -278,6 +345,9 @@ PP64.models = (function() {
           <ModelSelect
             selectedModel={this.props.selectedModel}
             onModelSelected={this.props.onModelSelected} />
+          <AnimSelect
+            selectedAnim={this.props.selectedAnim}
+            onAnimSelected={this.props.onAnimSelected} />
           <ModelBGColorSelect
             selectedColor={this.props.bgColor}
             onColorChange={this.props.onBgColorChange} />
@@ -338,6 +408,59 @@ PP64.models = (function() {
             }
             catch (e) {
               console.error(`Could not parse FORM ${d}/${f}`, e);
+            }
+          }
+        }
+      }
+      return entries;
+    }
+  };
+
+  const AnimSelect = class AnimSelect extends React.Component {
+    state = {}
+
+    render() {
+      let entries = this.getAnimEntries();
+      let options = entries.map(entry => {
+        return (
+          <option value={entry} key={entry}>{entry}</option>
+        );
+      });
+      options.unshift((
+          <option value={""} key={""}></option>
+      ));
+      return (
+        <div className="modelSelectContainer">
+          Animation:
+          <select value={this.props.selectedAnim} onChange={this.animSelected}>
+            {options}
+          </select>
+        </div>
+      );
+    }
+
+    animSelected = (e) => {
+      if (this.props.onAnimSelected)
+        this.props.onAnimSelected(e.target.value);
+    }
+
+    getAnimEntries() {
+      let entries = [];
+      let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
+      for (let d = 0; d < mainfsDirCount; d++) {
+        let dirFileCount = PP64.fs.mainfs.getFileCount(d);
+        for (let f = 0; f < dirFileCount; f++) {
+          let file = PP64.fs.mainfs.get(d, f);
+          if (PP64.utils.MTNX.isMtnx(file)) {
+            let name = d + "/" + f;
+            try {
+              // let form = PP64.utils.FORM.unpack(file);
+              // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
+              //   name += ` (${form.STRG[0].parsed[0]})`;
+              entries.push(name);
+            }
+            catch (e) {
+              console.error(`Could not parse MTNX ${d}/${f}`, e);
             }
           }
         }

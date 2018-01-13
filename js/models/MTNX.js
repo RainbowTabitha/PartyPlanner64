@@ -21,7 +21,7 @@ PP64.utils.MTNX = class MTNX {
 
     const mtnxObj = Object.create(null);
 
-    mtnxObj.totalKeyframes = mtnxView.getUint16(0xA);
+    mtnxObj.totalFrames = mtnxView.getUint16(0xA);
     mtnxObj.tracks = [];
 
     const totalTracks = mtnxView.getUint16(0x8);
@@ -82,7 +82,7 @@ PP64.utils.MTNX = class MTNX {
     return data;
   }
 
-  get TrackType() {
+  static get TrackType() {
     return {
       Transform: 0x17,
       Rotation: 0x4C,
@@ -90,7 +90,7 @@ PP64.utils.MTNX = class MTNX {
     };
   }
 
-  get Dimension() {
+  static get Dimension() {
     return {
       X: 0x45,
       Y: 0x46,
