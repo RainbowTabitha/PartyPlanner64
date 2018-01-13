@@ -53,7 +53,7 @@ PP64.utils.MTNX = class MTNX {
     trackObj.mystery3 = trackView.getUint16(4);
     trackObj.totalFrames = trackView.getUint16(6);
     trackObj.mystery4 = trackView.getUint8(8);
-    trackObj.objGlobalIndex = trackView.getUint8(9);
+    trackObj.objIndex = trackView.getUint8(9); // Not global!
     trackObj.keyframeCount = trackView.getUint16(0xE);
 
     trackObj.d = dsView.getUint8(trackIndex); // TODO ?

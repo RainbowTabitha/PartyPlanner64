@@ -307,6 +307,7 @@ PP64.models = (function() {
         $$log("mtnx", mtnx);
 
         const animConverter = new PP64.utils.MtnxToThreeJs();
+        animConverter.form = form;
         const clip = animConverter.createClip(mtnx);
         $$log("mtnxClip", clip);
 

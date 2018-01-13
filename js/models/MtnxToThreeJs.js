@@ -39,20 +39,21 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
   _createTransformTrack(track) {
     const name = this._createTransformTrackName(track);
     const keyframes = this._createKeyframeSecsArr(track.keyframes);
-    const data = this._createTransformTrackData(track.keyframes);
+    const data = this._createTransformTrackData(track);
     return new THREE.VectorKeyframeTrack(name, keyframes, data);
   }
 
   _createTransformTrackName(track) {
-    const nodeName = this._getObjNameFromId(track.objGlobalIndex);
+    const nodeName = this._getObjNameFromIndex(track.objIndex);
     const dimension = this._getDimensionProperty(track.dimension);
     return `${nodeName}.position[${dimension}]`;
   }
 
-  _createTransformTrackData(keyframesObj) {
+  _createTransformTrackData(track) {
     const data = [];
-    for (let frame in keyframesObj) {
-      data.push(keyframesObj[frame].value1);
+    for (let frame in track.keyframes) {
+      let pos = track.keyframes[frame].value1;
+      data.push(pos);
     }
     return data;
   }
@@ -65,7 +66,7 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
   }
 
   _createRotationTrackName(track) {
-    const nodeName = this._getObjNameFromId(track.objGlobalIndex);
+    const nodeName = this._getObjNameFromIndex(track.objIndex);
     //const dimension = this._getDimensionProperty(track.dimension);
     return `${nodeName}.quaternion`;
   }
@@ -124,8 +125,9 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
     throw `Unknown dimension ${$$hex(dimension)}`;
   }
 
-  _getObjNameFromId(id) {
-    return $$hex(id);
+  _getObjNameFromIndex(index) {
+    const obj = this.form.OBJ1[0].parsed.objects[index];
+    return $$hex(obj.globalIndex);
   }
 
   _framesToSeconds(frames) {
