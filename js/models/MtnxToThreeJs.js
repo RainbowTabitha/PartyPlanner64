@@ -19,6 +19,7 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
         tracks.push(track);
       }
     }
+    this._adjustTrackOrder(tracks);
     return tracks;
   }
 
@@ -126,11 +127,35 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
   }
 
   _getObjNameFromIndex(index) {
-    const obj = this.form.OBJ1[0].parsed.objects[index];
-    return $$hex(obj.globalIndex);
+    let cur3DIndex = -1;
+    const objs = this.form.OBJ1[0].parsed.objects;
+    for (let i = 0; i < objs.length; i++) {
+      if (objs[i].objType === 0x3D) {
+        cur3DIndex++;
+        if (cur3DIndex === index) {
+          return $$hex(objs[i].globalIndex);
+        }
+      }
+    }
+
+    console.warn(`Couldn't find associated object ${index} for track`);
+    return $$hex(index); // Probably wrong
   }
 
   _framesToSeconds(frames) {
     return frames / 30;
+  }
+
+  _adjustTrackOrder(tracks) {
+    // for (let i = 0; i < tracks.length - 2; i++) {
+    //   if (tracks[i].name.indexOf("quaternion") >= 0
+    //       && tracks[i + 1] && tracks[i + 1].name === tracks[i].name
+    //       && tracks[i + 2] && tracks[i + 2].name === tracks[i].name)
+    //   {
+    //     // Swap to ensure ZYX ordering
+    //     [tracks[i], tracks[i + 1], tracks[i + 2]]
+    //     = [tracks[i + 2], tracks[i + 1], tracks[i]];
+    //   }
+    // }
   }
 };
