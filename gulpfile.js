@@ -100,6 +100,7 @@ const JS = [
 
   "js/models/FORM.js",
   "js/models/MTNX.js",
+  "js/models/FormToThreeJs.js",
 
   "js/utils/dump.js",
   "js/utils/img/tiler.js",
