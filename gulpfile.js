@@ -98,8 +98,9 @@ const JS = [
   "js/adapter/boardinfo.MP3.js",
   "js/adapter/events.MP3.js",
 
-  "js/utils/FORM.js",
-  "js/utils/MTNX.js",
+  "js/models/FORM.js",
+  "js/models/MTNX.js",
+
   "js/utils/dump.js",
   "js/utils/img/tiler.js",
   "js/utils/img/RGBA5551.js",
