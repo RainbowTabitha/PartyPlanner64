@@ -29,8 +29,8 @@ PP64.ns("utils.img");
 //   u32 img_start_offset;
 //   u16 width;
 //   u16 height;
-//   u16 unknown1; // These usually are smaller than width/height
-//   u16 unknown2; // Could they be related to the positioning of the image?
+//   s16 origin_x;
+//   s16 origin_y;
 // }
 PP64.utils.img.ImgPack = new class ImgPack {
   // Rips each image from a ImgPack and returns an array of RGBA32.
