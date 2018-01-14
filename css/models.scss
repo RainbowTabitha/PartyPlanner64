@@ -23,6 +23,7 @@
   display: inline-block;
   vertical-align: middle;
   margin: 5px 0;
+  white-space: nowrap;
 }
 
 .modelSelectContainer select {
@@ -44,11 +45,17 @@
   cursor: pointer;
 }
 
+.modelViewerColorPicker {
+  white-space: nowrap;
+}
+
 .modelViewerColorPicker .toggleButton {
   max-height: 24px;
 }
 
 .modelFeatureSelectContainer {
+  white-space: nowrap;
+
   label {
     margin: 0 0.5em;
   }
@@ -60,6 +67,8 @@
 }
 
 .btnModelExport {
+  white-space: nowrap;
+
   background-color: rgba(0, 0, 0, 0.3);
   &:hover {
     background-color: rgba(0, 0, 0, 0.45);
