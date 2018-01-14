@@ -36,8 +36,10 @@ PP64.models = (function() {
 
     render() {
       return (
-        <div className="modelViewerContainer">
+        <div className="modelViewerContainer" tabindex="-1"
+          onKeyDownCapture={this.onKeyDown}>
           <ModelToolbar
+            ref={(c) => { this.modelToolbar = c }}
             selectedModel={this.state.selectedModel}
             onModelSelected={this.onModelSelected}
             selectedModelDir={this.state.selectedModelDir}
@@ -119,9 +121,22 @@ PP64.models = (function() {
     onFeatureChange = (features) => {
       this.setState(features);
     }
+
+    onKeyDown = (event) => {
+      if (event.key && this.modelToolbar) {
+        const key = event.key.toLowerCase();
+        if (key === "m") {
+          this.modelToolbar.focusModelSelect();
+        }
+        else if (key === "a") {
+          this.modelToolbar.focusAnimSelect();
+        }
+      }
+    }
   };
 
   let _modelRenderer;
+  let renderTimeout = null;
   let camera, scene, renderer, controls, clock, mixer;
   const ModelRenderer = class ModelRenderer extends React.Component {
     state = {
@@ -201,6 +216,10 @@ PP64.models = (function() {
       if (clock) {
         clock.stop();
         clock = null;
+      }
+      if (renderTimeout !== null) {
+        clearTimeout(renderTimeout);
+        renderTimeout = null;
       }
     }
 
@@ -348,7 +367,16 @@ PP64.models = (function() {
       }
 
       _modelRenderer.renderModel();
-      requestAnimationFrame(_modelRenderer.animate);
+
+      if (PP64.settings.get($setting.limitModelFPS)) {
+        renderTimeout = setTimeout(function() {
+          if (_modelRenderer)
+            requestAnimationFrame(_modelRenderer.animate);
+        }, 1000 / 30 );
+      }
+      else {
+        requestAnimationFrame(_modelRenderer.animate);
+      }
 		}
   };
 
@@ -359,10 +387,13 @@ PP64.models = (function() {
       return (
         <div className="modelViewerToolbar">
           <ModelSelect
+            ref={(c) => { this.modelSelect = c }}
             selectedModel={this.props.selectedModel}
             onModelSelected={this.props.onModelSelected} />
           <AnimSelect
+            ref={(c) => { this.animSelect = c }}
             selectedAnim={this.props.selectedAnim}
+            selectedModelDir={this.props.selectedModelDir}
             onAnimSelected={this.props.onAnimSelected} />
           <ModelBGColorSelect
             selectedColor={this.props.bgColor}
@@ -380,6 +411,18 @@ PP64.models = (function() {
         </div>
       );
     }
+
+    focusModelSelect = () => {
+      if (this.modelSelect) {
+        this.modelSelect.focus();
+      }
+    }
+
+    focusAnimSelect = () => {
+      if (this.animSelect) {
+        this.animSelect.focus();
+      }
+    }
   };
 
   const ModelSelect = class ModelSelect extends React.Component {
@@ -395,11 +438,19 @@ PP64.models = (function() {
       return (
         <div className="modelSelectContainer">
           Model:
-          <select value={this.props.selectedModel} onChange={this.modelSelected}>
+          <select
+            ref={(e) => { this.selectEl = e }}
+            value={this.props.selectedModel}
+            onChange={this.modelSelected}>
             {options}
           </select>
         </div>
       );
+    }
+
+    focus = () => {
+      if (this.selectEl)
+        this.selectEl.focus();
     }
 
     modelSelected = (e) => {
@@ -448,11 +499,19 @@ PP64.models = (function() {
       return (
         <div className="modelSelectContainer">
           Animation:
-          <select value={this.props.selectedAnim} onChange={this.animSelected}>
+          <select
+            ref={(e) => { this.selectEl = e }}
+            value={this.props.selectedAnim}
+            onChange={this.animSelected}>
             {options}
           </select>
         </div>
       );
+    }
+
+    focus = () => {
+      if (this.selectEl)
+        this.selectEl.focus();
     }
 
     animSelected = (e) => {
@@ -462,22 +521,37 @@ PP64.models = (function() {
 
     getAnimEntries() {
       let entries = [];
-      let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
-      for (let d = 0; d < mainfsDirCount; d++) {
-        let dirFileCount = PP64.fs.mainfs.getFileCount(d);
-        for (let f = 0; f < dirFileCount; f++) {
-          let file = PP64.fs.mainfs.get(d, f);
-          if (PP64.utils.MTNX.isMtnx(file)) {
-            let name = d + "/" + f;
-            try {
-              // let form = PP64.utils.FORM.unpack(file);
-              // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
-              //   name += ` (${form.STRG[0].parsed[0]})`;
-              entries.push(name);
-            }
-            catch (e) {
-              console.error(`Could not parse MTNX ${d}/${f}`, e);
-            }
+
+      if (this.props.selectedModelDir === null)
+        return entries; // No model selected
+
+      if (PP64.settings.get($setting.limitModelAnimations)) {
+        return this.getAnimationsInDir(this.props.selectedModelDir);
+      }
+      else {
+        let mainfsDirCount = PP64.fs.mainfs.getDirectoryCount();
+        for (let d = 0; d < mainfsDirCount; d++) {
+          entries = entries.concat(this.getAnimationsInDir(d));
+        }
+        return entries;
+      }
+    }
+
+    getAnimationsInDir(d) {
+      const entries = [];
+      let dirFileCount = PP64.fs.mainfs.getFileCount(d);
+      for (let f = 0; f < dirFileCount; f++) {
+        let file = PP64.fs.mainfs.get(d, f);
+        if (PP64.utils.MTNX.isMtnx(file)) {
+          let name = d + "/" + f;
+          try {
+            // let form = PP64.utils.FORM.unpack(file);
+            // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
+            //   name += ` (${form.STRG[0].parsed[0]})`;
+            entries.push(name);
+          }
+          catch (e) {
+            console.error(`Could not parse MTNX ${d}/${f}`, e);
           }
         }
       }
@@ -490,6 +564,18 @@ PP64.models = (function() {
 
     render() {
       const ToggleButton = PP64.controls.ToggleButton;
+
+      let motionTestColorBtn;
+      if ($$debug) {
+        motionTestColorBtn = (
+          <ToggleButton id={0xC6E7FF} key={1} allowDeselect={false} onToggled={this.onColorChange}
+            pressed={this.props.selectedColor === 0xC6E7FF}>
+            <span className="colorSwatch" title="Change background to MP3 motion test (0xC6E7FF)"
+              style={{backgroundColor: "#C6E7FF"}}></span>
+          </ToggleButton>
+        );
+      }
+
       return (
         <div className="modelViewerColorPicker">
           <ToggleButton id={0x000000} key={0} allowDeselect={false} onToggled={this.onColorChange}
@@ -502,6 +588,7 @@ PP64.models = (function() {
             <span className="colorSwatch" title="Change background to white"
               style={{backgroundColor: "#FFFFFF"}}></span>
           </ToggleButton>
+          {motionTestColorBtn}
         </div>
       );
     }

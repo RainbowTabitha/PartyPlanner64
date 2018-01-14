@@ -6,6 +6,8 @@ var $setting = {
   "uiAllowAllRoms": "ui.allowallroms",
   "writeBranding": "write.branding",
   "writeDecompressed": "write.decompressed",
+  "limitModelFPS": "models.limitfps",
+  "limitModelAnimations": "models.limitAnimations",
 };
 
 PP64.settings = (function() {
@@ -24,6 +26,11 @@ PP64.settings = (function() {
       desc: "Adds the PartyPlanner64 logo to the game boot splashscreens." },
     { id: "write.decompressed", type: "checkbox", "default": false, name: "Leave ROM decompressed", advanced: true,
       desc: "Leaves all files decompressed when saving a ROM, resulting in larger file size." },
+    { name: "Model Viewer", type: "section" },
+    { id: "models.limitfps", type: "checkbox", "default": true, name: "Limit FPS",
+      desc: "Reduce the refresh rate for better performance." },
+    { id: "models.limitAnimations", type: "checkbox", "default": true, name: "Limit animations",
+      desc: "Limit animations to those in the same directory as the model." },
   ];
   function _getSetting(id) {
     return _settings.find((setting) => {

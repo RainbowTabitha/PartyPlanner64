@@ -155,13 +155,15 @@ PP64.utils.img.toArrayBuffer = function toArrayBuffer(image, width, height) {
 };
 
 PP64.utils.img.invertColor = function invertColor(hex) {
-  if (hex === 0x000000) {
-    return 0xFFFFFF;
-  }
-  else if (hex === 0xFFFFFF) {
-    return 0x000000;
-  }
-  throw `PP64.utils.img.invertColor must be enhanced to support ${hex}`;
+  const rOrig = (hex >>> 16) & 0xFF;
+  const gOrig = (hex >>> 8) & 0xFF;
+  const bOrig = hex & 0xFF;
+
+  const r = (255 - rOrig);
+  const g = (255 - gOrig);
+  const b = (255 - bOrig);
+
+  return (r << 16 | g << 8 | b);
 }
 
 PP64.utils.browser = {
