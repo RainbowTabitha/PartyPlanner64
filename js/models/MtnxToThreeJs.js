@@ -64,21 +64,21 @@ PP64.utils.MtnxToThreeJs = class MtnxToThreeJs {
     const name = this._createRotationTrackName(track);
     const keyframes = this._createKeyframeSecsArr(track.keyframes);
     const data = this._createRotationTrackData(track);
-    return new THREE.QuaternionKeyframeTrack(name, keyframes, data);
+    return new THREE.VectorKeyframeTrack(name, keyframes, data);
   }
 
   _createRotationTrackName(track) {
     const nodeName = this._getObjNameFromIndex(track.objIndex);
-    //const dimension = this._getDimensionProperty(track.dimension);
-    return `${nodeName}.quaternion`;
+    const dimension = this._getDimensionProperty(track.dimension);
+    return `${nodeName}.rotation[${dimension}]`;
   }
 
   _createRotationTrackData(track) {
     const data = [];
     for (let frame in track.keyframes) {
       const degrees = track.keyframes[frame].value1;
-      const quaternion = this._createQuaternion(track.dimension, degrees);
-      data.push(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+      const rads = $$number.degreesToRadians(degrees);
+      data.push(rads);
     }
     return data;
   }
