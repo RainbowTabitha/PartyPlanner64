@@ -3,7 +3,7 @@ PP64.ns("utils.img");
 PP64.utils.img.HVQ = class HVQ {
   static decode(hvqView) {
     let firstWord = hvqView.getUint32(0);
-    let isHVQ = (firstWord & 0x48565100) === 0x48565100; // "HVQ"
+    let isHVQ = (firstWord & 0xFFFFFF00) === 0x48565100; // "HVQ"
     // $$log(`HVQ.decode, isHVQ: ${isHVQ}, len: ${$$hex(hvqView.byteLength)})`);
     if (firstWord === 0x00000003) { // MP2+ can have run-length instead
       let fileStartView = new DataView(hvqView.buffer, 8);
