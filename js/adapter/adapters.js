@@ -746,10 +746,10 @@ PP64.adapters = (function() {
     _writeEventAsmHook(boardInfo, boardIndex) {
       // The hook logic will be placed at the top of eventASMStart, since
       // we don't put anything there much anymore.
-      let hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
-      let hookJAL = $MIPS.makeInst("JAL", hookAddr);
+      const hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
+      const hookJAL = MIPSInst.parse(`JAL ${hookAddr}`);
 
-      let romView = PP64.romhandler.getDataView();
+      const romView = PP64.romhandler.getDataView();
 
       // Clear the space event table hydrations, because we want a NOP sled
       // through the old logic basically, and no hook interference.
@@ -757,7 +757,7 @@ PP64.adapters = (function() {
 
       // We will JAL to the eventASMStart location from the location where the
       // board data is hydrated.
-      let hookOffset = boardInfo.spaceEventTables[0].upper;
+      const hookOffset = boardInfo.spaceEventTables[0].upper;
       romView.setUint32(hookOffset, hookJAL);
 
       $$log(`Installed event hook at ROM ${$$hex(hookOffset)}, JAL ${hookAddr}`);
@@ -772,7 +772,7 @@ PP64.adapters = (function() {
       romView.setUint32(offset += 4, MIPSInst.parse("SW RA, 0x0010(SP)"));
 
       // Call for the MainFS to read in the ASM blob.
-      let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
+      const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
       romView.setUint32(offset += 4, MIPSInst.parse(`LUI A0 ${mainFsDir}`));
       romView.setUint32(offset += 4, MIPSInst.parse(`JAL ${this.MAINFS_READ_ADDR}`));
       romView.setUint32(offset += 4, MIPSInst.parse(`ADDIU A0 A0 ${mainFsFile}`));
