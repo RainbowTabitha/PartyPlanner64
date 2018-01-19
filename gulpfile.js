@@ -197,9 +197,6 @@ const LIB_JS = [
   //{ src: "node_modules/react-dom/umd/react-dom.development.js",
     dst: "react-dom.min.js"
   },
-  { src: "node_modules/react-virtualized/dist/umd/react-virtualized.js",
-    dst: "react-virtualized.min.js"
-  },
   { src: "node_modules/immutable/dist/immutable.min.js",
     dst: "immutable.min.js"
   },
@@ -232,9 +229,6 @@ const LIB_JS = [
 const LIB_CSS = [
   { src: "node_modules/draft-js/dist/Draft.css",
     dst: "Draft.css"
-  },
-  { src: "node_modules/react-virtualized/styles.css",
-    dst: "react-virtualized.css"
   },
   { src: "node_modules/basiccontext/dist/basicContext.min.css",
     dst: "basicContext.min.css"
