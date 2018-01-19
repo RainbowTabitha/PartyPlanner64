@@ -48,6 +48,7 @@ const JS = [
   "js/details.js",
   "js/about.js",
   "js/models.js",
+  "js/strings.js",
   "js/spaces.js",
   "js/renderer.js",
   "js/rightclick.js",
@@ -144,6 +145,7 @@ const CSS = [
   "css/settings.css",
   "css/about.css",
   "css/models.css",
+  "css/strings.css",
   "css/patches.css",
   // css/fonts.css is not included in prod
 ];
@@ -195,6 +197,9 @@ const LIB_JS = [
   //{ src: "node_modules/react-dom/umd/react-dom.development.js",
     dst: "react-dom.min.js"
   },
+  { src: "node_modules/react-virtualized/dist/umd/react-virtualized.js",
+    dst: "react-virtualized.min.js"
+  },
   { src: "node_modules/immutable/dist/immutable.min.js",
     dst: "immutable.min.js"
   },
@@ -227,6 +232,9 @@ const LIB_JS = [
 const LIB_CSS = [
   { src: "node_modules/draft-js/dist/Draft.css",
     dst: "Draft.css"
+  },
+  { src: "node_modules/react-virtualized/styles.css",
+    dst: "react-virtualized.css"
   },
   { src: "node_modules/basiccontext/dist/basicContext.min.css",
     dst: "basicContext.min.css"
@@ -317,8 +325,10 @@ var csslibtasks = [];
 LIB_CSS.forEach(function(lib) {
   var name = "copycsslib-" + GET_LIB_FILE(lib);
   gulp.task(name, function() {
-    return gulp.src(lib.src).pipe(gulp.dest(CSS_LIB_DEST, { cwd: "dist" }));
-  })
+    return gulp.src(lib.src)
+      .pipe(rename(lib.dst))
+      .pipe(gulp.dest(CSS_LIB_DEST, { cwd: "dist" }));
+  });
   csslibtasks.push(name);
 });
 gulp.task("copycsslib", csslibtasks);

@@ -33,6 +33,9 @@ PP64.app = new class app {
           case window.PP64.types.View.MODELS:
             mainView = <window.PP64.models.ModelViewer />;
             break;
+          case window.PP64.types.View.STRINGS:
+            mainView = <window.PP64.strings.StringsViewer />;
+            break;
           case window.PP64.types.View.PATCHES:
             mainView = [<window.PP64.patches.PatchView />];
             if (PP64.patches.gameshark.romSupportsCheats()) {

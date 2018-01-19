@@ -30,6 +30,7 @@ PP64.header = (function() {
     { "name": "Import file dump", "icon": "img/header/dump.png", "type": $actType.DUMP_LOAD, "details": "Import and overwrite with a dump of ROM data", "advanced": true },
     { "name": "Export file dump", "icon": "img/header/dump.png", "type": $actType.DUMP_SAVE, "details": "Export a zip of all the ROM file data", "advanced": true },
     { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": $actType.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
+    { "name": "Strings", "icon": "img/header/stringseditor.png", "type": $actType.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
     //{ "name": "Copy", "icon": "img/header/copyboard.png", "type": $actType.BOARD_COPY, "details": "Create a copy of this board" },
     // { "name": "View Details", "icon": "img/header/editdetails.png", "type": $actType.BOARD_DETAILS, "details": "View various board details" },
     { "name": "Screenshot", "icon": "img/header/screenshot.png",
@@ -58,6 +59,7 @@ PP64.header = (function() {
     { "name": "Import file dump", "icon": "img/header/dump.png", "type": $actType.DUMP_LOAD, "details": "Import and overwrite with a dump of ROM data", "advanced": true },
     { "name": "Export file dump", "icon": "img/header/dump.png", "type": $actType.DUMP_SAVE, "details": "Export a zip of all the ROM file data", "advanced": true },
     { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": $actType.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
+    { "name": "Strings", "icon": "img/header/stringseditor.png", "type": $actType.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
     //{ "name": "Copy", "icon": "img/header/copyboard.png", "type": $actType.BOARD_COPY, "details": "Create a copy of this board" },
     // { "name": "Edit Details", "icon": "img/header/editdetails.png", "type": $actType.BOARD_DETAILS, "details": "View and edit various board details" },
     // { "name": "Set BG", "icon": "img/header/setbg.png", "type": $actType.SET_BG, "details": "Change the board background image" },
@@ -126,6 +128,9 @@ PP64.header = (function() {
         break;
       case $actType.MODEL_VIEWER:
         PP64.app.changeView($viewType.MODELS);
+        break;
+      case $actType.STRINGS_EDITOR:
+        PP64.app.changeView($viewType.STRINGS);
         break;
       case $actType.PATCHES:
         PP64.app.changeView($viewType.PATCHES);

@@ -8,6 +8,7 @@ PP64.types = {
     ABOUT: 3,
     MODELS: 4,
     PATCHES: 5,
+    STRINGS: 6,
   },
 
   Space: {
@@ -68,6 +69,7 @@ PP64.types = {
     DUMP_LOAD: 13.1,
     DUMP_SAVE: 13.2,
     MODEL_VIEWER: 13.3,
+    STRINGS_EDITOR: 13.4,
     SET_BG: 14,
     SCREENSHOT: 14.1,
     ROM_SAVE: 15,
