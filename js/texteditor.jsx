@@ -54,6 +54,7 @@ PP64.texteditor = (function() {
           <div className="mpEditorWrapper">
             <Editor ref="editor"
               editorState={editorState}
+              stripPastedStyles={true}
               readOnly={displayMode !== MPEditorDisplayMode.Edit}
               customStyleMap={colorStyleMap}
               onChange={this.onChange}
