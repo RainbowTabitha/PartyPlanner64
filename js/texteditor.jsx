@@ -1,6 +1,6 @@
 // Rich text editor for strings in Mario Party.
 PP64.texteditor = (function() {
-  const {Editor, EditorState, ContentState, Modifier, RichUtils, Entity, CompositeDecorator} = Draft;
+  const {Editor, EditorState, ContentState, SelectionState, Modifier, RichUtils, Entity, CompositeDecorator} = Draft;
 
   class MPEditor extends React.Component {
     constructor(props) {
@@ -70,11 +70,12 @@ PP64.texteditor = (function() {
     toggleColor = toggledColor => {
       const {editorState} = this.state;
       const selection = editorState.getSelection();
+      const prevContentState = editorState.getCurrentContent();
 
       // Let's just allow one color at a time. Turn off all active colors.
       const nextContentState = Object.keys(colorStyleMap).reduce((contentState, color) => {
         return Modifier.removeInlineStyle(contentState, selection, color)
-      }, editorState.getCurrentContent());
+      }, prevContentState);
 
       let nextEditorState = EditorState.push(
         editorState,
@@ -207,6 +208,9 @@ PP64.texteditor = (function() {
     BLUE: {
       color: "#003EF9",
     },
+    PURPLE: {
+      color: "#E847CD",
+    },
     YELLOW: {
       color: '#FFEA38',
     },
@@ -220,6 +224,7 @@ PP64.texteditor = (function() {
         { key: "RED", type: "COLOR", icon: "img/richtext/red.png", desc: "Red" },
         { key: "GREEN", type: "COLOR", icon: "img/richtext/green.png", desc: "Green" },
         { key: "BLUE", type: "COLOR", icon: "img/richtext/blue.png", desc: "Blue" },
+        { key: "PURPLE", type: "COLOR", icon: "img/richtext/purple.png", desc: "Purple" },
         { key: "YELLOW", type: "COLOR", icon: "img/richtext/yellow.png", desc: "Yellow" },
       ],
     },
@@ -384,6 +389,9 @@ PP64.texteditor = (function() {
     }
   };
 
+  /**
+   * Converts between game strings and Draft.js editor state.
+   */
   const MPEditorStringAdapter = new class MPEditorStringAdapter {
     editorStateToString(editorState) {
       let contentState = editorState.getCurrentContent();
@@ -391,8 +399,79 @@ PP64.texteditor = (function() {
     }
 
     stringToEditorState(str) {
-      return EditorState.createWithContent(ContentState.createFromText(str), MPCompositeDecorator);
+      let contentState = ContentState.createFromText(str);
+
+      // Go through each block (line) and convert color tags to Draft.js inline styles.
+      let contentBlocks = contentState.getBlocksAsArray();
+      for (let i = 0; i < contentBlocks.length; i++) {
+        let contentBlock = contentBlocks[i];
+        let text = contentBlock.getText();
+
+        let [styleTag, tagStartIndex, tagEndIndex] = _getNextStyleTag(text);
+        while (styleTag) {
+          // Create a "selection" around the <tag>
+          let contentBlockKey = contentBlock.getKey();
+          let selection = SelectionState.createEmpty(contentBlock.getKey());
+          selection = selection.merge({
+            anchorOffset: tagStartIndex,
+            focusKey: contentBlockKey,
+            focusOffset: tagEndIndex,
+          });
+
+          // Remove the <tag>
+          contentState = Modifier.replaceText(contentState, selection, "");
+          contentBlocks = contentState.getBlocksAsArray();
+          contentBlock = contentBlocks[i];
+          text = contentBlock.getText();
+
+          // Make the "selection" go to the end of the entire string
+          const lastContentBlock = contentBlocks[contentBlocks.length - 1];
+          selection = selection.merge({
+            focusKey: lastContentBlock.getKey(),
+            focusOffset: lastContentBlock.getText().length,
+          });
+
+          // Remove any pre-existing colors from the tag index to end of string.
+          contentState = Object.keys(colorStyleMap).reduce((contentState, color) => {
+            return Modifier.removeInlineStyle(contentState, selection, color)
+          }, contentState);
+
+          // Apply the new tag.
+          contentState = Modifier.applyInlineStyle(contentState, selection, styleTag);
+
+          contentBlocks = contentState.getBlocksAsArray();
+          contentBlock = contentBlocks[i];
+          text = contentBlock.getText();
+          [styleTag, tagStartIndex, tagEndIndex] = _getNextStyleTag(text);
+        }
+      }
+
+      return EditorState.createWithContent(contentState, MPCompositeDecorator);
     }
+  }
+
+  function _getNextStyleTag(rawString) {
+    let startingIndex = 0;
+    while (startingIndex < rawString.length) {
+      let styleStart = rawString.indexOf("<", startingIndex) + 1;
+      if (!styleStart) // indexOf yielded -1
+        return [];
+
+      let styleEnd = rawString.indexOf(">", styleStart);
+      if (styleEnd === -1)
+        return [];
+
+      const styleTag = rawString.substring(styleStart, styleEnd);
+      if (!colorStyleMap[styleTag]) {
+        // Could be something like "<<BLUE>"
+        startingIndex = styleStart;
+        continue;
+      }
+
+      return [styleTag, styleStart - 1, styleEnd + 1];
+    }
+
+    return [];
   }
 
   const MPEditorDisplayMode = {

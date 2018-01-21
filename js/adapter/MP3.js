@@ -868,15 +868,15 @@ PP64.adapters.MP3 = (function() {
     getCharacterMap() {
       return {
         0x00: "", // NULL terminator
-        0x01: "{BLACK}",
-        0x02: "{DEFAULT}",
-        0x03: "{RED}",
-        0x04: "{PURPLE}",
-        0x05: "{GREEN}",
-        0x06: "{BLUE}",
-        0x07: "{YELLOW}",
-        0x08: "{WHITE}",
-        0x09: "{SEIZURE}",
+        0x01: "<BLACK>",
+        0x02: "<DEFAULT>",
+        0x03: "<RED>",
+        0x04: "<PURPLE>",
+        0x05: "<GREEN>",
+        0x06: "<BLUE>",
+        0x07: "<YELLOW>",
+        0x08: "<WHITE>",
+        0x09: "<SEIZURE>",
         0x0A: "\n",
         0x0B: "\u3014", // FEED Carriage return / start of bubble?
         0x0C: "○", // 2ND BYTE OF PLAYER CHOICE

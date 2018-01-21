@@ -576,15 +576,15 @@ PP64.adapters.MP1 = (function() {
     getCharacterMap() {
       return {
         0x00: "", // NULL terminator
-        0x01: "{BLACK}", // Start black font
-        0x02: "{DEFAULT}", // Start default font
-        0x03: "{RED}", // Start red font
-        0x04: "{PURPLE}", // Start purple font
-        0x05: "{GREEN}", // Start green font
-        0x06: "{BLUE}", // Start blue font
-        0x07: "{YELLOW}", // Start yellow font
-        0x08: "{WHITE}", // Start white font
-        0x09: "{SEIZURE}", // Start flashing font
+        0x01: "<BLACK>", // Start black font
+        0x02: "<DEFAULT>", // Start default font
+        0x03: "<RED>", // Start red font
+        0x04: "<PURPLE>", // Start purple font
+        0x05: "<GREEN>", // Start green font
+        0x06: "<BLUE>", // Start blue font
+        0x07: "<YELLOW>", // Start yellow font
+        0x08: "<WHITE>", // Start white font
+        0x09: "<SEIZURE>", // Start flashing font
         0x0A: "\n",
         0x0B: "\u3014", // FEED Carriage return / start of bubble?
         0x0C: "○", // 2ND BYTE OF PLAYER CHOICE
