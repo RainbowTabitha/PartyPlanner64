@@ -24,22 +24,70 @@ PP64.texteditor = (function() {
       }
     }
 
+    render() {
+      const {editorState} = this.state;
+      const displayMode = this.props.displayMode || MPEditorDisplayMode.Edit;
+
+      let toolbar;
+      const showToolbar = this.props.showToolbar;
+      if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
+        toolbar = (
+          <MPEditorToolbar onItemClick={this.onToolbarClick} />
+        );
+      }
+
+      const toolbarPlacement = this.props.toolbarPlacement || MPEditorToolbarPlacement.Top;
+
+      let className = "mpEditor";
+      if (displayMode === MPEditorDisplayMode.Display)
+        className += " mpDisplay";
+      if (toolbar) {
+        if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
+          className += " mpEditorShowToolbarBottom";
+        else
+          className += " mpEditorShowToolbarTop";
+      }
+
+      return (
+        <div className={className}>
+          {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
+          <div className="mpEditorWrapper">
+            <Editor ref="editor"
+              editorState={editorState}
+              readOnly={displayMode !== MPEditorDisplayMode.Edit}
+              customStyleMap={colorStyleMap}
+              onChange={this.onChange}
+              onFocus={this.onFocus}
+              onBlur={this.onBlur}
+              handleReturn={this.handleReturn} />
+          </div>
+          {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
+        </div>
+      );
+    }
+
     focus = () => {
       this.refs.editor.focus();
     }
 
     onChange = editorState => {
-      if (this.props.maxlines) {
-        let text = editorState.getCurrentContent().getPlainText();
-        if (text.split("\n").length > this.props.maxlines)
-          return;
-      }
-
       this.setState({editorState});
       this.setState((prevState, props) => {
         if (props.onValueChange)
           props.onValueChange(props.id, MPEditorStringAdapter.editorStateToString(prevState.editorState));
       });
+    }
+
+    handleReturn = (e, editorState) => {
+      if (this.props.maxlines) {
+        let text = editorState.getCurrentContent().getPlainText();
+
+        // = because Return would create an additional line
+        if (text.split("\n").length >= this.props.maxlines)
+          return "handled";
+      }
+
+      return "not-handled";
     }
 
     onFocus = event => {
@@ -121,47 +169,6 @@ PP64.texteditor = (function() {
       );
 
       this.onChange(nextEditorState);
-    }
-
-    render() {
-      const {editorState} = this.state;
-      const displayMode = this.props.displayMode || MPEditorDisplayMode.Edit;
-
-      let toolbar;
-      const showToolbar = this.props.showToolbar;
-      if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
-        toolbar = (
-          <MPEditorToolbar onItemClick={this.onToolbarClick} />
-        );
-      }
-
-      const toolbarPlacement = this.props.toolbarPlacement || MPEditorToolbarPlacement.Top;
-
-      let className = "mpEditor";
-      if (displayMode === MPEditorDisplayMode.Display)
-        className += " mpDisplay";
-      if (toolbar) {
-        if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
-          className += " mpEditorShowToolbarBottom";
-        else
-          className += " mpEditorShowToolbarTop";
-      }
-
-      return (
-        <div className={className}>
-          {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
-          <div className="mpEditorWrapper">
-            <Editor ref="editor"
-              editorState={editorState}
-              readOnly={displayMode !== MPEditorDisplayMode.Edit}
-              customStyleMap={colorStyleMap}
-              onChange={this.onChange}
-              onFocus={this.onFocus}
-              onBlur={this.onBlur} />
-          </div>
-          {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
-        </div>
-      );
     }
   };
 
