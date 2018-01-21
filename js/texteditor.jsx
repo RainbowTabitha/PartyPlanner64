@@ -8,7 +8,7 @@ PP64.texteditor = (function() {
 
       let editorState;
       if (props.value) {
-        editorState = EditorState.createWithContent(ContentState.createFromText(props.value), MPCompositeDecorator);
+        editorState = MPEditorStringAdapter.stringToEditorState(props.value);
       }
       else {
         editorState = EditorState.createEmpty();
@@ -19,18 +19,14 @@ PP64.texteditor = (function() {
     componentWillReceiveProps = (nextProps) => {
       const oldValue = MPEditorStringAdapter.editorStateToString(this.state.editorState);
       if (oldValue !== nextProps.value) {
-        let editorState = EditorState.createWithContent(ContentState.createFromText(nextProps.value), MPCompositeDecorator);
-        this.setState({editorState});
+        const newEditorState = MPEditorStringAdapter.stringToEditorState(nextProps.value);
+        this.setState({ editorState: newEditorState });
       }
     }
 
     focus = () => {
       this.refs.editor.focus();
     }
-
-    // shouldComponentUpdate = (nextProps, nextState) => {
-    //   return nextProps.value !== this.props.value;
-    // }
 
     onChange = editorState => {
       if (this.props.maxlines) {
@@ -65,6 +61,10 @@ PP64.texteditor = (function() {
           this.addImage(item.char);
           break;
       }
+
+      setTimeout(() => {
+        this.focus();
+      }, 0);
     }
 
     toggleColor = toggledColor => {
@@ -106,7 +106,7 @@ PP64.texteditor = (function() {
       const {editorState} = this.state;
       const selection = editorState.getSelection();
 
-      // Let's just allow one color at a time. Turn off all active colors.
+      // Insert a character that will be styled into an image.
       const nextContentState = Modifier.replaceText(
         editorState.getCurrentContent(),
         selection,
@@ -391,7 +391,7 @@ PP64.texteditor = (function() {
     }
 
     stringToEditorState(str) {
-      EditorState.createWithContent(ContentState.createFromText(str), MPCompositeDecorator);
+      return EditorState.createWithContent(ContentState.createFromText(str), MPCompositeDecorator);
     }
   }
 
