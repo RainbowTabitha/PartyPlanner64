@@ -21,13 +21,8 @@ PP64.strings = Object.assign((function() {
 
       let strCount = PP64.fs.strings.getStringCount();
       for (let s = 0; s < strCount; s++) {
-        let str = PP64.fs.strings.read(s);
-        strings.push(<PP64.texteditor.MPEditor
-          value={str}
-          onValueChange={(id, val) => {
-            // let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(PP64.fs.strings._strToBytes(val));
-            // PP64.fs.strings.write(index, strBuffer);
-          }} />
+        strings.push(
+          <StringEditWrapper strIndex={s} />
         );
       }
 
@@ -41,6 +36,50 @@ PP64.strings = Object.assign((function() {
     componentDidCatch(error, info) {
       this.setState({ hasError: true });
       console.error(error);
+    }
+  }
+
+  const StringEditWrapper = class StringEditWrapper extends React.Component {
+    state = {
+      hasFocus: false,
+    }
+
+    render() {
+      let str = PP64.fs.strings.read(this.props.strIndex);
+      return (
+        <PP64.texteditor.MPEditor
+          ref={(editor) => { this.editor = editor; }}
+          value={str}
+          displayMode={PP64.texteditor.MPEditorDisplayMode.Edit}
+          showToolbar={true}
+          toolbarPlacement={PP64.texteditor.MPEditorToolbarPlacement.Top}
+          onValueChange={this.onValueChanged}
+          onFocus={this.onFocus}
+          onBlur={this.onBlur} />
+      );
+    }
+
+    componentDidMount() {
+      if (this.state.hasFocus)
+        this.editor.focus();
+    }
+
+    componentDidUpdate() {
+      if (this.state.hasFocus)
+        this.editor.focus();
+    }
+
+    onValueChanged = (id, val) => {
+      // let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(PP64.fs.strings._strToBytes(val));
+      // PP64.fs.strings.write(index, strBuffer);
+    }
+
+    onFocus = event => {
+      this.setState({ hasFocus: true });
+    }
+
+    onBlur = event => {
+      this.setState({ hasFocus: false });
     }
   }
 

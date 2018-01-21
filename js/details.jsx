@@ -241,12 +241,16 @@ PP64.details = (function() {
             );
             break;
           case "richtext":
+            const displayMode = readonly
+              ? PP64.texteditor.MPEditorDisplayMode.ReadOnly
+              : PP64.texteditor.MPEditorDisplayMode.Edit;
             return (
               <div className="detailRichTextContainer" key={detail.id}>
                 <label htmlFor={detail.id}>{detail.desc}</label>
                 <PP64.texteditor.MPEditor id={detail.id}
                   value={value}
-                  readonly={readonly}
+                  showToolbar={!readonly}
+                  displayMode={displayMode}
                   maxlines={detail.maxlines || 0}
                   onValueChange={this.onRichTextChange} />
               </div>

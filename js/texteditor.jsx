@@ -5,7 +5,6 @@ PP64.texteditor = (function() {
   class MPEditor extends React.Component {
     constructor(props) {
       super(props);
-      this.focus = () => this.refs.editor.focus();
 
       let editorState;
       if (props.value) {
@@ -23,6 +22,10 @@ PP64.texteditor = (function() {
         let editorState = EditorState.createWithContent(ContentState.createFromText(nextProps.value), MPCompositeDecorator);
         this.setState({editorState});
       }
+    }
+
+    focus = () => {
+      this.refs.editor.focus();
     }
 
     // shouldComponentUpdate = (nextProps, nextState) => {
@@ -43,14 +46,23 @@ PP64.texteditor = (function() {
       });
     }
 
-    onToolbarClick = key => {
-      let item = _getToolbarItem(key);
+    onFocus = event => {
+      if (this.props.onFocus)
+        this.props.onFocus(event);
+    }
+
+    onBlur = event => {
+      if (this.props.onBlur)
+        this.props.onBlur(event);
+    }
+
+    onToolbarClick = item => {
       switch (item.type) {
         case "COLOR":
-          this.toggleColor(key);
+          this.toggleColor(item.key);
           break;
         case "IMAGE":
-          this.addImage(key);
+          this.addImage(item.char);
           break;
       }
     }
@@ -90,7 +102,7 @@ PP64.texteditor = (function() {
       this.onChange(nextEditorState);
     }
 
-    addImage = key => {
+    addImage = char => {
       const {editorState} = this.state;
       const selection = editorState.getSelection();
 
@@ -98,7 +110,7 @@ PP64.texteditor = (function() {
       const nextContentState = Modifier.replaceText(
         editorState.getCurrentContent(),
         selection,
-        _ToolbarKeyToChar[key]
+        char
       );
 
       let nextEditorState = EditorState.push(
@@ -115,29 +127,38 @@ PP64.texteditor = (function() {
       const displayMode = this.props.displayMode || MPEditorDisplayMode.Edit;
 
       let toolbar;
-      let readonly = displayMode !== MPEditorDisplayMode.Edit || this.props.readonly;
-      if (!readonly && false) { // FIXME: Make toolbar better
+      const showToolbar = this.props.showToolbar;
+      if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
         toolbar = (
           <MPEditorToolbar onItemClick={this.onToolbarClick} />
         );
       }
 
+      const toolbarPlacement = this.props.toolbarPlacement || MPEditorToolbarPlacement.Top;
+
       let className = "mpEditor";
       if (displayMode === MPEditorDisplayMode.Display)
         className += " mpDisplay";
-      if (displayMode === MPEditorDisplayMode.Readonly || this.props.readonly || true) // FIXME
-        className += " mpReadonly";
+      if (toolbar) {
+        if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
+          className += " mpEditorShowToolbarBottom";
+        else
+          className += " mpEditorShowToolbarTop";
+      }
 
       return (
         <div className={className}>
-          {toolbar}
+          {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
           <div className="mpEditorWrapper">
             <Editor ref="editor"
               editorState={editorState}
-              readOnly={readonly}
+              readOnly={displayMode !== MPEditorDisplayMode.Edit}
               customStyleMap={colorStyleMap}
-              onChange={this.onChange} />
+              onChange={this.onChange}
+              onFocus={this.onFocus}
+              onBlur={this.onBlur} />
           </div>
+          {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
         </div>
       );
     }
@@ -192,25 +213,32 @@ PP64.texteditor = (function() {
   };
 
   const _ToolbarItems = [
-    // { key: "DEFAULT", type: "COLOR", icon: "img/richtext/default.png", desc: "Default" },
-    // { key: "WHITE", type: "COLOR", icon: "img/richtext/white.png", desc: "White" },
-    // { key: "RED", type: "COLOR", icon: "img/richtext/red.png", desc: "Red" },
-    // { key: "GREEN", type: "COLOR", icon: "img/richtext/green.png", desc: "Green" },
-    // { key: "BLUE", type: "COLOR", icon: "img/richtext/blue.png", desc: "Blue" },
-    // { key: "YELLOW", type: "COLOR", icon: "img/richtext/yellow.png", desc: "Yellow" },
-    // { type: "SEP" },
-    { key: "A", type: "IMAGE", icon: "img/richtext/A.png", desc: "A button", "char": "\u3000" },
-    { key: "B", type: "IMAGE", icon: "img/richtext/B.png", desc: "B button", "char": "\u3001" },
-    { key: "S", type: "IMAGE", icon: "img/richtext/S.png", desc: "Start button", "char": "\u3010" },
-    { key: "CUP", type: "IMAGE", icon: "img/richtext/Cup.png", desc: "C-up button", "char": "\u3002" },
-    { key: "CDOWN", type: "IMAGE", icon: "img/richtext/Cdown.png", desc: "C-down button", "char": "\u3005" },
-    { key: "CLEFT", type: "IMAGE", icon: "img/richtext/Cleft.png", desc: "C-left button", "char": "\u3004" },
-    { key: "CRIGHT", type: "IMAGE", icon: "img/richtext/Cright.png", desc: "C-right button", "char": "\u3003" },
-    { key: "Z", type: "IMAGE", icon: "img/richtext/Z.png", desc: "Z button", "char": "\u3006" },
-    { key: "R", type: "IMAGE", icon: "img/richtext/R.png", desc: "R button", "char": "\u3011" },
-    { key: "ANALOG", type: "IMAGE", icon: "img/richtext/analog.png", desc: "Analog stick", "char": "\u3007" },
-    { key: "COIN", type: "IMAGE", icon: "img/richtext/coin.png", desc: "Coin", "char": "\u3008" },
-    { key: "STAR", type: "IMAGE", icon: "img/richtext/star.png", desc: "Star", "char": "\u3009" },
+    { key: "COLOR", type: "SUBMENU", icon: "img/richtext/default.png", desc: "Font color",
+      items: [
+        { key: "DEFAULT", type: "COLOR", icon: "img/richtext/default.png", desc: "Default" },
+        { key: "WHITE", type: "COLOR", icon: "img/richtext/white.png", desc: "White" },
+        { key: "RED", type: "COLOR", icon: "img/richtext/red.png", desc: "Red" },
+        { key: "GREEN", type: "COLOR", icon: "img/richtext/green.png", desc: "Green" },
+        { key: "BLUE", type: "COLOR", icon: "img/richtext/blue.png", desc: "Blue" },
+        { key: "YELLOW", type: "COLOR", icon: "img/richtext/yellow.png", desc: "Yellow" },
+      ],
+    },
+    { key: "IMAGE", type: "SUBMENU", icon: "img/richtext/A.png", desc: "Insert image",
+      items: [
+        { key: "A", type: "IMAGE", icon: "img/richtext/A.png", desc: "A button", "char": "\u3000" },
+        { key: "B", type: "IMAGE", icon: "img/richtext/B.png", desc: "B button", "char": "\u3001" },
+        { key: "S", type: "IMAGE", icon: "img/richtext/S.png", desc: "Start button", "char": "\u3010" },
+        { key: "CUP", type: "IMAGE", icon: "img/richtext/Cup.png", desc: "C-up button", "char": "\u3002" },
+        { key: "CDOWN", type: "IMAGE", icon: "img/richtext/Cdown.png", desc: "C-down button", "char": "\u3005" },
+        { key: "CLEFT", type: "IMAGE", icon: "img/richtext/Cleft.png", desc: "C-left button", "char": "\u3004" },
+        { key: "CRIGHT", type: "IMAGE", icon: "img/richtext/Cright.png", desc: "C-right button", "char": "\u3003" },
+        { key: "Z", type: "IMAGE", icon: "img/richtext/Z.png", desc: "Z button", "char": "\u3006" },
+        { key: "R", type: "IMAGE", icon: "img/richtext/R.png", desc: "R button", "char": "\u3011" },
+        { key: "ANALOG", type: "IMAGE", icon: "img/richtext/analog.png", desc: "Analog stick", "char": "\u3007" },
+        { key: "COIN", type: "IMAGE", icon: "img/richtext/coin.png", desc: "Coin", "char": "\u3008" },
+        { key: "STAR", type: "IMAGE", icon: "img/richtext/star.png", desc: "Star", "char": "\u3009" },
+      ],
+    },
     // { key: "PAUSE", type: "IMAGE", icon: "img/richtext/pause.png", desc: "Pause to continue", "char": "\u3015" },
     // { key: "FEED", type: "IMAGE", icon: "img/richtext/feed.png", desc: "Feed new page", "char": "\u3014" },
   ];
@@ -221,35 +249,111 @@ PP64.texteditor = (function() {
 
   let _ToolbarCharToKey = {};
   let _ToolbarKeyToChar = {};
-  _ToolbarItems.forEach(item => {
+  _ToolbarItems.forEach(_populateItemMaps);
+  function _populateItemMaps(item) {
+    if (item.items) {
+      item.items.forEach(_populateItemMaps);
+    }
     if (item.char) {
       _ToolbarCharToKey[item["char"]] = item.key;
       _ToolbarKeyToChar[item.key] = item["char"];
     }
-  });
+  }
+
+  function _toolbarItemToComponent(item) {
+    // if (item.type === "SEP") {
+    //   return (
+    //     <MPEditorToolbarSeparator key={key} />
+    //   );
+    // }
+
+    switch (item.type) {
+      case "SUBMENU":
+        return (
+          <MPEditorToolbarSubmenu key={item.key}
+            item={item}
+            onItemClick={this.onItemClick}
+            items={item.items} />
+        );
+
+      default:
+        return (
+          <MPEditorToolbarButton key={item.key}
+            item={item}
+            onItemClick={this.onItemClick} />
+        );
+    }
+  }
 
   class MPEditorToolbar extends React.Component {
     state = {}
 
     render() {
       let keyint = 0;
-      let items = _ToolbarItems.map(item => {
-        if (item.type === "SEP") {
-          return (
-            <MPEditorToolbarSeparator key={"key" + keyint++} />
-          );
-        }
-
-        return (
-          <MPEditorToolbarButton key={item.key} id={item.key} title={item.desc}
-            src={item.icon} onClick={this.props.onItemClick} />
-        );
-      });
+      let items = _ToolbarItems.map(_toolbarItemToComponent.bind(this));
       return (
         <div className="mpEditorToolbar">
           {items}
         </div>
       );
+    }
+
+    onItemClick = item => {
+      if (this.props.onItemClick)
+        this.props.onItemClick(item);
+    }
+  };
+
+  class MPEditorToolbarSubmenu extends React.Component {
+    state = {
+      expanded: false,
+    }
+
+    render() {
+      const item = this.props.item;
+
+      let expansion;
+      if (this.state.expanded) {
+        const submenuItems = this.props.items.map(_toolbarItemToComponent.bind(this));
+        expansion = (
+          <div ref={(expMenu => { this.expMenu = expMenu; })}
+            className="mpEditorToolbarSubmenuExp"
+            tabIndex={-1}
+            onBlur={this.onBlur}>
+            {submenuItems}
+          </div>
+        );
+      }
+      return (
+        <div className="mpEditorToolbarButton" title={item.desc} onClick={this.onClick}>
+          <img src={item.icon} alt={item.desc}></img>
+          <img src={"img/richtext/divot.png"}></img>
+          {expansion}
+        </div>
+      );
+    }
+
+    componentDidMount() {
+      if (this.state.expanded)
+        this.expMenu.focus();
+    }
+
+    componentDidUpdate() {
+      if (this.state.expanded)
+        this.expMenu.focus();
+    }
+
+    onBlur = () => {
+      this.setState({ expanded: false });
+    }
+
+    onClick = () => {
+      this.setState({ expanded: !this.state.expanded });
+    }
+
+    onItemClick = item => {
+      if (this.props.onItemClick)
+        this.props.onItemClick(item);
     }
   };
 
@@ -257,13 +361,14 @@ PP64.texteditor = (function() {
     state = {}
 
     onClick = () => {
-      this.props.onClick(this.props.id);
+      this.props.onItemClick(this.props.item);
     }
 
     render() {
+      const item = this.props.item;
       return (
-        <div className="mpEditorToolbarButton" title={this.props.title} onClick={this.onClick}>
-          <img src={this.props.src} alt={this.props.title}></img>
+        <div className="mpEditorToolbarButton" title={item.desc} onClick={this.onClick}>
+          <img src={item.icon} alt={item.desc}></img>
         </div>
       );
     }
@@ -296,10 +401,16 @@ PP64.texteditor = (function() {
     Display: 2,
   };
 
+  const MPEditorToolbarPlacement = {
+    Top: 0,
+    Bottom: 1,
+  };
+
   return {
     MPEditor,
     MPCompositeDecorator,
     MPEditorStringAdapter,
-    MPEditorDisplayMode
+    MPEditorDisplayMode,
+    MPEditorToolbarPlacement,
   };
 })();

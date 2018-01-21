@@ -1,10 +1,13 @@
+$bgColor: #DCE4BA;
+$borderColor: #DCC241;
+
 .mpEditor {
   font-size: 14px;
   width: 310px;
-  border: 1px solid #DCC241;
+  border: 1px solid $borderColor;
   border-radius: 2px;
   color: #200E71;
-  background-color: #DCE4BA;
+  background-color: $bgColor;
   padding: 5px;
 }
 
@@ -16,13 +19,13 @@
 }
 
 .mpEditorToolbar {
-  height: 24px;
+  //height: 24px;
 }
 
 .mpEditorToolbarButton {
   display: inline-block;
   max-height: 12px;
-  // width: 12px;
+  position: relative;
   padding: 3px;
   margin: 0 1px;
   border-radius: 2px;
@@ -40,6 +43,19 @@
   }
 }
 
+.mpEditorToolbarSubmenuExp {
+  position: absolute;
+  display: inline-flex;
+  top: 16px;
+  left: 0;
+  background-color: $bgColor;
+  // border: 1px solid $borderColor;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px #222222;
+  outline: none;
+  z-index: 2;
+}
+
 .mpEditorToolbarSeparator {
   display: inline-block;
   height: 14px;
@@ -48,10 +64,17 @@
   background-color: #AAAAAA;
 }
 
-.mpEditor:not(.mpDisplay):not(.mpReadonly) {
+.mpEditor.mpEditorShowToolbarTop {
   .mpEditorWrapper {
     border-top: 1px solid #999999;
-    padding: 4px 0
+    padding-top: 4px;
+  }
+}
+
+.mpEditor.mpEditorShowToolbarBottom {
+  .mpEditorWrapper {
+    border-bottom: 1px solid #999999;
+    padding-bottom: 4px;
   }
 }
 
