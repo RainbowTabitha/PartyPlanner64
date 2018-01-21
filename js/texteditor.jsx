@@ -13,7 +13,20 @@ PP64.texteditor = (function() {
       else {
         editorState = EditorState.createEmpty();
       }
-      this.state = {editorState};
+
+      // Take a specified theme, or make an educated guess.
+      let theme = props.theme;
+      if (typeof props.theme !== "number") {
+        if (props.value && props.value.indexOf("WHITE") >= 0)
+          theme = MPEditorTheme.Dark;
+        else
+          theme = MPEditorTheme.Light;
+      }
+
+      this.state = {
+        editorState,
+        theme,
+      };
     }
 
     componentWillReceiveProps = (nextProps) => {
@@ -39,8 +52,15 @@ PP64.texteditor = (function() {
       const toolbarPlacement = this.props.toolbarPlacement || MPEditorToolbarPlacement.Top;
 
       let className = "mpEditor";
+
       if (displayMode === MPEditorDisplayMode.Display)
         className += " mpDisplay";
+
+      if (this.state.theme === MPEditorTheme.Light)
+        className += " mpEditorLight";
+      if (this.state.theme === MPEditorTheme.Dark)
+        className += " mpEditorDark";
+
       if (toolbar) {
         if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
           className += " mpEditorShowToolbarBottom";
@@ -108,6 +128,16 @@ PP64.texteditor = (function() {
           break;
         case "IMAGE":
           this.addImage(item.char);
+          break;
+        case "ACTION":
+          switch (item.key) {
+            case "DARKLIGHT":
+              const nextTheme = this.state.theme === MPEditorTheme.Light
+                ? MPEditorTheme.Dark
+                : MPEditorTheme.Light
+              this.setState({ theme: nextTheme });
+              break;
+          }
           break;
       }
 
@@ -204,6 +234,9 @@ PP64.texteditor = (function() {
     DEFAULT: {
       color: "#200E71",
     },
+    BLACK: {
+      color: '#000000',
+    },
     WHITE: {
       color: '#FFFFFF',
     },
@@ -228,6 +261,7 @@ PP64.texteditor = (function() {
     { key: "COLOR", type: "SUBMENU", icon: "img/richtext/default.png", desc: "Font color",
       items: [
         { key: "DEFAULT", type: "COLOR", icon: "img/richtext/default.png", desc: "Default" },
+        { key: "BLACK", type: "COLOR", icon: "img/richtext/black.png", desc: "Black" },
         { key: "WHITE", type: "COLOR", icon: "img/richtext/white.png", desc: "White" },
         { key: "RED", type: "COLOR", icon: "img/richtext/red.png", desc: "Red" },
         { key: "GREEN", type: "COLOR", icon: "img/richtext/green.png", desc: "Green" },
@@ -250,10 +284,11 @@ PP64.texteditor = (function() {
         { key: "ANALOG", type: "IMAGE", icon: "img/richtext/analog.png", desc: "Analog stick", "char": "\u3007" },
         { key: "COIN", type: "IMAGE", icon: "img/richtext/coin.png", desc: "Coin", "char": "\u3008" },
         { key: "STAR", type: "IMAGE", icon: "img/richtext/star.png", desc: "Star", "char": "\u3009" },
+        { key: "PAUSE", type: "IMAGE", icon: "img/richtext/pause.png", desc: "Pause to continue", "char": "\u3015" },
+        { key: "FEED", type: "IMAGE", icon: "img/richtext/feed.png", desc: "Feed new page", "char": "\u3014" },
       ],
     },
-    // { key: "PAUSE", type: "IMAGE", icon: "img/richtext/pause.png", desc: "Pause to continue", "char": "\u3015" },
-    // { key: "FEED", type: "IMAGE", icon: "img/richtext/feed.png", desc: "Feed new page", "char": "\u3014" },
+    { key: "DARKLIGHT", type: "ACTION", icon: "img/richtext/darklight.png", desc: "Toggle background color" },
   ];
 
   function _getToolbarItem(key) {
@@ -491,6 +526,11 @@ PP64.texteditor = (function() {
   const MPEditorToolbarPlacement = {
     Top: 0,
     Bottom: 1,
+  };
+
+  const MPEditorTheme = {
+    Light: 0,
+    Dark: 1,
   };
 
   return {

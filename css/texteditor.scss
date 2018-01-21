@@ -1,14 +1,30 @@
-$bgColor: #DCE4BA;
-$borderColor: #DCC241;
+$foreColorLight: #200E71;
+$bgColorLight: #DCE4BA;
+$borderColorLight: #DCC241;
+
+$foreColorDark: #FFFFFF;
+$bgColorDark: #6D7597;
+$borderColorDark: #525F97;
 
 .mpEditor {
   font-size: 14px;
   width: 310px;
-  border: 1px solid $borderColor;
+  border-width: 1px;
+  border-style: solid;
   border-radius: 2px;
-  color: #200E71;
-  background-color: $bgColor;
   padding: 5px;
+}
+
+.mpEditorLight {
+  color: $foreColorLight;
+  background-color: $bgColorLight;
+  border-color: $borderColorLight;
+}
+
+.mpEditorDark {
+  color: $foreColorDark;
+  background-color: $bgColorDark;
+  border-color: $borderColorDark;
 }
 
 .mpEditor.mpDisplay {
@@ -16,10 +32,6 @@ $borderColor: #DCC241;
   border: none;
   background-color: transparent;
   padding: 0 0 2px 0;
-}
-
-.mpEditorToolbar {
-  //height: 24px;
 }
 
 .mpEditorToolbarButton {
@@ -48,12 +60,17 @@ $borderColor: #DCC241;
   display: inline-flex;
   top: 16px;
   left: 0;
-  background-color: $bgColor;
-  // border: 1px solid $borderColor;
   border-radius: 2px;
   box-shadow: 0 1px 2px #222222;
   outline: none;
   z-index: 2;
+}
+
+.mpEditorLight .mpEditorToolbarSubmenuExp {
+  background-color: $bgColorLight;
+}
+.mpEditorDark .mpEditorToolbarSubmenuExp {
+  background-color: $bgColorDark;
 }
 
 .mpEditorToolbarSeparator {
@@ -66,15 +83,29 @@ $borderColor: #DCC241;
 
 .mpEditor.mpEditorShowToolbarTop {
   .mpEditorWrapper {
-    border-top: 1px solid #999999;
     padding-top: 4px;
+  }
+
+  &.mpEditorLight .mpEditorWrapper {
+    border-top: 1px solid #999999;
+  }
+
+  &.mpEditorDark .mpEditorWrapper {
+    border-top: 1px solid #444444;
   }
 }
 
 .mpEditor.mpEditorShowToolbarBottom {
   .mpEditorWrapper {
-    border-bottom: 1px solid #999999;
     padding-bottom: 4px;
+  }
+
+  &.mpEditorLight .mpEditorWrapper {
+    border-bottom: 1px solid #999999;
+  }
+
+  &.mpEditorDark .mpEditorWrapper {
+    border-bottom: 1px solid #444444;
   }
 }
 
