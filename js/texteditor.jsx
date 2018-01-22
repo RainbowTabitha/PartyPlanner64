@@ -30,7 +30,9 @@ PP64.texteditor = (function() {
     }
 
     componentWillReceiveProps = (nextProps) => {
-      const oldValue = MPEditorStringAdapter.editorStateToString(this.state.editorState);
+      const oldValue = MPEditorStringAdapter.editorStateToString(this.state.editorState, {
+        theme: this.state.theme,
+      });
       if (oldValue !== nextProps.value) {
         const newEditorState = MPEditorStringAdapter.stringToEditorState(nextProps.value);
         this.setState({ editorState: newEditorState });
@@ -95,7 +97,9 @@ PP64.texteditor = (function() {
       this.setState({editorState});
       this.setState((prevState, props) => {
         if (props.onValueChange)
-          props.onValueChange(props.id, MPEditorStringAdapter.editorStateToString(prevState.editorState));
+          props.onValueChange(props.id, MPEditorStringAdapter.editorStateToString(prevState.editorState, {
+            theme: prevState.theme,
+          }));
       });
     }
 
@@ -436,9 +440,44 @@ PP64.texteditor = (function() {
    * Converts between game strings and Draft.js editor state.
    */
   const MPEditorStringAdapter = new class MPEditorStringAdapter {
-    editorStateToString(editorState) {
-      let contentState = editorState.getCurrentContent();
-      return contentState.getPlainText();
+    editorStateToString(editorState, args) {
+      const contentState = editorState.getCurrentContent();
+
+      let textBlocks = [];
+
+      const defaultColor = args.theme === MPEditorTheme.Light ? "DEFAULT" : "WHITE";
+
+      const blockMap = contentState.getBlockMap();
+      blockMap.forEach(block => {
+        let currentColor;
+        const changes = {};
+        block.findStyleRanges(
+          (characterMetadata) => {
+            const style = characterMetadata.getStyle();
+            let color = style.find(value => { return !!colorStyleMap[value]; });
+            if (!color)
+              color = defaultColor;
+
+            currentColor = color;
+            return true;
+          },
+          (start, end) => {
+            changes[start] = "<" + currentColor + ">";
+          }
+        );
+
+        let currentIndexOffset = 0;
+        let blockText = block.getText();
+        for (let index in changes) {
+          const replaceIndex = currentIndexOffset + parseInt(index);
+          blockText = PP64.utils.string.splice(blockText, replaceIndex, 0, changes[index]);
+          currentIndexOffset += changes[index].length;
+        }
+
+        textBlocks.push(blockText);
+      });
+
+      return textBlocks.join("\n");
     }
 
     stringToEditorState(str) {

@@ -266,7 +266,10 @@ PP64.utils.string = {
     for (let i = 0; i < str.length; ++i)
       charCodes[i] = str.charCodeAt(i);
     return charCodes;
-  }
+  },
+  splice: function(value, start, delCount, newSubStr) {
+    return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
+  },
 };
 
 var $$number = PP64.utils.number = {
