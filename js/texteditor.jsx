@@ -292,12 +292,12 @@ PP64.texteditor = (function() {
         { key: "FEED", type: "IMAGE", icon: "img/richtext/feed.png", desc: "Feed new page", "char": "\u3014" },
       ],
     },
-    { key: "DARKLIGHT", type: "ACTION", icon: "img/richtext/darklight.png", desc: "Toggle background color" },
+    { key: "DARKLIGHT", type: "ACTION", icon: "img/richtext/darklight.png", desc: "Toggle background color (has no effect on actual game)" },
   ];
 
-  function _getToolbarItem(key) {
-    return _ToolbarItems.filter(item => item.key === key)[0];
-  }
+  // function _getToolbarItem(key) {
+  //   return _ToolbarItems.filter(item => item.key === key)[0];
+  // }
 
   let _ToolbarCharToKey = {};
   let _ToolbarKeyToChar = {};
@@ -448,20 +448,29 @@ PP64.texteditor = (function() {
       const defaultColor = args.theme === MPEditorTheme.Light ? "DEFAULT" : "WHITE";
 
       const blockMap = contentState.getBlockMap();
-      blockMap.forEach(block => {
-        let currentColor;
+      let blockIndex = -1; // forEach is from immutable, no index param?
+      blockMap.forEach((block) => {
+        blockIndex++;
+
+        let currentColor, defaulting;
         const changes = {};
         block.findStyleRanges(
           (characterMetadata) => {
             const style = characterMetadata.getStyle();
             let color = style.find(value => { return !!colorStyleMap[value]; });
-            if (!color)
+            if (!color) {
+              defaulting = true;
               color = defaultColor;
-
+            }
+            else
+              defaulting = false;
             currentColor = color;
             return true;
           },
           (start, end) => {
+            if (defaulting && start === 0 && blockIndex === 0)
+              return; // Avoid always starting strings with color.
+
             changes[start] = "<" + currentColor + ">";
           }
         );
