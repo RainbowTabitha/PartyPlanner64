@@ -169,6 +169,7 @@ PP64.utils.img.invertColor = function invertColor(hex) {
 PP64.utils.browser = {
   updateWindowTitle: function updateWindowTitle(boardName) {
     boardName = boardName || PP64.boards.getCurrentBoard().name;
+    boardName = PP64.utils.string.mpFormatToPlainText(boardName);
     document.title = boardName ?  `PartyPlanner64 - ${boardName}` : "PartyPlanner64";
   }
 };
@@ -269,6 +270,23 @@ PP64.utils.string = {
   },
   splice: function(value, start, delCount, newSubStr) {
     return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
+  },
+  mpFormatToPlainText: function(value) {
+    if (!value)
+      return "";
+    return value.replace(/<\w+>/g, "") // Remove color tags
+      .replace("\u3000", "Ⓐ")  // ! A button
+      .replace("\u3001", "Ⓑ")  // " B button
+      .replace("\u3002", "▲") //  C-up button
+      .replace("\u3003", "►") //  C-right button
+      .replace("\u3004", "◄") //  C-left button
+      .replace("\u3005", "▼") // & C-down button
+      .replace("\u3006", "Ⓩ")  // ' Z button
+      .replace("\u3007", "🕹️")    // ( Analog stick
+      .replace("\u3008", "✪")  // ) (coin)
+      .replace("\u3009", "★")    // * Star
+      .replace("\u3010", "Ⓢ")  // , S button
+      .replace("\u3011", "Ⓡ") // , R button
   },
 };
 
