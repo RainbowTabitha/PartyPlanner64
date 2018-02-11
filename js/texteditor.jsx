@@ -47,7 +47,8 @@ PP64.texteditor = (function() {
       const showToolbar = this.props.showToolbar;
       if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
         toolbar = (
-          <MPEditorToolbar onItemClick={this.onToolbarClick} />
+          <MPEditorToolbar onItemClick={this.onToolbarClick}
+            itemBlacklist={this.props.itemBlacklist} />
         );
       }
 
@@ -288,16 +289,16 @@ PP64.texteditor = (function() {
         { key: "ANALOG", type: "IMAGE", icon: "img/richtext/analog.png", desc: "Analog stick", "char": "\u3007" },
         { key: "COIN", type: "IMAGE", icon: "img/richtext/coin.png", desc: "Coin", "char": "\u3008" },
         { key: "STAR", type: "IMAGE", icon: "img/richtext/star.png", desc: "Star", "char": "\u3009" },
+      ],
+    },
+    { key: "ADVANCED", type: "SUBMENU", icon: "img/richtext/pause.png", desc: "Advanced text features",
+      items: [
         { key: "PAUSE", type: "IMAGE", icon: "img/richtext/pause.png", desc: "Pause to continue", "char": "\u3015" },
         { key: "FEED", type: "IMAGE", icon: "img/richtext/feed.png", desc: "Feed new page", "char": "\u3014" },
       ],
     },
     { key: "DARKLIGHT", type: "ACTION", icon: "img/richtext/darklight.png", desc: "Toggle background color (has no effect on actual game)" },
   ];
-
-  // function _getToolbarItem(key) {
-  //   return _ToolbarItems.filter(item => item.key === key)[0];
-  // }
 
   let _ToolbarCharToKey = {};
   let _ToolbarKeyToChar = {};
@@ -312,7 +313,7 @@ PP64.texteditor = (function() {
     }
   }
 
-  function _toolbarItemToComponent(item) {
+  function _toolbarItemToComponent(item, onItemClick) {
     // if (item.type === "SEP") {
     //   return (
     //     <MPEditorToolbarSeparator key={key} />
@@ -324,7 +325,7 @@ PP64.texteditor = (function() {
         return (
           <MPEditorToolbarSubmenu key={item.key}
             item={item}
-            onItemClick={this.onItemClick}
+            onItemClick={onItemClick}
             items={item.items} />
         );
 
@@ -332,7 +333,7 @@ PP64.texteditor = (function() {
         return (
           <MPEditorToolbarButton key={item.key}
             item={item}
-            onItemClick={this.onItemClick} />
+            onItemClick={onItemClick} />
         );
     }
   }
@@ -341,8 +342,14 @@ PP64.texteditor = (function() {
     state = {}
 
     render() {
-      let keyint = 0;
-      let items = _ToolbarItems.map(_toolbarItemToComponent.bind(this));
+      const blacklist = this.props.itemBlacklist;
+      let items = _ToolbarItems.map(itemDef => {
+        if (blacklist && blacklist.indexOf(itemDef.key) !== -1) {
+          return null;
+        }
+
+        return _toolbarItemToComponent(itemDef, this.onItemClick);
+      });
       return (
         <div className="mpEditorToolbar">
           {items}
@@ -366,7 +373,9 @@ PP64.texteditor = (function() {
 
       let expansion;
       if (this.state.expanded) {
-        const submenuItems = this.props.items.map(_toolbarItemToComponent.bind(this));
+        const submenuItems = this.props.items.map(itemDef => {
+          return _toolbarItemToComponent(itemDef, this.onItemClick);
+        });
         expansion = (
           <div ref={(expMenu => { this.expMenu = expMenu; })}
             className="mpEditorToolbarSubmenuExp"

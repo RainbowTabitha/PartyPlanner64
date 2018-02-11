@@ -252,6 +252,7 @@ PP64.details = (function() {
                   showToolbar={!readonly}
                   displayMode={displayMode}
                   maxlines={detail.maxlines || 0}
+                  itemBlacklist={["COLOR", "ADVANCED", "DARKLIGHT"]}
                   onValueChange={this.onRichTextChange} />
               </div>
             );
