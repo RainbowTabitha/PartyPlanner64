@@ -11,6 +11,10 @@
   vertical-align: top;
 }
 
+.audioDetailsContainer, .difficultyDetailsContainer {
+  min-height: 70px;
+}
+
 #detailsForm label {
   display: block;
   max-width: 100%;
