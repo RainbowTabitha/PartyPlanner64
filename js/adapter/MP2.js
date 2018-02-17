@@ -75,7 +75,7 @@ PP64.adapters.MP2 = (function() {
         let lines = str.split("\n");
 
         // Read the board name and description.
-        let nameStart = lines[0].indexOf("}") + 1;
+        let nameStart = lines[0].indexOf(">") + 1;
         let nameEnd = lines[0].indexOf("\u0019", nameStart);
         board.name = lines[0].substring(nameStart, nameEnd);
         board.description = [lines[1], lines[2]].join("\n");

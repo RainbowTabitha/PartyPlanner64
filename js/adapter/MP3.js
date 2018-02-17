@@ -452,7 +452,7 @@ PP64.adapters.MP3 = (function() {
         let lines = str.split("\n");
 
         // Read the board name and description.
-        let nameStart = lines[0].indexOf("}") + 2;
+        let nameStart = lines[0].indexOf(">") + 2;
         let nameEnd = lines[0].indexOf("{", nameStart);
         board.name = lines[0].substring(nameStart, nameEnd);
         board.description = [lines[1], lines[2]].join("\n");
