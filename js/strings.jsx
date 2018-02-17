@@ -18,8 +18,12 @@ PP64.strings = Object.assign((function() {
       }
 
       let strings = [];
-
-      let strCount = PP64.fs.strings.getStringCount();
+      let strCount;
+      let game = PP64.romhandler.getGameVersion();
+      if (game === 3)
+        strCount = PP64.fs.strings3.getStringCount("en", 0); // TODO
+      else
+        strCount = PP64.fs.strings.getStringCount();
       for (let s = 0; s < strCount; s++) {
         strings.push(
           <StringEditWrapper strIndex={s} />
@@ -45,7 +49,13 @@ PP64.strings = Object.assign((function() {
     }
 
     render() {
-      let str = PP64.fs.strings.read(this.props.strIndex);
+      let str;
+      let game = PP64.romhandler.getGameVersion();
+      if (game === 3)
+        str = PP64.fs.strings3.read("en", 0, this.props.strIndex); // TODO
+      else
+        str = PP64.fs.strings.read(this.props.strIndex);
+
       return (
         <PP64.texteditor.MPEditor
           ref={(editor) => { this.editor = editor; }}
