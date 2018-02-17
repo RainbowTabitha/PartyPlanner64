@@ -32,6 +32,7 @@ PP64.strings = Object.assign((function() {
 
       return (
         <div className="stringViewerContainer">
+          <p>This is an experimental strings editor, probably doesn't work yet.</p>
           {strings}
         </div>
       );
@@ -80,8 +81,13 @@ PP64.strings = Object.assign((function() {
     }
 
     onValueChanged = (id, val) => {
-      // let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(PP64.fs.strings._strToBytes(val));
-      // PP64.fs.strings.write(index, strBuffer);
+      let game = PP64.romhandler.getGameVersion();
+      if (game === 3)
+        return;
+      else {
+        let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(PP64.fs.strings._strToBytes(val));
+        PP64.fs.strings.write(this.props.strIndex, strBuffer);
+      }
     }
 
     onFocus = event => {
