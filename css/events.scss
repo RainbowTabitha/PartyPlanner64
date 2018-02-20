@@ -1,0 +1,72 @@
+.eventsViewContainer {
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 1em;
+  color: white;
+}
+
+.eventsViewTable {
+  width: 100%;
+
+  th {
+    text-align: left;
+  }
+}
+
+.eventTableRow {
+  img {
+    padding: 4px;
+    cursor: pointer;
+    opacity: 0.6;
+    vertical-align: top;
+    flex-grow: 0;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+
+  &:hover {
+    td {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+.eventsViewTableIconColumn {
+  width: 32px;
+}
+
+.eventEditCellIcon {
+  padding-left: 0.25em;
+  visibility: hidden;
+}
+
+.eventNameTableCell:hover {
+  cursor: pointer;
+
+  .eventNameText {
+    text-decoration: underline;
+  }
+
+  .eventEditCellIcon {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.eventNameText {
+  font-size: 13pt;
+}
+
+.eventNameTableCell {
+  padding-left: 0.5em;
+}
+.eventsViewTable th:not(.eventsViewTableIconColumn) {
+  padding-left: 0.5em;
+}

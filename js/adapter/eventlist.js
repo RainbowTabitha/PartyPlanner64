@@ -12,11 +12,11 @@ PP64.adapters.SpaceEventList = class SpaceEventList {
   parse(buffer, offset) {
     let dataView = new DataView(buffer, offset);
     let currentOffset = 0;
-    let activationType, mystery, address;
+    let activationType, executionType, address;
     while ((activationType = dataView.getUint16(currentOffset)) !== 0) {
-      mystery = dataView.getUint16(currentOffset + 2);
+      executionType = dataView.getUint16(currentOffset + 2);
       address = dataView.getUint32(currentOffset + 4);
-      this.add(activationType, mystery, address);
+      this.add(activationType, executionType, address);
       currentOffset += 8;
     }
   }
@@ -29,7 +29,7 @@ PP64.adapters.SpaceEventList = class SpaceEventList {
     let dataView = new DataView(buffer, offset);
     let currentOffset = 0;
     this.forEach(entry => {
-      this._writeEntry(dataView, currentOffset, entry.activationType, entry.mystery, entry.address);
+      this._writeEntry(dataView, currentOffset, entry.activationType, entry.executionType, entry.address);
       currentOffset += 8;
     });
     this._writeEntry(dataView, currentOffset, 0, 0);
@@ -38,16 +38,16 @@ PP64.adapters.SpaceEventList = class SpaceEventList {
     return currentOffset;
   }
 
-  _writeEntry(dataView, currentOffset, activationType, mystery, address) {
+  _writeEntry(dataView, currentOffset, activationType, executionType, address) {
     dataView.setUint16(currentOffset, activationType);
-    dataView.setUint16(currentOffset + 2, mystery);
-    if (!address && (activationType || mystery))
+    dataView.setUint16(currentOffset + 2, executionType);
+    if (!address && (activationType || executionType))
       throw `Tried to write null address from SpaceEventList.`;
     dataView.setUint32(currentOffset + 4, address);
   }
 
-  add(activationType, mystery, address = 0) {
-    this._entries.push(new PP64.adapters.SpaceEventListEntry(activationType, mystery, address));
+  add(activationType, executionType, address = 0) {
+    this._entries.push(new PP64.adapters.SpaceEventListEntry(activationType, executionType, address));
   }
 
   setAddress(entryIndex, address = 0) {
@@ -69,9 +69,9 @@ PP64.adapters.SpaceEventList = class SpaceEventList {
 }
 
 PP64.adapters.SpaceEventListEntry = class SpaceEventListEntry {
-  constructor(activationType, mystery, address) {
+  constructor(activationType, executionType, address) {
     this.activationType = activationType;
-    this.mystery = mystery;
+    this.executionType = executionType;
     this.address = address;
   }
 }

@@ -60,35 +60,15 @@ PP64.boards = (function() {
   }
 
   let boards;
-  let cachedBoards = window.localStorage && localStorage.getItem("boards");
-  if (cachedBoards) {
-    boards = JSON.parse(cachedBoards);
+  let cachedBoards = PP64.utils.localstorage.getSavedBoards();
+  if (cachedBoards && cachedBoards.length) {
+    boards = [];
+    // Go through addBoard to collect any custom events.
+    cachedBoards.forEach(addBoard);
   }
-  if (!boards || !boards.length) {
+  else {
     boards = [ _makeDefaultBoard(1) ];
   }
-
-  window.addEventListener("beforeunload", function(event) {
-    let failed = true;
-    if (window.localStorage) {
-      let myBoards = boards.filter(val => {
-        return !boardIsROM(val);
-      });
-      try {
-        localStorage.setItem("boards", JSON.stringify(myBoards));
-        failed = false;
-      }
-      catch (e) {
-        // Browsers don't really let you save much...
-      }
-    }
-
-    if (failed) {
-      let msg = "Cannot save all your boards. Return to the editor and export them?";
-      event.returnValue = msg;
-      return msg;
-    }
-  });
 
   function addBoard(board, opts = {}) {
     if (!board)
@@ -97,9 +77,12 @@ PP64.boards = (function() {
     if (opts.rom)
       board._rom = true;
 
+    _findAllCustomEvents(board);
+
     boards.push(board);
 
-    PP64.app.boardsChanged();
+    if (PP64.app)
+      PP64.app.boardsChanged();
 
     return boards.length - 1;
   }
@@ -124,16 +107,18 @@ PP64.boards = (function() {
      return !!board._rom;
   }
 
-  // Tests if there is a connection from startIdx to endIdx.
-  // If endIdx is not passed, test if any connection is outbound from startIdx.
+  /**
+   * Tests if there is a connection from startIdx to endIdx.
+   * If endIdx is "*"" or not passed, test if any connection is outbound from startIdx.
+   */
   function hasConnection(startIdx, endIdx, board = getCurrentBoard()) {
     if (Array.isArray(board.links[startIdx])) {
-      if (endIdx === null || endIdx === undefined)
+      if (endIdx === "*" || endIdx === undefined)
         return true; // Asking if any connections exist out of startIdx
       return board.links[startIdx].indexOf(endIdx) >= 0;
     }
     if (board.links[startIdx] !== undefined && board.links[startIdx] !== null) {
-      if (endIdx === null || endIdx === undefined)
+      if (endIdx === "*" || endIdx === undefined)
         return true;
       return board.links[startIdx] === endIdx;
     }
@@ -312,6 +297,37 @@ PP64.boards = (function() {
     }
 
     return deadEnds;
+  }
+
+  function _findAllCustomEvents(board) {
+    if (!board.spaces)
+      return;
+    if (!PP64.adapters)
+      return; // To early in website loading phase.
+
+    for (let s = 0; s < board.spaces.length; s++) {
+      const space = board.spaces[s];
+      if (!space.events)
+        continue;
+
+      for (let e = 0; e < space.events.length; e++) {
+        const event = space.events[e];
+        if (!event.asm)
+          continue;
+
+        if (PP64.adapters.events.getEvent(event.id))
+          continue; // Already exists
+
+        try {
+          PP64.adapters.events.createCustomEvent(event.asm);
+        }
+        catch (e) {
+          console.error("Error reading custom event from loaded board: " + e.toString());
+          // Since it errored out, I guess remove it?
+          space.events.splice(e, 1);
+        }
+      }
+    }
   }
 
   return {

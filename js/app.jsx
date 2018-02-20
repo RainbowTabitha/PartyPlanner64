@@ -12,9 +12,26 @@ PP64.app = new class app {
         blocked: false,
         message: "",
         messageHTML: "",
+        error: false,
+        errorInfo: null,
       }
 
       render() {
+        if (this.state.error) {
+          return (
+            <div>
+              <h2>Oh-no! Something went wrong.</h2>
+              <p>Please
+                <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">file an issue</a>
+                with the following details, and refresh the page.
+              </p>
+              <p className="red">{this.state.error.toString()}</p>
+              <div>Component Stack Error Details:</div>
+              <p className="red">{this.state.errorInfo.componentStack}</p>
+            </div>
+          );
+        }
+
         window.PP64.utils.browser.updateWindowTitle(this.state.currentBoard.name);
         let mainView;
         switch (this.state.currentView) {
@@ -32,6 +49,12 @@ PP64.app = new class app {
             break;
           case window.PP64.types.View.MODELS:
             mainView = <window.PP64.models.ModelViewer />;
+            break;
+          case window.PP64.types.View.EVENTS:
+            mainView = <window.PP64.events.EventsView />;
+            break;
+          case window.PP64.types.View.CREATEEVENT:
+            mainView = <window.PP64.events.CreateEventView />;
             break;
           case window.PP64.types.View.STRINGS:
             mainView = <window.PP64.strings.StringsViewer />;
@@ -122,6 +145,14 @@ PP64.app = new class app {
           </div>
         );
       }
+
+      componentDidCatch(error, errorInfo) {
+        this.setState({
+          error,
+          errorInfo,
+        });
+        console.error(error, errorInfo);
+      }
     };
 
     this._instance = ReactDOM.render(<PP64App />, body);
@@ -161,6 +192,14 @@ PP64.app = new class app {
 
   getCurrentSpace() {
     return this._instance.state.currentSpace;
+  }
+
+  changeCurrentEvent(event) {
+    this._instance.setState({ currentEvent: event });
+  }
+
+  getCurrentEvent() {
+    return this._instance.state.currentEvent;
   }
 
   blockUI(blocked) {

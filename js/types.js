@@ -9,6 +9,8 @@ PP64.types = {
     MODELS: 4,
     PATCHES: 5,
     STRINGS: 6,
+    EVENTS: 7,
+    CREATEEVENT: 8,
   },
 
   Space: {
@@ -70,6 +72,11 @@ PP64.types = {
     DUMP_SAVE: 13.2,
     MODEL_VIEWER: 13.3,
     STRINGS_EDITOR: 13.4,
+    EVENTS: 13.5,
+    CREATEEVENT: 13.6,
+    BACK_TO_EVENTS: 13.7,
+    SAVE_EVENT: 13.8,
+    EVENT_LOAD: 13.9,
     SET_BG: 14,
     SCREENSHOT: 14.1,
     ROM_SAVE: 15,
@@ -107,12 +114,23 @@ PP64.types = {
   Game: {
     MP1_USA: "CLBE",
     MP1_JPN: "CLBJ",
+    MP1_PAL: "NLBP",
 
     MP2_USA: "NMWE",
     MP2_JPN: "NMWJ",
+    MP2_PAL: "NMWP",
 
     MP3_USA: "NMVE",
     MP3_JPN: "NMVJ",
+    MP3_PAL: "NMVP",
+  },
+
+  getGameName: function getGameName(id) {
+    for (const [key, value] of Object.entries(PP64.types.Game)) {
+      if (value === id)
+        return key;
+    }
+    return null;
   },
 
   EventActivationType: {
@@ -121,6 +139,30 @@ PP64.types = {
     "LANDON": 3,
     //"PERTURN": 7,
     "BEGINORWALKOVER": 8,
+  },
+
+  EventExecutionType: {
+    "DIRECT": 1,
+    "PROCESS": 2,
+  },
+
+  getExecutionTypeName: function getExecutionTypeName(executionType) {
+    switch (executionType) {
+      case 1:
+        return "Direct";
+      case 2:
+        return "Process";
+    }
+    throw new Error(`Unknown execution type ${executionType}.`);
+  },
+
+  getExecutionTypeByName: function getExecutionTypeByName(name) {
+    switch (name) {
+      case "Direct":
+        return 1;
+      case "Process":
+        return 2;
+    }
   },
 
   ValidationLevel: {
@@ -135,4 +177,5 @@ var $gameType = PP64.types.Game;
 var $spaceType = PP64.types.Space;
 var $spaceSubType = PP64.types.SpaceSubtype;
 var $activationType = PP64.types.EventActivationType;
+var $executionType = PP64.types.EventExecutionType;
 var $validationLevel = PP64.types.ValidationLevel;

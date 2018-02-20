@@ -16,6 +16,8 @@ PP64.validation.MP3 = (function() {
       rules.push(PP64.validation.getRule("TOOMANYOFEVENT", { event: PP64.adapters.events.getEvent("ITEMSHOP"), high: 2 }));
       rules.push(PP64.validation.getRule("TOOMANYITEMSHOPS", { limit: 2 }));
       rules.push(PP64.validation.getRule("TOOMANYOFEVENT", { event: PP64.adapters.events.getEvent("BOO"), high: 1 }));
+
+      // TODO: gamemasterplc: @PartyPlanner64 replace 0x323AAC in ROM with a NOP if you want more boos
       rules.push(PP64.validation.getRule("TOOMANYBOOS", { limit: 1 }));
       rules.push(PP64.validation.getRule("TOOMANYGATES", { limit: 2 }));
 

@@ -268,8 +268,10 @@ PP64.adapters.boarddef = (function() {
     // Doing start space first is important because MP2/3 assume start space
     // is first space of first chain.
 
+    // 1. Parse from start space.
     parseChain(PP64.boards.getStartSpace(board));
 
+    // 2. Parse from other "starting spaces" of paths.
     for (let s = 0; s < spaces.length; s++) {
       if (!spaces[s])
         continue;
@@ -278,7 +280,17 @@ PP64.adapters.boarddef = (function() {
 
       // The latter condition is not totally necessary, but I don't know that
       // we want to or can handle single-space chains.
-      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, null, board))
+      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, "*", board))
+        parseChain(s);
+    }
+
+    // 3. Catch any "cycles" that might be left, if they reached this point.
+    for (let s = 0; s < spaces.length; s++) {
+      if (!spaces[s] || spaces[s]._seen)
+        continue;
+
+      // Needs to have a connection; otherwise it is some decorative single space.
+      if (PP64.boards.hasConnection(s, "*", board))
         parseChain(s);
     }
 

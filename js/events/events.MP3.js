@@ -147,8 +147,7 @@ PP64.adapters.events.MP3 = (function() {
   const ReverseChainSplit = PP64.adapters.events.createEvent("REVERSECHAINSPLIT", "");
   ReverseChainSplit.fakeEvent = true;
   ReverseChainSplit.activationType = $activationType.WALKOVER;
-  ReverseChainSplit.mystery = 1; // Notable difference
-  ReverseChainSplit.supportedGameVersions = [3];
+  ReverseChainSplit.executionType = $executionType.DIRECT; // Notable difference
   ReverseChainSplit.supportedGames = [
     $gameType.MP3_USA,
   ];
@@ -203,8 +202,7 @@ PP64.adapters.events.MP3 = (function() {
   const GateChainSplit = PP64.adapters.events.createEvent("GATECHAINSPLIT", "");
   GateChainSplit.fakeEvent = true;
   GateChainSplit.activationType = $activationType.WALKOVER;
-  GateChainSplit.mystery = 2;
-  GateChainSplit.supportedGameVersions = [3];
+  GateChainSplit.executionType = $executionType.PROCESS;
   GateChainSplit.supportedGames = [
     $gameType.MP3_USA,
   ];

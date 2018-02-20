@@ -1,4 +1,4 @@
-PP64.ns("adapters");
+PP64.ns("adapters.events");
 
 PP64.adapters.events.common = (function() {
   const hashEqual = PP64.utils.arrays.hashEqual;
@@ -8,9 +8,8 @@ PP64.adapters.events.common = (function() {
   // This won't be an actual event when exposed to the user.
   const ChainMerge = PP64.adapters.events.createEvent("CHAINMERGE", "");
   ChainMerge.activationType = $activationType.WALKOVER;
-  ChainMerge.mystery = 1;
+  ChainMerge.executionType = $executionType.DIRECT;
   ChainMerge.fakeEvent = true;
-  ChainMerge.supportedGameVersions = [1, 2, 3];
   ChainMerge.supportedGames = [
     $gameType.MP1_USA,
     $gameType.MP2_USA,
@@ -120,9 +119,8 @@ PP64.adapters.events.common = (function() {
   // This won't be an actual event when exposed to the user.
   const ChainSplit = PP64.adapters.events.createEvent("CHAINSPLIT", "");
   ChainSplit.activationType = $activationType.WALKOVER;
-  ChainSplit.mystery = 2;
+  ChainSplit.executionType = $executionType.PROCESS;
   ChainSplit.fakeEvent = true;
-  ChainSplit.supportedGameVersions = [1, 2, 3];
   ChainSplit.supportedGames = [
     $gameType.MP1_USA,
     $gameType.MP2_USA,
@@ -212,8 +210,7 @@ PP64.adapters.events.common = (function() {
 
   const Boo = PP64.adapters.events.createEvent("BOO", "Visit Boo");
   Boo.activationType = $activationType.WALKOVER;
-  Boo.mystery = 1;
-  Boo.supportedGameVersions = [1, 2, 3];
+  Boo.executionType = $executionType.DIRECT;
   Boo.supportedGames = [
     $gameType.MP1_USA, $gameType.MP2_USA, $gameType.MP3_USA,
   ];
@@ -293,8 +290,7 @@ PP64.adapters.events.common = (function() {
 
   const Bowser = PP64.adapters.events.createEvent("BOWSER", "Visit Bowser");
   Bowser.activationType = $activationType.WALKOVER;
-  Bowser.mystery = 1;
-  Bowser.supportedGameVersions = [1];
+  Bowser.executionType = $executionType.DIRECT;
   Bowser.supportedGames = [
     $gameType.MP1_USA
   ];
@@ -352,9 +348,8 @@ PP64.adapters.events.common = (function() {
 
   const StarEvent = PP64.adapters.events.createEvent("STAR", "Buy star");
   StarEvent.activationType = $activationType.WALKOVER;
-  StarEvent.mystery = 1;
+  StarEvent.executionType = $executionType.DIRECT;
   StarEvent.fakeEvent = true;
-  StarEvent.supportedGameVersions = [1, 2, 3];
   StarEvent.supportedGames = [
     $gameType.MP1_USA,
     $gameType.MP2_USA,
@@ -386,8 +381,7 @@ PP64.adapters.events.common = (function() {
 
   const ChanceTime = PP64.adapters.events.createEvent("CHANCETIME", "Chance Time");
   ChanceTime.activationType = $activationType.LANDON;
-  ChanceTime.mystery = 1;
-  ChanceTime.supportedGameVersions = [1];
+  ChanceTime.executionType = $executionType.DIRECT;
   ChanceTime.supportedGames = [
     $gameType.MP1_USA,
   ];
@@ -431,8 +425,7 @@ PP64.adapters.events.common = (function() {
 
   const Bank = PP64.adapters.events.createEvent("BANK", "Visit Bank");
   Bank.activationType = $activationType.WALKOVER;
-  Bank.mystery = 1;
-  Bank.supportedGameVersions = [2, 3];
+  Bank.executionType = $executionType.DIRECT;
   Bank.supportedGames = [
     $gameType.MP2_USA,
     $gameType.MP3_USA,
@@ -465,8 +458,7 @@ PP64.adapters.events.common = (function() {
 
   const ItemShop = PP64.adapters.events.createEvent("ITEMSHOP", "Visit Item Shop");
   ItemShop.activationType = $activationType.WALKOVER;
-  ItemShop.mystery = 1;
-  ItemShop.supportedGameVersions = [2, 3];
+  ItemShop.executionType = $executionType.DIRECT;
   ItemShop.supportedGames = [
     $gameType.MP2_USA,
     $gameType.MP3_USA,
@@ -499,9 +491,8 @@ PP64.adapters.events.common = (function() {
 
   const Gate = PP64.adapters.events.createEvent("GATE", "Skeleton Key Gate");
   Gate.activationType = $activationType.WALKOVER;
-  Gate.mystery = 2;
+  Gate.executionType = $executionType.PROCESS;
   Gate.fakeEvent = true;
-  Gate.supportedGameVersions = [3];
   Gate.supportedGames = [
     //$gameType.MP2_USA,
     $gameType.MP3_USA,
@@ -535,9 +526,8 @@ PP64.adapters.events.common = (function() {
   // Event that actually occurs on the gate space itself to cause it to close.
   const GateClose = PP64.adapters.events.createEvent("GATECLOSE", "Skeleton Key Gate Close");
   GateClose.activationType = $activationType.WALKOVER;
-  GateClose.mystery = 1;
+  GateClose.executionType = $executionType.DIRECT;
   GateClose.fakeEvent = true;
-  GateClose.supportedGameVersions = [3];
   GateClose.supportedGames = [
     //$gameType.MP2_USA,
     $gameType.MP3_USA,

@@ -1,7 +1,10 @@
-PP64.ns("adapters");
+PP64.ns("adapters.events");
 
-PP64.adapters.events = (function() {
-  // May implement with LocalStorage to avoid parsing all the time.
+Object.assign(PP64.adapters.events, (function() {
+  /**
+   * Stores junk that the events want to keep around.
+   * In particular, cached data from parsing the original game events.
+   */
   const _cache = Object.create(null);
   const EventCache = {
     get: function(key) {
@@ -32,15 +35,12 @@ PP64.adapters.events = (function() {
     // Default activation type for the event.
     activationType: $activationType.WALKOVER,
 
-    // Default mystery value.
-    mystery: 1,
+    // Default execution type for the event function.
+    executionType: $executionType.DIRECT,
 
     // Returns true if event is not represented as a real event in the UI,
     // meaning it won't return a normal event object (chain merge, star, etc.)
     fakeEvent: false,
-
-    // Which games are supported (1, 2, and/or 3)
-    supportedGameVersions: [],
 
     // Which specific game versions (MP1_USA, etc.) are supported for write to ROM
     supportedGames: [],
@@ -63,9 +63,35 @@ PP64.adapters.events = (function() {
     return $$number.makeDivisibleBy(count * 2, 4);
   }
 
+  function _supportedGamesMatch(supportedGames, gameVersion) {
+    for (let i = 0; i < supportedGames.length; i++) {
+      switch (supportedGames[i]) {
+        case $gameType.MP1_USA:
+        case $gameType.MP1_JPN:
+        case $gameType.MP1_PAL:
+          if (gameVersion === 1)
+            return true;
+          break;
+        case $gameType.MP2_USA:
+        case $gameType.MP2_JPN:
+        case $gameType.MP2_PAL:
+          if (gameVersion === 2)
+            return true;
+          break;
+        case $gameType.MP3_USA:
+        case $gameType.MP3_JPN:
+        case $gameType.MP3_PAL:
+          if (gameVersion === 3)
+            return true;
+          break;
+      }
+    }
+    return false;
+  }
+
   return {
-    createEvent,
     EventCache,
+    createEvent,
     create: function(id, args) {
       let e = _events[id];
       if (!e)
@@ -73,13 +99,13 @@ PP64.adapters.events = (function() {
       let event = args ? PP64.utils.obj.copy(args) : {};
       event.id = id;
       event.activationType = e.activationType;
-      event.mystery = e.mystery;
+      event.executionType = e.executionType;
       return event;
     },
     parse: function(romView, info) {
-      let currentGame = PP64.romhandler.getGameVersion();
+      let currentGame = PP64.romhandler.getROMGame();
       for (let event in _events) {
-        if (_events[event].supportedGameVersions.indexOf(currentGame) === -1)
+        if (_events[event].supportedGames.indexOf(currentGame) === -1)
           continue;
         let args = _events[event].parse(romView, info);
         if (args) {
@@ -98,10 +124,20 @@ PP64.adapters.events = (function() {
     getAvailableEvents: function() {
       let events = [];
       let _events = PP64.adapters.events.getEvents();
-      let currentGame = PP64.boards.getCurrentBoard().game || 1;
+      let curGameVersion = PP64.boards.getCurrentBoard().game || 1;
       for (let id in _events) {
         let event = _events[id];
-        if (event.supportedGameVersions.indexOf(currentGame) >= 0 && !event.fakeEvent)
+        if (_supportedGamesMatch(event.supportedGames, curGameVersion) && !event.fakeEvent)
+          events.push(PP64.utils.obj.copy(event));
+      }
+      return events;
+    },
+    getCustomEvents: function() {
+      let events = [];
+      let _events = PP64.adapters.events.getEvents();
+      for (let id in _events) {
+        let event = _events[id];
+        if (event.custom)
           events.push(PP64.utils.obj.copy(event));
       }
       return events;
@@ -112,14 +148,14 @@ PP64.adapters.events = (function() {
       // to write them mixed in right beside the ASM that actually uses them...
       let argsCount = 0;
       let argsSize = 0;
-      if (event.args && event.args.inline) {
-        argsCount = event.args.inline.length;
+      if (event.inlineArgs) {
+        argsCount = event.inlineArgs.length;
         argsSize = _getArgsSize(argsCount);
 
         let argView = new DataView(buffer, info.offset);
         for (let arg = 0; arg < argsCount; arg++) {
           let argOffset = (arg * 2);
-          argView.setUint16(argOffset, event.args.inline[arg]);
+          argView.setUint16(argOffset, event.inlineArgs[arg]);
         }
 
         // We will tell the event code where the args are, and update where it
@@ -138,6 +174,9 @@ PP64.adapters.events = (function() {
 
       return result;
     },
+    removeEvent: function(id) {
+      delete _events[id];
+    },
     isUnsupported: function(id, gameId) {
       return _events[id].supportedGames.indexOf(gameId) === -1;
     },
@@ -145,7 +184,7 @@ PP64.adapters.events = (function() {
       return _events[id].sharedAsm;
     },
     getName: function(id) {
-      return _events[id].name;
+      return (_events[id] && _events[id].name) || "";
     },
     getEvent: function(id) {
       return _events[id];
@@ -154,4 +193,4 @@ PP64.adapters.events = (function() {
       return _events;
     },
   };
-})();
+})());

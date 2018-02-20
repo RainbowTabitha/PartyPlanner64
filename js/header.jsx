@@ -14,6 +14,7 @@ PP64.header = (function() {
       "type": $actType.SCREENSHOT, "details": "Take a screenshot of the current board",
       "dropdownFn": screenshotDropdown
     },
+    { "name": "Events", "icon": "img/header/events.png", "type": $actType.EVENTS, "details": "View and manage events", "advanced": true },
     { "name": "Settings", "icon": "img/header/settings.png", "type": $actType.SETTINGS, "details": "Editor settings" },
     { "name": "About", "icon": "img/header/about.png", "type": $actType.ABOUT, "details": "About PartyPlanner64" },
   ];
@@ -33,6 +34,7 @@ PP64.header = (function() {
       "type": $actType.SCREENSHOT, "details": "Take a screenshot of the current board",
       "dropdownFn": screenshotDropdown
     },
+    { "name": "Events", "icon": "img/header/events.png", "type": $actType.EVENTS, "details": "View and manage events", "advanced": true },
     { "name": "Patches", "icon": "img/header/rompatch.png", "type": $actType.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
     { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": $actType.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
     //{ "name": "Strings", "icon": "img/header/stringseditor.png", "type": $actType.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
@@ -62,6 +64,7 @@ PP64.header = (function() {
       "type": $actType.SCREENSHOT, "details": "Take a screenshot of the current board",
       "dropdownFn": screenshotDropdown
     },
+    { "name": "Events", "icon": "img/header/events.png", "type": $actType.EVENTS, "details": "View and manage events", "advanced": true },
     { "name": "Patches", "icon": "img/header/rompatch.png", "type": $actType.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
     { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": $actType.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
     //{ "name": "Strings", "icon": "img/header/stringseditor.png", "type": $actType.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
@@ -73,7 +76,17 @@ PP64.header = (function() {
   ];
 
   const actions_back = [
-    { "name": "Back to editor", "icon": "img/header/board.png", "type": $actType.BOARD_EDITOR, "details": "Return to the board editor" },
+    { "name": "Back to editor", "icon": "img/header/back.png", "type": $actType.BOARD_EDITOR, "details": "Return to the board editor" },
+  ];
+
+  const actions_events = actions_back.concat([
+    { "name": "Create Event", "icon": "img/header/add.png", "type": $actType.CREATEEVENT, "details": "Create your own event code" },
+    { "name": "Import Event", "icon": "img/header/eventload.png", "type": $actType.EVENT_LOAD, "details": "Load event code from a file" },
+  ]);
+
+  const actions_createevent = [
+    { "name": "Back to event list", "icon": "img/header/back.png", "type": $actType.BACK_TO_EVENTS, "details": "Return to the event list" },
+    { "name": "Save", "icon": "img/header/save.png", "type": $actType.SAVE_EVENT, "details": "Save the event" },
   ];
 
   //const action_overflow = { "name": "", "icon": "img/header/more.png", "type": "MORE", "details": "More options" };
@@ -128,6 +141,24 @@ PP64.header = (function() {
         break;
       case $actType.MODEL_VIEWER:
         PP64.app.changeView($viewType.MODELS);
+        break;
+      case $actType.EVENTS:
+        PP64.app.changeView($viewType.EVENTS);
+        break;
+      case $actType.BACK_TO_EVENTS:
+        if (PP64.events.createEventPromptExit()) {
+          PP64.app.changeCurrentEvent(null);
+          PP64.app.changeView($viewType.EVENTS);
+        }
+        break;
+      case $actType.EVENT_LOAD:
+        PP64.utils.input.openFile(".s", eventFileSelected);
+        break;
+      case $actType.SAVE_EVENT:
+        PP64.events.saveEvent();
+        break;
+      case $actType.CREATEEVENT:
+        PP64.app.changeView($viewType.CREATEEVENT);
         break;
       case $actType.STRINGS_EDITOR:
         PP64.app.changeView($viewType.STRINGS);
@@ -213,6 +244,27 @@ PP64.header = (function() {
     reader.readAsDataURL(file);
   }
 
+  function eventFileSelected(event) {
+    const files = event.target && event.target.files;
+    if (!(files && files[0]))
+      return;
+
+    for (let i = 0; i < files.length; i++) {
+      let reader = new FileReader();
+      reader.onload = e => {
+        try {
+          let asm = e.target.result;
+          PP64.adapters.events.createCustomEvent(asm);
+          PP64.events.refreshEventsView();
+        } catch (e) {
+          PP64.app.showMessage("Event file load failed. " + e.toString());
+          return;
+        }
+      };
+      reader.readAsText(files[i]);
+    }
+  }
+
   function dumpSelected(event) {
     let file = event.target.files[0];
     if (!file)
@@ -234,8 +286,14 @@ PP64.header = (function() {
   function getActions(view, board, romLoaded) {
     // Pick the set of actions based on the state.
     let actions;
-    if (view !== $viewType.EDITOR)
-      actions = actions_back;
+    if (view !== $viewType.EDITOR) {
+      if (view === $viewType.EVENTS)
+        actions = actions_events;
+      else if (view === $viewType.CREATEEVENT)
+        actions = actions_createevent;
+      else
+        actions = actions_back;
+    }
     else if (!romLoaded)
       actions = actions_norom;
     else if (PP64.boards.boardIsROM(board))

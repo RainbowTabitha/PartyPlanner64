@@ -141,6 +141,33 @@ PP64.validation = (function() {
     return false;
   };
 
+  const UnrecognizedEvents = createRule("UNRECOGNIZEDEVENTS", "Unrecognized events", $validationLevel.ERROR);
+  UnrecognizedEvents.fails = function(board, args) {
+    let unrecognizedEvents = Object.create(null);
+    board.spaces.forEach(space => {
+      if (!space || !space.events)
+        return;
+      space.events.forEach(event => {
+        if (!PP64.adapters.events.getEvent(event.id) && !unrecognizedEvents[event.id])
+          unrecognizedEvents[event.id] = true;
+      });
+    });
+
+    let ids = [];
+    for (var id in unrecognizedEvents) {
+      ids.push(id);
+    }
+
+    if (!ids.length)
+      return false;
+
+    let error = "The following events were unrecognized:\n";
+    ids.forEach(id => {
+      error += "\t" + id + "\n";
+    });
+    return error;
+  };
+
   const UnsupportedEvents = createRule("UNSUPPORTEDEVENTS", "Unsupported events", $validationLevel.ERROR);
   UnsupportedEvents.fails = function(board, args) {
     let unsupportedEvents = Object.create(null);
@@ -149,6 +176,9 @@ PP64.validation = (function() {
       if (!space || !space.events)
         return;
       space.events.forEach(event => {
+        if (!PP64.adapters.events.getEvent(event.id)) {
+          return; // Let the other rule handle this.
+        }
         if (PP64.adapters.events.isUnsupported(event.id, gameID) && !unsupportedEvents[event.id])
           unsupportedEvents[event.id] = true;
       });
@@ -163,6 +193,45 @@ PP64.validation = (function() {
       return false;
 
     let error = "The following events cannot be written to this ROM:\n";
+    ids.forEach(id => {
+      error += "\t" + id + "\n";
+    });
+    return error;
+  };
+
+  const FailingCustomEvents = createRule("CUSTOMEVENTFAIL", "Custom event errors", $validationLevel.ERROR);
+  FailingCustomEvents.fails = function(board, args) {
+    let failingEvents = Object.create(null);
+    let gameID = PP64.romhandler.getROMGame();
+    board.spaces.forEach(space => {
+      if (!space || !space.events)
+        return;
+      space.events.forEach(event => {
+        event = PP64.adapters.events.getEvent(event.id);
+        if (!event)
+          return; // Let the other rule handle this.
+        if (!event.custom)
+          return;
+        try {
+          PP64.adapters.events.CustomAsmHelper.testAssemble(event.asm, { game: gameID });
+        }
+        catch (e) {
+          console.error(e.toString());
+          if (!failingEvents[event.id])
+            failingEvents[event.id] = true;
+        }
+      });
+    });
+
+    let ids = [];
+    for (var id in failingEvents) {
+      ids.push(id);
+    }
+
+    if (!ids.length)
+      return false;
+
+    let error = "The following custom events fail to assemble:\n";
     ids.forEach(id => {
       error += "\t" + id + "\n";
     });
@@ -290,7 +359,9 @@ PP64.validation = (function() {
       PP64.validation.getRule("GAMEVERSION"),
       PP64.validation.getRule("DEADEND"),
       PP64.validation.getRule("TOOMANYSPACES"),
+      PP64.validation.getRule("UNRECOGNIZEDEVENTS"),
       PP64.validation.getRule("UNSUPPORTEDEVENTS"),
+      PP64.validation.getRule("CUSTOMEVENTFAIL"),
       PP64.validation.getRule("TOOMANYPATHOPTIONS"),
       PP64.validation.getRule("CHARACTERSONPATH"),
       PP64.validation.getRule("SPLITATNONINVISIBLESPACE"),

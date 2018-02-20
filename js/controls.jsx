@@ -11,7 +11,7 @@ PP64.controls = (function() {
       if (this.props.css)
         css += " " + this.props.css;
       return (
-        <div className={css} onClick={this.onClick}>
+        <div className={css} onClick={this.onClick} title={this.props.title}>
           {this.props.children}
         </div>
       );
@@ -22,7 +22,7 @@ PP64.controls = (function() {
     state = {}
 
     onClick = () => {
-      if (!this.props.allowDeselect && this.props.pressed)
+      if (this.props.allowDeselect === false && this.props.pressed)
         return;
       this.props.onToggled(this.props.id, !this.props.pressed);
     }
@@ -32,16 +32,41 @@ PP64.controls = (function() {
       if (this.props.css)
         css += " " + this.props.css;
       return (
-        <div className={css} onClick={this.onClick}>
+        <div className={css} onClick={this.onClick} title={this.props.title}>
           {this.props.children}
         </div>
       );
     }
   };
 
+  const ToggleGroup = class ToggleGroup extends React.Component {
+    state = {}
+
+    render() {
+      const items = this.props.items;
+      let toggles = items.map(item => {
+        return (
+          <ToggleButton id={item.id}
+            pressed={item.selected}
+            allowDeselect={this.props.allowDeselect}
+            title={item.title}
+            onToggled={this.props.onToggleClick}>
+            {item.text}
+          </ToggleButton>
+        );
+      });
+
+      return (
+        <div className={this.props.groupCssClass}>
+          {toggles}
+        </div>
+      );
+    }
+  }
+
   return {
     Button,
     ToggleButton,
-  }
-
+    ToggleGroup,
+  };
 })();

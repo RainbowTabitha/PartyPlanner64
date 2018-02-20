@@ -1,0 +1,84 @@
+.createEventViewContainer {
+  height: calc(100% - 40px);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-content: flex-start;
+  flex-wrap: wrap;
+
+  label {
+    color: white;
+  }
+}
+
+.eventcodemirror {
+  width: 640px;
+  height: 100%;
+
+  border: 1px solid rgb(51, 43, 39);
+  border-radius: 3px;
+  overflow: hidden;
+
+  .CodeMirror {
+    height: 100%;
+    background-color: #f3ece8;
+    font-family: Consolas, monospace;
+    font-size: 12pt;
+  }
+
+  .CodeMirror-focused {
+    box-shadow: 0 0 1em 0.3em black;
+  }
+
+  .cm-keyword.cm-nop {
+    opacity: 0.6; // Fade out NOPs
+  }
+}
+
+@media (max-width: 965px) {
+  .eventcodemirror {
+    height: 500px;
+
+    .CodeMirror {
+      height: 500px;
+    }
+  }
+}
+
+.createEventForm {
+  width: 260px;
+  padding: 0 1em;
+
+  &, * {
+    color: white;
+  }
+
+  label {
+    display: block;
+    font-weight: bold;
+  }
+
+  input {
+    color: black;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .toggleButton.pressed {
+    background-color: rgba(0, 0, 0, 0.75);
+  }
+}
+
+.createEventGameToggles {
+  .toggleButton {
+    min-width: 70px;
+  }
+}
+
+@media (max-width: 965px) {
+  .createEventForm {
+    margin-top: 1em;
+    padding: 0;
+    width: 610px;
+  }
+}

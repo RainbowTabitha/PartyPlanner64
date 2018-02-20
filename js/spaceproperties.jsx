@@ -373,7 +373,7 @@ PP64.properties.SpaceProperties = (function() {
 
     render() {
       let event = this.props.event;
-      let name = PP64.adapters.events.getName(event.id);
+      let name = PP64.adapters.events.getName(event.id) || event.id;
       return (
         <div className="eventEntry">
           <span className="eventEntryName" title={name}>{name}</span>

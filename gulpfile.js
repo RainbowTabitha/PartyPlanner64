@@ -11,6 +11,8 @@ var preprocess = require('gulp-preprocess');
 var rename = require("gulp-rename");
 var replace = require('gulp-replace');
 var sass = require("gulp-sass");
+var textTransformation = require("gulp-text-simple");
+var through = require("through2");
 var uglify = require("gulp-uglify");
 var zip = require('gulp-zip');
 
@@ -27,9 +29,12 @@ const JS = [
 
   "js/boot.js",
   "js/utils/utils.js",
+  "js/utils/localstorage.js",
   "js/utils/compression.js",
   "js/utils/MIPS.js",
   "js/utils/CIC.js",
+  "js/utils/lib/mp-mips-codemirror.js",
+  "js/utils/lib/mp-mips-autocomplete.js",
 
   "js/types.js",
   "js/settings.js",
@@ -48,12 +53,16 @@ const JS = [
   "js/details.js",
   "js/about.js",
   "js/models.js",
+  "js/eventsview.js",
+  "js/createevent.js",
   "js/strings.js",
   "js/spaces.js",
   "js/renderer.js",
   "js/rightclick.js",
   "js/interaction.js",
   "js/romhandler.js",
+
+  "js/components/codemirrorwrapper.js",
 
   "js/patches.js",
   "js/gameshark.js",
@@ -68,6 +77,11 @@ const JS = [
   "js/patches/SkipIntro.js",
   "js/patches/DebugMenu.js",
   "js/patches/NoGame.js",
+
+  "js/symbols/symbols.js",
+  "js/symbols/MarioParty1U.sym.js",
+  "js/symbols/MarioParty2U.sym.js",
+  "js/symbols/MarioParty3U.sym.js",
 
   "js/validation/validation.js",
   "js/validation/validation.MP1.js",
@@ -87,17 +101,19 @@ const JS = [
   "js/adapter/boardinfo.js",
   "js/adapter/eventtable.js",
   "js/adapter/eventlist.js",
-  "js/adapter/events.js",
-  "js/adapter/events.common.js",
   "js/adapter/MP1.js",
   "js/adapter/boardinfo.MP1.js",
-  "js/adapter/events.MP1.js",
   "js/adapter/MP2.js",
   "js/adapter/boardinfo.MP2.js",
-  "js/adapter/events.MP2.js",
   "js/adapter/MP3.js",
   "js/adapter/boardinfo.MP3.js",
-  "js/adapter/events.MP3.js",
+
+  "js/events/events.js",
+  "js/events/events.common.js",
+  "js/events/events.MP1.js",
+  "js/events/events.MP2.js",
+  "js/events/events.MP3.js",
+  "js/events/customevents.js",
 
   "js/models/FORM.js",
   "js/models/MTNX.js",
@@ -145,6 +161,8 @@ const CSS = [
   "css/settings.css",
   "css/about.css",
   "css/models.css",
+  "css/events.css",
+  "css/createevent.css",
   "css/strings.css",
   "css/patches.css",
   // css/fonts.css is not included in prod
@@ -218,11 +236,20 @@ const LIB_JS = [
   { src: "node_modules/three/build/three.min.js",
     dst: "three.min.js"
   },
+  { src: "node_modules/codemirror/lib/codemirror.js",
+    dst: "codemirror.js"
+  },
+  { src: "node_modules/codemirror/addon/hint/show-hint.js",
+    dst: "codemirror-show-hint.js"
+  },
   { src: "node_modules/gltf-js-utils/dist/gltfutils.js",
     dst: "gltfjsutils.min.js"
   },
   { src: "node_modules/mips-inst/dist/bundle.js",
     dst: "mips-inst.min.js"
+  },
+  { src: "node_modules/mips-assembler/dist/mipsassem.js",
+    dst: "mips-assembler.min.js"
   },
 ];
 
@@ -235,6 +262,12 @@ const LIB_CSS = [
   },
   { src: "node_modules/basiccontext/dist/themes/default.min.css",
     dst: "default.min.css"
+  },
+  { src: "node_modules/codemirror/lib/codemirror.css",
+    dst: "codemirror.css"
+  },
+  { src: "node_modules/codemirror/addon/hint/show-hint.css",
+    dst: "codemirror-show-hint.css"
   },
 ];
 
@@ -411,6 +444,63 @@ gulp.task("cleandistzip", function() {
     .pipe(clean());
 });
 
+const convertSymbols = function (text, options) {
+  const sourcePath = options.sourcePath;
+  let sourceFile = sourcePath.replace(".sym", "");
+  sourceFile = sourceFile.substring(sourceFile.lastIndexOf("/") + 1);
+  sourceFile = sourceFile.substring(sourceFile.lastIndexOf("\\") + 1);
+
+  const lines = text.split(/\r?\n/);
+  let output = `PP64.ns("symbols");
+
+PP64.symbols["${sourceFile}"] = [
+`;
+
+  const objs = [];
+  lines.forEach(function (line) {
+    line = line.trim();
+    if (!line)
+      return;
+
+    const pieces = line.split(",");
+    if (pieces.length < 3)
+      return;
+
+    // Exclude iffy symbols
+    if (pieces[2][pieces[2].length - 1] === "?")
+      return;
+
+    let obj = `{
+      addr: ${parseInt(pieces[0], 16)}, // 0x${pieces[0]}
+      type: "${pieces[1]}",
+      name: "${pieces[2]}"`;
+
+    if (pieces[3]) {
+      obj += `,
+      desc: ${JSON.stringify(pieces[3])}`;
+    }
+
+    obj += " }";
+
+    objs.push(obj);
+  });
+
+  output += objs.join(",\n");
+  output += "\n];";
+
+  return output;
+};
+
+const gulpConvertSymbols = textTransformation(convertSymbols);
+
+gulp.task("symbols", () => {
+  return gulp.src("symbols/*.sym")
+    .pipe(gulpConvertSymbols())
+    .pipe(rename(function (path) {
+      path.extname += ".js"
+    }))
+    .pipe(gulp.dest("js/symbols"));
+});
 
 gulp.task("clean", ["cleanhtml", "cleanimg", "cleancss", "cleanjs", "cleandistzip"]);
 
@@ -452,7 +542,7 @@ gulp.task("build-prod-electron", function(callback) {
 
 gulp.task("publish", function(callback) {
   exec("git subtree push --prefix dist origin gh-pages", function(err, stdout, stderr) {
-    // process.stdout.write("describe done, " + err + ", " + stdout + ", " + stderr);
+    // process.stdout.write("describe done, " + ervarr + ", " + stdout + ", " + stderr);
     callback();
   });
 });

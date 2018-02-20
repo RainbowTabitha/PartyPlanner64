@@ -24,12 +24,15 @@ PP64.adapters.boardinfo = (function() {
     switch(gameID) {
       case $gameType.MP1_USA:
       case $gameType.MP1_JPN:
+      case $gameType.MP1_PAL:
         return PP64.adapters.boardinfo.MP1.getBoardInfos(gameID);
       case $gameType.MP2_USA:
       case $gameType.MP2_JPN:
+      case $gameType.MP2_PAL:
         return PP64.adapters.boardinfo.MP2.getBoardInfos(gameID);
       case $gameType.MP3_USA:
       case $gameType.MP3_JPN:
+      case $gameType.MP3_PAL:
         return PP64.adapters.boardinfo.MP3.getBoardInfos(gameID);
     }
   }

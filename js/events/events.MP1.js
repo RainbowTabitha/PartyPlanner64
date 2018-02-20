@@ -58,9 +58,8 @@ PP64.adapters.events.MP1 = (function() {
   // it to grab some helper functions for plain ChainMerge (not usually present in DK)
   const ThwompChainSplit = PP64.adapters.events.createEvent("THWOMPCHAINSPLIT", "");
   ThwompChainSplit.fakeEvent = true;
-  ThwompChainSplit.supportedGameVersions = [1];
   ThwompChainSplit.supportedGames = [
-    //$gameType.MP1_USA,
+    $gameType.MP1_USA,
   ];
   ThwompChainSplit.parse = function(dataView, info) {
     var hashes = {
@@ -165,8 +164,7 @@ PP64.adapters.events.MP1 = (function() {
 
   const PassStart = PP64.adapters.events.createEvent("PASSSTART", "Pass start");
   PassStart.activationType = $activationType.WALKOVER;
-  PassStart.mystery = 2;
-  PassStart.supportedGameVersions = [1];
+  PassStart.executionType = $executionType.PROCESS;
   PassStart.supportedGames = [
     $gameType.MP1_USA,
   ];
@@ -268,9 +266,8 @@ PP64.adapters.events.MP1 = (function() {
   // The space had turned into a Chance Time space.
   const StarChanceEvent = PP64.adapters.events.createEvent("STARCHANCE", "Chance Time from old star space");
   StarChanceEvent.activationType = $activationType.LANDON;
-  StarChanceEvent.mystery = 1;
+  StarChanceEvent.executionType = $executionType.DIRECT;
   StarChanceEvent.fakeEvent = true;
-  StarChanceEvent.supportedGameVersions = [1];
   StarChanceEvent.supportedGames = [
     $gameType.MP1_USA,
   ];
@@ -314,11 +311,10 @@ PP64.adapters.events.MP1 = (function() {
 
   const Boulder = PP64.adapters.events.createEvent("BOULDER", "Boulder chase");
   Boulder.activationType = $activationType.LANDON;
-  Boulder.mystery = 1;
+  Boulder.executionType = $executionType.DIRECT;
   Boulder.fakeEvent = true;
-  Boulder.supportedGameVersions = [1];
   Boulder.supportedGames = [
-    //$gameType.MP1_USA,
+    $gameType.MP1_USA,
   ];
   Boulder.parse = function(dataView, info) {
     const hashes = {

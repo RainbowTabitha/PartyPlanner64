@@ -124,6 +124,26 @@ PP64.utils.arrays = {
     }
     return true;
   },
+
+  /**
+   * Creates the intersection of two arrays.
+   * equalityFn takes two values and decides if they're equal.
+   */
+  intersection: function ArrayIntersection(a, b, equalityFn = (a, b) => a === b) {
+    const output = [];
+
+    for (let i = 0; i < a.length; i++) {
+      const aVal = a[i];
+      for (let j = 0; j < b.length; j++) {
+        if (equalityFn(aVal, b[j])) {
+          output.push(aVal);
+          break;
+        }
+      }
+    }
+
+    return output;
+  },
 };
 
 PP64.ns("utils.img");
@@ -270,6 +290,11 @@ PP64.utils.string = {
   },
   splice: function(value, start, delCount, newSubStr) {
     return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
+  },
+  normalizeLineEndings: function(str) {
+    if (!str)
+      return str;
+    return str.replace(/\r\n|\r/g, "\n");
   },
   mpFormatToPlainText: function(value) {
     if (!value)

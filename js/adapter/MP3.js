@@ -289,7 +289,7 @@ PP64.adapters.MP3 = (function() {
           inlineArgs.push(0x0000);
 
           let args = {
-            args: { inline: inlineArgs },
+            inlineArgs,
             chains: chainIndices,
           }
           let chainWithGate = _needsGateChainSplit(chainIndices);
@@ -370,7 +370,7 @@ PP64.adapters.MP3 = (function() {
             inlineArgs.push(0x0000);
 
             event = PP64.adapters.events.create("REVERSECHAINSPLIT", {
-              args: { inline: inlineArgs },
+              inlineArgs,
               chains: chainIndices,
             });
             PP64.boards.addEventByIndex(board, firstSpace, event, true);

@@ -6,6 +6,7 @@ PP64.adapters = (function() {
 
       // Location that custom ASM will be placed in RAM.
       this.EVENT_RAM_LOC = (0x80000000 | (0x800000 - this.EVENT_MEM_SIZE)) >>> 0;
+      // 0x807B0000 right now
 
       // We reserve a 16 byte header, mainly to allow the ASM hook to be flexible
       // in where it transfers this blob to in RAM.
@@ -260,7 +261,7 @@ PP64.adapters = (function() {
 
         while (eventActivationType) {
           // Figure out the event ASM info in ROM.
-          let mystery2 = boardView.getUint16(curInfoOffset + 2);
+          let eventExecutionType = boardView.getUint16(curInfoOffset + 2);
           let asmAddr = boardView.getUint32(curInfoOffset + 4) & 0x7FFFFFFF;
           let asmOffset = boardInfo.spaceEventsStartOffset
             - (boardInfo.spaceEventsStartAddr - asmAddr);
@@ -280,7 +281,7 @@ PP64.adapters = (function() {
           // We parsed an actual event.
           if (eventInfo && eventInfo !== true) {
             eventInfo.activationType = eventActivationType;
-            eventInfo.mystery = mystery2;
+            eventInfo.executionType = eventExecutionType;
             PP64.boards.addEventByIndex(board, curSpace, eventInfo);
 
             //console.log(`Found event 0x${asmOffset.toString(16)} (${eventInfo.name})`);
@@ -377,7 +378,7 @@ PP64.adapters = (function() {
           // We parsed an actual event.
           if (eventInfo && eventInfo !== true) {
             eventInfo.activationType = listEntry.activationType;
-            eventInfo.mystery = listEntry.mystery;
+            eventInfo.executionType = listEntry.executionType;
             PP64.boards.addEventByIndex(board, curSpaceIndex, eventInfo);
 
             //console.log(`Found event 0x${asmOffset.toString(16)} (${eventInfo.name})`);
@@ -409,7 +410,7 @@ PP64.adapters = (function() {
             endpoints.push(_getChainWithSpace(link));
           });
           event = PP64.adapters.events.create("CHAINSPLIT", {
-            args: { inline: links.concat(0xFFFF) },
+            inlineArgs: links.concat(0xFFFF),
             chains: endpoints,
           });
         }
@@ -561,8 +562,8 @@ PP64.adapters = (function() {
         // Prepare the redirection area.
         let redirEntryLen = (space.events.length + 1) * 8;
         space.events.forEach(event => {
-          if (event.args && event.args.inline) {
-            redirEntryLen += this._getArgsSize(event.args.inline.length);
+          if (event.inlineArgs) {
+            redirEntryLen += this._getArgsSize(event.inlineArgs.length);
           }
         });
         curEventRedirectOffset -= redirEntryLen;
@@ -586,21 +587,21 @@ PP64.adapters = (function() {
           // Write any inline arguments
           let argsCount = 0;
           let argsSize = 0;
-          if (event.args && event.args.inline) {
-            argsCount = event.args.inline.length;
+          if (event.inlineArgs) {
+            argsCount = event.inlineArgs.length;
             argsSize = this._getArgsSize(argsCount);
             info.argsAddr = this._offsetToAddr(redirEntry, boardInfo) | 0x80000000;
           }
           for (let arg = 0; arg < argsCount; arg++) {
             let argOffset = redirEntry + (arg * 2);
-            romView.setUint16(argOffset, event.args.inline[arg]);
+            romView.setUint16(argOffset, event.inlineArgs[arg]);
           }
 
           let [writtenASMOffset, len] = PP64.adapters.events.write(PP64.romhandler.getROMBuffer(), event, info, temp);
           eventTemp[event.id] = temp;
 
           romView.setUint16(argsSize + redirEntry, event.activationType);
-          romView.setUint16(argsSize + redirEntry + 2, event.mystery);
+          romView.setUint16(argsSize + redirEntry + 2, event.executionType || event.mystery);
           romView.setUint32(argsSize + redirEntry + 4, this._offsetToAddr(writtenASMOffset, boardInfo) | 0x80000000);
 
           if (!hasWrittenListingOffset) {
@@ -655,7 +656,7 @@ PP64.adapters = (function() {
         let eventList = new PP64.adapters.SpaceEventList();
         for (let e = 0; e < space.events.length; e++) {
           let event = space.events[e];
-          eventList.add(event.activationType, event.mystery, 0); // Also to track size
+          eventList.add(event.activationType, event.executionType || event.mystery, 0); // Also to track size
         }
         eventLists.push(eventList);
       }
