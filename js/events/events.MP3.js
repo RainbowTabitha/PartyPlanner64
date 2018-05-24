@@ -519,7 +519,7 @@ PP64.adapters.events.MP3 = (function() {
       return [base, 0];
 
     let curGate = temp.curGate = temp.curGate || 1;
-    console.log(`curGate ${curGate}`);
+    $$log(`curGate ${curGate}`);
     temp.curGate++;
 
     if (info.boardIndex === 0) {
