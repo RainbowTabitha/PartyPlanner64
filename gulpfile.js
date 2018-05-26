@@ -227,7 +227,7 @@ const LIB_JS = [
   { src: "node_modules/basiccontext/dist/basicContext.min.js",
     dst: "basicContext.min.js"
   },
-  { src: "node_modules/filesaver.js/FileSaver.min.js",
+  { src: "node_modules/file-saver/FileSaver.min.js",
     dst: "FileSaver.min.js"
   },
   { src: "node_modules/cookies-js/dist/cookies.min.js",
