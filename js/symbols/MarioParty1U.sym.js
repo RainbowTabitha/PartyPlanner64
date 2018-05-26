@@ -237,6 +237,11 @@ PP64.symbols["MarioParty1U"] = [
       type: "code",
       name: "CreateProcess" },
 {
+      addr: 2147877548, // 0x800602AC
+      type: "code",
+      name: "PlaySound",
+      desc: "A0=index" },
+{
       addr: 2147885756, // 0x800622BC
       type: "code",
       name: "DrawDebugText",
@@ -253,6 +258,11 @@ PP64.symbols["MarioParty1U"] = [
       addr: 2147932120, // 0x8006D7D8
       type: "code",
       name: "LoadStringIntoWindow",
+      desc: "A0=window_id" },
+{
+      addr: 2147934320, // 0x8006E070
+      type: "code",
+      name: "SetTextCharsPerFrame",
       desc: "A0=window_id" },
 {
       addr: 2148005196, // 0x8007F54C

@@ -42,6 +42,35 @@ PP64.symbols["MarioParty2U"] = [
       name: "EventTableHydrate",
       desc: "Moves event table data into the space data" },
 {
+      addr: 2147867696, // 0x8005DC30
+      type: "code",
+      name: "GetCurrentPlayerIndex" },
+{
+      addr: 2147867708, // 0x8005DC3C
+      type: "code",
+      name: "GetPlayerStruct",
+      desc: "A0=player_index pass -1 to get current player's struct" },
+{
+      addr: 2147867780, // 0x8005DC84
+      type: "code",
+      name: "PlayerIsCurrent",
+      desc: "A0=player_index tests if A0 is the current player" },
+{
+      addr: 2147867808, // 0x8005DCA0
+      type: "code",
+      name: "PlayerIsCPU",
+      desc: "A0=player_index" },
+{
+      addr: 2147867848, // 0x8005DCC8
+      type: "code",
+      name: "AdjustPlayerCoins",
+      desc: "A0=player_index" },
+{
+      addr: 2147867960, // 0x8005DD38
+      type: "code",
+      name: "PlayerHasCoins",
+      desc: "A0=player_index" },
+{
       addr: 2148397008, // 0x800DEFD0
       type: "data",
       name: "perm_heap_addr",
@@ -1654,6 +1683,11 @@ PP64.symbols["MarioParty2U"] = [
       name: "p2_coins",
       desc: "Player 2 coin count" },
 {
+      addr: 2148520706, // 0x800FD302
+      type: "u16",
+      name: "p2_stars",
+      desc: "Player 2 star count" },
+{
       addr: 2148520708, // 0x800FD304
       type: "u16",
       name: "p2_cur_chain_index",
@@ -1684,6 +1718,16 @@ PP64.symbols["MarioParty2U"] = [
       name: "p2_turn_status",
       desc: "Player 2 turn status" },
 {
+      addr: 2148520752, // 0x800FD330
+      type: "u16",
+      name: "p3_coins",
+      desc: "Player 3 coin count" },
+{
+      addr: 2148520758, // 0x800FD336
+      type: "u16",
+      name: "p3_stars",
+      desc: "Player 3 star count" },
+{
       addr: 2148520769, // 0x800FD341
       type: "u8",
       name: "p3_item",
@@ -1693,6 +1737,16 @@ PP64.symbols["MarioParty2U"] = [
       type: "u16",
       name: "p3_turn_statu",
       desc: "Player 3 turn status" },
+{
+      addr: 2148520804, // 0x800FD364
+      type: "u16",
+      name: "p4_coins",
+      desc: "Player 4 coin count" },
+{
+      addr: 2148520810, // 0x800FD36A
+      type: "u16",
+      name: "p4_stars",
+      desc: "Player 4 star count" },
 {
       addr: 2148520821, // 0x800FD375
       type: "u8",

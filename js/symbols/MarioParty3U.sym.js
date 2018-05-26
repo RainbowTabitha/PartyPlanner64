@@ -51,7 +51,18 @@ PP64.symbols["MarioParty3U"] = [
 {
       addr: 2147557920, // 0x80012220
       type: "code",
-      name: "InitCameras" },
+      name: "InitCameras",
+      desc: "A0=num_cameras" },
+{
+      addr: 2147614240, // 0x8001FE20
+      type: "code",
+      name: "InitAnimations",
+      desc: "A0=1" },
+{
+      addr: 2147702884, // 0x80035864
+      type: "code",
+      name: "MallocPerm",
+      desc: "A0=size" },
 {
       addr: 2147774816, // 0x80047160
       type: "code",
@@ -69,6 +80,11 @@ PP64.symbols["MarioParty3U"] = [
       type: "code",
       name: "LoadOverlay",
       desc: "A0=num" },
+{
+      addr: 2147802492, // 0x8004DD7C
+      type: "code",
+      name: "DrawDebugText",
+      desc: "A0=x_pos" },
 {
       addr: 2147807248, // 0x8004F010
       type: "code",
@@ -1501,6 +1517,11 @@ PP64.symbols["MarioParty3U"] = [
       type: "code",
       name: "__umoddi3" },
 {
+      addr: 2148317348, // 0x800CB8A4
+      type: "u32",
+      name: "debug_font_color",
+      desc: "Used with DrawDebugText" },
+{
       addr: 2148323418, // 0x800CD05A
       type: "u8",
       name: "total_turns" },
@@ -1513,12 +1534,150 @@ PP64.symbols["MarioParty3U"] = [
       type: "u16",
       name: "current_scene" },
 {
+      addr: 2148339986, // 0x800D1112
+      type: "u16",
+      name: "p1_coins",
+      desc: "Player 1 coin count" },
+{
+      addr: 2148339990, // 0x800D1116
+      type: "u8",
+      name: "p1_stars",
+      desc: "Player 1 star count" },
+{
+      addr: 2148340000, // 0x800D1120
+      type: "u8",
+      name: "p1_item1",
+      desc: "Player 1 first item" },
+{
+      addr: 2148340001, // 0x800D1121
+      type: "u8",
+      name: "p1_item2",
+      desc: "Player 1 second item" },
+{
+      addr: 2148340002, // 0x800D1122
+      type: "u8",
+      name: "p1_item3",
+      desc: "Player 1 third item" },
+{
+      addr: 2148340042, // 0x800D114A
+      type: "u16",
+      name: "p2_coins",
+      desc: "Player 2 coin count" },
+{
+      addr: 2148340046, // 0x800D114E
+      type: "u8",
+      name: "p2_stars",
+      desc: "Player 2 star count" },
+{
+      addr: 2148340056, // 0x800D1158
+      type: "u8",
+      name: "p2_item1",
+      desc: "Player 2 first item" },
+{
+      addr: 2148340057, // 0x800D1159
+      type: "u8",
+      name: "p2_item2",
+      desc: "Player 2 second item" },
+{
+      addr: 2148340058, // 0x800D115A
+      type: "u8",
+      name: "p2_item3",
+      desc: "Player 2 third item" },
+{
+      addr: 2148340098, // 0x800D1182
+      type: "u16",
+      name: "p3_coins",
+      desc: "Player 3 coin count" },
+{
+      addr: 2148340102, // 0x800D1186
+      type: "u8",
+      name: "p3_stars",
+      desc: "Player 3 star count" },
+{
+      addr: 2148340112, // 0x800D1190
+      type: "u8",
+      name: "p3_item1",
+      desc: "Player 3 first item" },
+{
+      addr: 2148340113, // 0x800D1191
+      type: "u8",
+      name: "p3_item2",
+      desc: "Player 3 second item" },
+{
+      addr: 2148340114, // 0x800D1192
+      type: "u8",
+      name: "p3_item3",
+      desc: "Player 3 third item" },
+{
+      addr: 2148340154, // 0x800D11BA
+      type: "u16",
+      name: "p4_coins",
+      desc: "Player 4 coin count" },
+{
+      addr: 2148340158, // 0x800D11BE
+      type: "u8",
+      name: "p4_stars",
+      desc: "Player 4 star count" },
+{
+      addr: 2148340168, // 0x800D11C8
+      type: "u8",
+      name: "p4_item1",
+      desc: "Player 4 first item" },
+{
+      addr: 2148340169, // 0x800D11C9
+      type: "u8",
+      name: "p4_item2",
+      desc: "Player 4 second item" },
+{
+      addr: 2148340170, // 0x800D11CA
+      type: "u8",
+      name: "p4_item3",
+      desc: "Player 4 third item" },
+{
       addr: 2148352448, // 0x800D41C0
       type: "u32",
       name: "cur_player_spaces_remaining" },
 {
+      addr: 2148446560, // 0x800EB160
+      type: "code",
+      name: "GetSpaceData",
+      desc: "A0=space_index" },
+{
       addr: 2148448864, // 0x800EBA60
       type: "code",
       name: "EventTableHydrate",
-      desc: "Moves event table data into the space data" }
+      desc: "Moves event table data into the space data" },
+{
+      addr: 2148449480, // 0x800EBCC8
+      type: "code",
+      name: "GetCurrentSpaceIndex" },
+{
+      addr: 2148475184, // 0x800F2130
+      type: "code",
+      name: "GetCurrentPlayerIndex" },
+{
+      addr: 2148475196, // 0x800F213C
+      type: "code",
+      name: "GetPlayerStruct",
+      desc: "A0=player_index pass -1 to get current player's struct" },
+{
+      addr: 2148475260, // 0x800F217C
+      type: "code",
+      name: "PlayerIsCurrent",
+      desc: "A0=player_index tests if A0 is the current player" },
+{
+      addr: 2148475288, // 0x800F2198
+      type: "code",
+      name: "PlayerIsCPU",
+      desc: "A0=player_index" },
+{
+      addr: 2148475328, // 0x800F21C0
+      type: "code",
+      name: "AdjustPlayerCoins",
+      desc: "A0=player_index" },
+{
+      addr: 2148475440, // 0x800F2230
+      type: "code",
+      name: "PlayerHasCoins",
+      desc: "A0=player_index" }
 ];
