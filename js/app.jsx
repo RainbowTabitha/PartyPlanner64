@@ -60,9 +60,9 @@ PP64.app = new class app {
             mainView = <window.PP64.strings.StringsViewer />;
             break;
           case window.PP64.types.View.PATCHES:
-            mainView = [<window.PP64.patches.PatchView />];
+            mainView = [<window.PP64.patches.PatchView key="PatchView" />];
             if (PP64.patches.gameshark.romSupportsCheats()) {
-               mainView.push(<window.PP64.patches.gameshark.GamesharkView />);
+               mainView.push(<window.PP64.patches.gameshark.GamesharkView key="GamesharkView" />);
             }
             break;
         }

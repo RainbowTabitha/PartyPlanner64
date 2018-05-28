@@ -568,7 +568,7 @@ PP64.models = (function() {
       let motionTestColorBtn;
       if ($$debug) {
         motionTestColorBtn = (
-          <ToggleButton id={0xC6E7FF} key={1} allowDeselect={false} onToggled={this.onColorChange}
+          <ToggleButton id={0xC6E7FF} key={2} allowDeselect={false} onToggled={this.onColorChange}
             pressed={this.props.selectedColor === 0xC6E7FF}>
             <span className="colorSwatch" title="Change background to MP3 motion test (0xC6E7FF)"
               style={{backgroundColor: "#C6E7FF"}}></span>
@@ -606,28 +606,28 @@ PP64.models = (function() {
       let advancedFeatures;
       if (PP64.settings.get($setting.uiAdvanced)) {
         advancedFeatures = [
-          <label>
-            <input type="checkbox" key="modelFeatureSelectShowVertexNormals"
-              checked={this.props.showVertexNormals} onChange={this.onShowNormalsChange} />
+          <label key="modelFeatureSelectShowVertexNormals">
+            <input type="checkbox" checked={this.props.showVertexNormals}
+              onChange={this.onShowNormalsChange} />
             Vertex Normals
           </label>
         ];
       }
       return (
         <div className="modelFeatureSelectContainer">
-          <label>
-            <input type="checkbox" key="modelFeatureSelectShowTextures"
-              checked={this.props.showTextures} onChange={this.onShowTextureChange} />
+          <label key="modelFeatureSelectShowTextures">
+            <input type="checkbox" checked={this.props.showTextures}
+              onChange={this.onShowTextureChange} />
             Textures
           </label>
-          <label>
-            <input type="checkbox" key="modelFeatureSelectShowWireframe"
-              checked={this.props.showWireframe} onChange={this.onShowWireframeChange} />
+          <label key="modelFeatureSelectShowWireframe">
+            <input type="checkbox" checked={this.props.showWireframe}
+              onChange={this.onShowWireframeChange} />
             Wireframe
           </label>
-          <label title="Use the camera defined by the model">
-            <input type="checkbox" key="modelFeatureSelectUseCamera"
-              checked={this.props.useCamera} onChange={this.onUseCameraChange} />
+          <label key="modelFeatureSelectUseCamera" title="Use the camera defined by the model">
+            <input type="checkbox" checked={this.props.useCamera}
+              onChange={this.onUseCameraChange} />
             Camera
           </label>
           {advancedFeatures}
