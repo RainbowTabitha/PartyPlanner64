@@ -224,6 +224,7 @@ PP64.details = (function() {
 
     onValueChange = (id, value) => {
       _setValue(id, value, this.props.board);
+      this.forceUpdate();
     }
 
     render() {
@@ -421,16 +422,11 @@ PP64.details = (function() {
   const DetailsDifficulty = class DetailsDifficulty extends React.Component {
     constructor(props) {
       super(props);
-      this.state = { currentLevel: props.value, focusedLevel: 0 };
-    }
-
-    componentWillReceiveProps = (nextProps) => {
-      this.state = { currentLevel: nextProps.value };
+      this.state = { focusedLevel: 0 };
     }
 
     onSelection = level => {
       this.props.onDifficultySelected(this.props.id, level);
-      this.setState({ currentLevel: level });
     }
 
     onDifficultyFocused = level => {
@@ -438,25 +434,23 @@ PP64.details = (function() {
     }
 
     render() {
+      const levels = [];
+      for (let i = 1; i <= 5; i++) {
+        levels.push(<DetailsDifficultyLevel
+          level={i.toString()}
+          key={i.toString()}
+          currentLevel={this.props.value}
+          focusedLevel={this.state.focusedLevel}
+          onDifficultyLevelSelected={this.onSelection}
+          onDifficultyFocused={this.onDifficultyFocused} />
+        );
+      }
+
       return (
         <div className="difficultyDetailsContainer">
           <label>{this.props.desc}</label>
           <div className="difficultyDetailsLevels">
-            <DetailsDifficultyLevel level="1" currentLevel={this.state.currentLevel}
-              focusedLevel={this.state.focusedLevel}
-              onDifficultyLevelSelected={this.onSelection} onDifficultyFocused={this.onDifficultyFocused} />
-            <DetailsDifficultyLevel level="2" currentLevel={this.state.currentLevel}
-              focusedLevel={this.state.focusedLevel}
-              onDifficultyLevelSelected={this.onSelection} onDifficultyFocused={this.onDifficultyFocused} />
-            <DetailsDifficultyLevel level="3" currentLevel={this.state.currentLevel}
-              focusedLevel={this.state.focusedLevel}
-              onDifficultyLevelSelected={this.onSelection} onDifficultyFocused={this.onDifficultyFocused} />
-            <DetailsDifficultyLevel level="4" currentLevel={this.state.currentLevel}
-              focusedLevel={this.state.focusedLevel}
-              onDifficultyLevelSelected={this.onSelection} onDifficultyFocused={this.onDifficultyFocused} />
-            <DetailsDifficultyLevel level="5" currentLevel={this.state.currentLevel}
-              focusedLevel={this.state.focusedLevel}
-              onDifficultyLevelSelected={this.onSelection} onDifficultyFocused={this.onDifficultyFocused} />
+            {levels}
           </div>
         </div>
       );
