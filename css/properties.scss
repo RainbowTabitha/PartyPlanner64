@@ -68,20 +68,38 @@ $propertySectionHeight: 14px;
   cursor: default;
   padding: 2px 2px;
   font-size: 10pt;
+  font-weight: bold;
   line-height: $propertySectionHeight;
   display: block;
 }
 
 .eventEntry {
   font-size: 10pt;
-  padding: 1px;
+  padding: 1px 3px;
   cursor: default;
-  display: flex;
-  align-items: center;
+  border: 1px solid #514745;
+  border-radius: 2px;
+  background-color: #816A66;
+  box-shadow: 0 0px 1px #555555;
+  overflow: hidden;
+
+  &:not(:first-child) {
+    margin: 2px 0;
+  }
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.3);
+    border-color: #3d3230;
   }
+}
+
+.eventEntryHeader {
+  display: flex;
+  align-items: center;
+}
+
+.eventAddSelectEntry {
+  font-size: 10pt;
+  margin-top: 3px;
 }
 
 .eventEntryName {
@@ -91,9 +109,32 @@ $propertySectionHeight: 14px;
   text-overflow: ellipsis;
 }
 
+.eventEntryOptions {
+  margin: 2px 0;
+}
+
+.eventEntryItem {
+  display: flex;
+  align-items: center;
+  border: 1px solid #605654;
+  border-radius: 2px;
+  font-size: 9pt;
+}
+
+.eventEntryActivationTypeItem {
+  cursor: pointer;
+
+  &:hover {
+    border-color: #4a3d3a;
+    background-color: rgb(148, 125, 121);
+  }
+}
+
 .eventEntryActivationTypeToggle {
   width: 16px;
   height: 10px;
+  margin-left: 2px;
+  margin-right: 3px;
 
   &:hover {
     cursor: pointer;

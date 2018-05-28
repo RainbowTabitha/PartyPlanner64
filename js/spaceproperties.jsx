@@ -376,11 +376,15 @@ PP64.properties.SpaceProperties = (function() {
       let name = PP64.adapters.events.getName(event.id) || event.id;
       return (
         <div className="eventEntry">
-          <span className="eventEntryName" title={name}>{name}</span>
-          <SpaceEventActivationTypeToggle activationType={event.activationType}
-            onEventActivationTypeToggle={this.onEventActivationTypeToggle} />
-          <div role="button" className="eventEntryDelete" onClick={this.onEventDeleted}
-            title="Remove this event">✖</div>
+          <div className="eventEntryHeader">
+            <span className="eventEntryName" title={name}>{name}</span>
+            <div role="button" className="eventEntryDelete" onClick={this.onEventDeleted}
+              title="Remove this event">✖</div>
+          </div>
+          <div className="eventEntryOptions">
+            <SpaceEventActivationTypeToggle activationType={event.activationType}
+              onEventActivationTypeToggle={this.onEventActivationTypeToggle} />
+          </div>
         </div>
       );
     }
@@ -393,21 +397,35 @@ PP64.properties.SpaceProperties = (function() {
 
     render() {
       let activationType = this.props.activationType;
+      const activationTypes = PP64.types.EventActivationType;
 
       let activationTypeImages = {};
-      activationTypeImages[PP64.types.EventActivationType.WALKOVER] = "img/toolbar/eventpassing.png";
-      activationTypeImages[PP64.types.EventActivationType.LANDON] = "img/toolbar/eventstanding.png";
+      activationTypeImages[activationTypes.WALKOVER] = "img/toolbar/eventpassing.png";
+      activationTypeImages[activationTypes.LANDON] = "img/toolbar/eventstanding.png";
       let activationTypeToggleImg = activationTypeImages[activationType];
       if (!activationTypeToggleImg)
         return null;
 
       let activationTypeTitles = {};
-      activationTypeTitles[PP64.types.EventActivationType.WALKOVER] = "Occurs when passing the space";
-      activationTypeTitles[PP64.types.EventActivationType.LANDON] = "Occurs when landing on the space";
+      activationTypeTitles[activationTypes.WALKOVER] = "Occurs when passing over the space";
+      activationTypeTitles[activationTypes.LANDON] = "Occurs when landing on the space";
+
+      let activationTypeText = "";
+      switch (activationType) {
+        case activationTypes.WALKOVER:
+          activationTypeText = "Passing event";
+          break;
+        case activationTypes.LANDON:
+          activationTypeText = "Land-on event";
+          break;
+      }
 
       return (
-        <img className="eventEntryActivationTypeToggle" alt="Activation Type"
-          src={activationTypeToggleImg} onClick={this.onTypeToggle} title={activationTypeTitles[activationType]} />
+        <div className="eventEntryItem eventEntryActivationTypeItem" onClick={this.onTypeToggle}>
+          <img className="eventEntryActivationTypeToggle" alt="Activation Type"
+            src={activationTypeToggleImg} title={activationTypeTitles[activationType]} />
+          <span>{activationTypeText}</span>
+        </div>
       );
     }
   };
@@ -445,7 +463,7 @@ PP64.properties.SpaceProperties = (function() {
       eventOptions.unshift(<option value="-1" key="-1">Add new event</option>);
 
       return (
-        <div className="eventEntry">
+        <div className="eventAddSelectEntry">
           <select className="eventAddSelect" value={this.state.selectedValue} onChange={this.onSelection}>
             {eventOptions}
           </select>
