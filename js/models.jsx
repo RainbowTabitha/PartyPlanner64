@@ -36,7 +36,7 @@ PP64.models = (function() {
 
     render() {
       return (
-        <div className="modelViewerContainer" tabindex="-1"
+        <div className="modelViewerContainer" tabIndex="-1"
           onKeyDownCapture={this.onKeyDown}>
           <ModelToolbar
             ref={(c) => { this.modelToolbar = c }}
