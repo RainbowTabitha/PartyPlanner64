@@ -1,2 +1,8 @@
 out/
 node_modules/
+
+dist/js/*
+!dist/js/app.min.js
+
+dist/css/*
+!dist/css/app.min.css
