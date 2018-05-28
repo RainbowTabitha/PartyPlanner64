@@ -190,12 +190,14 @@ function GET_LIB_CDN(lib) {
 }
 
 function GET_LIB_NAME(lib) {
-  var path = lib.src.replace("node_modules/", "");
+  const prodLibSrc = lib.src_prod || lib.src;
+  var path = prodLibSrc.replace("node_modules/", "");
   return path.substring(0, path.indexOf("/"));
 }
 
 function GET_LIB_PATH(lib) {
-  var path = lib.src.replace("node_modules/", "");
+  const prodLibSrc = lib.src_prod || lib.src;
+  var path = prodLibSrc.replace("node_modules/", "");
   return path.substr(path.indexOf("/"));
 }
 
@@ -207,12 +209,12 @@ const LIB_JS = [
   { src: "node_modules/es6-shim/es6-shim.min.js",
     dst: "es6-shim.min.js",
   },
-  { src: "node_modules/react/umd/react.production.min.js",
-  //{ src: "node_modules/react/umd/react.development.js",
+  { src_prod: "node_modules/react/umd/react.production.min.js",
+    src_dev: "node_modules/react/umd/react.development.js",
     dst: "react.min.js",
   },
-  { src: "node_modules/react-dom/umd/react-dom.production.min.js",
-  //{ src: "node_modules/react-dom/umd/react-dom.development.js",
+  { src_prod: "node_modules/react-dom/umd/react-dom.production.min.js",
+    src_dev: "node_modules/react-dom/umd/react-dom.development.js",
     dst: "react-dom.min.js"
   },
   { src: "node_modules/immutable/dist/immutable.min.js",
@@ -391,18 +393,19 @@ LIB_JS.forEach(function(lib) {
   var name = "copyjslib-" + GET_LIB_FILE(lib);
   gulp.task(name, function() {
     // Speculatively try to find the map file.
-    var mapfile = lib.src.replace(".min.js", ".map");
-    if (mapfile !== lib.src) {
+    const devLibSrc = lib.src_dev || lib.src;
+    var mapfile = devLibSrc.replace(".min.js", ".map");
+    if (mapfile !== devLibSrc) {
       gulp.src(mapfile).pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));
 
       // OK, then might need the original src too.
-      var srcjs = lib.src.replace(".min.js", ".js");
-      if (srcjs !== lib.src)
+      var srcjs = devLibSrc.replace(".min.js", ".js");
+      if (srcjs !== devLibSrc)
         gulp.src(srcjs).pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));
     }
 
     // Copy from node_modules into js/lib
-    return gulp.src(lib.src)
+    return gulp.src(devLibSrc)
       .pipe(rename(lib.dst))
       .pipe(gulp.dest(JS_LIB_DEST, { cwd: "dist" }));
   })
