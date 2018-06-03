@@ -496,13 +496,22 @@ PP64.symbols["${sourceFile}"] = [
 
 const gulpConvertSymbols = textTransformation(convertSymbols);
 
-gulp.task("symbols", () => {
-  return gulp.src("symbols/*.sym")
-    .pipe(gulpConvertSymbols())
-    .pipe(rename(function (path) {
-      path.extname += ".js"
-    }))
-    .pipe(gulp.dest("js/symbols"));
+gulp.task("symbols", (callback) => {
+  exec("git submodule update --remote", function(err, stdout, stderr) {
+    // process.stdout.write("submodule update done, " + err + ", " + stdout + ", " + stderr);
+    if (err || stderr) {
+      callback();
+    }
+    else {
+      gulp.src("symbols/*.sym")
+      .pipe(gulpConvertSymbols())
+      .pipe(rename(function (path) {
+        path.extname += ".js"
+      }))
+      .pipe(gulp.dest("js/symbols"))
+      .on("end", callback);
+    }
+  });
 });
 
 gulp.task("clean", ["cleanhtml", "cleanimg", "cleancss", "cleanjs", "cleandistzip"]);

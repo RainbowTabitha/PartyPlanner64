@@ -81,6 +81,11 @@ PP64.symbols["MarioParty3U"] = [
       name: "LoadOverlay",
       desc: "A0=num" },
 {
+      addr: 2147789448, // 0x8004AA88
+      type: "code",
+      name: "PlaySound",
+      desc: "A0=index" },
+{
       addr: 2147802492, // 0x8004DD7C
       type: "code",
       name: "DrawDebugText",
