@@ -8,7 +8,7 @@ PP64.app = new class app {
         currentBoard: window.PP64.boards.getCurrentBoard(),
         romLoaded: false,
         currentAction: window.PP64.types.Action.MOVE,
-        currentSpace: null,
+        selectedSpaces: null,
         blocked: false,
         message: "",
         messageHTML: "",
@@ -36,7 +36,7 @@ PP64.app = new class app {
         let mainView;
         switch (this.state.currentView) {
           case window.PP64.types.View.EDITOR:
-            mainView = <window.PP64.renderer.Editor board={this.state.currentBoard} currentSpace={this.state.currentSpace} />;
+            mainView = <window.PP64.renderer.Editor board={this.state.currentBoard} selectedSpaces={this.state.selectedSpaces} />;
             break;
           case window.PP64.types.View.DETAILS:
             mainView = <window.PP64.details.Details board={this.state.currentBoard} />;
@@ -133,7 +133,7 @@ PP64.app = new class app {
                 </window.PP64.toolwindow.ToolWindow>
                 <window.PP64.toolwindow.ToolWindow name="Space Properties" position="BottomRight"
                   visible={this.state.currentView === $viewType.EDITOR}>
-                  <window.PP64.properties.SpaceProperties currentSpace={this.state.currentSpace} gameVersion={this.state.currentBoard.game} />
+                  <window.PP64.properties.SpaceProperties selectedSpaces={this.state.selectedSpaces} gameVersion={this.state.currentBoard.game} />
                 </window.PP64.toolwindow.ToolWindow>
                 <window.PP64.toolwindow.ToolWindow name="Board Properties" position="BottomLeft"
                   visible={this.state.currentView === $viewType.EDITOR}>
@@ -165,7 +165,7 @@ PP64.app = new class app {
   currentBoardChanged() {
     this._instance.setState({
       currentBoard: window.PP64.boards.getCurrentBoard(),
-      currentSpace: null,
+      selectedSpaces: null,
       currentAction: PP64.types.Action.MOVE
     });
   }
@@ -186,12 +186,12 @@ PP64.app = new class app {
     return this._instance.state.currentAction;
   }
 
-  changeCurrentSpace(space) {
-    this._instance.setState({ currentSpace: space });
+  changeSelectedSpaces(selectedSpaces) {
+    this._instance.setState({ selectedSpaces });
   }
 
-  getCurrentSpace() {
-    return this._instance.state.currentSpace;
+  getSelectedSpaces() {
+    return this._instance.state.selectedSpaces;
   }
 
   changeCurrentEvent(event) {

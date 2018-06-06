@@ -482,6 +482,18 @@ PP64.boards = (function() {
       return null;
     },
 
+    getSpacesOfType: function(type, board = getCurrentBoard()) {
+      let spaces = board.spaces;
+      let typeSpaces = [];
+      for (let i = 0; i < spaces.length; i++) {
+        if (!spaces[i])
+          continue;
+        if (spaces[i].type === type)
+          typeSpaces.push(i);
+      }
+      return typeSpaces;
+    },
+
     getSpacesOfSubType: function(subtype, board = getCurrentBoard()) {
       let spaces = board.spaces;
       let subtypeSpaces = [];

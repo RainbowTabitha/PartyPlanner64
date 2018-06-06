@@ -7,8 +7,12 @@
 }
 
 .propertiesEmptyText {
-  height: 35px;
-  line-height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 200px;
+  padding: 5px;
+  box-sizing: border-box;
   font-size: 10pt;
   color: #39221C;
   font-style: italic;

@@ -1,5 +1,5 @@
 PP64.interaction = (function() {
-  let currentSpaceIdx = -1;
+  let selectedSpaceIndices = {};
   let startX = -1;
   let startY = -1;
   let lastX = -1;
@@ -7,15 +7,635 @@ PP64.interaction = (function() {
 
   let canvasRect = null;
 
-  function getClickedSpace(x, y) {
-    let cur_board = PP64.boards.getCurrentBoard();
-    let spaceRadius = cur_board.game === 3 ? 14 : 8;
+  function onEditorMouseDown(event) {
+    const canvas = event.currentTarget;
+    _onEditorDown(canvas, event.clientX, event.clientY, event.ctrlKey);
+  }
+
+  function onEditorTouchStart(event) {
+    if (event.touches.length !== 1)
+      return;
+
+    const touch = event.touches[0];
+
+    const canvas = event.currentTarget;
+    _onEditorDown(canvas, touch.clientX, touch.clientY, event.ctrlKey);
+  }
+
+  /** mousedown or touchstart */
+  function _onEditorDown(canvas, clientX, clientY, ctrlKey) {
+    canvasRect = canvas.getBoundingClientRect();
+
+    const clickX = clientX - canvasRect.left;
+    const clickY = clientY - canvasRect.top;
+
+    startX = lastX = clickX;
+    startY = lastY = clickY;
+
+    const clickedSpaceIndex = _getClickedSpace(lastX, lastY);
+    $$log(`Clicked space: ${$$hex(clickedSpaceIndex)} (${clickedSpaceIndex})`,
+      PP64.boards.getCurrentBoard().spaces[clickedSpaceIndex]);
+
+    const spaceWasClicked = clickedSpaceIndex !== -1;
+
+    // ROM boards cannot be edited, so create a copy right now and switch to it.
+    if (PP64.boards.currentBoardIsROM() && spaceWasClicked) {
+      PP64.app.changeCurrentAction($actType.MOVE); // Avoid destructive actions like delete.
+      PP64.boards.copyCurrentBoard();
+      PP64.boards.setCurrentBoard(PP64.boards.getCurrentBoardIndex() + 1);
+    }
+
+    const curAction = PP64.app.getCurrentAction();
+    switch (curAction) {
+      case $actType.MOVE:
+        if (spaceWasClicked) {
+          if (ctrlKey) {
+            _addSelectedSpace(clickedSpaceIndex);
+          }
+          else if (!_spaceIsSelected(clickedSpaceIndex)) {
+            _setSelectedSpace(clickedSpaceIndex);
+          }
+        }
+        else {
+          _clearSelectedSpaces();
+        }
+        break;
+      case $actType.ADD_OTHER:
+      case $actType.ADD_BLUE:
+      case $actType.ADD_RED:
+      case $actType.ADD_MINIGAME:
+      case $actType.ADD_HAPPENING:
+      case $actType.ADD_STAR:
+      case $actType.ADD_BLACKSTAR:
+      case $actType.ADD_START:
+      case $actType.ADD_CHANCE:
+      case $actType.ADD_SHROOM:
+      case $actType.ADD_BOWSER:
+      case $actType.ADD_ITEM:
+      case $actType.ADD_BATTLE:
+      case $actType.ADD_BANK:
+      case $actType.ADD_GAMEGUY:
+      case $actType.ADD_ARROW:
+      case $actType.MARK_STAR:
+      case $actType.MARK_GATE:
+      case $actType.ADD_TOAD_CHARACTER:
+      case $actType.ADD_BOWSER_CHARACTER:
+      case $actType.ADD_KOOPA_CHARACTER:
+      case $actType.ADD_BOO_CHARACTER:
+      case $actType.ADD_BANK_SUBTYPE:
+      case $actType.ADD_BANKCOIN_SUBTYPE:
+      case $actType.ADD_ITEMSHOP_SUBTYPE:
+        if (spaceWasClicked) {
+          if (ctrlKey) {
+            _addSelectedSpace(clickedSpaceIndex);
+          }
+          else if (!_spaceIsSelected(clickedSpaceIndex)) {
+            _setSelectedSpace(clickedSpaceIndex);
+          }
+        }
+        else if (!ctrlKey) {
+          _clearSelectedSpaces();
+        }
+        break;
+      case $actType.LINE:
+      case $actType.LINE_STICKY:
+        if (spaceWasClicked) {
+          _setSelectedSpace(clickedSpaceIndex);
+        }
+        else {
+          _clearSelectedSpaces();
+        }
+        break;
+      case $actType.ERASE:
+        _clearSelectedSpaces();
+        break;
+    }
+
+    const selectedSpaces = _getSelectedSpaces();
+    const curBoard = PP64.boards.getCurrentBoard();
+    const clickedSpace = curBoard.spaces[clickedSpaceIndex];
+
+    switch (curAction) {
+      case $actType.LINE:
+        if (selectedSpaces.length === 1) {
+          let space = selectedSpaces[0];
+
+          // Draw a line from the start space to the current location.
+          PP64.renderer.renderConnections();
+          PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
+
+          if (PP64.renderer.rightClickOpen()) {
+            PP64.renderer.updateRightClickMenu(null);
+          }
+        }
+        break;
+
+      case $actType.LINE_STICKY:
+        if (selectedSpaces.length === 1) {
+          let space = selectedSpaces[0];
+
+          // Make a connection if we are in sticky mode and have reached a new space.
+          if (clickedSpace && clickedSpace !== space) {
+            const selectedSpaceIndex = PP64.boards.getSpaceIndex(space, curBoard);
+            PP64.boards.addConnection(selectedSpaceIndex, clickedSpaceIndex);
+            _setSelectedSpace(clickedSpaceIndex);
+            PP64.renderer.renderConnections();
+          }
+          else {
+            // Draw a line from the start space to the current location.
+            PP64.renderer.renderConnections();
+            PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
+          }
+        }
+        break;
+
+      case $actType.ERASE:
+        if (clickedSpaceIndex !== -1 && _canRemoveSpaceAtIndex(curBoard, clickedSpaceIndex)) {
+          PP64.boards.removeSpace(clickedSpaceIndex);
+          PP64.app.changeSelectedSpaces([]);
+          PP64.renderer.render();
+        }
+        else {
+          _eraseLines(clickX, clickY); // Try to slice some lines!
+        }
+        break;
+
+      case $actType.ADD_OTHER:
+      case $actType.ADD_BLUE:
+      case $actType.ADD_RED:
+      case $actType.ADD_MINIGAME:
+      case $actType.ADD_HAPPENING:
+      case $actType.ADD_STAR:
+      case $actType.ADD_BLACKSTAR:
+      case $actType.ADD_START:
+      case $actType.ADD_CHANCE:
+      case $actType.ADD_SHROOM:
+      case $actType.ADD_BOWSER:
+      case $actType.ADD_ITEM:
+      case $actType.ADD_BATTLE:
+      case $actType.ADD_BANK:
+      case $actType.ADD_GAMEGUY:
+      case $actType.ADD_ARROW:
+      case $actType.MARK_STAR:
+      case $actType.MARK_GATE:
+      case $actType.ADD_TOAD_CHARACTER:
+      case $actType.ADD_BOWSER_CHARACTER:
+      case $actType.ADD_KOOPA_CHARACTER:
+      case $actType.ADD_BOO_CHARACTER:
+      case $actType.ADD_BANK_SUBTYPE:
+      case $actType.ADD_BANKCOIN_SUBTYPE:
+      case $actType.ADD_ITEMSHOP_SUBTYPE:
+        if (_addSpace(curAction, clickX, clickY, clickedSpace, false, ctrlKey)) {
+          _addSelectedSpace(clickedSpaceIndex !== -1 ? clickedSpaceIndex : curBoard.spaces.length - 1);
+        }
+        break;
+
+      case $actType.MOVE:
+      default:
+        if (PP64.renderer.rightClickOpen()) {
+          PP64.renderer.updateRightClickMenu(selectedSpaces[0]);
+        }
+        break;
+    }
+  }
+
+  function onEditorTouchMove(event) {
+    let clickX, clickY;
+
+    if (event.touches.length !== 1)
+      return;
+
+    if (!_hasAnySelectedSpace())
+      return;
+
+    event.preventDefault(); // Don't drag around the board.
+
+    let touch = event.touches[0];
+
+    clickX = touch.clientX - canvasRect.left;
+    clickY = touch.clientY - canvasRect.top;
+
+    _onEditorMove(clickX, clickY);
+  }
+
+  function onEditorMouseMove(event) {
+    let clickX, clickY;
+
+    if (!canvasRect || event.buttons !== 1)
+      return;
+
+    clickX = event.clientX - canvasRect.left;
+    clickY = event.clientY - canvasRect.top;
+
+    _onEditorMove(clickX, clickY);
+  }
+
+  function _onEditorMove(clickX, clickY) {
+    if (PP64.boards.currentBoardIsROM())
+      return;
+
+    const curAction = PP64.app.getCurrentAction();
+    if (!_hasAnySelectedSpace() && curAction !== $actType.ERASE) {
+      lastX = clickX;
+      lastY = clickY;
+      return;
+    }
+
+    const selectedSpaces = _getSelectedSpaces();
+    const curBoard = PP64.boards.getCurrentBoard();
+    const clickedSpaceIndex = _getClickedSpace(clickX, clickY);
+
+    switch (curAction) {
+      case $actType.LINE:
+        if (selectedSpaces.length === 1) {
+          let space = selectedSpaces[0];
+
+          // Draw a line from the start space to the current location.
+          PP64.renderer.renderConnections();
+          PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
+
+          if (PP64.renderer.rightClickOpen()) {
+            PP64.renderer.updateRightClickMenu(null);
+          }
+        }
+        break;
+
+      case $actType.LINE_STICKY:
+        if (selectedSpaces.length === 1) {
+          let space = selectedSpaces[0];
+
+          // Make a connection if we are in sticky mode and have reached a new space.
+          let endSpace = curBoard.spaces[clickedSpaceIndex];
+          if (endSpace && endSpace !== space) {
+            const selectedSpaceIndex = PP64.boards.getSpaceIndex(space, curBoard);
+            PP64.boards.addConnection(selectedSpaceIndex, clickedSpaceIndex);
+            _setSelectedSpace(clickedSpaceIndex);
+            PP64.renderer.renderConnections();
+          }
+          else {
+            // Draw a line from the start space to the current location.
+            PP64.renderer.renderConnections();
+            PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
+          }
+        }
+        break;
+
+      case $actType.ERASE:
+        if (clickedSpaceIndex !== -1 && _canRemoveSpaceAtIndex(curBoard, clickedSpaceIndex)) {
+          PP64.boards.removeSpace(clickedSpaceIndex);
+          PP64.app.changeSelectedSpaces([]);
+          PP64.renderer.render();
+        }
+        else {
+          _eraseLines(clickX, clickY); // Try to slice some lines!
+        }
+        break;
+
+      case $actType.MOVE:
+      case $actType.ADD_OTHER:
+      case $actType.ADD_BLUE:
+      case $actType.ADD_RED:
+      case $actType.ADD_MINIGAME:
+      case $actType.ADD_HAPPENING:
+      case $actType.ADD_STAR:
+      case $actType.ADD_BLACKSTAR:
+      case $actType.ADD_START:
+      case $actType.ADD_CHANCE:
+      case $actType.ADD_SHROOM:
+      case $actType.ADD_BOWSER:
+      case $actType.ADD_ITEM:
+      case $actType.ADD_BATTLE:
+      case $actType.ADD_BANK:
+      case $actType.ADD_GAMEGUY:
+      case $actType.ADD_ARROW:
+      case $actType.MARK_STAR:
+      case $actType.MARK_GATE:
+      case $actType.ADD_TOAD_CHARACTER:
+      case $actType.ADD_BOWSER_CHARACTER:
+      case $actType.ADD_KOOPA_CHARACTER:
+      case $actType.ADD_BOO_CHARACTER:
+      case $actType.ADD_BANK_SUBTYPE:
+      case $actType.ADD_BANKCOIN_SUBTYPE:
+      case $actType.ADD_ITEMSHOP_SUBTYPE:
+      default:
+        // Move the space(s)
+        let deltaX = clickX - lastX;
+        let deltaY = clickY - lastY;
+
+        selectedSpaces.forEach(space => {
+          const newX = space.x + deltaX;
+          space.x = Math.max(0, Math.min(newX, curBoard.bg.width));
+
+          const newY = space.y + deltaY;
+          space.y = Math.max(0, Math.min(newY, curBoard.bg.height));
+        });
+
+        renderConnectionsOnTimeout();
+        renderSpacesOnTimeout();
+
+        if (PP64.renderer.rightClickOpen()) {
+          PP64.renderer.updateRightClickMenu(selectedSpaces[0]);
+        }
+        break;
+    }
+
+    //$$log("dX: " + deltaX + ", dY: " + deltaY);
+
+    lastX = clickX;
+    lastY = clickY;
+  }
+
+  function onEditorMouseUp(event) {
+    if (event.button !== 0)
+      return;
+
+    _onEditorUp();
+  }
+
+  function onEditorTouchEnd(event) {
+    if (event.touches.length !== 1)
+      return;
+
+    _onEditorUp();
+  }
+
+  function _onEditorUp() {
+    if (PP64.boards.currentBoardIsROM())
+      return;
+
+    if (!_hasAnySelectedSpace())
+      return;
+
+    const selectedSpaces = _getSelectedSpaces();
+    const curAction = PP64.app.getCurrentAction();
+    if (curAction === $actType.LINE) {
+      let endSpaceIdx = _getClickedSpace(lastX, lastY);
+      if (endSpaceIdx !== -1 && selectedSpaces.indexOf(endSpaceIdx) === -1) {
+        for (let index in selectedSpaceIndices) {
+          PP64.boards.addConnection(parseInt(index), endSpaceIdx);
+        }
+      }
+
+      PP64.renderer.renderConnections();
+    }
+  }
+
+  function onEditorClick(event) {
+    //console.log("onEditorClick", event);
+    if (PP64.boards.currentBoardIsROM())
+      return;
+
+    const moved = Math.abs(startX - lastX) > 5 || Math.abs(startY - lastY) > 5;
+    const movedAtAll = Math.abs(startX - lastX) > 0 || Math.abs(startY - lastY) > 0;
+
+    const selectedSpaces = _getSelectedSpaces();
+
+    startX = lastX = -1;
+    startY = lastY = -1;
+
+    const ctrlKey = event.ctrlKey;
+    const clickX = event.clientX - canvasRect.left;
+    const clickY = event.clientY - canvasRect.top;
+    let clickedSpaceIdx = _getClickedSpace(clickX, clickY);
+
+    const curBoard = PP64.boards.getCurrentBoard();
+    const clickedSpace = clickedSpaceIdx === -1 ? null : curBoard.spaces[clickedSpaceIdx];
+
+    if (event.button !== 0)
+      return;
+
+    const curAction = PP64.app.getCurrentAction();
+    switch (curAction) {
+      case $actType.MOVE:
+      case $actType.ADD_OTHER:
+      case $actType.ADD_BLUE:
+      case $actType.ADD_RED:
+      case $actType.ADD_MINIGAME:
+      case $actType.ADD_HAPPENING:
+      case $actType.ADD_STAR:
+      case $actType.ADD_BLACKSTAR:
+      case $actType.ADD_START:
+      case $actType.ADD_CHANCE:
+      case $actType.ADD_SHROOM:
+      case $actType.ADD_BOWSER:
+      case $actType.ADD_ITEM:
+      case $actType.ADD_BATTLE:
+      case $actType.ADD_BANK:
+      case $actType.ADD_GAMEGUY:
+      case $actType.ADD_ARROW:
+      case $actType.MARK_GATE:
+      case $actType.ADD_TOAD_CHARACTER:
+      case $actType.ADD_BOWSER_CHARACTER:
+      case $actType.ADD_KOOPA_CHARACTER:
+      case $actType.ADD_BOO_CHARACTER:
+      case $actType.ADD_BANK_SUBTYPE:
+      case $actType.ADD_BANKCOIN_SUBTYPE:
+      case $actType.ADD_ITEMSHOP_SUBTYPE:
+        if (!movedAtAll && !ctrlKey) {
+          if (!clickedSpace) {
+            _clearSelectedSpaces();
+          }
+          else {
+            _setSelectedSpace(clickedSpaceIdx);
+          }
+        }
+        break;
+
+      case $actType.MARK_STAR:
+        if (!moved) {
+          _toggleHostsStar(selectedSpaces);
+        }
+        break;
+
+      case $actType.LINE:
+      case $actType.LINE_STICKY:
+        PP64.renderer.renderConnections();
+        break;
+
+      case $actType.ERASE:
+        break;
+    }
+  }
+
+  function onEditorRightClick(event) {
+    //console.log("onEditorRightClick", event);
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const selectedSpaces = _getSelectedSpaces();
+    const space = selectedSpaces.length !== 1 ? null : selectedSpaces[0];
+    PP64.renderer.updateRightClickMenu(space);
+  };
+
+  function onEditorDrop(event) {
+    event.preventDefault();
+
+    if (PP64.boards.currentBoardIsROM())
+      return;
+
+    if (PP64.renderer.rightClickOpen())
+      PP64.renderer.updateRightClickMenu(null);
+
+    let data;
+    try {
+      data = JSON.parse(event.dataTransfer.getData("text"));
+    } catch (e) { return; }
+
+    _clearSelectedSpaces();
+
+    if (typeof data === "object" && data.action) {
+      let canvas = event.currentTarget;
+      canvasRect = canvas.getBoundingClientRect();
+      let clickX = event.clientX - canvasRect.left;
+      let clickY = event.clientY - canvasRect.top;
+      let droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
+      let curBoard = PP64.boards.getCurrentBoard();
+      let curSpace = droppedOnSpaceIdx === -1 ? null : curBoard.spaces[droppedOnSpaceIdx];
+      _addSpace(data.action.type, clickX, clickY, curSpace, false, false);
+    }
+  }
+
+  function onEditorKeyDown(event) {
+    const selectedSpaces = PP64.app.getSelectedSpaces();
+    if (!selectedSpaces || !selectedSpaces.length)
+      return;
+
+    const board = PP64.boards.getCurrentBoard();
+
+    if (event.keyCode === 38) { // up arrow
+      selectedSpaces.forEach(space => {
+        space.y = Math.max(space.y - 1, 0);
+      });
+      PP64.app.changeSelectedSpaces(selectedSpaces);
+    }
+    else if (event.keyCode === 40) { // down arrow
+      selectedSpaces.forEach(space => {
+        space.y = Math.min(space.y + 1, board.bg.height);
+      });
+      PP64.app.changeSelectedSpaces(selectedSpaces);
+    }
+    else if (event.keyCode === 37) { // left arrow
+      selectedSpaces.forEach(space => {
+        space.x = Math.max(space.x - 1, 0);
+      });
+      PP64.app.changeSelectedSpaces(selectedSpaces);
+    }
+    else if (event.keyCode === 39) { // right arrow
+      selectedSpaces.forEach(space => {
+        space.x = Math.min(space.x + 1, board.bg.width);
+      });
+      PP64.app.changeSelectedSpaces(selectedSpaces);
+    }
+    else if (event.keyCode === 46) { // delete
+      // If any characters are on the spaces, first press just deletes them.
+      // If there are no characters, selected spaces are deleted.
+      let onlySubtype = false
+      selectedSpaces.forEach(space => {
+        if (space.subtype !== undefined) {
+          onlySubtype = true;
+        }
+      });
+      selectedSpaces.forEach(space => {
+        // Delete the character(s) off first.
+        if (onlySubtype) {
+          if (space.subtype !== undefined) {
+            delete space.subtype;
+          }
+        }
+        else {
+          let index = PP64.boards.getSpaceIndex(space, board);
+          if (_canRemoveSpaceAtIndex(board, index)) {
+            PP64.boards.removeSpace(index, board);
+          }
+        }
+      });
+      if (onlySubtype) {
+        PP64.app.changeSelectedSpaces(selectedSpaces);
+      }
+      else {
+        PP64.app.changeSelectedSpaces([]);
+      }
+    }
+  }
+
+  let _renderConnectionsTimer;
+  function renderConnectionsOnTimeout() {
+    if (!_renderConnectionsTimer) {
+      _renderConnectionsTimer = setTimeout(_renderConnectionsTimeoutFn, 10);
+    }
+  }
+  function _renderConnectionsTimeoutFn() {
+    PP64.renderer.renderConnections();
+    _renderConnectionsTimer = null;
+  }
+
+  let _renderSpacesTimer;
+  function renderSpacesOnTimeout() {
+    if (!_renderSpacesTimer) {
+      _renderSpacesTimer = setTimeout(_renderSpacesTimeoutFn, 10);
+    }
+  }
+  function _renderSpacesTimeoutFn() {
+    PP64.renderer.renderSpaces();
+    PP64.renderer.renderSelectedSpaces();
+    _renderSpacesTimer = null;
+  }
+
+  function _clearSelectedSpaces() {
+    selectedSpaceIndices = {};
+    PP64.app.changeSelectedSpaces([]);
+  }
+
+  function _changeSelectedSpaces() {
+    PP64.app.changeSelectedSpaces(_getSelectedSpaces());
+  }
+
+  function _getSelectedSpaces() {
+    const curBoard = PP64.boards.getCurrentBoard();
+    const selectedSpaces = [];
+    for (let index in selectedSpaceIndices) {
+      let space = curBoard.spaces[index];
+      selectedSpaces.push(space);
+    }
+    return selectedSpaces;
+  }
+
+  function _hasAnySelectedSpace() {
+    for (let index in selectedSpaceIndices) {
+      return true;
+    }
+    return false;
+  }
+
+  function _spaceIsSelected(spaceIndex) {
+    return !!selectedSpaceIndices[spaceIndex];
+  }
+
+  function _addSelectedSpace(spaceIndex) {
+    if (!selectedSpaceIndices) {
+      selectedSpaceIndices = {};
+    }
+    selectedSpaceIndices[spaceIndex] = true;
+    _changeSelectedSpaces();
+  }
+
+  function _setSelectedSpace(spaceIndex) {
+    selectedSpaceIndices = {
+      [spaceIndex]: true,
+    };
+    _changeSelectedSpaces();
+  }
+
+  function _getClickedSpace(x, y) {
+    const curBoard = PP64.boards.getCurrentBoard();
+    const spaceRadius = curBoard.game === 3 ? 14 : 8;
 
     // Search for the last space that could be clicked. (FIXME: consider circular shape.)
     let spaceIdx = -1;
-    for (let index = 0; index < cur_board.spaces.length; index++) {
-      let space = cur_board.spaces[index];
-      if (space === null)
+    for (let index = 0; index < curBoard.spaces.length; index++) {
+      let space = curBoard.spaces[index];
+      if (!space)
         continue;
 
       if (Math.abs(space.x - x) <= spaceRadius && Math.abs(space.y - y) <= spaceRadius)
@@ -25,113 +645,70 @@ PP64.interaction = (function() {
     return spaceIdx;
   }
 
-  function onEditorRightClick(event) {
-    //console.log("onEditorRightClick", event);
+  function _canRemoveSpaceAtIndex(board, spaceIndex) {
+    const space = board.spaces[spaceIndex];
+    if (!space)
+      return false;
 
-    event.preventDefault();
-    event.stopPropagation();
-
-    let space = currentSpaceIdx === -1 ? null : PP64.boards.getCurrentBoard().spaces[currentSpaceIdx];
-    PP64.renderer.updateRightClickMenu(space);
-
-    currentSpaceIdx = -1;
-  };
-
-  function onEditorClick(event) {
-    //console.log("onEditorClick", event);
-    if (PP64.boards.currentBoardIsROM())
-      return;
-
-    let moved = Math.abs(startX - lastX) > 5 || Math.abs(startY - lastY) > 5;
-
-    let curSpaceIdx = currentSpaceIdx;
-    currentSpaceIdx = -1;
-
-    startX = lastX = -1;
-    startY = lastY = -1;
-
-    let clickX = event.clientX - canvasRect.left;
-    let clickY = event.clientY - canvasRect.top;
-    let clickedSpaceIdx = getClickedSpace(clickX, clickY);
-
-    let curBoard = PP64.boards.getCurrentBoard();
-    let curSpace = curSpaceIdx === -1 ? null : curBoard.spaces[curSpaceIdx];
-    let clickedSpace = clickedSpaceIdx === -1 ? null : curBoard.spaces[clickedSpaceIdx];
-
-    PP64.app.changeCurrentSpace(curSpace);
-
-    if (PP64.renderer.rightClickOpen() && !moved) {
-      PP64.renderer.updateRightClickMenu(curSpace);
-      if (curSpace) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      return;
+    // Don't allow removing the last start space, since in
+    // non-advanced mode you can't add it back.
+    if (space.type === $spaceType.START) {
+      const startSpaces = PP64.boards.getSpacesOfType($spaceType.START, board);
+      return startSpaces.length > 1;
     }
 
-    if (event.button !== 0)
-      return;
-
-    let curAction = PP64.app.getCurrentAction();
-    let actionsHandledInEditorUp = [
-      $actType.LINE,
-      $actType.LINE_STICKY,
-      //$actType.ASSOCIATE
-      $actType.MOVE,
-    ];
-    if (actionsHandledInEditorUp.indexOf(curAction) >= 0)
-      return;
-
-    if (curAction === $actType.DELETE || curAction === $actType.ERASE) {
-      if (clickedSpace && clickedSpace.type !== $spaceType.START) {
-        PP64.boards.removeSpace(clickedSpaceIdx);
-        PP64.app.changeCurrentSpace(null);
-        PP64.renderer.render();
-      }
-      else {
-        _eraseLines(clickX, clickY);
-      }
-    } else if (curAction === $actType.MARK_STAR) {
-      _toggleHostsStar(curSpace);
-    } else {
-      if (moved && clickedSpace)
-        return; // Avoid placing over an existing space
-      _addSpace(curAction, clickX, clickY, curSpace, moved);
-    }
+    return true;
   }
 
-  function _addSpace(action, x, y, curSpace, moved) {
+  function _addSpace(action, x, y, clickedSpace, moved, ctrlKey) {
     let spaceType = _getSpaceTypeFromAction(action);
     let spaceSubType = _getSpaceSubTypeFromAction(action);
-    if (curSpace) {
+    let shouldChangeSelection = false;
+    if (clickedSpace) {
       // If we are clicking a space, the only "add" action could be to toggle subtype.
       if (spaceSubType !== undefined && !moved) {
-        if (curSpace.type !== $spaceType.OTHER && spaceSubType === $spaceSubType.GATE) {
+        if (clickedSpace.type !== $spaceType.OTHER && spaceSubType === $spaceSubType.GATE) {
           // Don't add gate to non-invisible space.
         }
-        else if (curSpace.subtype === spaceSubType)
-          delete curSpace.subtype;
+        else if (clickedSpace.subtype === spaceSubType)
+          delete clickedSpace.subtype;
         else
-          curSpace.subtype = spaceSubType;
+          clickedSpace.subtype = spaceSubType;
+
+        PP64.app.changeSelectedSpaces([clickedSpace]);
+        shouldChangeSelection = true;
       }
-      PP64.app.changeCurrentSpace(curSpace);
     }
     else {
-      let newSpaceIdx = PP64.boards.addSpace(x, y, spaceType, spaceSubType);
-      let curBoard = PP64.boards.getCurrentBoard();
-      PP64.app.changeCurrentSpace(curBoard.spaces[newSpaceIdx]);
+      const curBoard = PP64.boards.getCurrentBoard();
+      const newSpaceIdx = PP64.boards.addSpace(x, y, spaceType, spaceSubType);
+      const newSpace = curBoard.spaces[newSpaceIdx];
+
+      if (ctrlKey) {
+        const selectedSpaces = PP64.app.getSelectedSpaces() || [];
+        selectedSpaces.push(newSpace);
+        PP64.app.changeSelectedSpaces(selectedSpaces);
+      }
+      else {
+        PP64.app.changeSelectedSpaces([newSpace]);
+      }
+      shouldChangeSelection = true;
     }
 
     PP64.renderer.renderSpaces();
+    return shouldChangeSelection;
   }
 
-  function _toggleHostsStar(curSpace) {
-    if (!curSpace)
+  function _toggleHostsStar(selectedSpaces) {
+    if (!selectedSpaces || !selectedSpaces.length)
       return;
 
-    curSpace.star = !curSpace.star;
+    selectedSpaces.forEach(space => {
+      space.star = !space.star;
+    });
+
     PP64.renderer.renderSpaces();
-    PP64.app.changeCurrentSpace(curSpace); // Refresh because .star changed
+    PP64.app.changeSelectedSpaces(selectedSpaces); // Refresh because .star changed
   }
 
   function _eraseLines(x, y) {
@@ -215,283 +792,20 @@ PP64.interaction = (function() {
     return spaceSubType;
   }
 
-  function onEditorMouseDown(event) {
-    let canvas = event.currentTarget;
-    _onEditorDown(canvas, event.clientX, event.clientY)
+  function _getSpaceSubTypeFromAction(action) {
+    let spaceSubType;
+    if (action === $actType.ADD_TOAD_CHARACTER) spaceSubType = $spaceSubType.TOAD;
+    else if (action === $actType.ADD_BOWSER_CHARACTER) spaceSubType = $spaceSubType.BOWSER;
+    else if (action === $actType.ADD_KOOPA_CHARACTER) spaceSubType = $spaceSubType.KOOPA;
+    else if (action === $actType.ADD_BOO_CHARACTER) spaceSubType = $spaceSubType.BOO;
+    else if (action === $actType.ADD_BANK_SUBTYPE) spaceSubType = $spaceSubType.BANK;
+    else if (action === $actType.ADD_BANKCOIN_SUBTYPE) spaceSubType = $spaceSubType.BANKCOIN;
+    else if (action === $actType.ADD_ITEMSHOP_SUBTYPE) spaceSubType = $spaceSubType.ITEMSHOP;
+    else if (action === $actType.MARK_GATE) spaceSubType = $spaceSubType.GATE;
+    return spaceSubType;
   }
 
-  function onEditorTouchStart(event) {
-    let canvas = event.currentTarget;
-
-    if (event.touches.length !== 1)
-      return;
-
-    let touch = event.touches[0];
-
-    _onEditorDown(canvas, touch.clientX, touch.clientY)
-  }
-
-  function _onEditorDown(canvas, clientX, clientY) {
-    canvasRect = canvas.getBoundingClientRect();
-
-    startX = lastX = clientX - canvasRect.left;
-    startY = lastY = clientY - canvasRect.top;
-
-    currentSpaceIdx = getClickedSpace(lastX, lastY);
-
-    // ROM boards cannot be edited, so create a copy right now and switch to it.
-    if (PP64.boards.currentBoardIsROM() && currentSpaceIdx !== -1) {
-      PP64.app.changeCurrentAction($actType.MOVE); // Avoid destructive actions like delete.
-      PP64.boards.copyCurrentBoard();
-      PP64.boards.setCurrentBoard(PP64.boards.getCurrentBoardIndex() + 1);
-    }
-
-    $$log(`Clicked space: ${$$hex(currentSpaceIdx)} (${currentSpaceIdx})`, PP64.boards.getCurrentBoard().spaces[currentSpaceIdx]);
-  }
-
-  let _renderConnectionsTimer;
-  function renderConnectionsOnTimeout() {
-    if (!_renderConnectionsTimer) {
-      _renderConnectionsTimer = setTimeout(renderConnectionsTimeoutFn, 10);
-    }
-  }
-  function renderConnectionsTimeoutFn() {
-    PP64.renderer.renderConnections();
-    _renderConnectionsTimer = null;
-  }
-
-  let _renderSpacesTimer;
-  function renderSpacesOnTimeout() {
-    if (!_renderSpacesTimer) {
-      _renderSpacesTimer = setTimeout(renderSpacesTimeoutFn, 10);
-    }
-  }
-  function renderSpacesTimeoutFn() {
-    PP64.renderer.renderSpaces();
-    PP64.renderer.renderCurrentSpace();
-    _renderSpacesTimer = null;
-  }
-
-  function onEditorTouchMove(event) {
-    let clickX, clickY;
-
-    if (event.touches.length !== 1)
-      return;
-
-    if (currentSpaceIdx === -1)
-      return;
-
-    event.preventDefault(); // Don't drag around the board.
-
-    let touch = event.touches[0];
-
-    clickX = touch.clientX - canvasRect.left;
-    clickY = touch.clientY - canvasRect.top;
-
-    _onEditorMove(clickX, clickY);
-  }
-
-  function onEditorMouseMove(event) {
-    let clickX, clickY;
-
-    if (!canvasRect || event.buttons !== 1)
-      return;
-
-    clickX = event.clientX - canvasRect.left;
-    clickY = event.clientY - canvasRect.top;
-
-    _onEditorMove(clickX, clickY);
-  }
-
-  function _onEditorMove(clickX, clickY) {
-    if (PP64.boards.currentBoardIsROM())
-      return;
-
-    let curAction = PP64.app.getCurrentAction();
-    if (currentSpaceIdx === -1 && curAction !== $actType.ERASE) {
-      lastX = clickX;
-      lastY = clickY;
-      return;
-    }
-
-    let cur_board = PP64.boards.getCurrentBoard();
-    let space = cur_board.spaces[currentSpaceIdx];
-    if (curAction === $actType.LINE) {
-      // Draw a line from the start space to the current location.
-      PP64.renderer.renderConnections();
-      PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
-
-      if (PP64.renderer.rightClickOpen()) {
-        PP64.renderer.updateRightClickMenu(null);
-      }
-    }
-    else if (curAction === $actType.LINE_STICKY) {
-      // Make a connection if we are in sticky mode and have reached a new space.
-      let endSpaceIdx = getClickedSpace(clickX, clickY);
-      if (endSpaceIdx !== -1 && endSpaceIdx !== currentSpaceIdx) {
-        let endSpace = cur_board.spaces[endSpaceIdx];
-        PP64.boards.addConnection(currentSpaceIdx, endSpaceIdx);
-        currentSpaceIdx = endSpaceIdx;
-        PP64.renderer.renderConnections();
-      }
-      else {
-        // Draw a line from the start space to the current location.
-        PP64.renderer.renderConnections();
-        PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
-      }
-    }
-    else if (curAction === $actType.ASSOCIATE) {
-      // Association line from the start space to the current location.
-      PP64.renderer.renderConnections();
-      PP64.renderer.drawAssociation(space.x, space.y, clickX, clickY);
-    }
-    else if (curAction === $actType.ERASE) {
-      let curSpaceIdx = getClickedSpace(clickX, clickY);
-      if (curSpaceIdx !== -1 && cur_board.spaces[curSpaceIdx].type !== $spaceType.START) {
-        PP64.boards.removeSpace(curSpaceIdx);
-        PP64.app.changeCurrentSpace(null);
-        PP64.renderer.render();
-      }
-      else {
-        _eraseLines(clickX, clickY); // Try to slice some lines!
-      }
-    }
-    else if (curAction !== $actType.DELETE) {
-      // Move the space.
-      let deltaX = clickX - lastX;
-      let deltaY = clickY - lastY;
-
-      space.x += deltaX;
-      space.y += deltaY;
-
-      renderConnectionsOnTimeout();
-      renderSpacesOnTimeout();
-
-      if (PP64.renderer.rightClickOpen()) {
-        PP64.renderer.updateRightClickMenu(space);
-      }
-    }
-
-    //$$log("dX: " + deltaX + ", dY: " + deltaY);
-
-    lastX = clickX;
-    lastY = clickY;
-  }
-
-  function onEditorMouseUp(event) {
-    if (event.button !== 0)
-      return;
-
-    _onEditorUp();
-  }
-
-  function onEditorTouchEnd(event) {
-    if (event.touches.length !== 1)
-      return;
-
-    _onEditorUp();
-  }
-
-  function _onEditorUp() {
-    if (PP64.boards.currentBoardIsROM())
-      return;
-
-    if (currentSpaceIdx === -1)
-      return;
-
-    let curAction = PP64.app.getCurrentAction();
-    let endSpaceIdx, endSpace;
-    if (curAction === $actType.LINE) {
-      endSpaceIdx = getClickedSpace(lastX, lastY);
-      if (endSpaceIdx !== -1 && endSpaceIdx !== currentSpaceIdx) {
-        endSpace = PP64.boards.getCurrentBoard().spaces[endSpaceIdx];
-        PP64.boards.addConnection(currentSpaceIdx, endSpaceIdx);
-      }
-
-      PP64.renderer.renderConnections();
-    }
-    else if (curAction === $actType.ASSOCIATE) {
-      endSpaceIdx = getClickedSpace(lastX, lastY);
-      if (endSpaceIdx !== -1) {
-        endSpace = PP64.boards.getCurrentBoard().spaces[endSpaceIdx];
-        if (endSpace.subtype === undefined) {
-          // PP64.boards.addConnection(currentSpaceIdx, endSpaceIdx);
-        }
-      }
-
-      PP64.renderer.renderConnections();
-    }
-  }
-
-  function onEditorDrop(event) {
-    event.preventDefault();
-
-    if (PP64.boards.currentBoardIsROM())
-      return;
-
-    if (PP64.renderer.rightClickOpen())
-      PP64.renderer.updateRightClickMenu(null);
-
-    let data;
-    try {
-      data = JSON.parse(event.dataTransfer.getData("text"));
-    } catch (e) { return; }
-
-    if (typeof data === "object" && data.action) {
-      let canvas = event.currentTarget;
-      canvasRect = canvas.getBoundingClientRect();
-      let clickX = event.clientX - canvasRect.left;
-      let clickY = event.clientY - canvasRect.top;
-      let currentSpaceIdx = getClickedSpace(clickX, clickY);
-      let curBoard = PP64.boards.getCurrentBoard();
-      let curSpace = currentSpaceIdx === -1 ? null : curBoard.spaces[currentSpaceIdx];
-      _addSpace(data.action.type, clickX, clickY, curSpace, false);
-    }
-  }
   function preventDefault(event) { event.preventDefault(); }
-
-  function onEditorKeyDown(event) {
-    let currentSpace = PP64.app.getCurrentSpace();
-    if (!currentSpace)
-      return;
-
-    let board = PP64.boards.getCurrentBoard();
-
-    if (event.keyCode == "38") { // up arrow
-      currentSpace.y = Math.max(currentSpace.y - 1, 0);
-      PP64.app.changeCurrentSpace(currentSpace);
-    }
-    else if (event.keyCode == "40") { // down arrow
-      currentSpace.y = Math.min(currentSpace.y + 1, board.bg.height);
-      PP64.app.changeCurrentSpace(currentSpace);
-    }
-    else if (event.keyCode == "37") { // left arrow
-      currentSpace.x = Math.max(currentSpace.x - 1, 0);
-      PP64.app.changeCurrentSpace(currentSpace);
-    }
-    else if (event.keyCode == "39") { // right arrow
-      currentSpace.x = Math.min(currentSpace.x + 1, board.bg.width);
-      PP64.app.changeCurrentSpace(currentSpace);
-    }
-    else if (event.keyCode == "46") { // delete
-      if (currentSpace.subtype !== undefined) { // Delete the character off first.
-        delete currentSpace.subtype;
-        PP64.app.changeCurrentSpace(currentSpace);
-      }
-      else { // Otherwise remove the space.
-        let index = PP64.boards.getSpaceIndex(currentSpace, board);
-        PP64.boards.removeSpace(index, board);
-        PP64.app.changeCurrentSpace(null);
-      }
-    }
-    else {
-      return;
-    }
-
-    //PP64.renderer.renderSpaces();
-    //PP64.renderer.renderCurrentSpace();
-  }
-
   return {
     attachToCanvas: function(canvas) {
       canvas.addEventListener("contextmenu", onEditorRightClick, false);

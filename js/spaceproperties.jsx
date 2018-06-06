@@ -6,30 +6,34 @@ PP64.properties.SpaceProperties = (function() {
     state = { }
 
     onTypeChanged = (type, subtype) => {
+      const space = this.props.selectedSpaces[0];
       if (type !== undefined)
-        this.props.currentSpace.type = type;
+        space.type = type;
       if (subtype !== undefined)
-        this.props.currentSpace.subtype = subtype;
+        space.subtype = subtype;
       else
-        delete this.props.currentSpace.subtype;
+        delete space.subtype;
       PP64.renderer.render();
       this.forceUpdate();
     }
 
     onStarCheckChanged = checked => {
-      this.props.currentSpace.star = !!checked;
+      const space = this.props.selectedSpaces[0];
+      space.star = !!checked;
       PP64.renderer.render();
       this.forceUpdate();
     }
 
     onEventAdded = event => {
-      PP64.boards.addEventToSpace(this.props.currentSpace, event);
+      const space = this.props.selectedSpaces[0];
+      PP64.boards.addEventToSpace(space, event);
       PP64.renderer.render();
       this.forceUpdate();
     }
 
     onEventDeleted = event => {
-      PP64.boards.removeEventFromSpace(this.props.currentSpace, event);
+      const space = this.props.selectedSpaces[0];
+      PP64.boards.removeEventFromSpace(space, event);
       PP64.renderer.render();
       this.forceUpdate();
     }
@@ -42,16 +46,23 @@ PP64.properties.SpaceProperties = (function() {
     }
 
     render() {
-      var curSpace = this.props.currentSpace;
-      if (!curSpace) {
+      const spaces = this.props.selectedSpaces;
+      if (!spaces || !spaces.length) {
         return (
           <div className="propertiesEmptyText">No space selected.</div>
         );
       }
 
-      let gameVersion = this.props.gameVersion;
-      let spaceToggleTypes = _getSpaceTypeToggles(gameVersion);
-      let spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion);
+      if (spaces.length > 1) {
+        return (
+          <div className="propertiesEmptyText">Cannot edit properties while multiple spaces are selected.</div>
+        );
+      }
+
+      const curSpace = spaces[0];
+      const gameVersion = this.props.gameVersion;
+      const spaceToggleTypes = _getSpaceTypeToggles(gameVersion);
+      const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion);
 
       let gameVersionHeading;
       if (true) {

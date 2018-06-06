@@ -305,19 +305,26 @@ PP64.renderer = (function() {
     lineCtx.restore();
   }
 
-  function renderCurrentSpace(canvas, context, space) {
+  /** Adds a glow around the selected spaces in the editor. */
+  function renderSelectedSpaces(canvas, context, spaces) {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (space) {
-      context.save();
-      context.beginPath();
-      let radius = PP64.boards.getCurrentBoard().game === 3 ? 16 : 10;
-      context.arc(space.x, space.y, radius, 0, 2 * Math.PI);
-      context.shadowColor = "rgba(225, 225, 225, 1)";
-      context.shadowBlur = 2;
-      context.fillStyle = "rgba(225, 225, 225, 0.5)";
-      context.fill();
-      context.restore();
+    if (!spaces || !spaces.length)
+      return;
+
+    for (let i = 0; i < spaces.length; i++) {
+      const space = spaces[i];
+      if (space) {
+        context.save();
+        context.beginPath();
+        const radius = PP64.boards.getCurrentBoard().game === 3 ? 16 : 10;
+        context.arc(space.x, space.y, radius, 0, 2 * Math.PI);
+        context.shadowColor = "rgba(225, 225, 225, 1)";
+        context.shadowBlur = 2;
+        context.fillStyle = "rgba(225, 225, 225, 0.5)";
+        context.fill();
+        context.restore();
+      }
     }
   }
 
@@ -468,17 +475,17 @@ PP64.renderer = (function() {
     }
   };
 
-  let _boardCurrentSpace;
-  const BoardCurrentSpace = class BoardCurrentSpace extends React.Component {
+  let _boardSelectedSpaces;
+  const BoardSelectedSpaces = class BoardSelectedSpaces extends React.Component {
     state = {}
 
     componentDidMount() {
       this.renderContent();
-      _boardCurrentSpace = this;
+      _boardSelectedSpaces = this;
     }
 
     componentWillUnmount() {
-      _boardCurrentSpace = null;
+      _boardSelectedSpaces = null;
     }
 
     componentDidUpdate() {
@@ -487,21 +494,21 @@ PP64.renderer = (function() {
 
     renderContent() {
       // Update the current space indication
-      const currentSpaceCanvas = ReactDOM.findDOMNode(this);
-      const editor = currentSpaceCanvas.parentElement;
+      const selectedSpacesCanvas = ReactDOM.findDOMNode(this);
+      const editor = selectedSpacesCanvas.parentElement;
       const board = this.props.board;
       const transformStyle = getEditorContentTransform(board, editor);
-      currentSpaceCanvas.style.transform = transformStyle;
-      if (currentSpaceCanvas.width !== board.bg.width || currentSpaceCanvas.height !== board.bg.height) {
-        currentSpaceCanvas.width = board.bg.width;
-        currentSpaceCanvas.height = board.bg.height;
+      selectedSpacesCanvas.style.transform = transformStyle;
+      if (selectedSpacesCanvas.width !== board.bg.width || selectedSpacesCanvas.height !== board.bg.height) {
+        selectedSpacesCanvas.width = board.bg.width;
+        selectedSpacesCanvas.height = board.bg.height;
       }
-      renderCurrentSpace(currentSpaceCanvas, currentSpaceCanvas.getContext("2d"), this.props.currentSpace);
+      renderSelectedSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d"), this.props.selectedSpaces);
     }
 
     highlightSpaces(spaces) {
-      const currentSpaceCanvas = ReactDOM.findDOMNode(this);
-      highlightSpaces(currentSpaceCanvas, currentSpaceCanvas.getContext("2d"), spaces);
+      const selectedSpacesCanvas = ReactDOM.findDOMNode(this);
+      highlightSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d"), spaces);
     }
 
     render() {
@@ -620,7 +627,8 @@ PP64.renderer = (function() {
         <div className="editor">
           <BoardBG board={this.props.board} />
           <BoardLines board={this.props.board} />
-          <BoardCurrentSpace board={this.props.board} currentSpace={this.props.currentSpace} />
+          <BoardSelectedSpaces board={this.props.board}
+            selectedSpaces={this.props.selectedSpaces} />
           <BoardSpaces board={this.props.board} />
           <BoardOverlay board={this.props.board} />
         </div>
@@ -634,8 +642,8 @@ PP64.renderer = (function() {
         _boardBG.renderContent();
       if (_boardLines)
         _boardLines.renderContent();
-      if (_boardCurrentSpace)
-        _boardCurrentSpace.renderContent();
+      if (_boardSelectedSpaces)
+        _boardSelectedSpaces.renderContent();
       if (_boardSpaces)
         _boardSpaces.renderContent();
     },
@@ -647,9 +655,9 @@ PP64.renderer = (function() {
       if (_boardLines)
         _boardLines.renderContent();
     },
-    renderCurrentSpace: function() {
-      if (_boardCurrentSpace)
-        _boardCurrentSpace.renderContent();
+    renderSelectedSpaces: function() {
+      if (_boardSelectedSpaces)
+        _boardSelectedSpaces.renderContent();
     },
     renderSpaces: function() {
       if (_boardSpaces)
@@ -672,8 +680,8 @@ PP64.renderer = (function() {
     },
     drawAssociation,
     highlightSpaces: function(spaces) {
-      if (_boardCurrentSpace)
-        _boardCurrentSpace.highlightSpaces(spaces);
+      if (_boardSelectedSpaces)
+        _boardSelectedSpaces.highlightSpaces(spaces);
     },
 
     playAnimation: _startAnimation,
