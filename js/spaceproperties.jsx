@@ -6,13 +6,15 @@ PP64.properties.SpaceProperties = (function() {
     state = { }
 
     onTypeChanged = (type, subtype) => {
-      const space = this.props.selectedSpaces[0];
-      if (type !== undefined)
-        space.type = type;
-      if (subtype !== undefined)
-        space.subtype = subtype;
-      else
-        delete space.subtype;
+      const selectedSpaces = this.props.selectedSpaces;
+      for (const space of selectedSpaces) {
+        if (type !== undefined)
+          space.type = type;
+        if (subtype !== undefined)
+          space.subtype = subtype;
+        else
+          delete space.subtype;
+      }
       PP64.renderer.render();
       this.forceUpdate();
     }
@@ -53,11 +55,7 @@ PP64.properties.SpaceProperties = (function() {
         );
       }
 
-      if (spaces.length > 1) {
-        return (
-          <div className="propertiesEmptyText">Cannot edit properties while multiple spaces are selected.</div>
-        );
-      }
+      const multipleSelections = spaces.length > 1;
 
       const curSpace = spaces[0];
       const gameVersion = this.props.gameVersion;
@@ -71,22 +69,42 @@ PP64.properties.SpaceProperties = (function() {
         </span>;
       }
 
+      let currentType = curSpace.type;
+      let currentSubtype = curSpace.subtype;
+      if (multipleSelections) {
+        // Only show a type as selected if all spaces are the same.
+        for (const space of spaces) {
+          if (space.type !== currentType)
+            currentType = undefined;
+          if (space.subtype !== currentSubtype)
+            currentSubtype = undefined;
+        }
+      }
+
       return (
         <div className="properties">
           <div className="propertiesPadded">
-            <SpaceCoords space={curSpace} />
-            <SpaceTypeToggle toggleTypes={spaceToggleTypes} type={curSpace.type}
-              subtype={curSpace.subtype} typeChanged={this.onTypeChanged} />
-            <SpaceTypeToggle toggleTypes={spaceToggleSubTypes} type={curSpace.type}
-              subtype={curSpace.subtype} typeChanged={this.onTypeChanged} />
-            <SpaceStarCheckbox checked={curSpace.star} onStarCheckChanged={this.onStarCheckChanged} />
+            {!multipleSelections ? <SpaceCoords space={curSpace} /> : null }
+            <SpaceTypeToggle toggleTypes={spaceToggleTypes}
+              type={currentType}
+              subtype={currentSubtype}
+              typeChanged={this.onTypeChanged} />
+            <SpaceTypeToggle toggleTypes={spaceToggleSubTypes}
+              type={currentType}
+              subtype={currentSubtype}
+              typeChanged={this.onTypeChanged} />
+            {!multipleSelections ?
+              <SpaceStarCheckbox checked={curSpace.star} onStarCheckChanged={this.onStarCheckChanged} />
+              : null }
           </div>
-          {gameVersionHeading}
+          {!multipleSelections ? gameVersionHeading : null }
+          {!multipleSelections ? (
           <div className="propertiesPadded">
             <SpaceEventsList events={curSpace.events}
               onEventAdded={this.onEventAdded} onEventDeleted={this.onEventDeleted}
               onEventActivationTypeToggle={this.onEventActivationTypeToggle} />
           </div>
+          ) : null }
         </div>
       );
     }
@@ -269,17 +287,16 @@ PP64.properties.SpaceProperties = (function() {
     }
 
     render() {
-      let type = this.props.type;
+      const type = this.props.type;
       if (type === $spaceType.START && !PP64.settings.get($setting.uiAdvanced))
         return null; // Can't switch start space type
-      let subtype = this.props.subtype;
-      let onTypeChanged = this.onTypeChanged;
-      let toggleTypes = this.props.toggleTypes;
-      let toggles = toggleTypes.map(item => {
-        let key = item.type + "-" + item.subtype;
-        let selected = type === item.type || (subtype !== undefined && subtype === item.subtype);
-        //if (type !== $spaceType.OTHER && item.subtype !== undefined)
-        //  return null;
+      const subtype = this.props.subtype;
+      const onTypeChanged = this.onTypeChanged;
+      const toggleTypes = this.props.toggleTypes;
+      const toggles = toggleTypes.map(item => {
+        const key = item.type + "-" + item.subtype;
+        const selected = (item.type !== undefined && type === item.type)
+          || (item.subtype !== undefined && subtype !== undefined && subtype === item.subtype);
         return (
           <SpaceTypeToggleBtn key={key} type={item.type} subtype={item.subtype}
             icon={item.icon} title={item.name} selected={selected} typeChanged={onTypeChanged} />
