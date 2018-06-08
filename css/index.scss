@@ -24,11 +24,11 @@ body {
 }
 
 .selectable {
-  -webkit-user-select: auto;
-  -moz-user-select: auto;
-  -ms-user-select: auto;
-  -o-user-select: auto;
-  user-select: auto;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  -o-user-select: text;
+  user-select: text;
 }
 
 .body {
@@ -227,4 +227,18 @@ canvas:focus {
   animation-duration: 1s;
   animation-delay: 2s;
   animation-iteration-count: infinite;
+}
+
+.errorDiv {
+  color: white;
+  padding: 1em;
+  max-width: 100%;
+
+  a {
+    color: white;
+  }
+
+  pre {
+    white-space: pre-wrap;
+  }
 }

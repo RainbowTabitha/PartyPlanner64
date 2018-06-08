@@ -19,15 +19,17 @@ PP64.app = new class app {
       render() {
         if (this.state.error) {
           return (
-            <div>
+            <div className="errorDiv selectable">
               <h2>Oh-no! Something went wrong.</h2>
-              <p>Please
-                <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">file an issue</a>
-                with the following details, and refresh the page.
+              <p>Please &nbsp;
+                <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">
+                  file an issue
+                </a>
+                &nbsp; with the following details, and refresh the page.
               </p>
-              <p className="red">{this.state.error.toString()}</p>
+              <pre className="red">{this.state.error.toString()}</pre>
               <div>Component Stack Error Details:</div>
-              <p className="red">{this.state.errorInfo.componentStack}</p>
+              <pre className="red">{this.state.errorInfo.componentStack}></pre>
             </div>
           );
         }

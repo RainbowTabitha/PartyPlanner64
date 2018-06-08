@@ -317,17 +317,23 @@ PP64.renderer = (function() {
       if (space) {
         context.save();
         context.beginPath();
-        const radius = PP64.boards.getCurrentBoard().game === 3 ? 16 : 10;
+        const radius = PP64.boards.getCurrentBoard().game === 3 ? 18 : 12;
         context.arc(space.x, space.y, radius, 0, 2 * Math.PI);
-        context.shadowColor = "rgba(225, 225, 225, 1)";
-        context.shadowBlur = 2;
-        context.fillStyle = "rgba(225, 225, 225, 0.5)";
+        context.setLineDash([2, 2]);
+        context.lineWidth = 2;
+        context.fillStyle = "rgba(47, 70, 95, 0.35)";
+        context.strokeStyle = "rgba(47, 70, 95, 1)";
+        // context.shadowColor = "rgba(225, 225, 225, 1)";
+        // context.shadowBlur = 2;
+        // context.fillStyle = "rgba(225, 225, 225, 0.5)";
         context.fill();
+        context.stroke();
         context.restore();
       }
     }
   }
 
+  /** Does a strong red highlight around some spaces. */
   function highlightSpaces(canvas, context, spaces) {
     const currentBoard = PP64.boards.getCurrentBoard();
     let radius = currentBoard.game === 3 ? 18 : 12;
