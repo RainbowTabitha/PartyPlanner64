@@ -23,6 +23,7 @@ PP64.adapters = (function() {
         let background = PP64.fs.hvqfs.readBackground(bgDir);
         let newBoard = {
           "game": this.gameVersion,
+          "type": boardInfo.type || PP64.types.BoardType.NORMAL,
           "bg": background,
           "otherbg": {},
         };

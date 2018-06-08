@@ -5,6 +5,7 @@ PP64.boards = (function() {
     let board = {
       name: "Untitled",
       description: "Use your Star Power to finish\nthis board.",
+      type: "NORMAL",
       difficulty: 3,
       spaces: [],
       links: {},

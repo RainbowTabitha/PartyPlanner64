@@ -180,6 +180,24 @@ PP64.adapters.boardinfo.MP3 = (function() {
     splashLogoTextImg: 33,
   };
 
+  // Gate Guy  - (U) ROM
+  const MP3U_GATEGUY = PP64.adapters.boardinfo.create("MP3U_GATEGUY");
+  MP3U_GATEGUY.name = "Gate Guy";
+  MP3U_GATEGUY.type = "DUEL";
+  MP3U_GATEGUY.boardDefFile = 577;
+  MP3U_GATEGUY.bgDir = 24;
+  // MP3U_GATEGUY.str = {
+  //   boardSelect: [
+  //     [21, 35],
+  //     [26, 22],
+  //   ],
+  // };
+  MP3U_GATEGUY.img = {
+    boardSelectImg: 81,
+    splashLogoImg: 34,
+    splashLogoTextImg: 40,
+  };
+
   return {
     getBoardInfos: function(gameID) {
       switch(gameID) {
@@ -191,6 +209,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
             MP3_WOODY,
             MP3_CAVERN,
             MP3_WALUIGI,
+
+            MP3U_GATEGUY,
           ];
       }
     }

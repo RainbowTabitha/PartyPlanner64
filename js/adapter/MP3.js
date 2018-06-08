@@ -102,31 +102,54 @@ PP64.adapters.MP3 = (function() {
     }
 
     onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
-      let _spaceTypes = PP64.types.Space;
-      let typeMap = {
-        0: _spaceTypes.OTHER, // Sometimes START
-        3: _spaceTypes.OTHER,
-        5: _spaceTypes.CHANCE,
-        6: _spaceTypes.ITEM,
-        7: _spaceTypes.BANK,
-        8: _spaceTypes.OTHER,
-        9: _spaceTypes.BATTLE,
-        12: _spaceTypes.BOWSER,
-        14: _spaceTypes.STAR,
-        15: _spaceTypes.GAMEGUY,
-        16: _spaceTypes.OTHER, // Toad
-        17: _spaceTypes.OTHER, // Baby Bowser the COHORT
-      };
+      let typeMap;
+      const isNormalBoard = !board.type || board.type === PP64.types.BoardType.NORMAL;
+      if (isNormalBoard) {
+        typeMap = {
+          0: $spaceType.OTHER, // Sometimes START
+          3: $spaceType.OTHER,
+          5: $spaceType.CHANCE,
+          6: $spaceType.ITEM,
+          7: $spaceType.BANK,
+          8: $spaceType.OTHER,
+          9: $spaceType.BATTLE,
+          12: $spaceType.BOWSER,
+          14: $spaceType.STAR,
+          15: $spaceType.GAMEGUY,
+          16: $spaceType.OTHER, // Toad
+          17: $spaceType.OTHER, // Baby Bowser the COHORT
+        };
+      }
+      else if (board.type === PP64.types.BoardType.DUEL) {
+        typeMap = {
+          1: $spaceType.OTHER,
+          2: $spaceType.HAPPENING,
+          3: $spaceType.GAMEGUY,
+          4: $spaceType.OTHER, // seen on spaces that have events
+          5: $spaceType.CHANCE, // DUEL_REVERSE
+          6: $spaceType.BLUE, // DUEL_BASIC
+          7: $spaceType.START, // DUEL_START_RED
+          8: $spaceType.MINIGAME, // DUEL_MINIGAME
+          9: $spaceType.START, // DUEL_START_BLUE
+          10: $spaceType.BATTLE, // DUEL_POWERUP
+        };
+      }
+      else {
+        throw new Error(`Unrecongized board type: ${board.type}`);
+      }
+
       board.spaces.forEach((space) => {
         let newType = typeMap[space.type];
         if (newType !== undefined)
           space.type = newType;
       });
 
-      if (chains.length) {
-        let startSpaceIndex = chains[0][0];
-        if (!isNaN(startSpaceIndex))
-          board.spaces[startSpaceIndex].type = _spaceTypes.START;
+      if (isNormalBoard) {
+        if (chains.length) {
+          let startSpaceIndex = chains[0][0];
+          if (!isNaN(startSpaceIndex))
+            board.spaces[startSpaceIndex].type = $spaceType.START;
+        }
       }
     }
 
@@ -165,6 +188,7 @@ PP64.adapters.MP3 = (function() {
         case 3: // 
         case 4: // 
         case 5: // 
+        case 6: // 
           newX = (width / 2) + (x * (1 + (y * 0.05 / (height / 2))))
                - 130 * (x / (width / 2));
           newY = (height / 2) + ((y + 100) * 0.4);
@@ -174,7 +198,6 @@ PP64.adapters.MP3 = (function() {
             newY += Math.abs(y) / 4.8;
           newZ = 0;
           break;
-        case 6: // 
         case 7: // 
         case 8: // 
         case 9: // 
@@ -584,7 +607,7 @@ PP64.adapters.MP3 = (function() {
     }
 
     onParseBoardSelectImg(board, boardInfo) {
-      if (!boardInfo.img.boardSelectImg)
+      if (!boardInfo.img || !boardInfo.img.boardSelectImg)
         return;
 
       board.otherbg.boardselect = this._readImgFromMainFS(20, boardInfo.img.boardSelectImg, 0);
@@ -592,7 +615,7 @@ PP64.adapters.MP3 = (function() {
 
     onWriteBoardSelectImg(board, boardInfo) {
       return new Promise((resolve, reject) => {
-        let boardSelectImg = boardInfo.img.boardSelectImg;
+        let boardSelectImg = boardInfo.img && boardInfo.img.boardSelectImg;
         if (!boardSelectImg) {
           resolve();
           return;
@@ -627,7 +650,7 @@ PP64.adapters.MP3 = (function() {
     }
 
     onParseBoardLogoImg(board, boardInfo) {
-      if (!boardInfo.img.splashLogoImg)
+      if (!boardInfo.img || !boardInfo.img.splashLogoImg)
         return;
 
       board.otherbg.boardlogo = this._readImgFromMainFS(19, boardInfo.img.splashLogoImg, 0);
@@ -636,7 +659,7 @@ PP64.adapters.MP3 = (function() {
 
     onWriteBoardLogoImg(board, boardInfo) {
       return new Promise((resolve, reject) => {
-        let splashLogoImg = boardInfo.img.splashLogoImg;
+        let splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
         if (!splashLogoImg) {
           resolve();
           return;
@@ -687,7 +710,7 @@ PP64.adapters.MP3 = (function() {
 
     onWriteBoardLogoTextImg(board, boardInfo) {
       return new Promise((resolve, reject) => {
-        let splashLogoTextImg = boardInfo.img.splashLogoTextImg;
+        let splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
         if (!splashLogoTextImg) {
           resolve();
           return;
@@ -725,7 +748,7 @@ PP64.adapters.MP3 = (function() {
     // Create generic skeleton key gate.
     _onWriteGateImg(board, boardInfo) {
       return new Promise(function(resolve, reject) {
-        let gateIndex = boardInfo.img.gateImg;
+        let gateIndex = boardInfo.img && boardInfo.img.gateImg;
         if (!gateIndex) {
           resolve();
           return;

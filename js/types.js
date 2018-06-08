@@ -52,6 +52,11 @@ PP64.types = {
     GATE: 8,
   },
 
+  BoardType: {
+    NORMAL: "NORMAL",
+    DUEL: "DUEL",
+  },
+
   Action: {
     MOVE: 0,
     LINE: 1,
