@@ -1,5 +1,6 @@
 PP64.interaction = (function() {
   let selectedSpaceIndices = {};
+  let spaceWasMouseDownedOn = false;
   let startX = -1;
   let startY = -1;
   let lastX = -1;
@@ -192,6 +193,8 @@ PP64.interaction = (function() {
 
       case $actType.MOVE:
       default:
+        spaceWasMouseDownedOn = spaceWasClicked;
+
         if (PP64.renderer.rightClickOpen()) {
           PP64.renderer.updateRightClickMenu(selectedSpaces[0]);
         }
@@ -235,12 +238,6 @@ PP64.interaction = (function() {
       return;
 
     const curAction = PP64.app.getCurrentAction();
-    if (!_hasAnySelectedSpace() && curAction !== $actType.ERASE) {
-      lastX = clickX;
-      lastY = clickY;
-      return;
-    }
-
     const selectedSpaces = _getSelectedSpaces();
     const curBoard = PP64.boards.getCurrentBoard();
     const clickedSpaceIndex = _getClickedSpace(clickX, clickY);
@@ -318,23 +315,30 @@ PP64.interaction = (function() {
       case $actType.ADD_BANKCOIN_SUBTYPE:
       case $actType.ADD_ITEMSHOP_SUBTYPE:
       default:
-        // Move the space(s)
-        let deltaX = clickX - lastX;
-        let deltaY = clickY - lastY;
+        const doingSelectionBox = !spaceWasMouseDownedOn && curAction === $actType.MOVE;
+        if (!doingSelectionBox && selectedSpaces.length) {
+          // Move the space(s)
+          const deltaX = clickX - lastX;
+          const deltaY = clickY - lastY;
 
-        selectedSpaces.forEach(space => {
-          const newX = space.x + deltaX;
-          space.x = Math.max(0, Math.min(newX, curBoard.bg.width));
+          selectedSpaces.forEach(space => {
+            const newX = space.x + deltaX;
+            space.x = Math.max(0, Math.min(newX, curBoard.bg.width));
 
-          const newY = space.y + deltaY;
-          space.y = Math.max(0, Math.min(newY, curBoard.bg.height));
-        });
+            const newY = space.y + deltaY;
+            space.y = Math.max(0, Math.min(newY, curBoard.bg.height));
+          });
 
-        renderConnectionsOnTimeout();
-        renderSpacesOnTimeout();
+          renderConnectionsOnTimeout();
+          renderSpacesOnTimeout();
 
-        if (PP64.renderer.rightClickOpen()) {
-          PP64.renderer.updateRightClickMenu(selectedSpaces[0]);
+          if (PP64.renderer.rightClickOpen()) {
+            PP64.renderer.updateRightClickMenu(selectedSpaces[0]);
+          }
+        }
+        if (doingSelectionBox) {
+          // Draw selection box, update selection.
+          _updateSelectionAndBox(clickX, clickY);
         }
         break;
     }
@@ -363,11 +367,16 @@ PP64.interaction = (function() {
     if (PP64.boards.currentBoardIsROM())
       return;
 
+    const curAction = PP64.app.getCurrentAction();
+    if (!spaceWasMouseDownedOn && curAction === $actType.MOVE) {
+      // Clear the selection we were drawing.
+      PP64.renderer.renderSpaces();
+    }
+
     if (!_hasAnySelectedSpace())
       return;
 
     const selectedSpaces = _getSelectedSpaces();
-    const curAction = PP64.app.getCurrentAction();
     if (curAction === $actType.LINE) {
       let endSpaceIdx = _getClickedSpace(lastX, lastY);
       if (endSpaceIdx !== -1 && selectedSpaces.indexOf(endSpaceIdx) === -1) {
@@ -559,6 +568,22 @@ PP64.interaction = (function() {
     }
   }
 
+  function onEditorMouseOut(event) {
+    if (event.button !== 0)
+      return;
+    if (PP64.boards.currentBoardIsROM())
+      return;
+
+    const curAction = PP64.app.getCurrentAction();
+    const doingSelectionBox = !spaceWasMouseDownedOn && curAction === $actType.MOVE;
+    if (doingSelectionBox) {
+      _clearSelectionBox();
+
+      startX = lastX = -1;
+      startY = lastY = -1;
+    }
+  }
+
   let _renderConnectionsTimer;
   function renderConnectionsOnTimeout() {
     if (!_renderConnectionsTimer) {
@@ -612,12 +637,13 @@ PP64.interaction = (function() {
     return !!selectedSpaceIndices[spaceIndex];
   }
 
-  function _addSelectedSpace(spaceIndex) {
+  function _addSelectedSpace(spaceIndex, skipUpdate) {
     if (!selectedSpaceIndices) {
       selectedSpaceIndices = {};
     }
     selectedSpaceIndices[spaceIndex] = true;
-    _changeSelectedSpaces();
+    if (!skipUpdate)
+      _changeSelectedSpaces();
   }
 
   function _setSelectedSpace(spaceIndex) {
@@ -627,9 +653,14 @@ PP64.interaction = (function() {
     _changeSelectedSpaces();
   }
 
+  function _getSpaceRadius() {
+    const curBoard = PP64.boards.getCurrentBoard();
+    return curBoard.game === 3 ? 14 : 8;
+  }
+
   function _getClickedSpace(x, y) {
     const curBoard = PP64.boards.getCurrentBoard();
-    const spaceRadius = curBoard.game === 3 ? 14 : 8;
+    const spaceRadius = _getSpaceRadius();
 
     // Search for the last space that could be clicked. (FIXME: consider circular shape.)
     let spaceIdx = -1;
@@ -805,6 +836,28 @@ PP64.interaction = (function() {
     return spaceSubType;
   }
 
+  function _updateSelectionAndBox(curX, curY) {
+    if (startX === -1 || startY === -1)
+      return;
+
+    _clearSelectedSpaces();
+    const curBoard = PP64.boards.getCurrentBoard();
+    const spaces = curBoard.spaces;
+    for (let i = 0; i < spaces.length; i++) {
+      const space = spaces[i];
+      if ($$number.pointFallsWithin(space.x, space.y, startX, startY, curX, curY)) {
+        _addSelectedSpace(i, true);
+      }
+    }
+    _changeSelectedSpaces();
+
+    PP64.renderer.drawSelectionBox(startX, startY, curX, curY);
+  }
+
+  function _clearSelectionBox() {
+    PP64.renderer.renderSpaces(); // It's on the space canvas, so just re-render.
+  }
+
   function preventDefault(event) { event.preventDefault(); }
   return {
     attachToCanvas: function(canvas) {
@@ -813,6 +866,7 @@ PP64.interaction = (function() {
       canvas.addEventListener("mousedown", onEditorMouseDown, false);
       canvas.addEventListener("mousemove", onEditorMouseMove, false);
       canvas.addEventListener("mouseup", onEditorMouseUp, false);
+      canvas.addEventListener("mouseout", onEditorMouseOut, false);
       canvas.addEventListener("touchstart", onEditorTouchStart, false);
       canvas.addEventListener("touchmove", onEditorTouchMove, false);
       canvas.addEventListener("touchend", onEditorTouchEnd, false);
@@ -826,6 +880,7 @@ PP64.interaction = (function() {
       canvas.removeEventListener("mousedown", onEditorMouseDown);
       canvas.removeEventListener("mousemove", onEditorMouseMove);
       canvas.removeEventListener("mouseup", onEditorMouseUp);
+      canvas.removeEventListener("mouseout", onEditorMouseOut);
       canvas.removeEventListener("touchstart", onEditorTouchStart);
       canvas.removeEventListener("touchmove", onEditorTouchMove);
       canvas.removeEventListener("touchend", onEditorTouchEnd);

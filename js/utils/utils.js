@@ -332,6 +332,16 @@ var $$number = PP64.utils.number = {
     return Math.abs(((y2 - y1)*tx) - ((x2 - x1)*ty) + (x2 * y1) - (y2 * x1)) / Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
   },
 
+  /**
+   * Tests if (x,y) falls within the square formed from (x_s,y_s) - (x_f,y_f)
+   * Being exactly at (x_s,y_s) or (x_f,y_f) is considered in.
+   */
+  pointFallsWithin: function(x, y, xs, ys, xf, yf) {
+    const [minX, maxX] = [Math.min(xs, xf), Math.max(xs, xf)];
+    const [minY, maxY] = [Math.min(ys, yf), Math.max(ys, yf)];
+    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+  },
+
   makeDivisibleBy: function(num, by) {
     return by * Math.ceil(num / by);
   },

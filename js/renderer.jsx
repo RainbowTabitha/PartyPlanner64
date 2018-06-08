@@ -523,7 +523,7 @@ PP64.renderer = (function() {
     state = {}
 
     componentDidMount() {
-      let canvas = ReactDOM.findDOMNode(this);
+      const canvas = ReactDOM.findDOMNode(this);
       PP64.interaction.attachToCanvas(canvas);
 
       this.renderContent();
@@ -531,7 +531,7 @@ PP64.renderer = (function() {
     }
 
     componentWillUnmount() {
-      let canvas = ReactDOM.findDOMNode(this);
+      const canvas = ReactDOM.findDOMNode(this);
       PP64.interaction.detachFromCanvas(canvas);
       _boardSpaces = null;
     }
@@ -542,10 +542,10 @@ PP64.renderer = (function() {
 
     renderContent() {
       // Update spaces
-      let spaceCanvas = ReactDOM.findDOMNode(this);
-      let editor = spaceCanvas.parentElement;
-      let board = this.props.board;
-      let transformStyle = getEditorContentTransform(board, editor);
+      const spaceCanvas = ReactDOM.findDOMNode(this);
+      const editor = spaceCanvas.parentElement;
+      const board = this.props.board;
+      const transformStyle = getEditorContentTransform(board, editor);
       spaceCanvas.style.transform = transformStyle;
       if (spaceCanvas.width !== board.bg.width || spaceCanvas.height !== board.bg.height) {
         spaceCanvas.width = board.bg.width;
@@ -559,6 +559,19 @@ PP64.renderer = (function() {
         <canvas className="editor_space_canvas" tabIndex="-1"
           onDragOver={this.preventDefault} onDrop={this.onDrop}></canvas>
       );
+    }
+
+    /** Draws the box as the user drags to select spaces. */
+    drawSelectionBox = (xs, ys, xf, yf) => {
+      const spaceCanvas = ReactDOM.findDOMNode(this);
+      const ctx = spaceCanvas.getContext("2d");
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = "rgba(47, 70, 95, 0.5)";
+      ctx.strokeStyle = "rgba(47, 70, 95, 1)";
+      ctx.fillRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
+      ctx.strokeRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
+      ctx.restore();
     }
   };
 
@@ -682,6 +695,11 @@ PP64.renderer = (function() {
     highlightSpaces: function(spaces) {
       if (_boardSelectedSpaces)
         _boardSelectedSpaces.highlightSpaces(spaces);
+    },
+
+    drawSelectionBox: function(xs, ys, xf, yf) {
+      if (_boardSpaces)
+      _boardSpaces.drawSelectionBox(xs, ys, xf, yf);
     },
 
     playAnimation: _startAnimation,
