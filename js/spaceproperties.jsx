@@ -94,7 +94,7 @@ PP64.properties.SpaceProperties = (function() {
               subtype={currentSubtype}
               typeChanged={this.onTypeChanged} />
             {!multipleSelections ?
-              <SpaceStarCheckbox checked={curSpace.star} onStarCheckChanged={this.onStarCheckChanged} />
+              <SpaceStarCheckbox checked={curSpace.star || false} onStarCheckChanged={this.onStarCheckChanged} />
               : null }
           </div>
           {!multipleSelections ? gameVersionHeading : null }
@@ -335,30 +335,15 @@ PP64.properties.SpaceProperties = (function() {
   };
 
   const SpaceStarCheckbox = class SpaceStarCheckbox extends React.Component {
-    constructor(props) {
-      super(props);
-
-      this.state = {
-        checked: props.checked
-      };
-    }
-
-    componentWillReceiveProps = (nextProps) => {
-      this.setState({
-        checked: nextProps.checked
-      });
-    }
-
     render() {
       return (
         <div className="starCheckbox">
-          <label><input type="checkbox" checked={this.state.checked} value={this.state.checked} onChange={this.onChange} /> Hosts star</label>
+          <label><input type="checkbox" checked={this.props.checked} value={this.props.checked} onChange={this.onChange} /> Hosts star</label>
         </div>
       );
     }
 
     onChange = event => {
-      this.setState({ checked: event.target.checked });
       this.props.onStarCheckChanged(event.target.checked);
     }
   };
