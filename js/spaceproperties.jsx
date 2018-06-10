@@ -20,8 +20,10 @@ PP64.properties.SpaceProperties = (function() {
     }
 
     onStarCheckChanged = checked => {
-      const space = this.props.selectedSpaces[0];
-      space.star = !!checked;
+      const selectedSpaces = this.props.selectedSpaces;
+      for (const space of selectedSpaces) {
+        space.star = !!checked;
+      }
       PP64.renderer.render();
       this.forceUpdate();
     }
@@ -71,6 +73,8 @@ PP64.properties.SpaceProperties = (function() {
 
       let currentType = curSpace.type;
       let currentSubtype = curSpace.subtype;
+      let hostsStarChecked = curSpace.star || false;
+      let hostsStarIndeterminate = false;
       if (multipleSelections) {
         // Only show a type as selected if all spaces are the same.
         for (const space of spaces) {
@@ -78,6 +82,8 @@ PP64.properties.SpaceProperties = (function() {
             currentType = undefined;
           if (space.subtype !== currentSubtype)
             currentSubtype = undefined;
+          if (space.star !== hostsStarChecked)
+            hostsStarIndeterminate = true;
         }
       }
 
@@ -93,9 +99,9 @@ PP64.properties.SpaceProperties = (function() {
               type={currentType}
               subtype={currentSubtype}
               typeChanged={this.onTypeChanged} />
-            {!multipleSelections ?
-              <SpaceStarCheckbox checked={curSpace.star || false} onStarCheckChanged={this.onStarCheckChanged} />
-              : null }
+            <SpaceStarCheckbox checked={hostsStarChecked}
+              indeterminate={hostsStarIndeterminate}
+              onStarCheckChanged={this.onStarCheckChanged} />
           </div>
           {!multipleSelections ? gameVersionHeading : null }
           {!multipleSelections ? (
@@ -338,13 +344,27 @@ PP64.properties.SpaceProperties = (function() {
     render() {
       return (
         <div className="starCheckbox">
-          <label><input type="checkbox" checked={this.props.checked} value={this.props.checked} onChange={this.onChange} /> Hosts star</label>
+          <label><input type="checkbox"
+            ref={el => this.checkboxEl = el}
+            checked={this.props.checked}
+            value={this.props.checked}
+            onChange={this.onChange} /> Hosts star</label>
         </div>
       );
     }
 
     onChange = event => {
       this.props.onStarCheckChanged(event.target.checked);
+    }
+
+    componentDidMount() {
+      this.checkboxEl.indeterminate = this.props.indeterminate;
+    }
+
+    componentDidUpdate(prevProps) {
+      if (prevProps.indeterminate !== this.props.indeterminate) {
+        this.checkboxEl.indeterminate = this.props.indeterminate;
+      }
     }
   };
 

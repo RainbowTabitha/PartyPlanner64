@@ -35,6 +35,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     { upper: 0x0024248C, lower: 0x00242494 }, // 0x800F71CC, 0x800F71D4
     { upper: 0x002424A8, lower: 0x002424B0 }, // 0x800F71E8, 0x800F71F0
     { upper: 0x002424C4, lower: 0x002424CC }, // 0x800F7204, 0x800F720C
+    // tables: 0x800FA0CC
   ];
   MP1_USA_DK.koopaSpaceInst = 0x002425F4; // 0x800F7330
   MP1_USA_DK.bowserSpaceInst = 0x00242558;
