@@ -86,6 +86,11 @@ PP64.interaction = (function() {
       case $actType.ADD_BANK_SUBTYPE:
       case $actType.ADD_BANKCOIN_SUBTYPE:
       case $actType.ADD_ITEMSHOP_SUBTYPE:
+      case $actType.ADD_DUEL_BASIC:
+      case $actType.ADD_DUEL_REVERSE:
+      case $actType.ADD_DUEL_POWERUP:
+      case $actType.ADD_DUEL_START_BLUE:
+      case $actType.ADD_DUEL_START_RED:
         if (spaceWasClicked) {
           if (ctrlKey) {
             _addSelectedSpace(clickedSpaceIndex);
@@ -186,6 +191,11 @@ PP64.interaction = (function() {
       case $actType.ADD_BANK_SUBTYPE:
       case $actType.ADD_BANKCOIN_SUBTYPE:
       case $actType.ADD_ITEMSHOP_SUBTYPE:
+      case $actType.ADD_DUEL_BASIC:
+      case $actType.ADD_DUEL_REVERSE:
+      case $actType.ADD_DUEL_POWERUP:
+      case $actType.ADD_DUEL_START_BLUE:
+      case $actType.ADD_DUEL_START_RED:
         if (_addSpace(curAction, clickX, clickY, clickedSpace, false, ctrlKey)) {
           _addSelectedSpace(clickedSpaceIndex !== -1 ? clickedSpaceIndex : curBoard.spaces.length - 1);
         }
@@ -314,6 +324,11 @@ PP64.interaction = (function() {
       case $actType.ADD_BANK_SUBTYPE:
       case $actType.ADD_BANKCOIN_SUBTYPE:
       case $actType.ADD_ITEMSHOP_SUBTYPE:
+      case $actType.ADD_DUEL_BASIC:
+      case $actType.ADD_DUEL_REVERSE:
+      case $actType.ADD_DUEL_POWERUP:
+      case $actType.ADD_DUEL_START_BLUE:
+      case $actType.ADD_DUEL_START_RED:
       default:
         const doingSelectionBox = !spaceWasMouseDownedOn && curAction === $actType.MOVE;
         if (!doingSelectionBox && selectedSpaces.length) {
@@ -440,6 +455,11 @@ PP64.interaction = (function() {
       case $actType.ADD_BANK_SUBTYPE:
       case $actType.ADD_BANKCOIN_SUBTYPE:
       case $actType.ADD_ITEMSHOP_SUBTYPE:
+      case $actType.ADD_DUEL_BASIC:
+      case $actType.ADD_DUEL_REVERSE:
+      case $actType.ADD_DUEL_POWERUP:
+      case $actType.ADD_DUEL_START_BLUE:
+      case $actType.ADD_DUEL_START_RED:
         if (!movedAtAll && !ctrlKey) {
           if (!clickedSpace) {
             _clearSelectedSpaces();
@@ -807,6 +827,11 @@ PP64.interaction = (function() {
     else if (action === $actType.ADD_BANK) spaceType = $spaceType.BANK;
     else if (action === $actType.ADD_ARROW) spaceType = $spaceType.ARROW;
     else if (action === $actType.ADD_GAMEGUY) spaceType = $spaceType.GAMEGUY;
+    else if (action === $actType.ADD_DUEL_BASIC) spaceType = $spaceType.DUEL_BASIC;
+    else if (action === $actType.ADD_DUEL_REVERSE) spaceType = $spaceType.DUEL_REVERSE;
+    else if (action === $actType.ADD_DUEL_POWERUP) spaceType = $spaceType.DUEL_POWERUP;
+    else if (action === $actType.ADD_DUEL_START_BLUE) spaceType = $spaceType.DUEL_START_BLUE;
+    else if (action === $actType.ADD_DUEL_START_RED) spaceType = $spaceType.DUEL_START_RED;
     return spaceType;
   }
 

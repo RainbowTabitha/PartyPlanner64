@@ -88,6 +88,12 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
+    static drawMiniGameDuel3(ctx, x, y) {
+      ctx.save();
+      ctx.drawImage(PP64.images.get("spaceMiniGameDuel3"), x - 14, y - 14);
+      ctx.restore();
+    }
+
     static drawHappening(ctx, x, y) {
       ctx.save();
       ctx.beginPath();
@@ -108,6 +114,12 @@ PP64.spaces = (function() {
     static drawHappening3(ctx, x, y) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceHappening3"), x - 14, y - 14);
+      ctx.restore();
+    }
+
+    static drawHappeningDuel3(ctx, x, y) {
+      ctx.save();
+      ctx.drawImage(PP64.images.get("spaceHappeningDuel3"), x - 14, y - 14);
       ctx.restore();
     }
 
@@ -177,19 +189,27 @@ PP64.spaces = (function() {
     }
 
     static drawStart(ctx, x, y) {
-      PP64.spaces._drawStart(ctx, x, y, 8);
+      PP64.spaces._drawStart(ctx, x, y, 8, "black");
     }
 
     static drawStart3(ctx, x, y) {
-      PP64.spaces._drawStart(ctx, x, y, 12);
+      PP64.spaces._drawStart(ctx, x, y, 12, "black");
     }
 
-    static _drawStart(ctx, x, y, radius) {
+    static drawStartDuelRed(ctx, x, y) {
+      PP64.spaces._drawStart(ctx, x, y, 12, "red");
+    }
+
+    static drawStartDuelBlue(ctx, x, y) {
+      PP64.spaces._drawStart(ctx, x, y, 12, "blue");
+    }
+
+    static _drawStart(ctx, x, y, radius, color) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, 2 * Math.PI);
       ctx.lineWidth = 1;
-      ctx.fillStyle = "black";
+      ctx.fillStyle = color;
       ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
       ctx.stroke();
       ctx.fill();
@@ -373,6 +393,30 @@ PP64.spaces = (function() {
     static drawGameGuy3(ctx, x, y) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceGameGuy3"), x - 14, y - 14);
+      ctx.restore();
+    }
+
+    static drawGameGuyDuel3(ctx, x, y) {
+      ctx.save();
+      ctx.drawImage(PP64.images.get("spaceGameGuyDuel3"), x - 14, y - 14);
+      ctx.restore();
+    }
+
+    static drawDuelBasic(ctx, x, y) {
+      ctx.save();
+      ctx.drawImage(PP64.images.get("spaceDuelBasic3"), x - 14, y - 14);
+      ctx.restore();
+    }
+
+    static drawDuelPowerup(ctx, x, y) {
+      ctx.save();
+      ctx.drawImage(PP64.images.get("spaceDuelPowerup3"), x - 14, y - 14);
+      ctx.restore();
+    }
+
+    static drawDuelReverse(ctx, x, y) {
+      ctx.save();
+      ctx.drawImage(PP64.images.get("spaceDuelReverse3"), x - 14, y - 14);
       ctx.restore();
     }
 

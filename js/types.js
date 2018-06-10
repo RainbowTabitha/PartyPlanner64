@@ -29,7 +29,12 @@ PP64.types = {
     BANK: 12,
     ARROW: 13,
     BLACKSTAR: 14,
-    GAMEGUY: 15
+    GAMEGUY: 15,
+    DUEL_BASIC: 16,
+    DUEL_START_BLUE: 17,
+    DUEL_START_RED: 18,
+    DUEL_POWERUP: 19,
+    DUEL_REVERSE: 20,
   },
 
   isKnownSpaceType: function(type) {
@@ -112,6 +117,11 @@ PP64.types = {
     ADD_BANK_SUBTYPE: 34,
     ADD_BANKCOIN_SUBTYPE: 35,
     ADD_ITEMSHOP_SUBTYPE: 36,
+    ADD_DUEL_BASIC: 37,
+    ADD_DUEL_REVERSE: 38,
+    ADD_DUEL_POWERUP: 39,
+    ADD_DUEL_START_BLUE: 40,
+    ADD_DUEL_START_RED: 41,
   },
 
   Game: {

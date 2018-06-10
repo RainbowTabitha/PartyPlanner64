@@ -87,7 +87,24 @@ PP64.toolbar = (function() {
     { "name": "Mark space as Skeleton Key gate", "icon": "img/toolbar/markgate.png", "type": $actType.MARK_GATE },
   ];
 
-  function _getActions(gameVersion) {
+  const mp3_duel_actions = [
+    { "name": "Move spaces", "icon": "img/toolbar/move.png", "type": $actType.MOVE },
+    { "name": "Connect spaces", "icon": "img/toolbar/line.png", "type": $actType.LINE },
+    { "name": "Connect multiple spaces in one click", "icon": "img/toolbar/stickyline.png", "type": $actType.LINE_STICKY },
+    { "name": "Erase spaces and lines", "icon": "img/toolbar/eraser.png", "type": $actType.ERASE },
+    { "spacer": true},
+    { "name": "Add basic space", "icon": "img/toolbar/basic3.png", "type": $actType.ADD_DUEL_BASIC, draggable: true },
+    { "name": "Add Mini-Game space", "icon": "img/toolbar/minigameduel3.png", "type": $actType.ADD_MINIGAME, draggable: true },
+    { "name": "Add reverse space", "icon": "img/toolbar/reverse3.png", "type": $actType.ADD_DUEL_REVERSE, draggable: true },
+    { "name": "Add happening space", "icon": "img/toolbar/happeningduel3.png", "type": $actType.ADD_HAPPENING, draggable: true },
+    { "name": "Add Game Guy space", "icon": "img/toolbar/gameguyduel.png", "type": $actType.ADD_GAMEGUY, draggable: true },
+    { "name": "Add power-up space", "icon": "img/toolbar/powerup.png", "type": $actType.ADD_DUEL_POWERUP, draggable: true },
+    { "name": "Add invisible space", "icon": "img/toolbar/other.png", "type": $actType.ADD_OTHER, draggable: true },
+    { "name": "Add blue start space", "icon": "img/toolbar/startblue.png", "type": $actType.ADD_DUEL_START_BLUE, draggable: true, advanced: true },
+    { "name": "Add red start space", "icon": "img/toolbar/startred.png", "type": $actType.ADD_DUEL_START_RED, draggable: true, advanced: true },
+  ];
+
+  function _getActions(gameVersion, boardType) {
     let actions;
     switch (gameVersion) {
       case 1:
@@ -97,7 +114,10 @@ PP64.toolbar = (function() {
         actions = mp2_actions;
         break;
       case 3:
-        actions = mp3_actions;
+        if (boardType === PP64.types.BoardType.DUEL)
+          actions = mp3_duel_actions;
+        else
+          actions = mp3_actions;
         break;
       default:
         throw `Unknown game version found by Toolbar (${gameVersion})`;
@@ -125,7 +145,7 @@ PP64.toolbar = (function() {
       }
 
       let i = 0;
-      let actions = _getActions(this.props.gameVersion);
+      let actions = _getActions(this.props.gameVersion, this.props.boardType);
       actions = actions.map(item => {
         if (item.group) {
           return (

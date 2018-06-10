@@ -180,22 +180,76 @@ PP64.adapters.boardinfo.MP3 = (function() {
     splashLogoTextImg: 33,
   };
 
-  // Gate Guy  - (U) ROM
+  // Gate Guy - (U) ROM
   const MP3U_GATEGUY = PP64.adapters.boardinfo.create("MP3U_GATEGUY");
   MP3U_GATEGUY.name = "Gate Guy";
   MP3U_GATEGUY.type = "DUEL";
   MP3U_GATEGUY.boardDefFile = 577;
   MP3U_GATEGUY.bgDir = 24;
-  // MP3U_GATEGUY.str = {
-  //   boardSelect: [
-  //     [21, 35],
-  //     [26, 22],
-  //   ],
-  // };
   MP3U_GATEGUY.img = {
     boardSelectImg: 81,
     splashLogoImg: 34,
     splashLogoTextImg: 40,
+  };
+
+  // Arrowhead - (U) ROM
+  const MP3U_ARROWHEAD = PP64.adapters.boardinfo.create("MP3U_ARROWHEAD");
+  MP3U_ARROWHEAD.name = "Arrowhead";
+  MP3U_ARROWHEAD.type = "DUEL";
+  MP3U_ARROWHEAD.boardDefFile = 578;
+  MP3U_ARROWHEAD.bgDir = 25;
+  MP3U_ARROWHEAD.img = {
+    boardSelectImg: 82,
+    splashLogoImg: 35,
+    splashLogoTextImg: 41,
+  };
+
+  // Pipesqueak - (U) ROM
+  const MP3U_PIPESQUEAK = PP64.adapters.boardinfo.create("MP3U_PIPESQUEAK");
+  MP3U_PIPESQUEAK.name = "Pipesqueak";
+  MP3U_PIPESQUEAK.type = "DUEL";
+  MP3U_PIPESQUEAK.boardDefFile = 579;
+  MP3U_PIPESQUEAK.bgDir = 26;
+  MP3U_PIPESQUEAK.img = {
+    boardSelectImg: 83,
+    splashLogoImg: 36,
+    splashLogoTextImg: 42,
+  };
+
+  // Blowhard - (U) ROM
+  const MP3U_BLOWHARD = PP64.adapters.boardinfo.create("MP3U_BLOWHARD");
+  MP3U_BLOWHARD.name = "Blowhard";
+  MP3U_BLOWHARD.type = "DUEL";
+  MP3U_BLOWHARD.boardDefFile = 580;
+  MP3U_BLOWHARD.bgDir = 27;
+  MP3U_BLOWHARD.img = {
+    boardSelectImg: 84,
+    splashLogoImg: 37,
+    splashLogoTextImg: 43,
+  };
+
+  // Mr. Mover - (U) ROM
+  const MP3U_MRMOVER = PP64.adapters.boardinfo.create("MP3U_MRMOVER");
+  MP3U_MRMOVER.name = "Mr. Mover";
+  MP3U_MRMOVER.type = "DUEL";
+  MP3U_MRMOVER.boardDefFile = 581;
+  MP3U_MRMOVER.bgDir = 28;
+  MP3U_MRMOVER.img = {
+    boardSelectImg: 85,
+    splashLogoImg: 38,
+    splashLogoTextImg: 44,
+  };
+
+  // Backtrack - (U) ROM
+  const MP3U_BACKTRACK = PP64.adapters.boardinfo.create("MP3U_BACKTRACK");
+  MP3U_BACKTRACK.name = "Backtrack";
+  MP3U_BACKTRACK.type = "DUEL";
+  MP3U_BACKTRACK.boardDefFile = 582;
+  MP3U_BACKTRACK.bgDir = 29;
+  MP3U_BACKTRACK.img = {
+    boardSelectImg: 86,
+    splashLogoImg: 39,
+    splashLogoTextImg: 45,
   };
 
   return {
@@ -211,6 +265,11 @@ PP64.adapters.boardinfo.MP3 = (function() {
             MP3_WALUIGI,
 
             MP3U_GATEGUY,
+            MP3U_ARROWHEAD,
+            MP3U_PIPESQUEAK,
+            MP3U_BLOWHARD,
+            MP3U_MRMOVER,
+            MP3U_BACKTRACK,
           ];
       }
     }

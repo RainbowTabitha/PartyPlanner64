@@ -61,8 +61,9 @@ PP64.properties.SpaceProperties = (function() {
 
       const curSpace = spaces[0];
       const gameVersion = this.props.gameVersion;
-      const spaceToggleTypes = _getSpaceTypeToggles(gameVersion);
-      const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion);
+      const boardType = this.props.boardType;
+      const spaceToggleTypes = _getSpaceTypeToggles(gameVersion, boardType);
+      const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion, boardType);
 
       let gameVersionHeading;
       if (true) {
@@ -180,7 +181,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Change to red space", icon: "img/toolbar/red.png", type: $spaceType.RED },
     { name: "Change to happening space", icon: "img/toolbar/happening.png", type: $spaceType.HAPPENING },
     { name: "Change to chance time space", icon: "img/toolbar/chance.png", type: $spaceType.CHANCE },
-    { name: "Change to minigame space", icon: "img/toolbar/minigame.png", type: $spaceType.MINIGAME },
+    { name: "Change to Mini-Game space", icon: "img/toolbar/minigame.png", type: $spaceType.MINIGAME },
     { name: "Change to shroom space", icon: "img/toolbar/shroom.png", type: $spaceType.SHROOM },
     { name: "Change to Bowser space", icon: "img/toolbar/bowser.png", type: $spaceType.BOWSER },
     { name: "Change to invisible space", icon: "img/toolbar/other.png", type: $spaceType.OTHER },
@@ -245,7 +246,20 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Show item shop", icon: "img/toolbar/itemshopsubtype.png", subtype: $spaceSubType.ITEMSHOP },
   ];
 
-  function _getSpaceTypeToggles(gameVersion) {
+  const SpaceTypeToggleTypes_3_Duel = [
+    // Types
+    { name: "Change to basic space", icon: "img/toolbar/basic3.png", type: $spaceType.DUEL_BASIC },
+    { name: "Change to Mini-Game space", icon: "img/toolbar/minigameduel3.png", type: $spaceType.MINIGAME },
+    { name: "Change to reverse space", icon: "img/toolbar/reverse3.png", type: $spaceType.DUEL_REVERSE },
+    { name: "Change to happening space", icon: "img/toolbar/happeningduel3.png", type: $spaceType.HAPPENING },
+    { name: "Change to Game Guy space", icon: "img/toolbar/gameguyduel.png", type: $spaceType.GAMEGUY },
+    { name: "Change to power-up space", icon: "img/toolbar/powerup.png", type: $spaceType.DUEL_POWERUP },
+    { name: "Change to invisible space", icon: "img/toolbar/other.png", type: $spaceType.OTHER },
+    { name: "Change to blue start space", icon: "img/toolbar/startblue.png", type: $spaceType.DUEL_START_BLUE, advanced: true },
+    { name: "Change to red start space", icon: "img/toolbar/startred.png", type: $spaceType.DUEL_START_RED, advanced: true },
+  ];
+
+  function _getSpaceTypeToggles(gameVersion, boardType) {
     let types;
     switch (gameVersion) {
       case 1:
@@ -255,7 +269,14 @@ PP64.properties.SpaceProperties = (function() {
         types = SpaceTypeToggleTypes_2;
         break;
       case 3:
-        types = SpaceTypeToggleTypes_3;
+        switch (boardType) {
+          case PP64.types.BoardType.DUEL:
+            types = SpaceTypeToggleTypes_3_Duel;
+            break;
+          default:
+            types = SpaceTypeToggleTypes_3;
+            break;
+        }
         break;
     }
 
@@ -266,7 +287,7 @@ PP64.properties.SpaceProperties = (function() {
     return types;
   }
 
-  function _getSpaceSubTypeToggles(gameVersion) {
+  function _getSpaceSubTypeToggles(gameVersion, boardType) {
     let types;
     switch (gameVersion) {
       case 1:
@@ -276,7 +297,14 @@ PP64.properties.SpaceProperties = (function() {
         types = SpaceSubTypeToggleTypes_2;
         break;
       case 3:
-        types = SpaceSubTypeToggleTypes_3;
+        switch (boardType) {
+          case PP64.types.BoardType.DUEL:
+            types = []; //SpaceSubTypeToggleTypes_3_Duel;
+            break;
+          default:
+            types = SpaceSubTypeToggleTypes_3;
+            break;
+        }
         break;
     }
 
@@ -298,7 +326,7 @@ PP64.properties.SpaceProperties = (function() {
         return null; // Can't switch start space type
       const subtype = this.props.subtype;
       const onTypeChanged = this.onTypeChanged;
-      const toggleTypes = this.props.toggleTypes;
+      const toggleTypes = this.props.toggleTypes || [];
       const toggles = toggleTypes.map(item => {
         const key = item.type + "-" + item.subtype;
         const selected = (item.type !== undefined && type === item.type)

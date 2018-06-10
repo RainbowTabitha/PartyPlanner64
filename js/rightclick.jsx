@@ -180,9 +180,23 @@ PP64.rightclick = (function() {
     { name: "Show item shop", icon: "img/toolbar/itemshopsubtype.png", subtype: $spaceSubType.ITEMSHOP },
   ];
 
+  const RCSpaceTypeToggleTypes_3_Duel = [
+    // Types
+    { name: "Change to basic space", icon: "img/toolbar/basic3.png", type: $spaceType.DUEL_BASIC },
+    { name: "Change to Mini-Game space", icon: "img/toolbar/minigameduel3.png", type: $spaceType.MINIGAME },
+    { name: "Change to reverse space", icon: "img/toolbar/reverse3.png", type: $spaceType.DUEL_REVERSE },
+    { name: "Change to happening space", icon: "img/toolbar/happeningduel3.png", type: $spaceType.HAPPENING },
+    { name: "Change to Game Guy space", icon: "img/toolbar/gameguyduel.png", type: $spaceType.GAMEGUY },
+    { name: "Change to power-up space", icon: "img/toolbar/powerup.png", type: $spaceType.DUEL_POWERUP },
+    { name: "Change to invisible space", icon: "img/toolbar/other.png", type: $spaceType.OTHER },
+    { name: "Change to blue start space", icon: "img/toolbar/startblue.png", type: $spaceType.DUEL_START_BLUE, advanced: true },
+    { name: "Change to red start space", icon: "img/toolbar/startred.png", type: $spaceType.DUEL_START_RED, advanced: true },
+  ];
+
   function _getRCSpaceTypeToggles() {
+    const curBoard = PP64.boards.getCurrentBoard();
     let types;
-    switch (PP64.boards.getCurrentBoard().game) {
+    switch (curBoard.game) {
       case 1:
         types = RCSpaceTypeToggleTypes_1;
         break;
@@ -190,7 +204,15 @@ PP64.rightclick = (function() {
         types = RCSpaceTypeToggleTypes_2;
         break;
       case 3:
-        types = RCSpaceTypeToggleTypes_3;
+        switch (curBoard.type) {
+          case PP64.types.BoardType.DUEL:
+            types = RCSpaceTypeToggleTypes_3_Duel;
+            break;
+          case PP64.types.BoardType.NORMAL:
+          default:
+            types = RCSpaceTypeToggleTypes_3;
+            break;
+        }
         break;
     }
 
@@ -202,8 +224,9 @@ PP64.rightclick = (function() {
   }
 
   function _getRCSpaceSubTypeToggles() {
+    const curBoard = PP64.boards.getCurrentBoard();
     let types;
-    switch (PP64.boards.getCurrentBoard().game) {
+    switch (curBoard.game) {
       case 1:
         types = RCSpaceTypeToggleSubTypes_1;
         break;
@@ -211,7 +234,14 @@ PP64.rightclick = (function() {
         types = RCSpaceTypeToggleSubTypes_2;
         break;
       case 3:
-        types = RCSpaceTypeToggleSubTypes_3;
+        switch (curBoard.type) {
+          case PP64.types.BoardType.DUEL:
+            types = []; // SpaceSubTypeToggleTypes_3_Duel;
+            break;
+          default:
+            types = RCSpaceTypeToggleSubTypes_3;
+            break;
+        }
         break;
     }
 

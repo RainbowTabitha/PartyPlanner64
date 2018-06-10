@@ -50,6 +50,7 @@ PP64.renderer = (function() {
       spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
     let game = board.game || 1;
+    const boardType = board.type || PP64.types.BoardType.NORMAL;
 
     // Draw spaces
     for (let index = 0; index < board.spaces.length; index++) {
@@ -58,11 +59,11 @@ PP64.renderer = (function() {
         continue;
       space.z = space.z || 0;
 
-      drawSpace(spaceCtx, space, game, opts);
+      drawSpace(spaceCtx, space, game, boardType, opts);
     }
   }
 
-  function drawSpace(spaceCtx, space, game, opts = {}) {
+  function drawSpace(spaceCtx, space, game, boardType, opts = {}) {
     let x = space.x;
     let y = space.y;
     let type = space.type;
@@ -90,11 +91,18 @@ PP64.renderer = (function() {
           PP64.spaces.drawRed(spaceCtx, x, y);
         break;
       case $spaceType.MINIGAME:
-        PP64.spaces.drawMiniGame(spaceCtx, x, y);
+        if (boardType === PP64.types.BoardType.DUEL)
+          PP64.spaces.drawMiniGameDuel3(spaceCtx, x, y);
+        else
+          PP64.spaces.drawMiniGame(spaceCtx, x, y);
         break;
       case $spaceType.HAPPENING:
-        if (game === 3)
-          PP64.spaces.drawHappening3(spaceCtx, x, y);
+        if (game === 3) {
+          if (boardType === PP64.types.BoardType.DUEL)
+            PP64.spaces.drawHappeningDuel3(spaceCtx, x, y);
+          else
+            PP64.spaces.drawHappening3(spaceCtx, x, y);
+        }
         else
           PP64.spaces.drawHappening(spaceCtx, x, y);
         break;
@@ -154,7 +162,29 @@ PP64.renderer = (function() {
         PP64.spaces.drawBlackStar2(spaceCtx, x, y);
         break;
       case $spaceType.GAMEGUY:
-        PP64.spaces.drawGameGuy3(spaceCtx, x, y);
+        if (boardType === PP64.types.BoardType.DUEL)
+          PP64.spaces.drawGameGuyDuel3(spaceCtx, x, y);
+        else
+          PP64.spaces.drawGameGuy3(spaceCtx, x, y);
+        break;
+      case $spaceType.DUEL_BASIC:
+        PP64.spaces.drawDuelBasic(spaceCtx, x, y);
+        break;
+      case $spaceType.DUEL_START_BLUE:
+        if (opts.skipHiddenSpaces)
+          break;
+        PP64.spaces.drawStartDuelBlue(spaceCtx, x, y);
+        break;
+      case $spaceType.DUEL_START_RED:
+        if (opts.skipHiddenSpaces)
+          break;
+        PP64.spaces.drawStartDuelRed(spaceCtx, x, y);
+        break;
+      case $spaceType.DUEL_POWERUP:
+        PP64.spaces.drawDuelPowerup(spaceCtx, x, y);
+        break;
+      case $spaceType.DUEL_REVERSE:
+        PP64.spaces.drawDuelReverse(spaceCtx, x, y);
         break;
       default:
         PP64.spaces.drawUnknown(spaceCtx, x, y);

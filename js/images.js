@@ -34,6 +34,13 @@ PP64.images = (function() {
   addImage("spaceBank3", "img/editor/spaces/bank3.png");
   addImage("spaceGameGuy3", "img/editor/spaces/gameguy.png");
 
+  addImage("spaceDuelBasic3", "img/editor/spaces/basic3.png");
+  addImage("spaceDuelPowerup3", "img/editor/spaces/powerup3.png");
+  addImage("spaceDuelReverse3", "img/editor/spaces/reverse3.png");
+  addImage("spaceGameGuyDuel3", "img/editor/spaces/gameguyduel.png");
+  addImage("spaceMiniGameDuel3", "img/editor/spaces/minigameduel3.png");
+  addImage("spaceHappeningDuel3", "img/editor/spaces/happeningduel3.png");
+
   function addImage(name, url) {
     _imageTemp[name] = url;
     _images[name] = new Image();

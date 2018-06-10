@@ -131,11 +131,15 @@ PP64.app = new class app {
               <div className="mainOverlay">
                 <window.PP64.toolwindow.ToolWindow name="Toolbox" position="TopRight"
                   visible={this.state.currentView === $viewType.EDITOR}>
-                  <window.PP64.toolbar.Toolbar currentAction={this.state.currentAction} gameVersion={this.state.currentBoard.game} />
+                  <window.PP64.toolbar.Toolbar currentAction={this.state.currentAction}
+                    gameVersion={this.state.currentBoard.game}
+                    boardType={this.state.currentBoard.type} />
                 </window.PP64.toolwindow.ToolWindow>
                 <window.PP64.toolwindow.ToolWindow name="Space Properties" position="BottomRight"
                   visible={this.state.currentView === $viewType.EDITOR}>
-                  <window.PP64.properties.SpaceProperties selectedSpaces={this.state.selectedSpaces} gameVersion={this.state.currentBoard.game} />
+                  <window.PP64.properties.SpaceProperties selectedSpaces={this.state.selectedSpaces}
+                    gameVersion={this.state.currentBoard.game}
+                    boardType={this.state.currentBoard.type} />
                 </window.PP64.toolwindow.ToolWindow>
                 <window.PP64.toolwindow.ToolWindow name="Board Properties" position="BottomLeft"
                   visible={this.state.currentView === $viewType.EDITOR}>

@@ -658,9 +658,12 @@ PP64.header = (function() {
   }
 
   function newboardDropdown(closeFn, props) {
-    function onAccept(gameVersion, theme) {
+    function onAccept(gameVersion, type, theme) {
       closeFn();
-      let newBoardIdx = PP64.boards.addBoard(null, { game: gameVersion });
+      const newBoardIdx = PP64.boards.addBoard(null, {
+        game: gameVersion,
+        type: type,
+      });
       PP64.boards.setCurrentBoard(newBoardIdx);
     }
     return (

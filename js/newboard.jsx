@@ -6,11 +6,18 @@ PP64.newboard = (function() {
   const NewBoard = class NewBoard extends React.Component {
     state = {
       version: 1,
+      type: PP64.types.BoardType.NORMAL,
       theme: 0,
     }
 
     onVersionChange = (version) => {
       this.setState({ version });
+      if (version !== 3)
+        this.setState({ type: PP64.types.BoardType.NORMAL });
+    }
+
+    onTypeChange = (type) => {
+      this.setState({ type });
     }
 
     onThemeChange = (theme) => {
@@ -20,7 +27,7 @@ PP64.newboard = (function() {
     submit = () => {
       let fn = this.props.onAccept;
       if (fn)
-        fn(this.state.version, Themes[this.props.theme]);
+        fn(this.state.version, this.state.type, Themes[this.props.theme]);
     }
 
     render() {
@@ -28,6 +35,10 @@ PP64.newboard = (function() {
       return (
         <div className="newBoardContainer">
           <NewBoardVersionSelect onVersionChange={this.onVersionChange} />
+          {this.state.version === 3 ?
+            <NewBoardTypeSelect type={this.state.type}
+              onTypeChange={this.onTypeChange} />
+            : null }
           <NewBoardThemeSelect onThemeChange={this.onThemeChange} />
           <Button onClick={this.submit} css="nbCreate">Create</Button>
         </div>
@@ -73,6 +84,34 @@ PP64.newboard = (function() {
           <label className="nbLabel">Game Version</label>
           <br />
           {gameVersions}
+        </div>
+      );
+    }
+  };
+
+  const NewBoardTypeSelect = class extends React.Component {
+    onTypeChange = (type) => {
+      this.props.onTypeChange(type);
+    }
+
+    render() {
+      const ToggleButton = PP64.controls.ToggleButton;
+      return (
+        <div className="newBoardVersionSelect">
+          <label className="nbLabel">Board Type</label>
+          <br />
+          <ToggleButton id={PP64.types.BoardType.NORMAL}
+            allowDeselect={false}
+            onToggled={this.onTypeChange}
+            pressed={this.props.type === PP64.types.BoardType.NORMAL}>
+            <span className="newBoardVersion" title="Normal party board">Normal</span>
+          </ToggleButton>
+          <ToggleButton id={PP64.types.BoardType.DUEL}
+            allowDeselect={false}
+            onToggled={this.onTypeChange}
+            pressed={this.props.type === PP64.types.BoardType.DUEL}>
+            <span className="newBoardVersion" title="Duel board">Duel</span>
+          </ToggleButton>
         </div>
       );
     }

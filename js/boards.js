@@ -1,11 +1,11 @@
 PP64.boards = (function() {
   let currentBoard = 0;
 
-  function _makeDefaultBoard(gameVersion = 1) {
-    let board = {
+  function _makeDefaultBoard(gameVersion = 1, type = PP64.types.BoardType.NORMAL) {
+    const board = {
       name: "Untitled",
       description: "Use your Star Power to finish\nthis board.",
-      type: "NORMAL",
+      type: type,
       difficulty: 3,
       spaces: [],
       links: {},
@@ -42,11 +42,23 @@ PP64.boards = (function() {
         };
         break;
       case 3:
-        board.bg = {
-          width: 1152,
-          height: 864,
-          src: true
-        };
+        switch (type) {
+          case PP64.types.BoardType.NORMAL:
+            board.bg = {
+              width: 1152,
+              height: 864,
+              src: true
+            };
+            break;
+          case PP64.types.BoardType.DUEL:
+            board.bg = {
+              width: 896,
+              height: 672,
+              src: true
+            };
+            break;
+        }
+
         board.otherbg = {
           boardselect: true,
           boardlogo: true,
@@ -55,7 +67,26 @@ PP64.boards = (function() {
         };
         break;
     }
-    board.spaces.push({ "x": board.bg.width - 200, "y": board.bg.height - 200, "type": $spaceType.START });
+
+    if (type === PP64.types.BoardType.DUEL) {
+      board.spaces.push({
+        x: 200,
+        y: 200,
+        type: $spaceType.DUEL_START_BLUE
+      });
+      board.spaces.push({
+        x: board.bg.width - 200,
+        y: board.bg.height - 200,
+        type: $spaceType.DUEL_START_RED
+      });
+    }
+    else {
+      board.spaces.push({
+        x: board.bg.width - 200,
+        y: board.bg.height - 200,
+        type: $spaceType.START
+      });
+    }
     applyTheme(board);
     return board;
   }
@@ -71,9 +102,16 @@ PP64.boards = (function() {
     boards = [ _makeDefaultBoard(1) ];
   }
 
+  /**
+   * Adds a board to the board collection.
+   * @param board The board to add. If not passed, a default board is generated.
+   * @param opts.rom The board is from the ROM
+   * @param opts.type Board type to use
+   * @param opts.game Game version for the board
+   */
   function addBoard(board, opts = {}) {
     if (!board)
-      board = _makeDefaultBoard(opts.game || 1)
+      board = _makeDefaultBoard(opts.game || 1, opts.type || PP64.types.BoardType.NORMAL);
 
     if (opts.rom)
       board._rom = true;
