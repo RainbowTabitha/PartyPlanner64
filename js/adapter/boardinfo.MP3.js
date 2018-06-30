@@ -186,10 +186,39 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3U_GATEGUY.type = "DUEL";
   MP3U_GATEGUY.boardDefFile = 577;
   MP3U_GATEGUY.bgDir = 24;
+  // MP3U_GATEGUY.str = {
+  //   boardSelect: [
+  //     [36, 21],
+  //     [41, 27],
+  //   ],
+  //   boardNames: [
+  //     [49, 45],
+  //     [39, 1],
+  //     [83, 49],
+  //   ],
+  // };
   MP3U_GATEGUY.img = {
     boardSelectImg: 81,
     splashLogoImg: 34,
     splashLogoTextImg: 40,
+    miniMapWithBg: 279, // dir 19
+    miniMapDots: 280,
+  };
+  MP3U_GATEGUY.spaceEventsStartAddr = 0x00118914;
+  MP3U_GATEGUY.spaceEventsStartOffset = 0x003EBA04;
+  MP3U_GATEGUY.spaceEventTables = [ // JAL 800EA46C
+    { upper: 0x3E0BAC, lower: 0x3E0BB4 }, // 0x8010DABC, 0x8010DAC4, table 0x80118914
+    { upper: 0x3E0BB8, lower: 0x3E0BC0 }, // 0x8010DAC8, 0x8010DAD0, table 0x80118DEC
+  ];
+  MP3U_GATEGUY.onAfterOverwrite = function(romView, board) {
+    // TODO Need this for duels?
+    // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
+    // Since we don't use any default events, we can overwrite it.
+    // romView.setUint32(, 0);
+    // romView.setUint32(, 0);
+    // romView.setUint32(, 0);
+
+    // TODO: Probably some stuff to NOP around 0x8010DA9C
   };
 
   // Arrowhead - (U) ROM
@@ -202,6 +231,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 82,
     splashLogoImg: 35,
     splashLogoTextImg: 41,
+    miniMapWithBg: 310, // dir 19
+    miniMapDots: 311,
   };
 
   // Pipesqueak - (U) ROM
@@ -214,6 +245,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 83,
     splashLogoImg: 36,
     splashLogoTextImg: 42,
+    miniMapWithBg: 312, // dir 19
+    miniMapDots: 313,
   };
 
   // Blowhard - (U) ROM
@@ -226,6 +259,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 84,
     splashLogoImg: 37,
     splashLogoTextImg: 43,
+    miniMapWithBg: 315, // dir 19
+    miniMapDots: 316,
   };
 
   // Mr. Mover - (U) ROM
@@ -238,6 +273,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 85,
     splashLogoImg: 38,
     splashLogoTextImg: 44,
+    miniMapWithBg: 317, // dir 19
+    miniMapDots: 318,
   };
 
   // Backtrack - (U) ROM
@@ -250,6 +287,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
     boardSelectImg: 86,
     splashLogoImg: 39,
     splashLogoTextImg: 45,
+    miniMapWithBg: 319, // dir 19
+    miniMapDots: 320,
   };
 
   return {

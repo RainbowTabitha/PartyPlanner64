@@ -188,12 +188,22 @@ PP64.adapters.MP3 = (function() {
         case 3: // 
         case 4: // 
         case 5: // 
+          newX = (width / 2) + (x * (1 + (y * 0.05 / (height / 2))))
+               - 130 * (x / (width / 2));
+          newY = (height / 2) + ((y + 100) * 0.4);
+          if (newY < (height / 2))
+            newY -= Math.abs(y) / 11.5;
+          else
+            newY += Math.abs(y) / 4.8;
+          newZ = 0;
+          break;
         case 6: // 
         case 7: // 
         case 8: // 
         case 9: // 
         case 10: // 
         case 11: // 
+        // FIXME bad
           newX = (width / 2) + (x * (1 + (y * 0.05 / (height / 2))))
                - 130 * (x / (width / 2));
           newY = (height / 2) + ((y + 100) * 0.4);

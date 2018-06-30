@@ -26,7 +26,7 @@ PP64.properties.BoardProperties = (function() {
       return (
         <div className="properties">
           <EditDetails romBoard={romBoard} />
-          <BGSelect gameVersion={gameVersion} />
+          <BGSelect gameVersion={gameVersion} boardType={this.props.currentBoard.type} />
           {deadEndCheck}
           {animationBGList}
         </div>
@@ -55,7 +55,20 @@ PP64.properties.BoardProperties = (function() {
     }
 
     render() {
-      let title = this.props.gameVersion === 1 ? "960 x 720" : "1152 x 864";
+      let title;
+      switch (this.props.gameVersion) {
+        case 1:
+          title = "960 x 720";
+          break;
+        case 2:
+        case 3:
+          if (this.props.boardType === PP64.types.BoardType.DUEL)
+            title = "896 x 672";
+          else
+            title = "1152 x 864";
+          break;
+      }
+
       return (
         <div className="propertiesActionButton" onClick={this.onChangeBg} title={title}>
           <img src="img/header/setbg.png" className="propertiesActionButtonImg" width="24" height="24" />
