@@ -25,6 +25,11 @@ PP64.newboard = (function() {
     }
 
     submit = () => {
+      if (this.state.type === PP64.types.BoardType.DUEL) {
+        PP64.app.showMessage("Duel board support is partially finished, coming soon!");
+        if (!$$debug)
+          return;
+      }
       let fn = this.props.onAccept;
       if (fn)
         fn(this.state.version, this.state.type, Themes[this.props.theme]);
