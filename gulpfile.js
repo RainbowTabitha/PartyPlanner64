@@ -496,6 +496,7 @@ PP64.symbols["${sourceFile}"] = [
 
 const gulpConvertSymbols = textTransformation(convertSymbols);
 
+// TODO: Need to run twice for some reason.
 gulp.task("symbols", (callback) => {
   exec("git submodule update --remote", function(err, stdout, stderr) {
     // process.stdout.write("submodule update done, " + err + ", " + stdout + ", " + stderr);

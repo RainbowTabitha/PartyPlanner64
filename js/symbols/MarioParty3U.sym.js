@@ -37,6 +37,10 @@ PP64.symbols["MarioParty3U"] = [
       name: "FreeMainFS",
       desc: "Free's an allocated MainFS file pointer" },
 {
+      addr: 2147529068, // 0x8000B16C
+      type: "code",
+      name: "GetRandomByte" },
+{
       addr: 2147530808, // 0x8000B838
       type: "code",
       name: "LoadGraphics" },
@@ -104,13 +108,20 @@ PP64.symbols["MarioParty3U"] = [
       type: "code",
       name: "ImgPackParse" },
 {
+      addr: 2147885032, // 0x80061FE8
+      type: "code",
+      name: "InitFadeIn",
+      desc: "A0=fade_type" },
+{
       addr: 2147885136, // 0x80062050
       type: "code",
-      name: "InitFadeout" },
+      name: "InitFadeOut",
+      desc: "A0=fade_type" },
 {
       addr: 2147885244, // 0x800620BC
       type: "code",
-      name: "GetFadeStatus" },
+      name: "GetFadeStatus",
+      desc: "returns 0 when fade action is finished" },
 {
       addr: 2147902720, // 0x80066500
       type: "code",
@@ -1549,6 +1560,26 @@ PP64.symbols["MarioParty3U"] = [
       name: "p1_stars",
       desc: "Player 1 star count" },
 {
+      addr: 2148339991, // 0x800D1117
+      type: "u8",
+      name: "p1_cur_chain_index",
+      desc: "Player 1 current chain index" },
+{
+      addr: 2148339992, // 0x800D1118
+      type: "u8",
+      name: "p1_cur_space_index",
+      desc: "Player 1 current space index" },
+{
+      addr: 2148339993, // 0x800D1119
+      type: "u8",
+      name: "p1_next_chain_index",
+      desc: "Player 1 next chain index" },
+{
+      addr: 2148339994, // 0x800D111A
+      type: "u8",
+      name: "p1_next_space_index",
+      desc: "Player 1 next space index" },
+{
       addr: 2148340000, // 0x800D1120
       type: "u8",
       name: "p1_item1",
@@ -1573,6 +1604,26 @@ PP64.symbols["MarioParty3U"] = [
       type: "u8",
       name: "p2_stars",
       desc: "Player 2 star count" },
+{
+      addr: 2148340047, // 0x800D114F
+      type: "u8",
+      name: "p2_cur_chain_index",
+      desc: "Player 2 current chain index" },
+{
+      addr: 2148340048, // 0x800D1150
+      type: "u8",
+      name: "p2_cur_space_index",
+      desc: "Player 2 current space index" },
+{
+      addr: 2148340049, // 0x800D1151
+      type: "u8",
+      name: "p2_next_chain_index",
+      desc: "Player 2 next chain index" },
+{
+      addr: 2148340050, // 0x800D1152
+      type: "u8",
+      name: "p2_next_space_index",
+      desc: "Player 2 next space index" },
 {
       addr: 2148340056, // 0x800D1158
       type: "u8",
@@ -1599,6 +1650,26 @@ PP64.symbols["MarioParty3U"] = [
       name: "p3_stars",
       desc: "Player 3 star count" },
 {
+      addr: 2148340103, // 0x800D1187
+      type: "u8",
+      name: "p3_cur_chain_index",
+      desc: "Player 3 current chain index" },
+{
+      addr: 2148340104, // 0x800D1188
+      type: "u8",
+      name: "p3_cur_space_index",
+      desc: "Player 3 current space index" },
+{
+      addr: 2148340105, // 0x800D1189
+      type: "u8",
+      name: "p3_next_chain_index",
+      desc: "Player 3 next chain index" },
+{
+      addr: 2148340106, // 0x800D118A
+      type: "u8",
+      name: "p3_next_space_index",
+      desc: "Player 3 next space index" },
+{
       addr: 2148340112, // 0x800D1190
       type: "u8",
       name: "p3_item1",
@@ -1624,6 +1695,26 @@ PP64.symbols["MarioParty3U"] = [
       name: "p4_stars",
       desc: "Player 4 star count" },
 {
+      addr: 2148340159, // 0x800D11BF
+      type: "u8",
+      name: "p4_cur_chain_index",
+      desc: "Player 4 current chain index" },
+{
+      addr: 2148340160, // 0x800D11C0
+      type: "u8",
+      name: "p4_cur_space_index",
+      desc: "Player 4 current space index" },
+{
+      addr: 2148340161, // 0x800D11C1
+      type: "u8",
+      name: "p4_next_chain_index",
+      desc: "Player 4 next chain index" },
+{
+      addr: 2148340162, // 0x800D11C2
+      type: "u8",
+      name: "p4_next_space_index",
+      desc: "Player 4 next space index" },
+{
       addr: 2148340168, // 0x800D11C8
       type: "u8",
       name: "p4_item1",
@@ -1643,10 +1734,30 @@ PP64.symbols["MarioParty3U"] = [
       type: "u32",
       name: "cur_player_spaces_remaining" },
 {
+      addr: 2148409160, // 0x800E1F48
+      type: "code",
+      name: "ShowPlayerCoinChange",
+      desc: "A0=player_index" },
+{
       addr: 2148446560, // 0x800EB160
       type: "code",
       name: "GetSpaceData",
       desc: "A0=space_index" },
+{
+      addr: 2148446596, // 0x800EB184
+      type: "code",
+      name: "GetAbsSpaceIndexFromChainSpaceIndex",
+      desc: "A0=chain_index" },
+{
+      addr: 2148446640, // 0x800EB1B0
+      type: "code",
+      name: "GetChainLength",
+      desc: "A0=chain_index" },
+{
+      addr: 2148446668, // 0x800EB1CC
+      type: "code",
+      name: "GetChainSpaceIndexFromAbsSpaceIndex",
+      desc: "A0=abs_space_index" },
 {
       addr: 2148448864, // 0x800EBA60
       type: "code",
@@ -1656,6 +1767,16 @@ PP64.symbols["MarioParty3U"] = [
       addr: 2148449480, // 0x800EBCC8
       type: "code",
       name: "GetCurrentSpaceIndex" },
+{
+      addr: 2148456732, // 0x800ED91C
+      type: "code",
+      name: "SetPlayerOntoChain",
+      desc: "A0=player_index" },
+{
+      addr: 2148456856, // 0x800ED998
+      type: "code",
+      name: "SetNextChainAndSpace",
+      desc: "A0=player_index" },
 {
       addr: 2148475184, // 0x800F2130
       type: "code",
@@ -1684,5 +1805,18 @@ PP64.symbols["MarioParty3U"] = [
       addr: 2148475440, // 0x800F2230
       type: "code",
       name: "PlayerHasCoins",
-      desc: "A0=player_index" }
+      desc: "A0=player_index" },
+{
+      addr: 2148490564, // 0x800F5D44
+      type: "code",
+      name: "AdjustPlayerCoinsGradual",
+      desc: "A0=player_index" },
+{
+      addr: 2148553236, // 0x80105214
+      type: "u32",
+      name: "hydrated_space_data" },
+{
+      addr: 2148553240, // 0x80105218
+      type: "u32",
+      name: "hydrated_chains" }
 ];

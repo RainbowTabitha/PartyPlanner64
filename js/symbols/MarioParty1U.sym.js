@@ -235,7 +235,11 @@ PP64.symbols["MarioParty1U"] = [
 {
       addr: 2147867688, // 0x8005DC28
       type: "code",
-      name: "CreateProcess" },
+      name: "InitProcess" },
+{
+      addr: 2147868048, // 0x8005DD90
+      type: "code",
+      name: "EndProcess" },
 {
       addr: 2147877548, // 0x800602AC
       type: "code",
