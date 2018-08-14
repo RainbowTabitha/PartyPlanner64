@@ -20,16 +20,24 @@ PP64.app = new class app {
         if (this.state.error) {
           return (
             <div className="errorDiv selectable">
-              <h2>Oh-no! Something went wrong.</h2>
+              <h2>Hey, it seeems like something's wrong in&nbsp;
+                <span className="errorStrikeoutText">Mushroom Village</span>&nbsp;
+                PartyPlanner64.</h2>
               <p>Please &nbsp;
                 <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">
                   file an issue
                 </a>
                 &nbsp; with the following details, and refresh the page.
               </p>
-              <pre className="red">{this.state.error.toString()}</pre>
+              <pre>{this.state.error.toString()}</pre>
+              {this.state.error.stack ? <React.Fragment>
+                  <div>Stack Error Details:</div>
+                  <pre>{this.state.error.stack}</pre>
+                </React.Fragment>
+                : null
+              }
               <div>Component Stack Error Details:</div>
-              <pre className="red">{this.state.errorInfo.componentStack}></pre>
+              <pre>{this.state.errorInfo.componentStack}></pre>
             </div>
           );
         }

@@ -241,4 +241,8 @@ canvas:focus {
   pre {
     white-space: pre-wrap;
   }
+
+  .errorStrikeoutText {
+    text-decoration: line-through;
+  }
 }

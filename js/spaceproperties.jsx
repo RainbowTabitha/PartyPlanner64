@@ -62,6 +62,7 @@ PP64.properties.SpaceProperties = (function() {
       const curSpace = spaces[0];
       const gameVersion = this.props.gameVersion;
       const boardType = this.props.boardType;
+      const isDuel = boardType === PP64.types.BoardType.DUEL;
       const spaceToggleTypes = _getSpaceTypeToggles(gameVersion, boardType);
       const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion, boardType);
 
@@ -100,9 +101,9 @@ PP64.properties.SpaceProperties = (function() {
               type={currentType}
               subtype={currentSubtype}
               typeChanged={this.onTypeChanged} />
-            <SpaceStarCheckbox checked={hostsStarChecked}
+            {!isDuel ? <SpaceStarCheckbox checked={hostsStarChecked}
               indeterminate={hostsStarIndeterminate}
-              onStarCheckChanged={this.onStarCheckChanged} />
+              onStarCheckChanged={this.onStarCheckChanged} /> : null }
           </div>
           {!multipleSelections ? gameVersionHeading : null }
           {!multipleSelections ? (
