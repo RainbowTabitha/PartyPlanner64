@@ -31,7 +31,7 @@ PP64.adapters.boardinfo.MP2 = (function() {
   MP2_WESTERN.spaceEventsStartOffset = 0x002A7ADC;
   MP2_WESTERN.spaceEventsEndOffset = 0x002A7BE0;
   MP2_WESTERN.spaceEventTables = [
-    { upper: 0x29AEBC, lower: 0x29AEC4 }, // 0x80105BEC, 0x80105BF4
+    { upper: 0x29AEBC, lower: 0x29AEC4 }, // 0x80105BEC, 0x80105BF4, table 0x80112484
     { upper: 0x29AEC8, lower: 0x29AED0, primary: true }, // 0x80105BF8, 0x80105C00, table 0x8011280C
     { upper: 0x29AED4, lower: 0x29AEDC }, // 0x80105C04, 0x80105C0C, table 0x801124EC
   ];
