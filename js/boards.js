@@ -318,9 +318,9 @@ PP64.boards = (function() {
       return false; // length === 1 && only entry is prevIdx
     }
 
-    let startIdx = PP64.boards.getStartSpace(board);
-
-    _checkDeadEnd(startIdx);
+    let startIdx = PP64.boards.getStartSpaceIndex(board);
+    if (startIdx >= 0)
+      _checkDeadEnd(startIdx);
 
     for (let s = 0; s < spaces.length; s++) {
       if (!spaces[s])
@@ -510,7 +510,7 @@ PP64.boards = (function() {
       return board.spaces.indexOf(space);
     },
 
-    getStartSpace: function(board) {
+    getStartSpaceIndex: function(board) {
       let spaces = board.spaces;
       for (let i = 0; i < spaces.length; i++) {
         if (!spaces[i])
@@ -518,7 +518,7 @@ PP64.boards = (function() {
         if (spaces[i].type === PP64.types.Space.START)
           return i;
       }
-      return null;
+      return -1;
     },
 
     getSpacesOfType: function(type, board = getCurrentBoard()) {

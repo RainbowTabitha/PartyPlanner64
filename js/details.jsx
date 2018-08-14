@@ -24,7 +24,6 @@ PP64.details = (function() {
     { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
     { type: "br" },
     { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
-    //{ type: "image", id: "detailBoardConversationBg", desc: "Conversation background", width: 320, height: 240  },
   ];
 
   const _details_mp3 = [
@@ -38,18 +37,35 @@ PP64.details = (function() {
     { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
     { type: "br" },
     { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
-    // { type: "image", id: "detailBoardConversationBg", desc: "Conversation background", width: 320, height: 240  },
+  ];
+
+  const _details_mp3_duel = [
+    { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
+    { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
+    { type: "br" },
+    { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 64, height: 64 },
+    { type: "image", id: "detailBoardLogoImg", desc: "Board logo", width: 226, height: 120 },
+    { type: "image", id: "detailBoardLogoTextImg", desc: "Board logo text", width: 226, height: 36 },
+    { type: "audio", id: "detailBoardAudio", desc: "Background music" },
+    { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
   ];
 
   function _getGameDetails() {
-    let gameVersion = PP64.boards.getCurrentBoard().game;
+    const board = PP64.boards.getCurrentBoard();
+    const gameVersion = board.game;
+    const boardType = board.type;
     switch (gameVersion) {
       case 1:
         return _details_mp1;
       case 2:
         return _details_mp2;
       case 3:
-        return _details_mp3;
+        switch (boardType) {
+          case PP64.types.BoardType.DUEL:
+            return _details_mp3_duel;
+          default:
+            return _details_mp3;
+        }
     }
   }
 
@@ -243,7 +259,7 @@ PP64.details = (function() {
             break;
           case "richtext":
             const displayMode = readonly
-              ? PP64.texteditor.MPEditorDisplayMode.ReadOnly
+              ? PP64.texteditor.MPEditorDisplayMode.Readonly
               : PP64.texteditor.MPEditorDisplayMode.Edit;
             return (
               <div className="detailRichTextContainer" key={detail.id}>

@@ -21,8 +21,8 @@ PP64.validation = (function() {
 
   const HasStart = createRule("HASSTART", "Has start space", $validationLevel.ERROR);
   HasStart.fails = function(board, args) {
-    let curIdx = PP64.boards.getStartSpace(board);
-    if (curIdx === null)
+    let curIdx = PP64.boards.getStartSpaceIndex(board);
+    if (curIdx < 0)
       return "No start space found on board.";
     return false;
   };
@@ -39,7 +39,10 @@ PP64.validation = (function() {
   DeadEnd.fails = function(board, args) {
     const deadEnds = PP64.boards.getDeadEnds(board);
 
-    const startIndex = PP64.boards.getStartSpace(board);
+    const startIndex = PP64.boards.getStartSpaceIndex(board);
+    if (startIndex < 0)
+      return false; // Let HASSTART rule complain.
+
     if (deadEnds.indexOf(startIndex) >= 0)
       return "Start space does not lead anywhere.";
 
@@ -349,8 +352,12 @@ PP64.validation = (function() {
     return boardIndex === 0 || PP64.settings.get($setting.uiSkipValidation);
   }
 
-  function _dontShowInUI(boardIndex) {
-    return boardIndex > 7;
+  function _dontShowInUI(romBoard, boardIndex, boardType) {
+    if (typeof boardType !== "string") {
+      // Because default is normal
+      return romBoard.type === PP64.types.BoardType.DUEL;
+    }
+    return romBoard.type !== boardType;
   }
 
   function _getRulesForBoard(gameID, boardIndex) {
@@ -394,7 +401,7 @@ PP64.validation = (function() {
     let romBoards = PP64.boards.getROMBoards();
     let currentBoard = PP64.boards.getCurrentBoard();
     romBoards.forEach((board, boardIndex) => {
-      if (_dontShowInUI(boardIndex))
+      if (_dontShowInUI(board, boardIndex, currentBoard.type))
         return;
 
       let unavailable = !_overwriteAvailable(boardIndex);

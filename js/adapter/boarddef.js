@@ -269,7 +269,7 @@ PP64.adapters.boarddef = (function() {
     // is first space of first chain.
 
     // 1. Parse from start space.
-    parseChain(PP64.boards.getStartSpace(board));
+    parseChain(PP64.boards.getStartSpaceIndex(board));
 
     // 2. Parse from other "starting spaces" of paths.
     for (let s = 0; s < spaces.length; s++) {

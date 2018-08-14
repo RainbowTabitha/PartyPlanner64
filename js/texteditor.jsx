@@ -446,7 +446,7 @@ PP64.texteditor = (function() {
   };
 
   /**
-   * Converts between game strings and Draft.js editor state.
+   * Converts bReadonlyetween game strings and Draft.js editor state.
    */
   const MPEditorStringAdapter = new class MPEditorStringAdapter {
     editorStateToString(editorState, args) {
@@ -499,7 +499,7 @@ PP64.texteditor = (function() {
     }
 
     stringToEditorState(str) {
-      let contentState = ContentState.createFromText(str);
+      let contentState = ContentState.createFromText(str || "");
 
       // Go through each block (line) and convert color tags to Draft.js inline styles.
       let contentBlocks = contentState.getBlocksAsArray();
