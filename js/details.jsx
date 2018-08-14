@@ -442,10 +442,14 @@ PP64.details = (function() {
     }
 
     onSelection = level => {
+      if (this.props.readonly)
+        return;
       this.props.onDifficultySelected(this.props.id, level);
     }
 
     onDifficultyFocused = level => {
+      if (this.props.readonly)
+        return;
       this.setState({ focusedLevel: level });
     }
 
@@ -455,6 +459,7 @@ PP64.details = (function() {
         levels.push(<DetailsDifficultyLevel
           level={i.toString()}
           key={i.toString()}
+          readonly={this.props.readonly}
           currentLevel={this.props.value}
           focusedLevel={this.state.focusedLevel}
           onDifficultyLevelSelected={this.onSelection}
@@ -477,23 +482,31 @@ PP64.details = (function() {
     state = {}
 
     onClick = () => {
+      if (this.props.readonly)
+        return;
       this.props.onDifficultyLevelSelected(this.props.level);
     }
 
     onMouseEnter = () => {
+      if (this.props.readonly)
+        return;
       this.props.onDifficultyFocused(this.props.level);
     }
 
     onMouseLeave = () => {
+      if (this.props.readonly)
+        return;
       this.props.onDifficultyFocused(0);
     }
 
     render() {
       let className = "difficultyDetailsLevel";
-      if (this.props.level <= this.props.currentLevel)
-        className += " difficultyLevelCurrent";
-      if (this.props.focusedLevel > 0 && this.props.level <= this.props.focusedLevel)
-        className += " difficultyLevelFocused";
+      if (!this.props.readonly) {
+        if (this.props.level <= this.props.currentLevel)
+          className += " difficultyLevelCurrent";
+        if (this.props.focusedLevel > 0 && this.props.level <= this.props.focusedLevel)
+          className += " difficultyLevelFocused";
+      }
       return (
         <div className={className} onClick={this.onClick}
           onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}></div>
