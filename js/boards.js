@@ -585,8 +585,17 @@ PP64.boards = (function() {
         return;
     },
 
+    setSpaceRotation: function(spaceIdx, angleYAxisDeg, board = getCurrentBoard()) {
+      const space = board.spaces[spaceIdx];
+      if (!space) {
+        throw new Error("setSpaceRotation: Invalid space index " + spaceIdx);
+      }
+
+      space.rotation = Math.round(angleYAxisDeg);
+    },
+
     addEventByIndex: function(board, spaceIdx, event, toStart) {
-      let space = board.spaces[spaceIdx];
+      const space = board.spaces[spaceIdx];
       addEventToSpace(space, event, toStart);
     },
 

@@ -38,5 +38,22 @@ Object.assign(PP64.symbols, (function() {
 
       return symbols;
     },
+
+    /** Retrieves the value of a particular symbol. */
+    getSymbol: function(game, name) {
+      const symName = _getSymbolNameFromGame(game);
+
+      let symbols = PP64.symbols[symName];
+      if (!symbols)
+        throw new Error(`Symbols aren't available for ${symName}.`);
+
+      for (let i = 0; i < symbols.length; i++) {
+        if (symbols[i].name === name) {
+          return symbols[i].addr;
+        }
+      }
+
+      throw new Error(`Symbol ${name} wasn't found for ${symName}.`);
+    },
   };
 })());

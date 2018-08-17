@@ -353,6 +353,31 @@ var $$number = PP64.utils.number = {
   radiansToDegrees: function(radians) {
     return radians * 180 / Math.PI;
   },
+
+  /**
+   * Determines the angle made by two points.
+   * @returns Radians counter-clockwise from the +x axis.
+   */
+  determineAngle: function(xOrigin, yOrigin, x, y) {
+    const deltaX = x - xOrigin;
+    const deltaY = y - yOrigin;
+    let angleRadians = Math.atan2(deltaY, deltaX);
+    if (angleRadians < 0) {
+      return Math.abs(angleRadians);
+    }
+    return Math.abs(angleRadians - Math.PI) + Math.PI;
+  },
+
+  /**
+   * Gets the IEEE-754 float formatted version of a number.
+   * For example, 1.0 yields 0x3f800000
+   */
+  getRawFloat32Format: function(num) {
+    const buffer = new ArrayBuffer(4);
+    const dataView = new DataView(buffer);
+    dataView.setFloat32(0, num);
+    return dataView.getUint32(0);
+  },
 };
 
 PP64.utils.debug = {

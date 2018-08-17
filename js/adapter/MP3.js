@@ -26,6 +26,7 @@ PP64.adapters.MP3 = (function() {
       this._writeBanks(board, boardInfo);
       this._writeItemShops(board, boardInfo);
       this._writeGates(board, boardInfo);
+      this._writeArrowRotations(board, boardInfo);
 
       // Patch game to use all 8MB.
       romView.setUint16(0x360EE, 0x8040); // Main heap now starts at 0x80400000

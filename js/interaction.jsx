@@ -105,6 +105,7 @@ PP64.interaction = (function() {
         break;
       case $actType.LINE:
       case $actType.LINE_STICKY:
+      case $actType.ROTATE:
         if (spaceWasClicked) {
           _setSelectedSpace(clickedSpaceIndex);
         }
@@ -152,6 +153,12 @@ PP64.interaction = (function() {
             PP64.renderer.renderConnections();
             PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
           }
+        }
+        break;
+
+      case $actType.ROTATE:
+        if (selectedSpaces.length === 1) {
+
         }
         break;
 
@@ -269,10 +276,10 @@ PP64.interaction = (function() {
 
       case $actType.LINE_STICKY:
         if (selectedSpaces.length === 1) {
-          let space = selectedSpaces[0];
+          const space = selectedSpaces[0];
 
           // Make a connection if we are in sticky mode and have reached a new space.
-          let endSpace = curBoard.spaces[clickedSpaceIndex];
+          const endSpace = curBoard.spaces[clickedSpaceIndex];
           if (endSpace && endSpace !== space) {
             const selectedSpaceIndex = PP64.boards.getSpaceIndex(space, curBoard);
             PP64.boards.addConnection(selectedSpaceIndex, clickedSpaceIndex);
@@ -284,6 +291,21 @@ PP64.interaction = (function() {
             PP64.renderer.renderConnections();
             PP64.renderer.drawConnection(space.x, space.y, clickX, clickY);
           }
+        }
+        break;
+
+      case $actType.ROTATE:
+        if (selectedSpaces.length === 1) {
+          const space = selectedSpaces[0];
+
+          // Adjust rotation of the space.
+          const angleXAxisRad = PP64.utils.number.determineAngle(space.x, space.y, clickX, clickY);
+          const angleYAxisRad = ((Math.PI * 1.5) + angleXAxisRad) % (Math.PI * 2);
+          const angleYAxisDeg = PP64.utils.number.radiansToDegrees(angleYAxisRad);
+          const selectedSpaceIndex = PP64.boards.getSpaceIndex(space, curBoard);
+          $$log(`Space ${selectedSpaceIndex} rotated ${angleYAxisDeg} degrees`);
+          PP64.boards.setSpaceRotation(selectedSpaceIndex, angleYAxisDeg);
+          PP64.renderer.renderSpaces();
         }
         break;
 
@@ -482,6 +504,7 @@ PP64.interaction = (function() {
         break;
 
       case $actType.ERASE:
+      case $actType.ROTATE:
         break;
     }
   }

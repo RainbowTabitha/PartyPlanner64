@@ -1119,6 +1119,46 @@ PP64.adapters = (function() {
       }
     }
 
+    _writeArrowRotations(board, boardInfo) {
+      const romView = PP64.romhandler.getDataView();
+      const { arrowRotStartOffset, arrowRotEndOffset } = boardInfo;
+      if (!arrowRotStartOffset)
+        return;
+
+      // Clear the original board's instructions.
+      for (let offset = arrowRotStartOffset; offset < arrowRotEndOffset; offset += 4) {
+        romView.setUint32(offset, 0);
+      }
+
+      const rotations = [];
+      for (let i = 0; i < board.spaces.length; i++) {
+        if (board.spaces[i].type === $spaceType.ARROW) {
+          rotations.push(board.spaces[i].rotation || 0);
+        }
+      }
+
+      const game = PP64.romhandler.getROMGame();
+      const addArrowAngleAddr = PP64.symbols.getSymbol(game, "AddArrowAngle");
+
+      // 8 arrows is the imposed restriction by the game.
+      // We may be further restricted by the space available.
+      // We can write 1 rotation angle with 3 instructions.
+      const bytesAvailable = arrowRotEndOffset - arrowRotStartOffset;
+      const instructionsAvailable = Math.floor(bytesAvailable / 4);
+      const numArrowBlocks = Math.floor(instructionsAvailable / 3);
+      const totalArrowsToWrite = Math.min(8, numArrowBlocks);
+
+      let insts = [`.orga ${arrowRotStartOffset}`];
+      const loopLimit = Math.min(totalArrowsToWrite, rotations.length);
+      for (let i = 0; i < loopLimit; i++) {
+        insts.push(`LUI A0 hi(${$$hex(PP64.utils.number.getRawFloat32Format(rotations[i]))})`);
+        insts.push(`JAL ${addArrowAngleAddr}`);
+        insts.push("MTC1 A0 F12");
+      }
+
+      MIPSAssem.assemble(insts, { buffer: romView.buffer });
+    }
+
     _writeBackground(bgIndex, src, width, height) {
       return new Promise((resolve, reject) => {
         // We need to write the image onto a canvas to get the RGBA32 values.

@@ -151,6 +151,8 @@ PP64.adapters.boardinfo.MP2 = (function() {
     boardSelectImg: 31,
     boardSelectIconCoords: [35, 61],
   };
+  MP2_PIRATE.arrowRotStartOffset = 0x00; // 0x801059F0
+  MP2_PIRATE.arrowRotEndOffset = 0x00; // 0x80105A30
 
   // Horror Land - (U) ROM
   const MP2_HORROR = PP64.adapters.boardinfo.create("MP2_HORROR");

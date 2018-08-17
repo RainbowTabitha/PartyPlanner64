@@ -53,6 +53,8 @@ PP64.adapters.boardinfo.MP3 = (function() {
   MP3_CHILLY.gateNeighborsOffset = [0x00332EE4]; // 0x8011D374
   MP3_CHILLY.gateArrOffset = [0x00332F8C]; // 0x8011D41C
   MP3_CHILLY.gateCount = 2;
+  MP3_CHILLY.arrowRotStartOffset = 0x0031D8A8; // 0x80107D38
+  MP3_CHILLY.arrowRotEndOffset = 0x0031D950; // 0x80107DDC
   MP3_CHILLY.audioIndexOffset = 0x0031DB92;
   MP3_CHILLY.onLoad = function(board) {
     board.otherbg.largescene = PP64.fs.hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
@@ -78,10 +80,6 @@ PP64.adapters.boardinfo.MP3 = (function() {
     // Banish the snowman assets to the dead space.
     romView.setUint16(0x0032E72E, board._deadSpace);
     romView.setUint16(0x0032E74E, board._deadSpace);
-
-    // Get rid of the arrow space spinning
-    for (let offset = 0x0031D8A8; offset < 0x0031D950; offset += 4) // 0x80107D38 - 0x80107DDC
-      romView.setUint32(offset, 0);
   };
 
   // Deep Bloober Sea - (U) ROM

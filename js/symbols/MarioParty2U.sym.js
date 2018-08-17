@@ -37,6 +37,16 @@ PP64.symbols["MarioParty2U"] = [
       name: "FreeMainFS",
       desc: "Free's an allocated MainFS file pointer" },
 {
+      addr: 2147828328, // 0x80054268
+      type: "code",
+      name: "AddArrowAngle",
+      desc: "F0=degree_rot_of_arrow" },
+{
+      addr: 2147830668, // 0x80054B8C
+      type: "code",
+      name: "GetSpaceData",
+      desc: "A0=space_index" },
+{
       addr: 2147833484, // 0x8005568C
       type: "code",
       name: "EventTableHydrate",
@@ -1756,5 +1766,30 @@ PP64.symbols["MarioParty2U"] = [
       addr: 2148520822, // 0x800FD376
       type: "u16",
       name: "p4_turn_status",
-      desc: "Player 4 turn status" }
+      desc: "Player 4 turn status" },
+{
+      addr: 2148407504, // 0x800E18D0
+      type: "u16",
+      name: "num_board_spaces" },
+{
+      addr: 2148407506, // 0x800E18D2
+      type: "u16",
+      name: "num_chains" },
+{
+      addr: 2148407508, // 0x800E18D4
+      type: "u32",
+      name: "hydrated_space_data" },
+{
+      addr: 2148407512, // 0x800E18D8
+      type: "u32",
+      name: "hydrated_chains" },
+{
+      addr: 2148407616, // 0x800E1940
+      type: "data",
+      name: "arrow_angles",
+      desc: "f32[8]" },
+{
+      addr: 2148407648, // 0x800E1960
+      type: "u32",
+      name: "num_arrow_angles" }
 ];

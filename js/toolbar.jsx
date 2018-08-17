@@ -63,6 +63,7 @@ PP64.toolbar = (function() {
     { "name": "Connect spaces", "icon": "img/toolbar/line.png", "type": $actType.LINE },
     { "name": "Connect multiple spaces in one click", "icon": "img/toolbar/stickyline.png", "type": $actType.LINE_STICKY },
     { "name": "Erase spaces and lines", "icon": "img/toolbar/eraser.png", "type": $actType.ERASE },
+    { "name": "Rotate arrow spaces", "icon": "img/toolbar/rotate.png", "type": $actType.ROTATE, advanced: true },
     { "spacer": true},
     { "name": "Add blue space", "icon": "img/toolbar/blue3.png", "type": $actType.ADD_BLUE, draggable: true },
     { "name": "Add red space", "icon": "img/toolbar/red3.png", "type": $actType.ADD_RED, draggable: true },

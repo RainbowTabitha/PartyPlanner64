@@ -66,6 +66,7 @@ PP64.types = {
     MOVE: 0,
     LINE: 1,
     LINE_STICKY: 2,
+    ROTATE: 3,
     ERASE: 4,
     ROM_LOAD: 5,
     ROM_UNLOAD: 6,

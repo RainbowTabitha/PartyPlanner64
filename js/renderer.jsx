@@ -64,10 +64,19 @@ PP64.renderer = (function() {
   }
 
   function drawSpace(spaceCtx, space, game, boardType, opts = {}) {
-    let x = space.x;
-    let y = space.y;
-    let type = space.type;
-    let subtype = space.subtype;
+    const x = space.x;
+    const y = space.y;
+    const rotation = space.rotation;
+    const type = space.type;
+    const subtype = space.subtype;
+
+    if (typeof rotation === "number") {
+      spaceCtx.save();
+      spaceCtx.translate(x, y);
+      const adjustedAngleRad = -rotation;
+      spaceCtx.rotate(PP64.utils.number.degreesToRadians(adjustedAngleRad));
+      spaceCtx.translate(-x, -y);
+    }
 
     switch (type) {
       case $spaceType.OTHER:
@@ -189,6 +198,10 @@ PP64.renderer = (function() {
       default:
         PP64.spaces.drawUnknown(spaceCtx, x, y);
         break;
+    }
+
+    if (typeof rotation === "number") {
+      spaceCtx.restore();
     }
 
     if (!opts.skipCharacters) {

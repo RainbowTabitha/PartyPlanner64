@@ -1533,6 +1533,11 @@ PP64.symbols["MarioParty3U"] = [
       type: "code",
       name: "__umoddi3" },
 {
+      addr: 2148047536, // 0x80089AB0
+      type: "code",
+      name: "midpoint",
+      desc: "A0=output_xyz" },
+{
       addr: 2148317348, // 0x800CB8A4
       type: "u32",
       name: "debug_font_color",
@@ -1739,6 +1744,11 @@ PP64.symbols["MarioParty3U"] = [
       name: "ShowPlayerCoinChange",
       desc: "A0=player_index" },
 {
+      addr: 2148443744, // 0x800EA660
+      type: "code",
+      name: "AddArrowAngle",
+      desc: "F0=degree_rot_of_arrow" },
+{
       addr: 2148446560, // 0x800EB160
       type: "code",
       name: "GetSpaceData",
@@ -1812,11 +1822,28 @@ PP64.symbols["MarioParty3U"] = [
       name: "AdjustPlayerCoinsGradual",
       desc: "A0=player_index" },
 {
+      addr: 2148553232, // 0x80105210
+      type: "u16",
+      name: "num_board_spaces" },
+{
+      addr: 2148553234, // 0x80105212
+      type: "u16",
+      name: "num_chains" },
+{
       addr: 2148553236, // 0x80105214
       type: "u32",
       name: "hydrated_space_data" },
 {
       addr: 2148553240, // 0x80105218
       type: "u32",
-      name: "hydrated_chains" }
+      name: "hydrated_chains" },
+{
+      addr: 2148553360, // 0x80105290
+      type: "data",
+      name: "arrow_angles",
+      desc: "f32[8]" },
+{
+      addr: 2148553392, // 0x801052B0
+      type: "u32",
+      name: "num_arrow_angles" }
 ];
