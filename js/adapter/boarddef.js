@@ -214,8 +214,13 @@ PP64.adapters.boarddef = (function() {
           return;
         }
 
-        if (typeof nextSpaceIdx !== "number")
-          throw `_determineChains.parseChain hit a dead end at ${$$hex(curSpaceIdx)} (${curSpaceIdx})`;
+        // Hit a dead end. The validation should catch this, so if it didn't,
+        // presumably it was disabled. Just warn but keep going.
+        if (typeof nextSpaceIdx !== "number") {
+          console.warn(`determineChains.parseChain hit a dead end at ${$$hex(curSpaceIdx)} (${curSpaceIdx})`);
+          chains.push(chain);
+          return;
+        }
 
         // Must break the chain if a chain intersects the next space.
         if (spaceIsLinkedFromByAnother(nextSpaceIdx, curSpaceIdx)) {
