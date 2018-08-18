@@ -156,9 +156,12 @@ PP64.romhandler = new class RomHandler {
     return this._u8array;
   }
 
-  getDataView(startingOffset = 0) {
+  getDataView(startingOffset = 0, endOffset = 0) {
     if (!this._rom)
       throw "ROM not loaded, cannot get DataView.";
+    if (endOffset) {
+      return new DataView(this._rom, startingOffset, endOffset - startingOffset);
+    }
     return new DataView(this._rom, startingOffset);
   }
 

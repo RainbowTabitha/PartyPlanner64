@@ -11,12 +11,17 @@ PP64.fs.scenes = new class Scenes {
     this._sceneInfo = null;
   }
 
+  count() {
+    return this._sceneInfo.length;
+  }
+
   getInfo(index) {
     return this._sceneInfo[index] || null;
   }
 
-  count() {
-    return this._sceneInfo.length;
+  getDataView(index) {
+    const info = this._sceneInfo[index];
+    return PP64.romhandler.getDataView(info.rom_start, info.rom_end);
   }
 
   extractAsync() {
@@ -55,26 +60,28 @@ PP64.fs.scenes = new class Scenes {
     }
   }
 
-  // replace(index, binary = null) {
-  //   if (!binary) {
-  //     this._promptReplace(index);
-  //     return;
-  //   }
+  replace(index, buffer = null) {
+    if (!buffer) {
+      this._promptReplace(index);
+      return;
+    }
 
-  //   this._sceneCache[index] = binary;
-  // }
+    const info = this._sceneInfo[index];
+    const romBuffer = PP64.romhandler.getROMBuffer();
+    PP64.utils.arrays.copyRange(romBuffer, buffer, info.rom_start, 0, buffer.byteLength);
+  }
 
-  // _promptReplace(index) {
-  //   PP64.utils.input.openFile("", (event) => {
-  //     let file = event.target.files[0];
-  //     if (!file)
-  //       return;
+  _promptReplace(index) {
+    PP64.utils.input.openFile("", (event) => {
+      const file = event.target.files[0];
+      if (!file)
+        return;
 
-  //     let reader = new FileReader();
-  //     reader.onload = error => {
-  //       this.replace(index, reader.result);
-  //     };
-  //     reader.readAsArrayBuffer(file);
-  //   });
-  // }
+      const reader = new FileReader();
+      reader.onload = error => {
+        this.replace(index, reader.result);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
 };
