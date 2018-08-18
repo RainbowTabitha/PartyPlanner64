@@ -38,6 +38,7 @@
         "JSZip": false,
         "saveAs": false,
         "SparkMD5": false,
-        "MIPSInst": false
+        "MIPSInst": false,
+        "MIPSAssem": false
     }
 }
