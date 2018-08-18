@@ -103,7 +103,7 @@ Object.assign(PP64.adapters.events, (function() {
       return bytes.byteLength;
     }
 
-    $$log("New custom event", custEvent);
+    //$$log("New custom event", custEvent);
     return custEvent;
   }
 

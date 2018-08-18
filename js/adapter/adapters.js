@@ -18,6 +18,9 @@ PP64.adapters = (function() {
       let boardInfos = PP64.adapters.boardinfo.getBoardInfos(PP64.romhandler.getROMGame());
 
       for (let i = 0; i < boardInfos.length; i++) {
+        if ($$debug)
+          console.group(`Board ${i}`);
+
         let boardInfo = boardInfos[i];
         let bgDir = boardInfo.bgDir;
         let background = PP64.fs.hvqfs.readBackground(bgDir);
@@ -58,6 +61,9 @@ PP64.adapters = (function() {
           this.onLoad(newBoard, boardInfo);
 
         boards.push(newBoard);
+
+        if ($$debug)
+          console.groupEnd();
       }
 
       if ($$debug) {

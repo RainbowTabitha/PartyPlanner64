@@ -52,7 +52,7 @@ PP64.images = (function() {
   function _onImageLoaded() {
     _imagesToLoad = _imagesToLoad - 1;
     if (!_imagesToLoad) {
-      $$log("All images loaded, rendering again.");
+      //$$log("All images loaded, rendering again.");
       PP64.renderer.render();
     }
   }
