@@ -263,30 +263,27 @@ PP64.utils.dump = class Dump {
 
   static printSceneTable() {
     const adapter = PP64.adapters.getROMAdapter();
-    const offset = adapter && adapter.SCENE_TABLE_ROM;
-    if (!offset) {
+    if (!(adapter && adapter.SCENE_TABLE_ROM)) {
       console.log("ROM is not loaded, or scene table location is unknown");
       return;
     }
 
-    let romView = PP64.romhandler.getDataView();
-    let table = [];
-    let curOffset = offset;
-    while (romView.getUint32(curOffset) !== 0x44200000) {
+    const sceneCount = PP64.fs.scenes.count();
+    const table = [];
+    for (let i = 0; i < sceneCount; i++) {
+      const info = PP64.fs.scenes.getInfo(i);
       table.push({
-        i: $$hex(table.length),
-        rom_start: $$hex(romView.getUint32(curOffset)),
-        rom_end: $$hex(romView.getUint32(curOffset + 4)),
-        //ram_start: $$hex(romView.getUint32(curOffset + 8)),
-        code_start: $$hex(romView.getUint32(curOffset + 12)),
-        //code_end: $$hex(romView.getUint32(curOffset + 16)),
-        rodata_start: $$hex(romView.getUint32(curOffset + 20)),
-        //rodata_end: $$hex(romView.getUint32(curOffset + 24)),
-        bss_start: $$hex(romView.getUint32(curOffset + 28)),
-        bss_end: $$hex(romView.getUint32(curOffset + 32)),
+        i: $$hex(i),
+        rom_start: $$hex(info.rom_start),
+        rom_end: $$hex(info.rom_end),
+        //ram_start: $$hex(),
+        code_start: $$hex(info.code_start),
+        //code_end: $$hex(),
+        rodata_start: $$hex(info.rodata_start),
+        //rodata_end: $$hex(),
+        bss_start: $$hex(info.bss_start),
+        bss_end: $$hex(info.bss_end),
       });
-
-      curOffset += (9 * 4);
     }
 
     console.table(table);
