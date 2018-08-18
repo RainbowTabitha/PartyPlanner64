@@ -72,7 +72,7 @@ PP64.adapters = (function() {
 
     overwriteBoard(boardIndex, board) {
       let boardCopy = PP64.utils.obj.copy(board);
-      let boardInfo = PP64.adapters.boardinfo.getBoardInfos(PP64.romhandler.getROMGame())[boardIndex];
+      const boardInfo = PP64.adapters.boardinfo.getBoardInfoByIndex(PP64.romhandler.getROMGame(), boardIndex);
 
       let chains = PP64.adapters.boarddef.determineChains(boardCopy);
       PP64.adapters.boarddef.padChains(boardCopy, chains);
@@ -1140,13 +1140,7 @@ PP64.adapters = (function() {
       const game = PP64.romhandler.getROMGame();
       const addArrowAngleAddr = PP64.symbols.getSymbol(game, "AddArrowAngle");
 
-      // 8 arrows is the imposed restriction by the game.
-      // We may be further restricted by the space available.
-      // We can write 1 rotation angle with 3 instructions.
-      const bytesAvailable = arrowRotEndOffset - arrowRotStartOffset;
-      const instructionsAvailable = Math.floor(bytesAvailable / 4);
-      const numArrowBlocks = Math.floor(instructionsAvailable / 3);
-      const totalArrowsToWrite = Math.min(8, numArrowBlocks);
+      const totalArrowsToWrite = PP64.adapters.boardinfo.getArrowRotationLimit(boardInfo);
 
       let insts = [`.orga ${arrowRotStartOffset}`];
       const loopLimit = Math.min(totalArrowsToWrite, rotations.length);

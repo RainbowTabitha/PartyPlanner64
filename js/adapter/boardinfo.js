@@ -15,7 +15,7 @@ PP64.adapters.boardinfo = (function() {
   function create(id) {
     if (_boardInfos[id])
       throw `Cannot create an already existing BoardInfo ${id}.`;
-    let boardInfo = Object.create(BoardInfoBase);
+    const boardInfo = Object.create(BoardInfoBase);
     _boardInfos[id] = boardInfo;
     return boardInfo;
   }
@@ -40,5 +40,23 @@ PP64.adapters.boardinfo = (function() {
   return {
     create,
     getBoardInfos,
+
+    getBoardInfoByIndex: function(gameID, index) {
+      return getBoardInfos(gameID)[index];
+    },
+
+    getArrowRotationLimit: function(boardInfo) {
+      const { arrowRotStartOffset, arrowRotEndOffset } = boardInfo;
+      if (!arrowRotStartOffset)
+        return 0;
+
+      // 8 arrows is the imposed restriction by the game.
+      // We may be further restricted by the space available.
+      // We can write 1 rotation angle with 3 instructions.
+      const bytesAvailable = arrowRotEndOffset - arrowRotStartOffset;
+      const instructionsAvailable = Math.floor(bytesAvailable / 4);
+      const numArrowBlocks = Math.floor(instructionsAvailable / 3);
+      return Math.min(8, numArrowBlocks);
+    },
   };
 })();

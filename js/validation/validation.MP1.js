@@ -5,7 +5,7 @@ PP64.validation.MP1 = (function() {
     PP64.validation.getRule("TOOMANYGATES", { limit: 0 }),
   ];
 
-  function getValidationRulesForBoard(boardIndex) {
+  function getValidationRulesForBoard(gameID, boardIndex) {
     let rules = commonRules.slice(0);
     if (boardIndex === 0) {
       rules.push(PP64.validation.getRule("TOOMANYBOOS", { limit: 2 }));

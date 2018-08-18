@@ -282,6 +282,22 @@ PP64.validation = (function() {
     return false;
   };
 
+  const TooManyArrowRotations = createRule("TOOMANYARROWROTATIONS", "Too many arrow rotations", $validationLevel.WARNING);
+  TooManyArrowRotations.fails = function(board, args = {}) {
+    let rotationCount = 0;
+    board.spaces.forEach(space => {
+      if (!space)
+        return;
+      if (typeof space.rotation === "number") {
+        rotationCount++;
+      }
+    });
+    if (rotationCount > args.limit) {
+      return `Only ${args.limit} arrows will be rotated in-game.`;
+    }
+    return false;
+  };
+
   const GateSetup = createRule("GATESETUP", "Incorrect gate setup", $validationLevel.ERROR);
   GateSetup.fails = function(board, args = {}) {
     let gateSpaceIndices = PP64.boards.getSpacesOfSubType($spaceSubType.GATE, board);
@@ -377,15 +393,15 @@ PP64.validation = (function() {
     switch(gameID) {
       case $gameType.MP1_USA:
       case $gameType.MP1_JPN:
-        rules = rules.concat(PP64.validation.MP1.getValidationRulesForBoard(boardIndex));
+        rules = rules.concat(PP64.validation.MP1.getValidationRulesForBoard(gameID, boardIndex));
         break;
       case $gameType.MP2_USA:
       case $gameType.MP2_JPN:
-        rules = rules.concat(PP64.validation.MP2.getValidationRulesForBoard(boardIndex));
+        rules = rules.concat(PP64.validation.MP2.getValidationRulesForBoard(gameID, boardIndex));
         break;
       case $gameType.MP3_USA:
       case $gameType.MP3_JPN:
-        rules = rules.concat(PP64.validation.MP3.getValidationRulesForBoard(boardIndex));
+        rules = rules.concat(PP64.validation.MP3.getValidationRulesForBoard(gameID, boardIndex));
         break;
     }
 

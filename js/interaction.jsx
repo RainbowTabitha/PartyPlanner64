@@ -157,9 +157,6 @@ PP64.interaction = (function() {
         break;
 
       case $actType.ROTATE:
-        if (selectedSpaces.length === 1) {
-
-        }
         break;
 
       case $actType.ERASE:
@@ -297,15 +294,16 @@ PP64.interaction = (function() {
       case $actType.ROTATE:
         if (selectedSpaces.length === 1) {
           const space = selectedSpaces[0];
-
-          // Adjust rotation of the space.
-          const angleXAxisRad = PP64.utils.number.determineAngle(space.x, space.y, clickX, clickY);
-          const angleYAxisRad = ((Math.PI * 1.5) + angleXAxisRad) % (Math.PI * 2);
-          const angleYAxisDeg = PP64.utils.number.radiansToDegrees(angleYAxisRad);
-          const selectedSpaceIndex = PP64.boards.getSpaceIndex(space, curBoard);
-          $$log(`Space ${selectedSpaceIndex} rotated ${angleYAxisDeg} degrees`);
-          PP64.boards.setSpaceRotation(selectedSpaceIndex, angleYAxisDeg);
-          PP64.renderer.renderSpaces();
+          if (space.type === $spaceType.ARROW) {
+            // Adjust rotation of the space.
+            const angleXAxisRad = PP64.utils.number.determineAngle(space.x, space.y, clickX, clickY);
+            const angleYAxisRad = ((Math.PI * 1.5) + angleXAxisRad) % (Math.PI * 2);
+            const angleYAxisDeg = PP64.utils.number.radiansToDegrees(angleYAxisRad);
+            const selectedSpaceIndex = PP64.boards.getSpaceIndex(space, curBoard);
+            //$$log(`Space ${selectedSpaceIndex} rotated ${angleYAxisDeg} degrees`);
+            PP64.boards.setSpaceRotation(selectedSpaceIndex, angleYAxisDeg);
+            PP64.renderer.renderSpaces();
+          }
         }
         break;
 

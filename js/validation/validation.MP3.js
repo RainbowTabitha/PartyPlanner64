@@ -8,8 +8,13 @@ PP64.validation.MP3 = (function() {
     PP64.validation.getRule("OVERRECOMMENDEDSPACES", { max: 128 }),
   ];
 
-  function getValidationRulesForBoard(boardIndex) {
-    let rules = commonRules.slice(0);
+  function getValidationRulesForBoard(gameID, boardIndex) {
+    const rules = commonRules.slice(0);
+    const boardInfo = PP64.adapters.boardinfo.getBoardInfoByIndex(gameID, boardIndex);
+
+    const totalArrowsToWrite = PP64.adapters.boardinfo.getArrowRotationLimit(boardInfo);
+    rules.push(PP64.validation.getRule("TOOMANYARROWROTATIONS", { limit: totalArrowsToWrite }));
+
     if (boardIndex === 0) {
       rules.push(PP64.validation.getRule("TOOMANYOFEVENT", { event: PP64.adapters.events.getEvent("BANK"), high: 2 }));
       rules.push(PP64.validation.getRule("TOOMANYBANKS", { limit: 2 }));

@@ -145,11 +145,25 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
+    onChangeRotation = event => {
+      let newRot = parseInt(event.target.value, 10);
+      let isBlank = event.target.value === "";
+      if ((!isBlank && isNaN(newRot)) || newRot < 0 || newRot > 360)
+        return;
+      if (!this.state.oldRot)
+        this.setState({ oldRot: this.props.space.rotation });
+      if (!newRot)
+        delete this.props.space.rotation;
+      else
+        this.props.space.rotation = newRot;
+      this.forceUpdate();
+    }
+
     onCoordSet = event => {
       this.props.space.x = this.props.space.x || 0;
       this.props.space.y = this.props.space.y || 0;
       PP64.renderer.render();
-      this.setState({ oldX: undefined, oldY: undefined });
+      this.setState({ oldX: undefined, oldY: undefined, oldRot: undefined });
       this.forceUpdate();
     }
 
@@ -163,15 +177,26 @@ PP64.properties.SpaceProperties = (function() {
       if (!space)
         return null;
 
+      const isArrow = space.type === $spaceType.ARROW;
+
       return (
-        <div>
-          <span className="coordLabel">X:</span>
-          <input className="coordInput" type="text" value={space.x} onChange={this.onChangeX}
-            onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
-          <span className="coordLabel">Y:</span>
-          <input className="coordInput" type="text" value={space.y} onChange={this.onChangeY}
-            onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
-        </div>
+        <React.Fragment>
+          <div className="spaceCoordRow">
+            <span className="coordLabel">X:</span>
+            <input className="coordInput" type="text" value={space.x} onChange={this.onChangeX}
+              onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
+            <span className="coordLabel">Y:</span>
+            <input className="coordInput" type="text" value={space.y} onChange={this.onChangeY}
+              onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
+          </div>
+          {/* {isArrow &&
+            <div className="spaceCoordRow">
+              <span className="coordLabel">Rotation:</span>
+                <input className="coordInput" type="text" value={space.rotation} onChange={this.onChangeRotation}
+                  onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
+            </div>
+          } */}
+        </React.Fragment>
       );
     }
   };
