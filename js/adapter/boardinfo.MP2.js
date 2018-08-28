@@ -22,6 +22,7 @@ PP64.adapters.boardinfo.MP2 = (function() {
     boardSelectIconMask: 20,
   };
   MP2_WESTERN.mainfsEventFile = [10, 682];
+  MP2_WESTERN.sceneIndex = 0x3E; // 62
   // First I tried 0x0029CF24 / 0x80107C54, but then I included the star event
   // at 0x0029E91C / 0x80?. But then, using items NOP sledded, and I found a mystery
   // table at 0x800DF720 that suggests I should use this actually:
@@ -151,6 +152,7 @@ PP64.adapters.boardinfo.MP2 = (function() {
     boardSelectImg: 31,
     boardSelectIconCoords: [35, 61],
   };
+  //MP2_PIRATE.sceneIndex = 0x3F; // 63
   MP2_PIRATE.arrowRotStartOffset = 0x00; // 0x801059F0
   MP2_PIRATE.arrowRotEndOffset = 0x00; // 0x80105A30
 
@@ -169,6 +171,7 @@ PP64.adapters.boardinfo.MP2 = (function() {
     boardSelectImg: 32,
     boardSelectIconCoords: [133, 60],
   };
+  MP2_HORROR.sceneIndex = 0x43; // 67
   MP2_HORROR.eventASMStart = 0; // 0x80112248 ballpark for safe start
   MP2_HORROR.eventASMEnd = 0; // 0x80112C2C same, c2c is big boo event b2w
   MP2_HORROR.spaceEventsStartAddr = 0x0011466C; // There's more...

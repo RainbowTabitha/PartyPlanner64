@@ -21,9 +21,9 @@ PP64.adapters.boardinfo.MP1 = (function() {
     titleScreenImg: 385,
   };
 
-  // scene 0x36? code 0x2418A0, 0x244B50
+  // scene 0x36 code 0x2418A0, 0x244B50
   // PP64.utils.dump.printAsm(0x2418A0, 0x244B50)
-
+  MP1_USA_DK.sceneIndex = 0x36; // 54
   MP1_USA_DK.mainfsEventFile = [10, 422];
   MP1_USA_DK.eventASMStart = 0x00242CDC;
   MP1_USA_DK.eventASMEnd = 0x00244AFC; // 0x00244AC4
@@ -130,6 +130,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     introLogoImg: [359],
     titleScreenImg: 382,
   };
+  MP1_USA_PEACH.sceneIndex = 0x37; // 55
   MP1_USA_PEACH.eventASMStart = 0x00;
   MP1_USA_PEACH.spaceEventsStartAddr = 0x000F7C70;
   MP1_USA_PEACH.spaceEventsStartOffset = 0x00246C50;
@@ -153,6 +154,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     introLogoImg: [362],
     titleScreenImg: 383,
   };
+  MP1_USA_YOSHI.sceneIndex = 0x38; // 56
   MP1_USA_YOSHI.eventASMStart = 0x00;
   MP1_USA_YOSHI.spaceEventsStartAddr = 0x000F861C;
   MP1_USA_YOSHI.spaceEventsStartOffset = 0x00248E2C;
@@ -173,6 +175,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     introLogoImg: [365],
     titleScreenImg: 384,
   };
+  MP1_USA_WARIO.sceneIndex = 0x39; // 57
   MP1_USA_WARIO.eventASMStart = 0x00;
   MP1_USA_WARIO.spaceEventsStartAddr = 0x000F99C4;
   MP1_USA_WARIO.spaceEventsStartOffset = 0x0024C2E4;
@@ -200,6 +203,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     introLogoImg: [368],
     titleScreenImg: 381,
   };
+  MP1_USA_LUIGI.sceneIndex = 0x3A; // 58
   MP1_USA_LUIGI.eventASMStart = 0x00;
   MP1_USA_LUIGI.spaceEventsStartAddr = 0x000F9B90;
   MP1_USA_LUIGI.spaceEventsStartOffset = 0x0024F940;
@@ -223,6 +227,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     introLogoImg: [371],
     titleScreenImg: 380,
   };
+  MP1_USA_MARIO.sceneIndex = 0x3B; // 59
   MP1_USA_MARIO.eventASMStart = 0x00;
   MP1_USA_MARIO.spaceEventsStartAddr = 0x000F8390;
   MP1_USA_MARIO.spaceEventsStartOffset = 0x00251830;
@@ -242,6 +247,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     pauseLogoImg: 282,
     introLogoImg: [374],
   };
+  MP1_USA_BOWSER.sceneIndex = 0x3C; // 60
   MP1_USA_BOWSER.eventASMStart = 0x00;
   MP1_USA_BOWSER.spaceEventsStartAddr = 0x000F9080;
   MP1_USA_BOWSER.spaceEventsStartOffset = 0x00254370;
@@ -264,6 +270,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
     pauseLogoImg: 283,
     introLogoImg: [378],
   };
+  MP1_USA_ETERNALSTAR.sceneIndex = 0x3D; // 61
   MP1_USA_ETERNALSTAR.eventASMStart = 0x00;
   MP1_USA_ETERNALSTAR.spaceEventsStartAddr = 0x000F905C;
   MP1_USA_ETERNALSTAR.spaceEventsStartOffset = 0x00256ECC;
@@ -280,6 +287,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
   MP1_USA_TRAINING.bgDir = 77;
   MP1_USA_TRAINING.str = {};
   MP1_USA_TRAINING.img = {};
+  MP1_USA_TRAINING.sceneIndex = 0x3E; // 62
   MP1_USA_TRAINING.eventASMStart = 0x00;
   MP1_USA_TRAINING.spaceEventsStartAddr = 0x000F87A8;
   MP1_USA_TRAINING.spaceEventsStartOffset = 0x002591B8;
@@ -296,6 +304,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
   MP1_USA_STADIUM.bgDir = 99;
   MP1_USA_STADIUM.str = {};
   MP1_USA_STADIUM.img = {};
+  //MP1_USA_STADIUM.sceneIndex = 0x3F; // 63
 
   // Mini-Game Island - (U) ROM
   const MP1_USA_ISLAND = PP64.adapters.boardinfo.create("MP1_USA_ISLAND");
@@ -304,6 +313,7 @@ PP64.adapters.boardinfo.MP1 = (function() {
   MP1_USA_ISLAND.bgDir = 79;
   MP1_USA_ISLAND.str = {};
   MP1_USA_ISLAND.img = {};
+  MP1_USA_ISLAND.sceneIndex = 0x72; // 114
   MP1_USA_ISLAND.eventASMStart = 0x00;
   MP1_USA_ISLAND.spaceEventsStartAddr = 0x000F8448;
   MP1_USA_ISLAND.spaceEventsStartOffset = 0x002F8EE8;

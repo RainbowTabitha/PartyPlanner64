@@ -91,6 +91,22 @@ PP64.utils.MIPS = class MIPS {
     return offset - startOffset;
   }
 
+  /**
+   * Finds JALs to a given address contained in a DataView.
+   * @returns Array of offsets of the JALs.
+   */
+  static findCalls(dataView, jalAddr) {
+    const jalInst = MIPSInst.parse(`JAL ${jalAddr}`);
+    const calls = [];
+    for (let i = 0; i < dataView.byteLength; i += 4) {
+      const inst = dataView.getUint32(i);
+      if (inst === jalInst) {
+        calls.push(i);
+      }
+    }
+    return calls;
+  }
+
   static _addiu(dst, reg, imm) {
     let base = 0x24000000;
     base = base | reg << 21;

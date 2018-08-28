@@ -50,6 +50,7 @@ PP64.adapters = (function() {
 
         this._parseAudio(newBoard, boardInfo);
 
+        this._findEventTableLocations(boardInfo);
         this._extractEvents(boardInfo, newBoard, i, chains);
         this._extractStarGuardians(newBoard, boardInfo);
         this._extractBoos(newBoard, boardInfo);
@@ -207,8 +208,19 @@ PP64.adapters = (function() {
       $$log("Adapter does not implement onChangeGameSpaceTypesFromBoardSpaceTypes");
     }
 
-    // Assumes the board event data region.
+    /**
+     * Converts a ROM address to an in-game RAM offset.
+     * Assumes the offset is within the scene overlay for the given board.
+     * @param {number} offset ROM offset to convert
+     * @param {object} boardInfo Board info related to the offset
+     */
     _offsetToAddr(offset, boardInfo) {
+      if (typeof boardInfo.sceneIndex === "number" && boardInfo.sceneIndex >= 0) {
+        const sceneInfo = PP64.fs.scenes.getInfo(boardInfo.sceneIndex);
+        return (sceneInfo.ram_start & 0x7FFFFFFF)
+             - (sceneInfo.rom_start - offset);
+      }
+
       return boardInfo.spaceEventsStartAddr
           - (boardInfo.spaceEventsStartOffset - offset);
     }
@@ -217,8 +229,19 @@ PP64.adapters = (function() {
       return (base + offset) >>> 0;
     }
 
-    // Assumes the board event data region.
+    /**
+     * Converts an in-game address to ROM offset.
+     * Assumes the address is within the scene overlay for a given board.
+     * @param {number} addr Address to convert
+     * @param {object} boardInfo Board info related to the address.
+     */
     _addrToOffset(addr, boardInfo) {
+      if (typeof boardInfo.sceneIndex === "number" && boardInfo.sceneIndex >= 0) {
+        const sceneInfo = PP64.fs.scenes.getInfo(boardInfo.sceneIndex);
+        return sceneInfo.rom_start
+             - ((sceneInfo.ram_start & 0x7FFFFFFF) - (addr & 0x7FFFFFFF));
+      }
+
       return boardInfo.spaceEventsStartOffset
           - (boardInfo.spaceEventsStartAddr - addr);
     }
@@ -234,6 +257,31 @@ PP64.adapters = (function() {
       if (lastSpace && (lastSpace.x > board.bg.width + 50) && (lastSpace.y > board.bg.height + 50)) {
         $$log("Pruning dead space", lastSpace);
         board.spaces.splice(lastIdx, 1);
+      }
+    }
+
+    _findEventTableLocations(boardInfo) {
+      if (typeof boardInfo.sceneIndex !== "number" || boardInfo.sceneIndex < 0)
+        return;
+
+      const game = PP64.romhandler.getROMGame();
+      const hydrateEventTableAddr = PP64.symbols.getSymbol(game, "EventTableHydrate");
+
+      const boardCodeDataView = PP64.fs.scenes.getCodeDataView(boardInfo.sceneIndex);
+      const tableCalls = $MIPS.findCalls(boardCodeDataView, hydrateEventTableAddr);
+
+      const spaceEventTables = [];
+      if (!boardInfo.spaceEventTables) {
+        boardInfo.spaceEventTables = spaceEventTables;
+      }
+      for (let i = 0; i < tableCalls.length; i++) {
+        const callOffset = tableCalls[i];
+        const upper = boardCodeDataView.getUint32(callOffset - 4);
+        const lower = boardCodeDataView.getUint32(callOffset + 4);
+        const tableAddr = $MIPS.getRegSetAddress(upper, lower);
+        const tableOffset = this._addrToOffset(tableAddr, boardInfo);
+        $$log(`Found event table ${$$hex(tableAddr)} (ROM ${$$hex(tableOffset)})`);
+        spaceEventTables.push({ tableOffset });
       }
     }
 
@@ -333,12 +381,18 @@ PP64.adapters = (function() {
           // passing the table address to some function. We are parsing the table
           // addresses from those calls, because that gives us the flexibility
           // to reposition the tables and find them again later.
-          let upper = bufferView.getUint32(tableDeflateCall.upper);
-          let lower = bufferView.getUint32(tableDeflateCall.lower);
-          if (!upper && !lower)
-            return;
-          let tableAddr = $MIPS.getRegSetAddress(upper, lower);
-          let tableOffset = this._addrToOffset(tableAddr, boardInfo);
+          let tableOffset;
+          if (tableDeflateCall.tableOffset) {
+            tableOffset = tableDeflateCall.tableOffset;
+          }
+          else {
+            let upper = bufferView.getUint32(tableDeflateCall.upper);
+            let lower = bufferView.getUint32(tableDeflateCall.lower);
+            if (!upper && !lower)
+              return;
+            let tableAddr = $MIPS.getRegSetAddress(upper, lower);
+            tableOffset = this._addrToOffset(tableAddr, boardInfo);
+          }
 
           eventTable.parse(buffer, tableOffset); // Build up all the events into one collection.
         });

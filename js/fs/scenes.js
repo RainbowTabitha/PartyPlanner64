@@ -24,6 +24,24 @@ PP64.fs.scenes = new class Scenes {
     return PP64.romhandler.getDataView(info.rom_start, info.rom_end);
   }
 
+  getCodeDataView(index) {
+    const info = this._sceneInfo[index];
+    const startAddr = info.code_start & 0x7FFFFFFF;
+    const endAddr = info.code_end & 0x7FFFFFFF;
+    return PP64.romhandler.getDataView(info.rom_start, info.rom_start + (endAddr - startAddr));
+  }
+
+  getRoDataView(index) {
+    const info = this._sceneInfo[index];
+    const startAddr = info.rodata_start & 0x7FFFFFFF;
+    const endAddr = info.rodata_end & 0x7FFFFFFF;
+    const ramStart = info.ram_start & 0x7FFFFFFF;
+    return PP64.romhandler.getDataView(
+      info.rom_start + (startAddr - ramStart),
+      info.rom_start + (endAddr - ramStart)
+    );
+  }
+
   extractAsync() {
     return new Promise((resolve) => {
       this.extract();

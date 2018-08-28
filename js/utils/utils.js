@@ -288,6 +288,12 @@ PP64.utils.string = {
       charCodes[i] = str.charCodeAt(i);
     return charCodes;
   },
+  pad: function(str, len, padChar) {
+    while (str.length < len) {
+      str = padChar + str;
+    }
+    return str;
+  },
   splice: function(value, start, delCount, newSubStr) {
     return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
   },

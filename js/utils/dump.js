@@ -309,4 +309,45 @@ PP64.utils.dump = class Dump {
 
     console.log(insts.join("\n"));
   }
+
+  /**
+   * Prints the assembly from an overlay.
+   * @param {number} sceneIndex
+   */
+  static printSceneAsm(sceneIndex) {
+    const sceneInfo = PP64.fs.scenes.getInfo(sceneIndex);
+    let currentAsmAddr = sceneInfo.code_start;
+    const codeDataView = PP64.fs.scenes.getCodeDataView(sceneIndex);
+    const insts = [];
+    for (let i = 0; i < codeDataView.byteLength; i += 4) {
+      const value = codeDataView.getUint32(i);
+      let asm = "? " + $$hex(value);
+      try {
+        asm = MIPSInst.print(value);
+      }
+      catch(e) {
+        console.log("UNRECOGNIZED: " + $$hex(value));
+      }
+      insts.push($$hex(currentAsmAddr) + ": " + asm);
+      currentAsmAddr += 4;
+    }
+
+    console.log(insts.join("\n"));
+
+    const roDataView = PP64.fs.scenes.getRoDataView(sceneIndex);
+    const lines = [];
+    currentAsmAddr = sceneInfo.rodata_start;
+    let i = 0;
+    while (i < roDataView.byteLength) {
+      lines.push($$hex(currentAsmAddr)
+      + ": " + PP64.utils.string.pad($$hex(roDataView.getUint32(i), ""), 8, "0")
+      + " " + PP64.utils.string.pad($$hex(roDataView.getUint32(i + 4), ""), 8, "0")
+      + " " + PP64.utils.string.pad($$hex(roDataView.getUint32(i + 8), ""), 8, "0")
+      + " " + PP64.utils.string.pad($$hex(roDataView.getUint32(i + 12), ""), 8, "0"));
+      currentAsmAddr += 16;
+      i += 16;
+    }
+
+    console.log(lines.join("\n"));
+  }
 }
