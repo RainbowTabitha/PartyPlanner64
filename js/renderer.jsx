@@ -215,7 +215,7 @@ PP64.renderer = (function() {
         let iconY = y + offset;
         if (type === $spaceType.START)
           iconY -= startOffset;
-        spaceCtx.drawImage(PP64.images.get("eventImg"), x + offset, iconY);
+        spaceCtx.drawImage(__determineSpaceEventImg(space), x + offset, iconY);
       }
 
       if (space.star) {
@@ -394,6 +394,23 @@ PP64.renderer = (function() {
         context.restore();
       }
     }
+  }
+
+  function __determineSpaceEventImg(space) {
+    if (space.events && space.events.length) {
+      for (let i = 0; i < space.events.length; i++) {
+        const event = space.events[i];
+        if (event.parameters) {
+          for (let p = 0; p < event.parameters.length; p++) {
+            const parameter = event.parameters[p];
+            if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
+              return PP64.images.get("eventErrorImg");
+            }
+          }
+        }
+      }
+    }
+    return PP64.images.get("eventImg");
   }
 
   let _boardBG;

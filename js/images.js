@@ -12,6 +12,7 @@ PP64.images = (function() {
   addImage("booImg", "img/editor/boo.png");
   addImage("goombaImg", "img/editor/goomba.png");
   addImage("eventImg", "img/editor/event.png");
+  addImage("eventErrorImg", "img/editor/eventerrors.png");
   addImage("starImg", "img/editor/star.png");
   addImage("bank2Img", "img/editor/bank2.png");
   addImage("bank3Img", "img/editor/bank.png");

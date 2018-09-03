@@ -53,7 +53,14 @@ PP64.properties.SpaceProperties = (function() {
       if (!event.parameterValues) {
         event.parameterValues = {};
       }
+
+      const hadPreviousValue = event.parameterValues.hasOwnProperty(name);
+
       event.parameterValues[name] = value;
+
+      if (!hadPreviousValue) {
+        PP64.renderer.renderSpaces();
+      }
     }
 
     render() {
