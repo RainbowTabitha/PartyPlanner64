@@ -185,7 +185,13 @@ Object.assign(PP64.adapters.events, (function() {
     let parameterSymbols = [];
     if (parameters && parameters.length && info.parameterValues) {
       parameterSymbols = parameters.map(parameter => {
-        return `.definelabel ${parameter.name},${info.parameterValues[parameter.name]}`;
+        switch (parameter.type) {
+          case "Boolean":
+            return `.definelabel ${parameter.name},${info.parameterValues[parameter.name] ? 1 : 0}`;
+
+          default:
+            return `.definelabel ${parameter.name},${info.parameterValues[parameter.name]}`;
+        }
       })
     }
 

@@ -481,6 +481,14 @@ PP64.properties.SpaceProperties = (function() {
         parameterButtons = event.parameters.map(parameter => {
           const parameterValue = event.parameterValues && event.parameterValues[parameter.name];
           switch (parameter.type) {
+            case "Boolean":
+              return (
+                <SpaceEventBooleanParameterButton key={parameter.name}
+                  parameter={parameter}
+                  parameterValue={parameterValue}
+                  onEventParameterSet={this.onEventParameterSet} />
+              );
+
             case "Number":
             case "+Number":
               return (
@@ -489,7 +497,7 @@ PP64.properties.SpaceProperties = (function() {
                   parameterValue={parameterValue}
                   positiveOnly={parameter.type === "+Number"}
                   onEventParameterSet={this.onEventParameterSet} />
-              )
+              );
 
             default:
               return null;
@@ -591,6 +599,30 @@ PP64.properties.SpaceProperties = (function() {
         return;
       }
       this.props.onEventParameterSet(name, value);
+    }
+  };
+
+  const SpaceEventBooleanParameterButton = class SpaceEventBooleanParameterButton extends React.Component {
+    render() {
+      const parameterValue = this.props.parameterValue;
+      const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
+      const tooltip = `(Boolean) ${this.props.parameter.name}: ${valueHasBeenSet ? parameterValue : "null"}`;
+      return (
+        <div className="eventEntryItem" title={tooltip}
+          onClick={this.onParameterClicked}>
+          <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
+          &nbsp;
+          {valueHasBeenSet ?
+            <span>{this.props.parameterValue.toString()}</span>
+            : <span className="eventEntryItemParameterUnset">null</span>
+          }
+        </div>
+      );
+    }
+
+    onParameterClicked = () => {
+      const parameterValue = this.props.parameterValue;
+      this.props.onEventParameterSet(this.props.parameter.name, !parameterValue);
     }
   };
 

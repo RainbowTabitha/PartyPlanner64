@@ -350,6 +350,7 @@ ADDIU SP SP 4`;
           <select value={this.state.selectedType}
             onChange={this.onTypeChange}>
             <option></option>
+            <option value="Boolean">Boolean</option>
             <option value="Number">Number</option>
             <option value="+Number">Positive Number</option>
             {/* <option value="Space">Space</option> */}

@@ -185,6 +185,7 @@ PP64.types = {
   },
 
   EventParameterTypes: [
+    "Boolean",
     "Number",
     "+Number",
     "Space",
