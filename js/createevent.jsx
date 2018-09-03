@@ -12,7 +12,7 @@ SW RA 0(SP)
 
 ; Your code here
 
-LW RA 0x000(SP)
+LW RA 0(SP)
 JR RA
 ADDIU SP SP 4`;
 
@@ -28,8 +28,6 @@ ADDIU SP SP 4`;
           executionType: currentEvent.executionType,
           asm: currentEvent.asm,
           parameters: currentEvent.parameters,
-
-          hasError: false,
         };
       }
       else {
@@ -39,8 +37,6 @@ ADDIU SP SP 4`;
           executionType: $executionType.DIRECT,
           asm: _defaultEventAsm,
           parameters: [],
-
-          hasError: false,
         };
       }
     }
@@ -78,11 +74,6 @@ ADDIU SP SP 4`;
 
     componentWillUnmount() {
       _createEventViewInstance = null;
-    }
-
-    componentDidCatch(error, info) {
-      this.setState({ hasError: true });
-      console.error(error);
     }
 
     onEventNameChange = (eventName) => {
@@ -130,17 +121,19 @@ ADDIU SP SP 4`;
     }
 
     onAddEventParameter = (entry) => {
-      this.setState({
-        parameters: [...this.state.parameters, entry]
-      });
+      let newState = { ...this.state };
+      newState.parameters = [...this.state.parameters, entry];
+      this.setState(newState);
+      this.syncTextToStateVars(newState, this.state.asm);
     }
 
     onRemoveEventParameter = (removedEntry) => {
-      this.setState({
-        parameters: this.state.parameters.filter(entry => {
-          return entry.name !== removedEntry.name;
-        })
+      let newState = { ...this.state };
+      newState.parameters = this.state.parameters.filter(entry => {
+        return entry.name !== removedEntry.name;
       });
+      this.setState(newState);
+      this.syncTextToStateVars(newState, this.state.asm);
     }
 
     getEventName = () => {
@@ -161,10 +154,16 @@ ADDIU SP SP 4`;
 
     /** Ensures the ASM text includes the discrete properties. */
     syncTextToStateVars = (newState, existingAsm) => {
-      let newAsm;
-      newAsm = this.__replaceDiscreteProperty(existingAsm, "EXECUTION", PP64.types.getExecutionTypeName(newState.executionType));
-      newAsm = this.__replaceDiscreteProperty(newAsm, "GAMES", newState.supportedGames.map(PP64.types.getGameName).join(","));
-      newAsm = this.__replaceDiscreteProperty(newAsm, "NAME", newState.eventName.trim());
+      let newAsm = this.__clearDiscreteProperties(existingAsm, [
+        "NAME", "GAMES", "EXECUTION", "PARAM"
+      ]);
+      newAsm = "\n" + newAsm;
+      newAsm = this.__writeDiscretePropertyArray(newAsm, "PARAM", newState.parameters.map(param => {
+        return `${param.type}|${param.name}`;
+      }));
+      newAsm = this.__writeDiscreteProperty(newAsm, "EXECUTION", PP64.types.getExecutionTypeName(newState.executionType));
+      newAsm = this.__writeDiscreteProperty(newAsm, "GAMES", newState.supportedGames.map(PP64.types.getGameName).join(","));
+      newAsm = this.__writeDiscreteProperty(newAsm, "NAME", newState.eventName.trim());
 
       if (newAsm !== existingAsm) {
         this.setState({ asm: newAsm });
@@ -187,15 +186,30 @@ ADDIU SP SP 4`;
       if (value) {
         this.setState({ executionType: value });
       }
+
+      value = PP64.adapters.events.CustomAsmHelper.readParameters(asm);
+      if (value) {
+        this.setState({ parameters: value });
+      }
     }
 
-    __replaceDiscreteProperty(asm, propName, value) {
-      const regex = new RegExp("^\\s*[;\\/]+\\s*" + propName + ":.*$", "im");
-      const newLine = `; ${propName}: ${value}`;
-      if (!regex.test(asm)) {
-        return newLine + "\n" + asm; // The prop was deleted? Replace it.
+    __clearDiscreteProperties(asm, properties) {
+      properties.forEach(propertyName => {
+        const regex = new RegExp("^\\s*[;\\/]+\\s*" + propertyName + ":.*[\r\n]*", "gim");
+        asm = asm.replace(regex, "");
+      });
+      return asm;
+    }
+
+    __writeDiscreteProperty(asm, propName, value) {
+      return `; ${propName}: ${value}\n` + asm;
+    }
+
+    __writeDiscretePropertyArray(asm, propName, values) {
+      for (let i = values.length - 1; i >= 0; i--) {
+        asm = `; ${propName}: ${values[i]}\n` + asm;
       }
-      return asm.replace(regex, `; ${propName}: ${value}`);
+      return asm;
     }
 
     __readDiscreteProperty(asm, propName) {
@@ -351,7 +365,7 @@ ADDIU SP SP 4`;
       const newName = event.target.value;
 
       // Can only contain valid characters for a assembler label
-      if (!newName.match(/^[\w\?\!]*$/))
+      if (!newName.match(PP64.adapters.events.CustomAsmHelper.validParameterNameRegex))
         return;
 
       this.setState({ name: newName });

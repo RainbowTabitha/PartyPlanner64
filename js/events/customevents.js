@@ -12,6 +12,19 @@ Object.assign(PP64.adapters.events, (function() {
       return null;
     },
 
+    readDiscretePropertySet: function(asm, propName) {
+      const regex = new RegExp("^\\s*[;\\/]+\\s*" + propName + ":(.+)$", "gim");
+      let lastFind = null;
+      const matches = [];
+      do {
+        lastFind = regex.exec(asm);
+        if (lastFind) {
+          matches.push(lastFind[1].trim());
+        }
+      } while (lastFind);
+      return matches;
+    },
+
     readSupportedGames: function(asm) {
       let value = CustomAsmHelper.readDiscreteProperty(asm, "GAMES");
       if (value !== null) {
@@ -33,10 +46,54 @@ Object.assign(PP64.adapters.events, (function() {
       return PP64.types.getExecutionTypeByName(value.trim());
     },
 
+    readParameters: function(asm) {
+      const entryStrings = CustomAsmHelper.readDiscretePropertySet(asm, "PARAM");
+      const parameters = [];
+      entryStrings.forEach(entryStr => {
+        const pieces = entryStr.split("|");
+        if (pieces.length !== 2)
+          return;
+        const parameter = {
+          name: pieces[1],
+          type: pieces[0]
+        };
+        try {
+          CustomAsmHelper.validateParameters([parameter]);
+          parameters.push(parameter);
+        }
+        catch (e) {} // It's invalid, just skip it.
+      });
+      return parameters;
+    },
+
+    validParameterNameRegex: /^[\w\?\!]*$/,
+
+    validateParameters: function(parameters) {
+      if (!parameters)
+        return;
+      parameters.forEach(parameter => {
+        if (!parameter.name)
+          throw new Error("An event parameter didn't have a name");
+        if (!parameter.type)
+          throw new Error("An event parameter didn't have a type");
+        if (!parameter.name.match(CustomAsmHelper.validParameterNameRegex))
+          throw new Error(`Event parameter name '${parameter.name}' is not valid`);
+        if (PP64.types.EventParameterTypes.indexOf(parameter.type) === -1)
+          throw new Error(`Event parameter type ${parameter.type} is not recognized`);
+      });
+    },
+
     /** Does a test assembly of a custom event. */
-    testAssemble: function(asm, info = {}) {
-      const preppedAsm = prepAsm(asm, Object.assign({
+    testAssemble: function(asm, parameters, info = {}) {
+      // Make fake parameterValues
+      const parameterValues = {};
+      parameters.forEach(parameter => {
+        parameterValues[parameter.name] = 0;
+      });
+
+      const preppedAsm = prepAsm(asm, parameters, Object.assign({
         addr: 0,
+        parameterValues,
       }, info));
       const bytes = MIPSAssem.assemble(preppedAsm);
       return bytes;
@@ -62,11 +119,14 @@ Object.assign(PP64.adapters.events, (function() {
       throw new Error("Custom even must have supported games list");
     }
 
+    const parameters = CustomAsmHelper.readParameters(asm);
+    CustomAsmHelper.validateParameters(parameters);
+
     // Test that assembly works in all claimed supported versions.
     for (let i = 0; i < supportedGames.length; i++) {
       const game = supportedGames[i];
       try {
-        CustomAsmHelper.testAssemble(asm, { game });
+        CustomAsmHelper.testAssemble(asm, parameters, { game });
       }
       catch (e) {
         throw new Error("Failed a test assembly for " + PP64.types.getGameName(game)
@@ -80,6 +140,7 @@ Object.assign(PP64.adapters.events, (function() {
     custEvent.activationType = $activationType.LANDON;
     custEvent.executionType = executionType;
     custEvent.supportedGames = supportedGames;
+    custEvent.parameters = parameters;
 
     custEvent.parse = function(dataView, info) {
       // TODO: Can we generically parse custom events?
@@ -89,7 +150,7 @@ Object.assign(PP64.adapters.events, (function() {
       $$log("Writing custom event", event, info);
 
       // Assemble and write
-      const asm = prepAsm(event.asm, info);
+      const asm = prepAsm(event.asm, event.parameters, info);
       const bytes = MIPSAssem.assemble(asm);
 
       PP64.utils.arrays.copyRange(dataView, bytes, 0, 0, bytes.byteLength);
@@ -111,7 +172,7 @@ Object.assign(PP64.adapters.events, (function() {
    * Takes the event asm that someone wrote and merges in all the assumed
    * global variables.
    */
-  function prepAsm(asm, info) {
+  function prepAsm(asm, parameters, info) {
     const orgDirective = `.org 0x${info.addr.toString(16)}`;
 
     let syms = PP64.symbols.getSymbols(info.game);
@@ -119,9 +180,17 @@ Object.assign(PP64.adapters.events, (function() {
       return `.definelabel ${symbol.name},0x${symbol.addr.toString(16)}`;
     });
 
+    let parameterSymbols = [];
+    if (parameters && parameters.length && info.parameterValues) {
+      parameterSymbols = parameters.map(parameter => {
+        return `.definelabel ${parameter.name},${info.parameterValues[parameter.name]}`;
+      })
+    }
+
     return [
       orgDirective,
       ...syms,
+      ...parameterSymbols,
       asm,
       ".align 4", // it better!
     ].join("\n");

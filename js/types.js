@@ -183,6 +183,11 @@ PP64.types = {
     ERROR: 1,
     WARNING: 2,
   },
+
+  EventParameterTypes: [
+    "Number",
+    "Space",
+  ],
 };
 
 var $viewType = PP64.types.View;

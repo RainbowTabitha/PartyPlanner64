@@ -643,6 +643,7 @@ PP64.adapters = (function() {
             addr: this._offsetToAddr(curASMOffset, boardInfo) | 0x80000000,
             game: PP64.romhandler.getROMGame(),
             gameVersion: this.gameVersion,
+            parameterValues: event.parameterValues,
           };
 
           // Write any inline arguments
@@ -755,6 +756,7 @@ PP64.adapters = (function() {
             addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
             game: PP64.romhandler.getROMGame(),
             gameVersion: this.gameVersion,
+            parameterValues: event.parameterValues,
           };
 
           let [writtenOffset, len] = PP64.adapters.events.write(eventBuffer, event, info, temp);
