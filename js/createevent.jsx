@@ -27,6 +27,7 @@ ADDIU SP SP 4`;
           supportedGames: currentEvent.supportedGames,
           executionType: currentEvent.executionType,
           asm: currentEvent.asm,
+          parameters: currentEvent.parameters,
 
           hasError: false,
         };
@@ -37,6 +38,7 @@ ADDIU SP SP 4`;
           supportedGames: [],
           executionType: $executionType.DIRECT,
           asm: _defaultEventAsm,
+          parameters: [],
 
           hasError: false,
         };
@@ -62,7 +64,10 @@ ADDIU SP SP 4`;
             supportedGames={this.state.supportedGames}
             onGameToggleClicked={this.onGameToggleClicked}
             executionType={this.state.executionType}
-            onExecTypeToggleClicked={this.onExecTypeToggleClicked} />
+            onExecTypeToggleClicked={this.onExecTypeToggleClicked}
+            parameters={this.state.parameters}
+            onAddEventParameter={this.onAddEventParameter}
+            onRemoveEventParameter={this.onRemoveEventParameter} />
         </div>
       );
     }
@@ -122,6 +127,20 @@ ADDIU SP SP 4`;
       newState.executionType = id;
       this.setState({ executionType: id });
       this.syncTextToStateVars(newState, this.state.asm);
+    }
+
+    onAddEventParameter = (entry) => {
+      this.setState({
+        parameters: [...this.state.parameters, entry]
+      });
+    }
+
+    onRemoveEventParameter = (removedEntry) => {
+      this.setState({
+        parameters: this.state.parameters.filter(entry => {
+          return entry.name !== removedEntry.name;
+        })
+      });
     }
 
     getEventName = () => {
@@ -233,6 +252,12 @@ ADDIU SP SP 4`;
           <ToggleGroup items={execTypeToggles}
             allowDeselect={false}
             onToggleClick={this.props.onExecTypeToggleClicked} />
+          <br />
+          <label>Parameters:</label>
+          <EventParametersList
+            parameters={this.props.parameters}
+            onAddEventParameter={this.props.onAddEventParameter}
+            onRemoveEventParameter={this.props.onRemoveEventParameter} />
         </div>
       );
     }
@@ -243,6 +268,111 @@ ADDIU SP SP 4`;
 
     _gameSupported = (game) => {
       return this.props.supportedGames.indexOf(game) >= 0;
+    }
+  }
+
+  const EventParametersList = class EventParametersList extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+
+    render() {
+      const entries = this.props.parameters.map(entry => {
+        return (
+          <EventParametersEntry entry={entry} key={entry.name}
+            onRemoveEntry={this.props.onRemoveEventParameter}/>
+        );
+      });
+
+      return (
+        <div className="eventParametersList">
+          <table>
+            <tbody>
+              {entries}
+            </tbody>
+          </table>
+          <EventParametersAddNewEntry
+            onAddEntry={this.props.onAddEventParameter} />
+        </div>
+      );
+    }
+  }
+
+  const EventParametersEntry = class EventParametersEntry extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+
+    render() {
+      const { type, name } = this.props.entry;
+
+      return (
+        <tr className="eventParameterEntry">
+          <td className="eventParameterEntryType">{type}</td>
+          <td className="eventParameterEntryName" title={name}>{name}</td>
+          <td className="eventParameterEntryDelete">
+            <img src="img/events/delete.png" alt="Delete"
+              onClick={this.onDeleteClick}></img>
+          </td>
+        </tr>
+      );
+    }
+
+    onDeleteClick = () => {
+      this.props.onRemoveEntry(this.props.entry);
+    }
+  }
+
+  const EventParametersAddNewEntry = class EventParametersAddNewEntry extends React.Component {
+    state = {
+      selectedType: "",
+      name: "",
+    }
+
+    render() {
+      const Button = PP64.controls.Button;
+      return (
+        <div className="eventParameterAddNewEntry">
+          <select value={this.state.selectedType}
+            onChange={this.onTypeChange}>
+            <option></option>
+            <option value="Number">Number</option>
+            <option value="Space">Space</option>
+          </select>
+          <input type="text" placeholder="Name"
+            value={this.state.name}
+            onChange={this.onNameChange} />
+          <Button onClick={this.onAddClick}>Add</Button>
+        </div>
+      );
+    }
+
+    onNameChange = (event) => {
+      const newName = event.target.value;
+
+      // Can only contain valid characters for a assembler label
+      if (!newName.match(/^[\w\?\!]*$/))
+        return;
+
+      this.setState({ name: newName });
+    }
+
+    onTypeChange = (event) => {
+      this.setState({ selectedType: event.target.value });
+    }
+
+    onAddClick = () => {
+      if (!this.state.name || !this.state.selectedType)
+        return;
+
+      this.props.onAddEntry({
+        name: this.state.name,
+        type: this.state.selectedType,
+      });
+      this.setState({
+        name: "",
+        selectedType: "",
+      });
     }
   }
 

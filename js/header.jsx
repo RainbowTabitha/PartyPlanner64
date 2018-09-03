@@ -431,8 +431,10 @@ PP64.header = (function() {
         iconImg = <img className="headerButtonIcon" src={this.props.action.icon}></img>;
       }
       return (
-        <div className="headerButton" onClick={this.handleClick} title={this.props.action.details}
-          role="button" tabIndex="0">
+        <div className="headerButton" title={this.props.action.details}
+          role="button" tabIndex="0"
+          onClick={this.handleClick}
+          onKeyDown={PP64.utils.react.makeKeyClick(this.handleClick, this)}>
           {iconImg}
           <span className="headerButtonText">{this.props.action.name}</span>
         </div>

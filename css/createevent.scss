@@ -75,6 +75,69 @@
   }
 }
 
+.eventParametersList {
+  max-width: 100%;
+
+  table {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.eventParameterEntry {
+  display: flex;
+}
+
+.eventParameterEntryType {
+  width: 90px;
+}
+
+.eventParameterEntryName {
+  flex: 1;
+  font-family: "Courier New", Courier, monospace;
+  line-height: 22px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventParameterEntryDelete {
+  width: 30px;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.eventParameterAddNewEntry {
+  display: flex;
+  font-size: smaller;
+
+  select {
+    flex-shrink: 0;
+    color: initial;
+    width: 90px;
+
+    option {
+      color: initial;
+    }
+  }
+
+  input {
+    flex: 1;
+    min-width: 50px;
+    color: initial;
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  button {
+    color: initial;
+    width: 22px;
+    min-width: 16px;
+  }
+}
+
 @media (max-width: 965px) {
   .createEventForm {
     margin-top: 1em;

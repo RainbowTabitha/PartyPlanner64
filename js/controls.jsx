@@ -11,7 +11,9 @@ PP64.controls = (function() {
       if (this.props.css)
         css += " " + this.props.css;
       return (
-        <div className={css} onClick={this.onClick} title={this.props.title}>
+        <div className={css} title={this.props.title} tabIndex={0}
+          onClick={this.onClick}
+          onKeyDown={PP64.utils.react.makeKeyClick(this.onClick, this)}>
           {this.props.children}
         </div>
       );
@@ -32,7 +34,9 @@ PP64.controls = (function() {
       if (this.props.css)
         css += " " + this.props.css;
       return (
-        <div className={css} onClick={this.onClick} title={this.props.title}>
+        <div className={css} title={this.props.title} tabIndex={0}
+          onClick={this.onClick}
+          onKeyDown={PP64.utils.react.makeKeyClick(this.onClick, this)}>
           {this.props.children}
         </div>
       );
@@ -47,6 +51,7 @@ PP64.controls = (function() {
       let toggles = items.map(item => {
         return (
           <ToggleButton id={item.id}
+            key={item.id}
             pressed={item.selected}
             allowDeselect={this.props.allowDeselect}
             title={item.title}
