@@ -210,13 +210,14 @@ PP64.validation = (function() {
       if (!space || !space.events)
         return;
       space.events.forEach(event => {
-        event = PP64.adapters.events.getEvent(event.id);
         if (!event)
           return; // Let the other rule handle this.
         if (!event.custom)
           return;
         try {
-          PP64.adapters.events.CustomAsmHelper.testAssemble(event.asm, { game: gameID });
+          PP64.adapters.events.CustomAsmHelper.testAssemble(event.asm, event.parameters, {
+            game: gameID,
+          });
         }
         catch (e) {
           console.error(e.toString());

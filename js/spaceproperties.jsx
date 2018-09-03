@@ -49,6 +49,13 @@ PP64.properties.SpaceProperties = (function() {
         event.activationType = PP64.types.EventActivationType.WALKOVER;
     }
 
+    onEventParameterSet = (event, name, value) => {
+      if (!event.parameterValues) {
+        event.parameterValues = {};
+      }
+      event.parameterValues[name] = value;
+    }
+
     render() {
       const spaces = this.props.selectedSpaces;
       if (!spaces || !spaces.length) {
@@ -110,7 +117,8 @@ PP64.properties.SpaceProperties = (function() {
           <div className="propertiesPadded">
             <SpaceEventsList events={curSpace.events}
               onEventAdded={this.onEventAdded} onEventDeleted={this.onEventDeleted}
-              onEventActivationTypeToggle={this.onEventActivationTypeToggle} />
+              onEventActivationTypeToggle={this.onEventActivationTypeToggle}
+              onEventParameterSet={this.onEventParameterSet} />
           </div>
           ) : null }
         </div>
@@ -430,7 +438,8 @@ PP64.properties.SpaceProperties = (function() {
         return (
           <SpaceEventEntry event={event} key={`${event.id}-${id++}`}
             onEventDeleted={this.props.onEventDeleted}
-            onEventActivationTypeToggle={this.props.onEventActivationTypeToggle} />
+            onEventActivationTypeToggle={this.props.onEventActivationTypeToggle}
+            onEventParameterSet={this.props.onEventParameterSet} />
         );
       });
       let eventadd;
@@ -458,9 +467,36 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
+    onEventParameterSet = (name, value) => {
+      this.props.onEventParameterSet(this.props.event, name, value);
+      this.forceUpdate();
+    }
+
     render() {
       let event = this.props.event;
       let name = PP64.adapters.events.getName(event.id) || event.id;
+
+      let parameterButtons;
+      if (event.parameters) {
+        parameterButtons = event.parameters.map(parameter => {
+          const parameterValue = event.parameterValues && event.parameterValues[parameter.name];
+          switch (parameter.type) {
+            case "Number":
+            case "+Number":
+              return (
+                <SpaceEventNumberParameterButton key={parameter.name}
+                  parameter={parameter}
+                  parameterValue={parameterValue}
+                  positiveOnly={parameter.type === "+Number"}
+                  onEventParameterSet={this.onEventParameterSet} />
+              )
+
+            default:
+              return null;
+          }
+        })
+      }
+
       return (
         <div className="eventEntry">
           <div className="eventEntryHeader">
@@ -471,6 +507,7 @@ PP64.properties.SpaceProperties = (function() {
           <div className="eventEntryOptions">
             <SpaceEventActivationTypeToggle activationType={event.activationType}
               onEventActivationTypeToggle={this.onEventActivationTypeToggle} />
+            {parameterButtons}
           </div>
         </div>
       );
@@ -514,6 +551,46 @@ PP64.properties.SpaceProperties = (function() {
           <span>{activationTypeText}</span>
         </div>
       );
+    }
+  };
+
+  const SpaceEventNumberParameterButton = class SpaceEventNumberParameterButton extends React.Component {
+    render() {
+      const parameterValue = this.props.parameterValue;
+      const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
+      const tooltip = `(Number) ${this.props.parameter.name}: ${valueHasBeenSet ? parameterValue : "null"}`;
+      return (
+        <div className="eventEntryItem" title={tooltip}
+          onClick={this.onParameterClicked}>
+          <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
+          &nbsp;
+          {valueHasBeenSet ?
+            <span>{this.props.parameterValue}</span>
+            : <span className="eventEntryItemParameterUnset">null</span>
+          }
+        </div>
+      );
+    }
+
+    onParameterClicked = () => {
+      const name = this.props.parameter.name;
+      const positiveOnly = this.props.positiveOnly;
+      // Prompt the user for a value.
+      const userValue =
+        window.prompt(`Enter a ${positiveOnly ? "positive" : ""} numeric value for the ${name} parameter`);
+      if (!userValue) {
+        return; // Enter nothing, ignore response.
+      }
+      const value = parseInt(userValue);
+      if (isNaN(value)) {
+        PP64.app.showMessage("The value entered could not be parsed into a number");
+        return;
+      }
+      if (this.props.positiveOnly && value <= 0) {
+        PP64.app.showMessage("The value entered must be a positive number");
+        return;
+      }
+      this.props.onEventParameterSet(name, value);
     }
   };
 

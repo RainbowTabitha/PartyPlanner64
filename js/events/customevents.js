@@ -87,9 +87,11 @@ Object.assign(PP64.adapters.events, (function() {
     testAssemble: function(asm, parameters, info = {}) {
       // Make fake parameterValues
       const parameterValues = {};
-      parameters.forEach(parameter => {
-        parameterValues[parameter.name] = 0;
-      });
+      if (parameters && parameters.length) {
+        parameters.forEach(parameter => {
+          parameterValues[parameter.name] = 0;
+        });
+      }
 
       const preppedAsm = prepAsm(asm, parameters, Object.assign({
         addr: 0,
