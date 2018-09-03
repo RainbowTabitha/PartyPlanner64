@@ -127,26 +127,24 @@ $propertySectionHeight: 14px;
   border: 1px solid #605654;
   border-radius: 2px;
   font-size: 9pt;
-}
-
-.eventEntryActivationTypeItem {
+  margin-top: 2px;
+  padding-left: 2px;
   cursor: pointer;
 
   &:hover {
     border-color: #4a3d3a;
     background-color: rgb(148, 125, 121);
+    cursor: pointer;
   }
+}
+
+.eventEntryActivationTypeItem {
 }
 
 .eventEntryActivationTypeToggle {
   width: 16px;
   height: 10px;
-  margin-left: 2px;
   margin-right: 3px;
-
-  &:hover {
-    cursor: pointer;
-  }
 }
 
 .eventEntryDelete {
@@ -160,6 +158,15 @@ $propertySectionHeight: 14px;
     color: #AA0000;
     cursor: pointer;
   }
+}
+
+.eventEntryItemParameterName {
+  font-family: "Courier New", Courier, monospace;
+}
+
+.eventEntryItemParameterUnset {
+  color: #841617;
+  font-style: italic;
 }
 
 .eventAddSelect {

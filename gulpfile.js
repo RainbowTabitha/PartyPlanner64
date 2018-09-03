@@ -1,26 +1,25 @@
-var gulp = require("gulp");
+const gulp = require("gulp");
 
-var babel = require("gulp-babel");
-var cache = require("gulp-cached");
-var clean = require("gulp-clean");
-var cleanCSS = require('gulp-clean-css');
-var concat = require("gulp-concat");
-//var imagemin = require('gulp-imagemin');
-var order = require('gulp-order');
-var preprocess = require('gulp-preprocess');
-var rename = require("gulp-rename");
-var replace = require('gulp-replace');
-var sass = require("gulp-sass");
-var textTransformation = require("gulp-text-simple");
-var through = require("through2");
-var uglify = require("gulp-uglify");
-var zip = require('gulp-zip');
+const babel = require("gulp-babel");
+const cache = require("gulp-cached");
+const clean = require("gulp-clean");
+const cleanCSS = require('gulp-clean-css');
+const concat = require("gulp-concat");
+//const imagemin = require('gulp-imagemin');
+const order = require('gulp-order');
+const preprocess = require('gulp-preprocess');
+const rename = require("gulp-rename");
+const replace = require('gulp-replace');
+const sass = require("gulp-sass");
+const textTransformation = require("gulp-text-simple");
+const uglify = require("gulp-uglify");
+const zip = require('gulp-zip');
 
-var exec = require('child_process').exec;
-var fs = require("fs");
-var runSequence = require("run-sequence");
+const exec = require('child_process').exec;
+const fs = require("fs");
+const runSequence = require("run-sequence");
 
-var packageJson = JSON.parse(fs.readFileSync("./package.json"));
+const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 
 const JS = [
   "js/lib/js-spark-md5/spark-md5.js",
@@ -247,7 +246,7 @@ const LIB_JS = [
   { src: "node_modules/gltf-js-utils/dist/gltfutils.js",
     dst: "gltfjsutils.min.js"
   },
-  { src: "node_modules/mips-inst/dist/bundle.js",
+  { src: "node_modules/mips-inst/dist/mipsinst.js",
     dst: "mips-inst.min.js"
   },
   { src: "node_modules/mips-assembler/dist/mipsassem.js",
