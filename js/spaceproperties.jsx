@@ -592,7 +592,7 @@ PP64.properties.SpaceProperties = (function() {
       const positiveOnly = this.props.positiveOnly;
       // Prompt the user for a value.
       const userValue =
-        window.prompt(`Enter a ${positiveOnly ? "positive" : ""} numeric value for the ${name} parameter`);
+        window.prompt(`Enter a${positiveOnly ? " positive " : " "}numeric value for the ${name} parameter`);
       if (!userValue) {
         return; // Enter nothing, ignore response.
       }

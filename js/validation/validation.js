@@ -214,6 +214,7 @@ PP64.validation = (function() {
           return; // Let the other rule handle this.
         if (!event.custom)
           return;
+
         try {
           PP64.adapters.events.CustomAsmHelper.testAssemble(event.asm, event.parameters, {
             game: gameID,
@@ -240,6 +241,45 @@ PP64.validation = (function() {
       error += "\t" + id + "\n";
     });
     return error;
+  };
+
+  const BadCustomEventParameters = createRule("CUSTOMEVENTBADPARAMS", "Custom event parameter issues", $validationLevel.ERROR);
+  BadCustomEventParameters.fails = function(board, args) {
+    const missingParams = Object.create(null);
+    board.spaces.forEach(space => {
+      if (!space || !space.events)
+        return;
+      space.events.forEach(event => {
+        if (!event)
+          return; // Let the other rule handle this.
+        if (!event.custom)
+          return;
+
+        const parameters = event.parameters;
+        if (parameters && parameters.length) {
+          parameters.forEach(parameter => {
+            if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
+              if (!missingParams[parameter.name])
+                missingParams[parameter.name] = 0;
+              missingParams[parameter.name]++;
+            }
+          });
+        }
+      });
+    });
+
+    let errorLines = [];
+    for (let id in missingParams) {
+      const count = missingParams[id];
+      if (!count)
+        continue; // ?
+      errorLines.push(`\t${count} ${id} event parameter${count > 1 ? "s are " : " is "}not set`);
+    }
+
+    if (!errorLines.length)
+      return false;
+
+    return "Some event parameters need to be set:\n" + errorLines.join("\n");
   };
 
   const TooManyPathOptions = createRule("TOOMANYPATHOPTIONS", "Too many path options", $validationLevel.ERROR);
@@ -386,6 +426,7 @@ PP64.validation = (function() {
       PP64.validation.getRule("UNRECOGNIZEDEVENTS"),
       PP64.validation.getRule("UNSUPPORTEDEVENTS"),
       PP64.validation.getRule("CUSTOMEVENTFAIL"),
+      PP64.validation.getRule("CUSTOMEVENTBADPARAMS"),
       PP64.validation.getRule("TOOMANYPATHOPTIONS"),
       PP64.validation.getRule("CHARACTERSONPATH"),
       PP64.validation.getRule("SPLITATNONINVISIBLESPACE"),
