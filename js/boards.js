@@ -187,6 +187,38 @@ PP64.boards = (function() {
     }
   }
 
+  function _removeAssociations(spaceIdx, board) {
+    _forEachEventParameter(board, (parameter, event) => {
+      if (parameter.type === "Space") {
+        if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
+          if (event.parameterValues[parameter.name] === spaceIdx) {
+            delete event.parameterValues[parameter.name];
+          }
+        }
+      }
+    });
+  }
+
+  function _forEachEventParameter(board, fn) {
+    const spaces = board.spaces;
+    if (spaces && spaces.length) {
+      for (let s = 0; s < spaces.length; s++) {
+        const space = spaces[s];
+        if (space.events && space.events.length) {
+          for (let i = 0; i < space.events.length; i++) {
+            const event = space.events[i];
+            if (event.parameters) {
+              for (let p = 0; p < event.parameters.length; p++) {
+                const parameter = event.parameters[p];
+                fn(parameter, event, space);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   // Removes any _ prefixed property from a board.
   function stripPrivateProps(obj = {}) {
     if (typeof obj !== "object")
@@ -480,6 +512,7 @@ PP64.boards = (function() {
 
       // Remove any attached connections.
       _removeConnections(index, board);
+      _removeAssociations(index, board);
 
       // Remove the actual space.
       let oldSpaceLen = board.spaces.length;
@@ -504,6 +537,15 @@ PP64.boards = (function() {
         else
           board.links[start] = _adjust(end);
       }
+
+      // Update space event parameter indices
+      _forEachEventParameter(board, (parameter, event) => {
+        if (parameter.type === "Space") {
+          if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
+            event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
+          }
+        }
+      });
     },
 
     getSpaceIndex: function(space, board = getCurrentBoard()) {
