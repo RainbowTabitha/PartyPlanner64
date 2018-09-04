@@ -15,8 +15,8 @@ PP64.renderer = (function() {
       lineCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
 
     // Draw connecting lines.
-    board.links = board.links || {};
-    for (let startSpace in board.links) {
+    const links = board.links = board.links || {};
+    for (let startSpace in links) {
       let x1 = board.spaces[startSpace].x;
       let y1 = board.spaces[startSpace].y;
 
@@ -26,10 +26,38 @@ PP64.renderer = (function() {
       for (let i = 0; i < endLinks.length; i++) {
         x2 = board.spaces[endLinks[i]].x;
         y2 = board.spaces[endLinks[i]].y;
-        bidirectional = _isConnectedTo(board.links, endLinks[i], startSpace);
+        bidirectional = _isConnectedTo(links, endLinks[i], startSpace);
         if (bidirectional && startSpace > endLinks[i])
           continue;
         drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
+      }
+    }
+
+    // Draw associated spaces in event params.
+    const spaces = board.spaces;
+    if (spaces && spaces.length) {
+      for (let i = 0; i < spaces.length; i++) {
+        const space = spaces[i];
+        if (space.events && space.events.length) {
+          for (let e = 0; e < space.events.length; e++) {
+            const event = space.events[e];
+            if (event.parameters && event.parameters.length) {
+              for (let p = 0; p < event.parameters.length; p++) {
+                const parameter = event.parameters[p];
+                if (parameter.type === "Space") {
+                  const associatedSpaceIndex =
+                    event.parameterValues && event.parameterValues[parameter.name];
+                  if (typeof associatedSpaceIndex === "number") {
+                    const associatedSpace = spaces[associatedSpaceIndex];
+                    if (!associatedSpace)
+                      continue; // I guess maybe this could happen?
+                    drawAssociation(lineCtx, space.x, space.y, associatedSpace.x, associatedSpace.y);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -338,8 +366,19 @@ PP64.renderer = (function() {
   function drawAssociation(lineCtx, x1, y1, x2, y2) {
     lineCtx.save();
     lineCtx.beginPath();
-    lineCtx.strokeStyle = "rgba(211, 211, 211, 0.75)";
-    lineCtx.setLineDash([1, 6]);
+    lineCtx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    lineCtx.setLineDash([1, 8]);
+    lineCtx.lineCap = "round";
+    lineCtx.lineWidth = 6;
+    lineCtx.moveTo(x1, y1);
+    lineCtx.lineTo(x2, y2);
+    lineCtx.stroke();
+    lineCtx.restore();
+
+    lineCtx.save();
+    lineCtx.beginPath();
+    lineCtx.strokeStyle = "rgba(240, 240, 240, 0.5)";
+    lineCtx.setLineDash([1, 8]);
     lineCtx.lineCap = "round";
     lineCtx.lineWidth = 4;
     lineCtx.moveTo(x1, y1);
@@ -757,7 +796,7 @@ PP64.renderer = (function() {
       let lineCtx = ReactDOM.findDOMNode(_boardLines).getContext("2d");
       drawConnection(lineCtx, x1, y1, x2, y2);
     },
-    drawAssociation,
+
     highlightSpaces: function(spaces) {
       if (_boardSelectedSpaces)
         _boardSelectedSpaces.highlightSpaces(spaces);

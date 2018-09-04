@@ -54,6 +54,7 @@ PP64.properties.SpaceProperties = (function() {
         event.parameterValues = {};
       }
       event.parameterValues[name] = value;
+      PP64.renderer.renderConnections();
       PP64.renderer.renderSpaces();
     }
 
