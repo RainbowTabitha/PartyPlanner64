@@ -408,6 +408,8 @@ PP64.interaction = (function() {
       PP64.renderer.renderSpaces();
     }
 
+    spaceWasMouseDownedOn = false;
+
     if (!_hasAnySelectedSpace())
       return;
 
@@ -610,6 +612,8 @@ PP64.interaction = (function() {
   }
 
   function onEditorMouseOut(event) {
+    spaceWasMouseDownedOn = false;
+
     if (event.button !== 0)
       return;
     if (PP64.boards.currentBoardIsROM())
