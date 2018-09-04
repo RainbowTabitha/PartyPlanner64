@@ -623,7 +623,7 @@ PP64.renderer = (function() {
     render() {
       return (
         <canvas className="editor_space_canvas" tabIndex="-1"
-          onDragOver={this.preventDefault} onDrop={this.onDrop}></canvas>
+          onDragOver={this.preventDefault}></canvas>
       );
     }
 

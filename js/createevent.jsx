@@ -353,7 +353,7 @@ ADDIU SP SP 4`;
             <option value="Boolean">Boolean</option>
             <option value="Number">Number</option>
             <option value="+Number">Positive Number</option>
-            {/* <option value="Space">Space</option> */}
+            <option value="Space">Space</option>
           </select>
           <input type="text" placeholder="Name"
             value={this.state.name}

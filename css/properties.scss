@@ -131,10 +131,20 @@ $propertySectionHeight: 14px;
   padding-left: 2px;
   cursor: pointer;
 
+  > img {
+    margin-right: 3px;
+  }
+
   &:hover {
     border-color: #4a3d3a;
     background-color: rgb(148, 125, 121);
     cursor: pointer;
+  }
+}
+
+.eventEntryItem.eventEntryItemDraggable {
+  &:hover {
+    cursor: alias;
   }
 }
 
@@ -144,7 +154,6 @@ $propertySectionHeight: 14px;
 .eventEntryActivationTypeToggle {
   width: 16px;
   height: 10px;
-  margin-right: 3px;
 }
 
 .eventEntryDelete {

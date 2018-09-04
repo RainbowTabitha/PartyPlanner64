@@ -53,14 +53,8 @@ PP64.properties.SpaceProperties = (function() {
       if (!event.parameterValues) {
         event.parameterValues = {};
       }
-
-      const hadPreviousValue = event.parameterValues.hasOwnProperty(name);
-
       event.parameterValues[name] = value;
-
-      if (!hadPreviousValue) {
-        PP64.renderer.renderSpaces();
-      }
+      PP64.renderer.renderSpaces();
     }
 
     render() {
@@ -506,6 +500,14 @@ PP64.properties.SpaceProperties = (function() {
                   onEventParameterSet={this.onEventParameterSet} />
               );
 
+            case "Space":
+              return (
+                <SpaceEventSpaceParameterButton key={parameter.name}
+                  parameter={parameter}
+                  parameterValue={parameterValue}
+                  onEventParameterSet={this.onEventParameterSet} />
+              );
+
             default:
               return null;
           }
@@ -630,6 +632,48 @@ PP64.properties.SpaceProperties = (function() {
     onParameterClicked = () => {
       const parameterValue = this.props.parameterValue;
       this.props.onEventParameterSet(this.props.parameter.name, !parameterValue);
+    }
+  };
+
+  const SpaceEventSpaceParameterButton = class SpaceEventSpaceParameterButton extends React.Component {
+    render() {
+      const parameterValue = this.props.parameterValue;
+      const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
+      const tooltip = `(Space) ${this.props.parameter.name}: ${valueHasBeenSet ? "set" : "null"}`
+        + "\nDrag to a space to associate it";
+      return (
+        <div className="eventEntryItem eventEntryItemDraggable" title={tooltip}
+          draggable={true}
+          onDragStart={this.onDragStart}
+          onClick={this.onParameterClicked}>
+          <img alt="Target" src="img/events/target.png" />
+          <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
+          &nbsp;
+          {valueHasBeenSet ?
+            <span>set</span>
+            : <span className="eventEntryItemParameterUnset">null</span>
+          }
+        </div>
+      );
+    }
+
+    onDragStart = (event) => {
+      PP64.utils.drag.setEventParamDropHandler(this.onSpaceDroppedOn);
+      event.dataTransfer.setDragImage(PP64.images.get("targetImg"), 3, 0);
+      event.dataTransfer.setData("text", JSON.stringify({
+        isEventParamDrop: true
+      }));
+    }
+
+    onSpaceDroppedOn = (spaceIndex) => {
+      PP64.utils.drag.setEventParamDropHandler(null);
+      if (spaceIndex >= 0) {
+        this.props.onEventParameterSet(this.props.parameter.name, spaceIndex);
+      }
+    }
+
+    onParameterClicked = () => {
+      PP64.app.showMessage("To associate a space with this event, click and drag from this list entry and release over the target space.");
     }
   };
 

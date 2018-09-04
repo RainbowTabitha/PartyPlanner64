@@ -42,6 +42,8 @@ PP64.images = (function() {
   addImage("spaceMiniGameDuel3", "img/editor/spaces/minigameduel3.png");
   addImage("spaceHappeningDuel3", "img/editor/spaces/happeningduel3.png");
 
+  addImage("targetImg", "img/events/target.png");
+
   function addImage(name, url) {
     _imageTemp[name] = url;
     _images[name] = new Image();

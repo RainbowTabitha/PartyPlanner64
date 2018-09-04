@@ -532,19 +532,34 @@ PP64.interaction = (function() {
     let data;
     try {
       data = JSON.parse(event.dataTransfer.getData("text"));
-    } catch (e) { return; }
+    } catch (e) {
+      return;
+    }
 
-    _clearSelectedSpaces();
+    if (typeof data === "object") {
+      if (data.action) {
+        _clearSelectedSpaces();
 
-    if (typeof data === "object" && data.action) {
-      let canvas = event.currentTarget;
-      canvasRect = canvas.getBoundingClientRect();
-      let clickX = event.clientX - canvasRect.left;
-      let clickY = event.clientY - canvasRect.top;
-      let droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
-      let curBoard = PP64.boards.getCurrentBoard();
-      let curSpace = droppedOnSpaceIdx === -1 ? null : curBoard.spaces[droppedOnSpaceIdx];
-      _addSpace(data.action.type, clickX, clickY, curSpace, false, false);
+        const canvas = event.currentTarget;
+        canvasRect = canvas.getBoundingClientRect();
+        const clickX = event.clientX - canvasRect.left;
+        const clickY = event.clientY - canvasRect.top;
+        const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
+        const curBoard = PP64.boards.getCurrentBoard();
+        const curSpace = droppedOnSpaceIdx === -1 ? null : curBoard.spaces[droppedOnSpaceIdx];
+        _addSpace(data.action.type, clickX, clickY, curSpace, false, false);
+      }
+      else if (data.isEventParamDrop) {
+        const handler = PP64.utils.drag.getEventParamDropHandler();
+        if (handler) {
+          const canvas = event.currentTarget;
+          canvasRect = canvas.getBoundingClientRect();
+          const clickX = event.clientX - canvasRect.left;
+          const clickY = event.clientY - canvasRect.top;
+          const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
+          handler(droppedOnSpaceIdx);
+        }
+      }
     }
   }
 

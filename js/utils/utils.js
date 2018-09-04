@@ -225,7 +225,13 @@ PP64.utils.drag = {
   },
   clearHandlers: function clearHandlers() {
     document.getElementById("dragZone").ondrop = null;
-  }
+  },
+  setEventParamDropHandler: function setEventParamDropHandler(fn) {
+    PP64.utils.drag.__eventParamDropHandler = fn;
+  },
+  getEventParamDropHandler: function getEventParamDropHandler() {
+    return PP64.utils.drag.__eventParamDropHandler;
+  },
 };
 
 PP64.utils.input = {
