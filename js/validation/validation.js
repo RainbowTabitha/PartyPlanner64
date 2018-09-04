@@ -35,7 +35,7 @@ PP64.validation = (function() {
     return false;
   };
 
-  const DeadEnd = createRule("DEADEND", "No dead ends", $validationLevel.ERROR);
+  const DeadEnd = createRule("DEADEND", "No dead ends", $validationLevel.WARNING);
   DeadEnd.fails = function(board, args) {
     const deadEnds = PP64.boards.getDeadEnds(board);
 

@@ -184,13 +184,30 @@ Object.assign(PP64.adapters.events, (function() {
 
     let parameterSymbols = [];
     if (parameters && parameters.length && info.parameterValues) {
-      parameterSymbols = parameters.map(parameter => {
+      parameters.forEach(parameter => {
+        const parameterValue = info.parameterValues[parameter.name];
         switch (parameter.type) {
           case "Boolean":
-            return `.definelabel ${parameter.name},${info.parameterValues[parameter.name] ? 1 : 0}`;
+            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue ? 1 : 0}`);
+            break;
+
+          case "Space":
+            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+            if (info.chains) {
+              const indices = PP64.adapters.boarddef.getChainIndexValuesFromAbsoluteIndex(info.chains, parameterValue);
+              parameterSymbols.push(`.definelabel ${parameter.name}_chain_index,${indices[0]}`);
+              parameterSymbols.push(`.definelabel ${parameter.name}_chain_space_index,${indices[1]}`);
+            }
+            else {
+              // Mostly for testAssemble
+              parameterSymbols.push(`.definelabel ${parameter.name}_chain_index,-1`);
+              parameterSymbols.push(`.definelabel ${parameter.name}_chain_space_index,-1`);
+            }
+            break;
 
           default:
-            return `.definelabel ${parameter.name},${info.parameterValues[parameter.name]}`;
+            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+            break;
         }
       })
     }

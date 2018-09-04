@@ -361,11 +361,27 @@ PP64.adapters.boarddef = (function() {
     // TODO: This would make board parsing not have weird extra spaces.
   }
 
+  /**
+   * Gets the "chain index" and "chain space index" for an absolute
+   * space index found somewhere within the chains.
+   */
+  function getChainIndexValuesFromAbsoluteIndex(chains, absSpaceIndex) {
+    for (let c = 0; c < chains.length; c++) {
+      const chain = chains[c];
+      const chainSpaceIndex = chain.indexOf(absSpaceIndex);
+      if (chainSpaceIndex >= 0) {
+        return [c, chainSpaceIndex];
+      }
+    }
+    return [-1, -1];
+  }
+
   return {
     parse,
     create,
     determineChains,
     padChains,
     trimChains,
+    getChainIndexValuesFromAbsoluteIndex,
   };
 })();

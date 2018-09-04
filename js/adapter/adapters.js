@@ -118,7 +118,7 @@ PP64.adapters = (function() {
       this._createGateEvents(boardCopy, boardInfo, chains);
       if (boardInfo.onWriteEvents)
         boardInfo.onWriteEvents(boardCopy);
-      this._writeEvents(boardCopy, boardInfo, boardIndex);
+      this._writeEvents(boardCopy, boardInfo, boardIndex, chains);
       this._writeStarInfo(boardCopy, boardInfo);
       this._writeBoos(boardCopy, boardInfo);
 
@@ -598,9 +598,9 @@ PP64.adapters = (function() {
     }
 
     // Write out all of the events ASM.
-    _writeEvents(board, boardInfo, boardIndex) {
+    _writeEvents(board, boardInfo, boardIndex, chains) {
       if (boardInfo.mainfsEventFile) {
-        this._writeEventsNew(board, boardInfo, boardIndex);
+        this._writeEventsNew(board, boardInfo, boardIndex, chains);
         return;
       }
 
@@ -692,7 +692,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _writeEventsNew(board, boardInfo, boardIndex) {
+    _writeEventsNew(board, boardInfo, boardIndex, chains) {
       if (!boardInfo.mainfsEventFile)
         throw `No MainFS file specified to place board ASM for board ${boardIndex}.`;
 
@@ -752,6 +752,7 @@ PP64.adapters = (function() {
             board,
             curSpaceIndex: i,
             curSpace: space,
+            chains,
             offset: currentOffset,
             addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
             game: PP64.romhandler.getROMGame(),
