@@ -47,6 +47,10 @@ PP64.symbols["MarioParty1U"] = [
       name: "LoadFormFile",
       desc: "A0=main_fs_DDDDFFFF" },
 {
+      addr: 2147579276, // 0x8001758C
+      type: "code",
+      name: "GetRandomByte" },
+{
       addr: 2147579328, // 0x800175C0
       type: "code",
       name: "LoadOverlay",
@@ -107,6 +111,11 @@ PP64.symbols["MarioParty1U"] = [
       name: "DirectionPrompt",
       desc: "Prompts player to choose path at branch" },
 {
+      addr: 2147768184, // 0x80045778
+      type: "code",
+      name: "ShowPlayerCoinChange",
+      desc: "A0=player_index" },
+{
       addr: 2147787668, // 0x8004A394
       type: "code",
       name: "HVQDecode",
@@ -122,25 +131,50 @@ PP64.symbols["MarioParty1U"] = [
       name: "GetAbsSpaceIndexFromChainSpaceIndex",
       desc: "A0=chain_index" },
 {
+      addr: 2147795504, // 0x8004C230
+      type: "code",
+      name: "GetChainLength",
+      desc: "A0=chain_index" },
+{
+      addr: 2147795532, // 0x8004C24C
+      type: "code",
+      name: "GetChainSpaceIndexFromAbsSpaceIndex",
+      desc: "A0=abs_space_index" },
+{
+      addr: 2147796108, // 0x8004C48C
+      type: "code",
+      name: "SetSpaceType",
+      desc: "A0=space_index" },
+{
       addr: 2147797248, // 0x8004C900
       type: "code",
       name: "EventTableHydrate",
       desc: "Moves event table data into the space data" },
 {
-      addr: 2147798852, // 0x8004CF44
+      addr: 2147798640, // 0x8004CE70
+      type: "code",
+      name: "SwapPlayerLocationData",
+      desc: "A0=player_index_1" },
+{
+      addr: 2147798848, // 0x8004CF40
       type: "code",
       name: "SetPlayerBlue",
       desc: "Sets the player's turn state blue" },
 {
-      addr: 2147798860, // 0x8004CF4C
+      addr: 2147798856, // 0x8004CF48
       type: "code",
       name: "SetPlayerRed",
       desc: "Sets the player's turn state red" },
 {
-      addr: 2147798868, // 0x8004CF54
+      addr: 2147798864, // 0x8004CF50
       type: "code",
       name: "SetPlayerGreen",
       desc: "Sets the player's turn state green" },
+{
+      addr: 2147798896, // 0x8004CF70
+      type: "code",
+      name: "GetSumOfPlayerStars",
+      desc: "sums the star count of all players" },
 {
       addr: 2147799048, // 0x8004D008
       type: "code",
@@ -207,6 +241,31 @@ PP64.symbols["MarioParty1U"] = [
       type: "code",
       name: "ClearPlayer0x20",
       desc: "clears all 0x20 entries in player structs" },
+{
+      addr: 2147834208, // 0x80055960
+      type: "code",
+      name: "AdjustPlayerCoinsGradual",
+      desc: "A0=player_index" },
+{
+      addr: 2147845968, // 0x80058750
+      type: "code",
+      name: "ExecBoardScene",
+      desc: "A0=board_fns" },
+{
+      addr: 2147850136, // 0x80059798
+      type: "code",
+      name: "IsBoardFeatureDisabled",
+      desc: "A0=0xD:bowser" },
+{
+      addr: 2147850204, // 0x800597DC
+      type: "code",
+      name: "SetBoardFeatureEnabled",
+      desc: "A0=feature" },
+{
+      addr: 2147850284, // 0x8005982C
+      type: "code",
+      name: "SetBoardFeatureDisabled",
+      desc: "A0=feature" },
 {
       addr: 2147850368, // 0x80059880
       type: "code",
@@ -1743,6 +1802,28 @@ PP64.symbols["MarioParty1U"] = [
       type: "code",
       name: "__osSpDeviceBusy" },
 {
+      addr: 2148277364, // 0x800C1C74
+      type: "data",
+      name: "dma_table" },
+{
+      addr: 2148282356, // 0x800C2FF4
+      type: "data",
+      name: "rng_seed" },
+{
+      addr: 2148287312, // 0x800C4350
+      type: "data",
+      name: "model_info" },
+{
+      addr: 2148292986, // 0x800C597A
+      type: "u16",
+      name: "cur_board_scene_state",
+      desc: "Determines how the board scene starts up when (re)loaded" },
+{
+      addr: 2148313792, // 0x800CAAC0
+      type: "data",
+      name: "jt_ai_logic",
+      desc: "Jump table for 8003E9B0" },
+{
       addr: 2148315232, // 0x800CB060
       type: "data",
       name: "jt_spacetype_to_turneffect",
@@ -1797,6 +1878,10 @@ PP64.symbols["MarioParty1U"] = [
       name: "bank_stars",
       desc: "Stars in bank" },
 {
+      addr: 2148454728, // 0x800ED148
+      type: "u16",
+      name: "enabled_feature_flags" },
+{
       addr: 2148455878, // 0x800ED5C6
       type: "u16",
       name: "total_turns",
@@ -1821,6 +1906,16 @@ PP64.symbols["MarioParty1U"] = [
       type: "u16",
       name: "hidden_block_space_index",
       desc: "Space index of hidden block" },
+{
+      addr: 2148479665, // 0x800F32B1
+      type: "u8",
+      name: "p1_cpu_difficulty_1",
+      desc: "Player 1 CPU difficulty" },
+{
+      addr: 2148479666, // 0x800F32B2
+      type: "u8",
+      name: "p1_cpu_difficulty_2",
+      desc: "Player 1 CPU difficulty" },
 {
       addr: 2148479668, // 0x800F32B4
       type: "u8",
@@ -1877,6 +1972,11 @@ PP64.symbols["MarioParty1U"] = [
       name: "p1_total_minigame_coins",
       desc: "Player 1 total Mini-Game coins collected" },
 {
+      addr: 2148479702, // 0x800F32D6
+      type: "u16",
+      name: "p1_total_coins",
+      desc: "Player 1 total coins collected" },
+{
       addr: 2148479704, // 0x800F32D8
       type: "u8",
       name: "p1_total_happening_spaces",
@@ -1911,6 +2011,16 @@ PP64.symbols["MarioParty1U"] = [
       type: "u8",
       name: "p1_total_bowser_spaces",
       desc: "Player 1 total number of Bowser spaces landed on" },
+{
+      addr: 2148479713, // 0x800F32E1
+      type: "u8",
+      name: "p2_cpu_difficulty_1",
+      desc: "Player 2 CPU difficulty" },
+{
+      addr: 2148479714, // 0x800F32E2
+      type: "u8",
+      name: "p2_cpu_difficulty_2",
+      desc: "Player 2 CPU difficulty" },
 {
       addr: 2148479716, // 0x800F32E4
       type: "u8",
@@ -1962,6 +2072,16 @@ PP64.symbols["MarioParty1U"] = [
       name: "p2_turn_status",
       desc: "Color based on type of spaced landed on" },
 {
+      addr: 2148479748, // 0x800F3304
+      type: "u16",
+      name: "p2_total_minigame_coins",
+      desc: "Player 2 total Mini-Game coins collected" },
+{
+      addr: 2148479750, // 0x800F3306
+      type: "u16",
+      name: "p2_total_coins",
+      desc: "Player 2 total coins collected" },
+{
       addr: 2148479752, // 0x800F3308
       type: "u8",
       name: "p2_total_happening_spaces",
@@ -1996,6 +2116,16 @@ PP64.symbols["MarioParty1U"] = [
       type: "u8",
       name: "p2_total_bowser_spaces",
       desc: "Player 2 total number of Bowser spaces landed on" },
+{
+      addr: 2148479761, // 0x800F3311
+      type: "u8",
+      name: "p3_cpu_difficulty_1",
+      desc: "Player 3 CPU difficulty" },
+{
+      addr: 2148479762, // 0x800F3312
+      type: "u8",
+      name: "p3_cpu_difficulty_2",
+      desc: "Player 3 CPU difficulty" },
 {
       addr: 2148479764, // 0x800F3314
       type: "u8",
@@ -2047,6 +2177,16 @@ PP64.symbols["MarioParty1U"] = [
       name: "p3_turn_status",
       desc: "Color based on type of space landed on" },
 {
+      addr: 2148479796, // 0x800F3334
+      type: "u16",
+      name: "p3_total_minigame_coins",
+      desc: "Player 3 total Mini-Game coins collected" },
+{
+      addr: 2148479798, // 0x800F3336
+      type: "u16",
+      name: "p3_total_coins",
+      desc: "Player 3 total coins collected" },
+{
       addr: 2148479800, // 0x800F3338
       type: "u8",
       name: "p3_total_happening_spaces",
@@ -2081,6 +2221,16 @@ PP64.symbols["MarioParty1U"] = [
       type: "u8",
       name: "p3_total_bowser_spaces",
       desc: "Player 3 total number of Bowser spaces landed on" },
+{
+      addr: 2148479809, // 0x800F3341
+      type: "u8",
+      name: "p3_cpu_difficulty_1",
+      desc: "Player 3 CPU difficulty" },
+{
+      addr: 2148479810, // 0x800F3342
+      type: "u8",
+      name: "p3_cpu_difficulty_2",
+      desc: "Player 3 CPU difficulty" },
 {
       addr: 2148479812, // 0x800F3344
       type: "u8",
@@ -2131,6 +2281,16 @@ PP64.symbols["MarioParty1U"] = [
       type: "u8",
       name: "p4_turn_status",
       desc: "Color based on type of space landed on" },
+{
+      addr: 2148479844, // 0x800F3364
+      type: "u16",
+      name: "p4_total_minigame_coins",
+      desc: "Player 4 total Mini-Game coins collected" },
+{
+      addr: 2148479846, // 0x800F3366
+      type: "u16",
+      name: "p4_total_coins",
+      desc: "Player 4 total coins collected" },
 {
       addr: 2148479848, // 0x800F3368
       type: "u8",

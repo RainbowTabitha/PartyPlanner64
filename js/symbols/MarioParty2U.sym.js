@@ -37,6 +37,15 @@ PP64.symbols["MarioParty2U"] = [
       name: "FreeMainFS",
       desc: "Free's an allocated MainFS file pointer" },
 {
+      addr: 2147584764, // 0x80018AFC
+      type: "code",
+      name: "GetRandomByte" },
+{
+      addr: 2147797556, // 0x8004CA34
+      type: "code",
+      name: "ShowPlayerCoinChange",
+      desc: "A0=player_index" },
+{
       addr: 2147828328, // 0x80054268
       type: "code",
       name: "AddArrowAngle",
@@ -79,6 +88,11 @@ PP64.symbols["MarioParty2U"] = [
       addr: 2147867960, // 0x8005DD38
       type: "code",
       name: "PlayerHasCoins",
+      desc: "A0=player_index" },
+{
+      addr: 2147882164, // 0x800614B4
+      type: "code",
+      name: "AdjustPlayerCoinsGradual",
       desc: "A0=player_index" },
 {
       addr: 2148397008, // 0x800DEFD0
