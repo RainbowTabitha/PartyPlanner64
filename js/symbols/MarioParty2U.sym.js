@@ -95,6 +95,14 @@ PP64.symbols["MarioParty2U"] = [
       name: "AdjustPlayerCoinsGradual",
       desc: "A0=player_index" },
 {
+      addr: 2147998176, // 0x8007D9E0
+      type: "code",
+      name: "SleepProcess" },
+{
+      addr: 2147998276, // 0x8007DA44
+      type: "code",
+      name: "SleepVProcess" },
+{
       addr: 2148397008, // 0x800DEFD0
       type: "data",
       name: "perm_heap_addr",
