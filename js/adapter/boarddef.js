@@ -319,7 +319,8 @@ PP64.adapters.boarddef = (function() {
         let lastSpace = spaces[lastSpaceIdx];
         let oldLinks = links[lastSpaceIdx];
         let padX, padY;
-        if (Array.isArray(oldLinks) && oldLinks.length > 1) { // CHAINSPLIT
+        if (Array.isArray(oldLinks) && oldLinks.length > 1) {
+          // CHAINSPLIT
           if (oldLinks.length === 2) {
             // TODO: Very precisely push it towards the split spaces, otherwise the player faces down always.
             let nextLeft = spaces[oldLinks[0]];
@@ -339,7 +340,8 @@ PP64.adapters.boarddef = (function() {
             padY = lastSpace.y;
           }
         }
-        else { // CHAINMERGE
+        else if (typeof oldLinks === "number") {
+          // CHAINMERGE
           // Just put it half way in between, who cares.
           let nextSpace = spaces[oldLinks];
           let midpoint = $$number.midpoint(lastSpace.x, lastSpace.y, nextSpace.x, nextSpace.y);
@@ -347,12 +349,14 @@ PP64.adapters.boarddef = (function() {
           padY = midpoint.y;
         }
 
-        let newLink = PP64.boards.addSpace(padX, padY, $spaceType.OTHER, undefined, board);
-        chain.push(newLink);
+        if (typeof padX === "number" && typeof padY === "number") {
+          let newLink = PP64.boards.addSpace(padX, padY, $spaceType.OTHER, undefined, board);
+          chain.push(newLink);
 
-        // CS classic, insert into linkedish list.
-        links[lastSpaceIdx] = newLink;
-        links[newLink] = oldLinks;
+          // CS classic, insert into linkedish list.
+          links[lastSpaceIdx] = newLink;
+          links[newLink] = oldLinks;
+        }
       }
     }
   }
