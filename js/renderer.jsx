@@ -7,7 +7,7 @@ PP64.renderer = (function() {
     let board_offset_y = Math.floor((editor.offsetHeight - board.bg.height) / 2);
     board_offset_y = Math.max(0, board_offset_y);
 
-    return "translateX(" + board_offset_x + "px) translateY(" + board_offset_y + "px)";
+    return `translateX(${board_offset_x}px) translateY(${board_offset_y}px)`;
   }
 
   function renderConnections(lineCanvas, lineCtx, board, clear = true) {
@@ -17,10 +17,10 @@ PP64.renderer = (function() {
     // Draw connecting lines.
     const links = board.links = board.links || {};
     for (let startSpace in links) {
-      let x1 = board.spaces[startSpace].x;
-      let y1 = board.spaces[startSpace].y;
+      const x1 = board.spaces[startSpace].x;
+      const y1 = board.spaces[startSpace].y;
 
-      let endLinks = PP64.boards.getConnections(startSpace, board);
+      const endLinks = PP64.boards.getConnections(startSpace, board);
       let x2, y2;
       let bidirectional = false;
       for (let i = 0; i < endLinks.length; i++) {
