@@ -1,6 +1,4 @@
 PP64.renderer = (function() {
-  const _isKnownSpaceType = PP64.types.isKnownSpaceType;
-
   function getEditorContentTransform(board, editor) {
     let board_offset_x = Math.floor((editor.offsetWidth - board.bg.width) / 2);
     board_offset_x = Math.max(0, board_offset_x);
