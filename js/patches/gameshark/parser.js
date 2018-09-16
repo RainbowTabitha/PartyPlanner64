@@ -51,7 +51,7 @@ PP64.patches.gameshark.Parser = class Parser {
       return null;
     }
 
-    const addr = inst & 0x00FFFFFF;
+    const addr = (inst & 0x00FFFFFF) | 0x80000000;
 
     if (PP64.patches.gameshark.Parser.opcodeHas8BitValue(opcode)) {
       value = value & 0x00FF;
