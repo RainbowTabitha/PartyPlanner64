@@ -6,3 +6,6 @@ dist/js/*
 
 dist/css/*
 !dist/css/app.min.css
+
+# TypeScript generated
+js/utils/CIC.js

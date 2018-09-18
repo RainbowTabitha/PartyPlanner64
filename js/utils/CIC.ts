@@ -37,6 +37,7 @@ namespace PP64.utils {
    * ported the source code from spinout182's n64crc.c code.
    */
   export class CIC {
+    /** Fixes the checksum of a ROM buffer. */
     static fixChecksum(buffer: ArrayBuffer) {
       function ROL(i: number, b: number) {
         return (i << b) | (i >>> (32 - b));
