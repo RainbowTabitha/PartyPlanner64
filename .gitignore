@@ -9,3 +9,6 @@ dist/css/*
 
 # TypeScript generated
 js/utils/CIC.js
+js/utils/localstorage.js
+js/utils/utils.js
+js/types.js

@@ -1,6 +1,7 @@
 // Defines commonly used types.
 
 namespace PP64.types {
+  /** Different pages in PP64. */
   export enum View {
     EDITOR = 0,
     DETAILS = 1,

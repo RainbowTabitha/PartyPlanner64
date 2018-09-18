@@ -30,15 +30,16 @@ namespace PP64.utils {
    * If the saving fails (common, size limitations) then prompt.
    */
   window.addEventListener("beforeunload", function(event) {
-    let failed = true;
+    let failed = false;
     if (window.localStorage) {
       // Save off the current events (first, since they're very small)
       const events = (PP64 as any).adapters.events.getCustomEvents();
       try {
         localStorage.setItem("events", JSON.stringify(events));
-        failed = false;
       }
-      catch (e) {}
+      catch (e) {
+        failed = true;
+      }
 
       // Save off the current boards.
       let boards = (PP64 as any).boards.getBoards();
@@ -47,11 +48,14 @@ namespace PP64.utils {
       });
       try {
         localStorage.setItem("boards", JSON.stringify(myBoards));
-        failed = false;
       }
       catch (e) {
         // Browsers don't really let you save much...
+        failed = true;
       }
+    }
+    else {
+      failed = true;
     }
 
     if (failed) {

@@ -43,8 +43,8 @@ namespace PP64.utils {
         return (i << b) | (i >>> (32 - b));
       }
 
-      let bootcode = PP64.utils.CIC._getGameCIC(buffer);
-      let seed = PP64.utils.CIC._getChecksumSeed(bootcode);
+      const bootcode = PP64.utils.CIC._getGameCIC(buffer);
+      const seed = PP64.utils.CIC._getChecksumSeed(bootcode);
       let [t1, t2, t3, t4, t5, t6] = [seed, seed, seed, seed, seed, seed];
 
       $$log(`CIC.fixChecksum -> Bootcode: ${bootcode}, seed: ${$$hex(seed)}`);

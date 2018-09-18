@@ -113,6 +113,13 @@ namespace PP64.utils {
       return tmp.buffer;
     }
 
+    /**
+     * Tests if two arrays are equal.
+     * They are equal if:
+     *   - They are the same reference.
+     *   - They have the same number of items
+     *   - Each item is === across arrays.
+     */
     public static equal(a: any[], b: any[]) {
       if (a === b)
         return true;
