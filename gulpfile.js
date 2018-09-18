@@ -12,6 +12,7 @@ const rename = require("gulp-rename");
 const replace = require('gulp-replace');
 const sass = require("gulp-sass");
 const textTransformation = require("gulp-text-simple");
+const typescript = require("gulp-typescript");
 const uglify = require("gulp-uglify");
 const zip = require('gulp-zip');
 
@@ -143,6 +144,8 @@ function MAKE_JS_ORDER(js) {
 const ORDER_PROD_JS = MAKE_JS_ORDER(JS);
 const SRC_JS = ["!js/electron.js", "js/**/*.js", "js/**/*.jsx"];
 const DST_JS = "dist/js";
+
+const SRC_TS = ["js/**/*.ts", "js/**/*.tsx"];
 
 const CSS = [
   "css/normalize.css",
@@ -414,6 +417,14 @@ LIB_JS.forEach(function(lib) {
 });
 gulp.task("copyjslib", jslibtasks);
 
+const tsProject = typescript.createProject("tsconfig.json");
+gulp.task("buildts", function() {
+  return gulp.src(SRC_TS, { base: "./js" })
+    .pipe(tsProject())
+      .on("error", function (err) { console.error(err.toString()); })
+    .pipe(gulp.dest("./js"));
+});
+
 gulp.task("version", function(callback) {
   exec("git describe --tags --long --always", function(err, stdout, stderr) {
     // process.stdout.write("describe done, " + err + ", " + stdout + ", " + stderr);
@@ -519,7 +530,7 @@ gulp.task("symbols", (callback) => {
 gulp.task("clean", ["cleanhtml", "cleanimg", "cleancss", "cleanjs", "cleandistzip"]);
 
 gulp.task("build", function(callback) {
-  runSequence("clean", [
+  runSequence("clean", "buildts", [
     "copyhtml",
     "copyimg",
     "copycss",
@@ -532,7 +543,7 @@ gulp.task("build", function(callback) {
   callback);
 });
 gulp.task("build-prod", function(callback) {
-  runSequence("clean", [
+  runSequence("clean", "buildts", [
     "copyhtml-prod",
     "copyimg-prod",
     "copycss-prod",
