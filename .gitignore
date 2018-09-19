@@ -11,5 +11,6 @@ dist/css/*
 js/utils/CIC.js
 js/utils/localstorage.js
 js/utils/utils.js
+js/images.js
 js/settings.js
 js/types.js

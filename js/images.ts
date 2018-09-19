@@ -1,9 +1,9 @@
 // This is just kind of a goofy wrapper that makes sure we load all the images
 // that are part of rendering, and then triggers a re-render when they load.
-PP64.images = (function() {
-  const _images = {};
-  let _imageTemp = {};
-  let _imagesToLoad = 0;
+namespace PP64.images {
+  const _images: { [name: string]: HTMLImageElement } = {};
+  let _imageTemp: { [name: string]: string } | null = {};
+  let _imagesToLoad: number = 0;
 
   addImage("toadImg", "img/editor/toad.png");
   addImage("mstarImg", "img/editor/mstar.png");
@@ -44,8 +44,8 @@ PP64.images = (function() {
 
   addImage("targetImg", "img/events/target.png");
 
-  function addImage(name, url) {
-    _imageTemp[name] = url;
+  function addImage(name: string, url: string) {
+    _imageTemp![name] = url;
     _images[name] = new Image();
     _imagesToLoad = _imagesToLoad + 1;
     _images[name].onload = _onImageLoaded;
@@ -56,23 +56,19 @@ PP64.images = (function() {
     _imagesToLoad = _imagesToLoad - 1;
     if (!_imagesToLoad) {
       //$$log("All images loaded, rendering again.");
-      PP64.renderer.render();
+      (PP64 as any).renderer.render();
     }
   }
 
-  (function startImgLoading() {
-    for (let name in _imageTemp) {
-      if (!_imageTemp.hasOwnProperty(name))
-        continue;
-      let url = _imageTemp[name];
-      _images[name].src = url;
-    }
-    _imageTemp = null;
-  })();
+  for (let name in _imageTemp) {
+    if (!_imageTemp.hasOwnProperty(name))
+      continue;
+    let url = _imageTemp[name];
+    _images[name].src = url;
+  }
+  _imageTemp = null;
 
-  return {
-    get: function(name) {
-      return _images[name];
-    }
-  };
-})();
+  export function get(name: string) {
+    return _images[name];
+  }
+}
