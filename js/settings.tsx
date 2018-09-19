@@ -10,8 +10,25 @@ var $setting = {
   "limitModelAnimations": "models.limitAnimations",
 };
 
-PP64.settings = (function() {
-  const _settings = [
+namespace PP64.settings {
+  interface ICheckboxSetting {
+    name: string;
+    type: "checkbox";
+    id: string;
+    default: boolean;
+    desc: string;
+    advanced?: boolean;
+  }
+
+  interface ISettingSection {
+    name: string;
+    type: "section";
+    advanced?: boolean;
+  }
+
+  type ISetting = ISettingSection | ICheckboxSetting;
+
+  const _settings: ISetting[] = [
     { name: "UI", type: "section" },
     { id: "ui.advanced", type: "checkbox", "default": false, name: "Advanced features",
       desc: "Enables infrequently used, potentially complicated, and developer features." },
@@ -32,50 +49,58 @@ PP64.settings = (function() {
     { id: "models.limitAnimations", type: "checkbox", "default": true, name: "Limit animations",
       desc: "Limit animations to those in the same directory as the model." },
   ];
-  function _getSetting(id) {
+  function _getSetting(id: string) {
     return _settings.find((setting) => {
+      if (setting.type === "section")
+        return false;
       return setting.id === id;
     });
   }
-  function _getSettingDefault(id) {
-    return _getSetting(id)["default"];
+  function _getSettingDefault(id: string) {
+    const setting = _getSetting(id);
+    if (setting && setting.type !== "section")
+      return setting.default;
   }
 
   class SettingsManager {
+    private _tempSettings: { [settingName: string]: any };
+
     constructor() {
-      Cookies.defaults = {
+      (window as any).Cookies.defaults = {
         expires: Infinity
       };
 
       this._tempSettings = {};
     }
-    getSetting(name) {
-      if (!Cookies.enabled) {
+    getSetting(name: string) {
+      if (!(window as any).Cookies.enabled) {
         // Allow changing settings for at least the session without cookies.
         if (this._tempSettings.hasOwnProperty(name))
           return this._tempSettings[name];
         return this._tempSettings[name] = _getSettingDefault(name);
       }
 
-      let val = Cookies.get(name);
+      let val = (window as any).Cookies.get(name);
       if (val === undefined) // Never set, use default.
         return _getSettingDefault(name);
       return JSON.parse(val);
     }
 
-    setSetting(name, value) {
-      if (!Cookies.enabled) {
+    setSetting(name: string, value: any) {
+      if (!(window as any).Cookies.enabled) {
         this._tempSettings[name] = value;
         return;
       }
 
-      Cookies.set(name, JSON.stringify(value));
+      (window as any).Cookies.set(name, JSON.stringify(value));
     }
 
     reset() {
       _settings.forEach((setting) => {
+        if (setting.type === "section")
+          return;
         if (setting.id)
-          Cookies.expire(setting.id);
+          (window as any).Cookies.expire(setting.id);
       });
     }
   }
@@ -83,13 +108,13 @@ PP64.settings = (function() {
 
   $$debug = _settingsManager.getSetting($setting.uiDebug);
 
-  function _getValue(id) {
+  function _getValue(id?: string) {
     if (id)
       return _settingsManager.getSetting(id);
     return "";
   }
 
-  function _setValue(id, value) {
+  function _setValue(id: string, value: any) {
     _settingsManager.setSetting(id, value);
     if (id === "ui.debug") {
       $$debug = value;
@@ -106,18 +131,18 @@ PP64.settings = (function() {
     return settings;
   }
 
-  let Settings = class Settings extends React.Component {
+  export const Settings = class Settings extends React.Component {
     state = {}
 
     render() {
       let formEls = _getEffectiveSettings().map(setting => {
         let i = 0;
-        let value = _getValue(setting.id);
         switch (setting.type) {
           case "checkbox":
+            let value = _getValue(setting.id);
             return (
-              <CheckboxSetting id={setting.id} name={setting.name}
-                desc={setting.desc} key={setting.id} value={value}
+              <CheckboxSetting id={setting.id!} name={setting.name}
+                desc={setting.desc!} key={setting.id} value={value}
                 onCheckChanged={this.onCheckChanged} />
             );
             break;
@@ -136,18 +161,26 @@ PP64.settings = (function() {
       );
     }
 
-    onCheckChanged = (id, value) => {
+    onCheckChanged = (id: string, value: any) => {
       _setValue(id, value);
       this.setState({ id: value }); // Trigger refresh
     }
   };
 
-  let CheckboxSetting = class CheckboxSetting extends React.Component {
+  interface CheckboxSettingProps {
+    id: string;
+    value: boolean;
+    name: string;
+    desc: string;
+    onCheckChanged: (id: string, value: boolean) => any;
+  }
+
+  const CheckboxSetting = class CheckboxSetting extends React.Component<CheckboxSettingProps> {
     state = {}
 
     render() {
-      let mainId = this.props.id + "-main";
-      let descId = this.props.id + "-desc";
+      const mainId = this.props.id + "-main";
+      const descId = this.props.id + "-desc";
       return (
         <div className="checkboxSetting" onClick={this.onToggled}>
           <input type="checkbox" className="checkboxSettingChk"
@@ -167,13 +200,10 @@ PP64.settings = (function() {
     }
   };
 
-  return {
-    Settings,
-    get: function(id) {
-      return _settingsManager.getSetting(id);
-    },
-    set: function(id, value) {
-      return _settingsManager.setSetting(id, value);
-    }
-  };
-})();
+  export function get(id: string) {
+    return _settingsManager.getSetting(id);
+  }
+  export function set(id: string, value: any) {
+    return _settingsManager.setSetting(id, value);
+  }
+}
