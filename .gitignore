@@ -17,6 +17,7 @@ js/patches/gameshark/parser.js
 js/utils/CIC.js
 js/utils/compression.js
 js/utils/localstorage.js
+js/utils/MIPS.js
 js/utils/utils.js
 js/controls.js
 js/gameshark.js
