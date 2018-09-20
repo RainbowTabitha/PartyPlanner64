@@ -1,10 +1,8 @@
-PP64.ns("utils");
+namespace PP64.utils.compression {
+  let WINDOW_START = 0x3BE;
+  let WINDOW_SIZE = 1024;
 
-PP64.utils.compression = (function() {
-  var WINDOW_START = 0x3BE;
-  var WINDOW_SIZE = 1024;
-
-  var MIN_MATCH_LEN = 3;
+  let MIN_MATCH_LEN = 3;
   // var MAX_MATCH_LEN = 0x42;
 
   /* Mario Party N64 compression type 01
@@ -28,7 +26,7 @@ PP64.utils.compression = (function() {
    * Notably, the circular buffer begins filling not at zero, but at a position
    * roughly 90% of the way through, WINDOW_START.
    */
-  function decompress01(src, dst, decompressedSize) {
+  function decompress01(src: DataView, dst: DataView, decompressedSize: number) {
     // Current positions in src/dst buffers and sliding window.
     var srcPlace = 0;
     var dstPlace = 0;
@@ -93,7 +91,7 @@ PP64.utils.compression = (function() {
   /* This is a hack for MP3 Strings3 at the moment. Just "wraps" with dummy code
    * words, so file size will just grow.
    */
-  function compress01(src) {
+  function compress01(src: DataView) {
     let codeWordCount = Math.ceil(src.byteLength / 8);
     let compressedSize = src.byteLength + codeWordCount;
     let compressedBuffer = new ArrayBuffer(compressedSize);
@@ -133,7 +131,7 @@ PP64.utils.compression = (function() {
    * It is noted as type "3" when used for non-HVQ images, but there is no known
    * difference between types 2 and 3.
    */
-  function decompress02(src, dst, decompressedSize) {
+  function decompress02(src: DataView, dst: DataView, decompressedSize: number) {
     // Current positions in src/dst buffers.
     var srcPlace = 0;
     var dstPlace = 0;
@@ -196,7 +194,7 @@ PP64.utils.compression = (function() {
   /* This is a hack for MP2 HVQ at the moment. Just "wraps" with dummy code
    * words, so file size just grows.
    */
-  function compress02(src) {
+  function compress02(src: DataView) {
     let codeWordCount = src.byteLength / 32;
     let compressedSize = src.byteLength + (codeWordCount * 4);
     let compressedBuffer = new ArrayBuffer(compressedSize);
@@ -232,7 +230,7 @@ PP64.utils.compression = (function() {
    * Typically this is used when there are a lot of zeroes or repeated single
    * values, like in some images.
    */
-  function decompress05(src, dst, decompressedSize) {
+  function decompress05(src: DataView, dst: DataView, decompressedSize: number) {
     // Current positions in src/dst buffers.
     let srcPlace = 0;
     let dstPlace = 0;
@@ -266,77 +264,75 @@ PP64.utils.compression = (function() {
     return srcPlace; // Return the size of the compressed data.
   }
 
-  return {
     // Returns a new buffer with the decompressed data.
     // The compressed size is attached as a property to the buffer object.
-    decompress: function(type, srcDataView, decompressedSize) {
-      let dstBuffer = new ArrayBuffer(decompressedSize);
-      let dstView = new DataView(dstBuffer);
-      let compressedSize;
-      switch (type) {
-        case 1:
-          compressedSize = decompress01(srcDataView, dstView, decompressedSize);
-          break;
-        case 2:
-        case 3:
-        case 4:
-          compressedSize = decompress02(srcDataView, dstView, decompressedSize);
-          break;
-        case 5:
-          compressedSize = decompress05(srcDataView, dstView, decompressedSize);
-          break;
-        case 0:
-          // Just directly copy uncompressed data.
-          compressedSize = decompressedSize;
-          for (let i = 0; i < decompressedSize; i++)
-            dstView.setUint8(i, srcDataView.getUint8(i));
-          break;
-        default:
-          $$log(`decompression ${type} not implemented.`);
-          break;
-      }
-
-      dstBuffer.compressedSize = compressedSize;
-      return dstBuffer;
-    },
-
-    compress: function(type, srcDataView) {
-      switch (type) {
-        case 1:
-          return compress01(srcDataView);
-        case 2:
-        case 3:
-          return compress02(srcDataView);
-        case 4:
-        case 5:
-          console.log(`compress ${type} not implemented.`);
-          break;
-        case 0:
-          /* falls through */
-        default:
-          // Just directly copy uncompressed data.
-          return srcDataView.buffer.slice(0);
-      }
-    },
-
-    getCompressedSize: function(type, srcDataView, decompressedSize) {
-      let dstBuffer = new ArrayBuffer(decompressedSize);
-      let dstView = new DataView(dstBuffer);
-
-      switch (type) {
-        case 1:
-          return decompress01(srcDataView, dstView, decompressedSize);
-        case 2:
-        case 3:
-        case 4:
-          return decompress02(srcDataView, dstView, decompressedSize);
-        case 5:
-          return decompress05(srcDataView, dstView, decompressedSize);
-        case 0:
-          return decompressedSize;
-        default:
-          $$log(`getCompressedSize ${type} not implemented.`);
-      }
+  export function decompress(type: number, srcDataView: DataView, decompressedSize: number) {
+    let dstBuffer = new ArrayBuffer(decompressedSize);
+    let dstView = new DataView(dstBuffer);
+    let compressedSize;
+    switch (type) {
+      case 1:
+        compressedSize = decompress01(srcDataView, dstView, decompressedSize);
+        break;
+      case 2:
+      case 3:
+      case 4:
+        compressedSize = decompress02(srcDataView, dstView, decompressedSize);
+        break;
+      case 5:
+        compressedSize = decompress05(srcDataView, dstView, decompressedSize);
+        break;
+      case 0:
+        // Just directly copy uncompressed data.
+        compressedSize = decompressedSize;
+        for (let i = 0; i < decompressedSize; i++)
+          dstView.setUint8(i, srcDataView.getUint8(i));
+        break;
+      default:
+        $$log(`decompression ${type} not implemented.`);
+        break;
     }
-  };
-})();
+
+    (dstBuffer as any).compressedSize = compressedSize;
+    return dstBuffer;
+  }
+
+  export function compress(type: number, srcDataView: DataView) {
+    switch (type) {
+      case 1:
+        return compress01(srcDataView);
+      case 2:
+      case 3:
+        return compress02(srcDataView);
+      case 4:
+      case 5:
+        console.log(`compress ${type} not implemented.`);
+        break;
+      case 0:
+        /* falls through */
+      default:
+        // Just directly copy uncompressed data.
+        return srcDataView.buffer.slice(0);
+    }
+  }
+
+  export function getCompressedSize(type: number, srcDataView: DataView, decompressedSize: number) {
+    let dstBuffer = new ArrayBuffer(decompressedSize);
+    let dstView = new DataView(dstBuffer);
+
+    switch (type) {
+      case 1:
+        return decompress01(srcDataView, dstView, decompressedSize);
+      case 2:
+      case 3:
+      case 4:
+        return decompress02(srcDataView, dstView, decompressedSize);
+      case 5:
+        return decompress05(srcDataView, dstView, decompressedSize);
+      case 0:
+        return decompressedSize;
+      default:
+        $$log(`getCompressedSize ${type} not implemented.`);
+    }
+  }
+}

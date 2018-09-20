@@ -15,6 +15,7 @@ js/patches/gameshark/hook.MP3.U.js
 js/patches/gameshark/hook.js
 js/patches/gameshark/parser.js
 js/utils/CIC.js
+js/utils/compression.js
 js/utils/localstorage.js
 js/utils/utils.js
 js/gameshark.js
