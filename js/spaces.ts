@@ -1,6 +1,6 @@
-PP64.spaces = (function() {
-  return class Spaces {
-    static drawUnknown(ctx, x, y) {
+namespace PP64 {
+  export class spaces {
+    static drawUnknown(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -11,15 +11,15 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawOther(ctx, x, y) {
+    static drawOther(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawOther(ctx, x, y, 8);
     }
 
-    static drawOther3(ctx, x, y) {
+    static drawOther3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawOther(ctx, x, y, 12);
     }
 
-    static _drawOther(ctx, x, y, radius) {
+    static _drawOther(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -35,7 +35,7 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawBlue(ctx, x, y) {
+    static drawBlue(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -47,13 +47,13 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawBlue3(ctx, x, y) {
+    static drawBlue3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceBlue3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawRed(ctx, x, y) {
+    static drawRed(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -65,13 +65,13 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawRed3(ctx, x, y) {
+    static drawRed3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceRed3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawMiniGame(ctx, x, y) {
+    static drawMiniGame(ctx: CanvasRenderingContext2D, x: number, y: number) {
       // Same as blue
       ctx.save();
       ctx.beginPath();
@@ -88,13 +88,13 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawMiniGameDuel3(ctx, x, y) {
+    static drawMiniGameDuel3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceMiniGameDuel3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawHappening(ctx, x, y) {
+    static drawHappening(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -111,27 +111,27 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawHappening3(ctx, x, y) {
+    static drawHappening3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceHappening3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawHappeningDuel3(ctx, x, y) {
+    static drawHappeningDuel3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceHappeningDuel3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawStar(ctx, x, y) {
+    static drawStar(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawStarSpace(ctx, x, y, 8);
     }
 
-    static drawStar3(ctx, x, y) {
+    static drawStar3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawStarSpace(ctx, x, y, 12);
     }
 
-    static _drawStarSpace(ctx, x, y, radius) {
+    static _drawStarSpace(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
       ctx.save();
       // Transparent base circle
       ctx.beginPath();
@@ -148,7 +148,7 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawChance(ctx, x, y) {
+    static drawChance(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -165,7 +165,7 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawChance2(ctx, x, y) {
+    static drawChance2(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -182,29 +182,29 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawChance3(ctx, x, y) {
+    static drawChance3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceChance3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawStart(ctx, x, y) {
+    static drawStart(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawStart(ctx, x, y, 8, "black");
     }
 
-    static drawStart3(ctx, x, y) {
+    static drawStart3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawStart(ctx, x, y, 12, "black");
     }
 
-    static drawStartDuelRed(ctx, x, y) {
+    static drawStartDuelRed(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawStart(ctx, x, y, 12, "red");
     }
 
-    static drawStartDuelBlue(ctx, x, y) {
+    static drawStartDuelBlue(ctx: CanvasRenderingContext2D, x: number, y: number) {
       PP64.spaces._drawStart(ctx, x, y, 12, "blue");
     }
 
-    static _drawStart(ctx, x, y, radius, color) {
+    static _drawStart(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -225,7 +225,7 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawShroom(ctx, x, y) {
+    static drawShroom(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       if (ctx.ellipse) {
@@ -257,31 +257,31 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawBowser(ctx, x, y) {
+    static drawBowser(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceBowser"), x - 9, y - 9);
       ctx.restore();
     }
 
-    static drawBowser3(ctx, x, y) {
+    static drawBowser3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceBowser3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawItem2(ctx, x, y) {
+    static drawItem2(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceItem2"), x - 9, y - 9);
       ctx.restore();
     }
 
-    static drawItem3(ctx, x, y) {
+    static drawItem3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceItem3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawBattle2(ctx, x, y) {
+    static drawBattle2(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -306,13 +306,13 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawBattle3(ctx, x, y) {
+    static drawBattle3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceBattle3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawBank2(ctx, x, y) {
+    static drawBank2(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
@@ -342,13 +342,13 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawBank3(ctx, x, y) {
+    static drawBank3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceBank3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawArrow(ctx, x, y, game) {
+    static drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number, game: number) {
       ctx.save();
       ctx.beginPath();
       ctx.fillStyle = "#F647A0";
@@ -373,7 +373,7 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawBlackStar2(ctx, x, y) {
+    static drawBlackStar2(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       // Transparent base circle
       ctx.beginPath();
@@ -390,38 +390,38 @@ PP64.spaces = (function() {
       ctx.restore();
     }
 
-    static drawGameGuy3(ctx, x, y) {
+    static drawGameGuy3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceGameGuy3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawGameGuyDuel3(ctx, x, y) {
+    static drawGameGuyDuel3(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceGameGuyDuel3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawDuelBasic(ctx, x, y) {
+    static drawDuelBasic(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceDuelBasic3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawDuelPowerup(ctx, x, y) {
+    static drawDuelPowerup(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceDuelPowerup3"), x - 14, y - 14);
       ctx.restore();
     }
 
-    static drawDuelReverse(ctx, x, y) {
+    static drawDuelReverse(ctx: CanvasRenderingContext2D, x: number, y: number) {
       ctx.save();
       ctx.drawImage(PP64.images.get("spaceDuelReverse3"), x - 14, y - 14);
       ctx.restore();
     }
 
     // Draws any star shape, helper method.
-    static _drawStar(ctx, x, y, r, numPoints, radiusInsetFraction) {
+    static _drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, numPoints: number, radiusInsetFraction: number) {
       ctx.save();
       ctx.beginPath();
       ctx.translate(x, y);
@@ -436,4 +436,4 @@ PP64.spaces = (function() {
       ctx.restore();
     }
   };
-})();
+}
