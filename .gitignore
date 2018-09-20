@@ -18,6 +18,7 @@ js/utils/CIC.js
 js/utils/compression.js
 js/utils/localstorage.js
 js/utils/utils.js
+js/controls.js
 js/gameshark.js
 js/images.js
 js/romhandler.js

@@ -1,5 +1,12 @@
-PP64.controls = (function() {
-  const Button = class Button extends React.Component {
+namespace PP64.controls {
+  export interface IButtonProps {
+    onClick: (id: string) => any;
+    id: string;
+    css?: string;
+    title?: string;
+  }
+
+  export const Button = class Button extends React.Component<IButtonProps> {
     state = {}
 
     onClick = () => {
@@ -20,7 +27,16 @@ PP64.controls = (function() {
     }
   };
 
-  const ToggleButton = class ToggleButton extends React.Component {
+  export interface IToggleButtonProps {
+    onToggled: (id: string, pressed: boolean) => any;
+    allowDeselect?: boolean;
+    id: string;
+    pressed?: boolean;
+    css?: string;
+    title?: string;
+  }
+
+  export const ToggleButton = class ToggleButton extends React.Component<IToggleButtonProps> {
     state = {}
 
     onClick = () => {
@@ -43,7 +59,14 @@ PP64.controls = (function() {
     }
   };
 
-  const ToggleGroup = class ToggleGroup extends React.Component {
+  export interface IToggleGroupProps {
+    onToggleClick: (id: string, pressed: boolean) => any;
+    groupCssClass?: string;
+    items: { id: string, selected: boolean, title: string, text: string }[];
+    allowDeselect?: boolean;
+  }
+
+  export const ToggleGroup = class ToggleGroup extends React.Component<IToggleGroupProps> {
     state = {}
 
     render() {
@@ -68,10 +91,4 @@ PP64.controls = (function() {
       );
     }
   }
-
-  return {
-    Button,
-    ToggleButton,
-    ToggleGroup,
-  };
-})();
+}
