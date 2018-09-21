@@ -1,12 +1,10 @@
-PP64.ns("patches");
-
-PP64.patches.PatchView = (function() {
-  class PatchView extends React.Component {
+namespace PP64.patches {
+  export class PatchView extends React.Component {
     state = {}
 
     render() {
       let patches = PP64.patches.getPatches(PP64.romhandler.getROMGame());
-      let entries = patches.map(patch => {
+      let entries: any = patches.map(patch => {
         return (
           <PatchEntry key={patch.id} patch={patch} />
         );
@@ -25,7 +23,11 @@ PP64.patches.PatchView = (function() {
     }
   };
 
-  class PatchEntry extends React.Component {
+  interface IPatchEntryProps {
+    patch: IPatch;
+  }
+
+  class PatchEntry extends React.Component<IPatchEntryProps> {
     state = {
       applied: false
     }
@@ -52,7 +54,5 @@ PP64.patches.PatchView = (function() {
       this.setState({ applied: true });
       $$log(`Applied patch ${patch.id}.`);
     }
-  };
-
-  return PatchView;
-})();
+  }
+}

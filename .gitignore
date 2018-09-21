@@ -14,6 +14,16 @@ js/patches/gameshark/hook.MP2.U.js
 js/patches/gameshark/hook.MP3.U.js
 js/patches/gameshark/hook.js
 js/patches/gameshark/parser.js
+js/patches/PatchBase.js
+js/symbols/symbols.js
+js/utils/img/BMP.js
+js/utils/img/Grayscale.js
+js/utils/img/HVQ.js
+js/utils/img/BMP.js
+js/utils/img/ImgPack.js
+js/utils/img/RGBA32.js
+js/utils/img/RGBA5551.js
+js/utils/img/tiler.js
 js/utils/CIC.js
 js/utils/compression.js
 js/utils/localstorage.js
@@ -22,6 +32,7 @@ js/utils/utils.js
 js/controls.js
 js/gameshark.js
 js/images.js
+js/patches.js
 js/romhandler.js
 js/spaces.js
 js/settings.js

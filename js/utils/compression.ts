@@ -307,7 +307,7 @@ namespace PP64.utils.compression {
       case 4:
       case 5:
         console.log(`compress ${type} not implemented.`);
-        break;
+        /* falls through */
       case 0:
         /* falls through */
       default:
