@@ -577,6 +577,7 @@ gulp.task("watch", function() {
   gulp.watch(SRC_IMG, ["copyimg"]);
   gulp.watch(SRC_CSS, ["copycss"]);
   gulp.watch(SRC_JS, ["copyjs"]);
+  gulp.watch(SRC_TS, ["buildts"]);
 });
 
 gulp.task("default", ["clean", "build"]);

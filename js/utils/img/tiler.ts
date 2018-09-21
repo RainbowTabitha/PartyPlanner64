@@ -2,6 +2,7 @@ namespace PP64.utils.img {
 
   /** Converts from a set of tiles to a single chunk, and vice-versa. */
   export const tiler = class Tiler {
+    /** Takes a set of image tiles and reconstructs the entire image. */
     static fromTiles(tileViews: DataView[], tileXCount: number, tileYCount: number, tileXWidth: number, tileYWidth: number) {
       let width = tileXCount * tileXWidth;
       let height = tileYCount * tileYWidth;
@@ -34,6 +35,7 @@ namespace PP64.utils.img {
       return buffer;
     }
 
+    /** Takes an image and splits it into tiles. */
     static toTiles(imgArr: number[], tileXCount: number, tileYCount: number, tileXWidth: number, tileYWidth: number) {
       let width = tileXCount * tileXWidth;
       let height = tileYCount * tileYWidth;
