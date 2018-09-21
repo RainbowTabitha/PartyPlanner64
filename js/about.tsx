@@ -1,5 +1,5 @@
-PP64.about = (function() {
-  let About = class About extends React.Component {
+namespace PP64.about {
+  export const About = class About extends React.Component {
     state = {}
 
     render() {
@@ -59,9 +59,5 @@ PP64.about = (function() {
           //  </ul>
           //</div>
     }
-  };
-
-  return {
-    About,
-  };
-})();
+  }
+}
