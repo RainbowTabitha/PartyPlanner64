@@ -2,7 +2,8 @@ PP64.ns("fs");
 
 PP64.fs.mainfs = (function() {
   let _mainFSOffsets = {};
-  _mainFSOffsets[$gameType.MP1_USA] = [
+
+  _mainFSOffsets[$gameType.MP1_USA] = [ // Default 0x0031C7E0
     { upper: 0x157A6, lower: 0x157AA },
     { upper: 0x3C016, lower: 0x3C01E }
   ];

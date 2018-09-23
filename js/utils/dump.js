@@ -289,6 +289,27 @@ PP64.utils.dump = class Dump {
     console.table(table);
   }
 
+  /** Prints the overlay table in n64split format. */
+  static printSceneN64Split() {
+    const adapter = PP64.adapters.getROMAdapter();
+    if (!(adapter && adapter.SCENE_TABLE_ROM)) {
+      console.log("ROM is not loaded, or scene table location is unknown");
+      return;
+    }
+
+    const sceneCount = PP64.fs.scenes.count();
+    const strings = [];
+    for (let i = 0; i < sceneCount; i++) {
+      const info = PP64.fs.scenes.getInfo(i);
+
+      strings.push(`   - [${$$hex(info.rom_start)}, ${$$hex(info.rom_start + (info.code_end - info.code_start))}, "asm", "overlay${i}_main", ${$$hex(info.code_start)}]`);
+      strings.push(`   - [${$$hex(info.rom_start + (info.rodata_start - info.code_start))}, ${$$hex(info.rom_start + (info.rodata_end - info.code_start))}, "bin", "overlay${i}_rodata_bin"]`);
+      strings.push(`   # overlay${i} bss: ${$$hex(info.bss_start)} - ${$$hex(info.bss_end)}`);
+    }
+
+    console.log(strings.join("\n"));
+  }
+
   // Prints region of ROM as assembly instructions
   static printAsm(start, end) {
     let romView = PP64.romhandler.getDataView();
