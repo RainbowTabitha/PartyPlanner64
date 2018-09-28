@@ -4,20 +4,25 @@ namespace PP64 {
   export const romhandler = new class RomHandler {
     _rom: ArrayBuffer | null = null;
     _u8array: Uint8Array | null = null;
-    _gameId: string | null = null;
+    _gameId: PP64.types.Game | null = null;
     _gameVersion: number | null = null;
 
-    getROMGame() {
+    getROMGame(): PP64.types.Game | null {
       if (!this._rom)
         return null;
 
       if (this._gameId)
-        return this._gameId;
+        return this._gameId as PP64.types.Game;
 
       if (this._rom.byteLength < 0x40)
         return null;
 
-      this._gameId = String.fromCharCode(this._u8array![0x3B], this._u8array![0x3C], this._u8array![0x3D], this._u8array![0x3E]);
+      this._gameId = String.fromCharCode(
+        this._u8array![0x3B],
+        this._u8array![0x3C],
+        this._u8array![0x3D],
+        this._u8array![0x3E]
+      ) as PP64.types.Game;
       return this._gameId;
     }
 

@@ -1,7 +1,10 @@
-PP64.ns("fs");
+namespace PP64.fs.strings {
+  interface IOffsetInfo {
+    upper: number;
+    lower: number;
+  }
 
-PP64.fs.strings = (function() {
-  let _stringOffsets = {};
+  let _stringOffsets: { [game: string]: IOffsetInfo[] } = {};
   _stringOffsets[$gameType.MP1_USA] = [
     { upper: 0x0001AE6E, lower: 0x0001AE76 },
   ];
@@ -14,7 +17,7 @@ PP64.fs.strings = (function() {
     { upper: 0x0008936A, lower: 0x00089372 },
   ];
 
-  function getROMOffset() {
+  export function getROMOffset() {
     let romView = PP64.romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
@@ -41,7 +44,7 @@ PP64.fs.strings = (function() {
     return offset;
   }
 
-  function setROMOffset(newOffset, buffer) {
+  export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
     let patchOffsets = getPatchOffsets();
     let upper = (newOffset & 0xFFFF0000) >>> 16;
@@ -55,16 +58,18 @@ PP64.fs.strings = (function() {
     $$log(`Strings.setROMOffset -> ${$$hex((upper << 16) | lower)}`);
   }
 
-  function getPatchOffsets() {
-    return _stringOffsets[PP64.romhandler.getROMGame()];
+  export function getPatchOffsets() {
+    return _stringOffsets[PP64.romhandler.getROMGame()!];
   }
 
-  class StringTable {
-    constructor(dataView) {
+  export class StringTable {
+    private strs: ArrayBuffer[];
+
+    constructor(dataView: DataView) {
       this.strs = this._extract(dataView)
     }
 
-    _extract(view) {
+    _extract(view: DataView) {
       let strCount = this._getStringCountFromView(view);
       let strs = new Array(strCount);
       for (let s = 0; s < strCount; s++) {
@@ -73,22 +78,25 @@ PP64.fs.strings = (function() {
       return strs;
     }
 
-    _getStringCountFromView(view) {
+    _getStringCountFromView(view: DataView) {
       return view.getUint32(0);
     }
 
-    _readFromView(view, index) {
+    _readFromView(view: DataView, index: number) {
       let entryOffset = this._getStringOffsetFromView(view, index);
       let entryView = new DataView(view.buffer, view.byteOffset + entryOffset);
       let strSize = entryView.getUint16(0);
       return view.buffer.slice(view.byteOffset + entryOffset + 2, view.byteOffset + entryOffset + 2 + strSize);
     }
 
-    _getStringOffsetFromView(view, index) {
+    _getStringOffsetFromView(view: DataView, index: number) {
       return view.getUint32(4 * (1 + index));
     }
 
-    read(index, raw = false) {
+    public read(index: number, raw: false): string;
+    public read(index: number, raw: true): ArrayBuffer;
+    public read(index: number, raw: boolean): ArrayBuffer | string;
+    public read(index: number, raw: boolean = false): ArrayBuffer | string {
       if (index >= this.getStringCount())
         throw "Requesting non-existent string entry";
 
@@ -102,14 +110,14 @@ PP64.fs.strings = (function() {
       return result;
     }
 
-    _byteToStr(val) {
-      let map = PP64.adapters.getROMAdapter().getCharacterMap();
+    _byteToStr(val: number) {
+      let map = (PP64 as any).adapters.getROMAdapter().getCharacterMap();
       if (map.hasOwnProperty(val))
         return map[val];
       return String.fromCharCode(val);
     }
 
-    write(index, content) {
+    write(index: number, content: ArrayBuffer) {
       this.strs[index] = content.slice(0);
     }
 
@@ -117,7 +125,7 @@ PP64.fs.strings = (function() {
       return this.strs.length;
     }
 
-    getByteLength(applyCompression = false) {
+    getByteLength(applyCompression: boolean = false) {
       let byteLen = 0;
       let strCount = this.strs.length;
 
@@ -137,7 +145,7 @@ PP64.fs.strings = (function() {
       return byteLen;
     }
 
-    pack(buffer, offset = 0) {
+    pack(buffer: ArrayBuffer, offset: number = 0) {
       let view = new DataView(buffer, offset);
 
       let strCount = this.getStringCount();
@@ -155,7 +163,7 @@ PP64.fs.strings = (function() {
       return curStrWriteOffset;
     }
 
-    _packStr(s, view, offset) {
+    _packStr(s: number, view: DataView, offset: number) {
       let strBytes = this.strs[s];
       view.setUint16(offset, strBytes.byteLength);
       PP64.utils.arrays.copyRange(view, strBytes, offset + 2, 0, strBytes.byteLength);
@@ -163,8 +171,8 @@ PP64.fs.strings = (function() {
     }
   }
 
-  function _strToBytes(str) {
-    let map = PP64.adapters.getROMAdapter().getCharacterMap();
+  export function _strToBytes(str: string) {
+    let map = (PP64 as any).adapters.getROMAdapter().getCharacterMap();
     let result = [];
     let [curIdx, len] = [0, str.length];
     while (curIdx < len) {
@@ -198,59 +206,46 @@ PP64.fs.strings = (function() {
     return result;
   }
 
-  let _strFsInstance;
+  let _strFsInstance: StringTable | null;
 
-  function extract() {
-    let view = PP64.romhandler.getDataView(getROMOffset());
+  export function extract() {
+    let view = PP64.romhandler.getDataView(getROMOffset()!);
     return _strFsInstance = new StringTable(view);
   }
 
-  function extractAsync() {
+  export function extractAsync() {
     return new Promise((resolve, reject) => {
       extract();
       resolve();
     });
   }
 
-  function pack(buffer, offset = 0) {
-    return _strFsInstance.pack(buffer, offset);
+  export function pack(buffer: ArrayBuffer, offset: number = 0) {
+    return _strFsInstance!.pack(buffer, offset);
   }
 
-  function read(index, raw = false) {
-    return _strFsInstance.read(index, raw);
+  export function read(index: number, raw: true): ArrayBuffer;
+  export function read(index: number, raw?: false): string;
+  export function read(index: number, raw: boolean): ArrayBuffer | string;
+  export function read(index: number, raw: boolean = false): ArrayBuffer | string {
+    return _strFsInstance!.read(index, raw);
   }
 
   // Writes a pre-made buffer for now.
-  function write(index, content) {
-    _strFsInstance.write(index, content);
+  export function write(index: number, content: ArrayBuffer) {
+    _strFsInstance!.write(index, content);
   }
 
-  function clear() {
+  export function clear() {
     _strFsInstance = null;
   }
 
-  function getStringCount() {
-    return _strFsInstance.getStringCount();
+  export function getStringCount() {
+    return _strFsInstance!.getStringCount();
   }
 
   // Gets the required byte length of the string section of the ROM.
-  function getByteLength() {
-    return _strFsInstance.getByteLength();
+  export function getByteLength() {
+    return _strFsInstance!.getByteLength();
   }
-
-  return {
-    extract,
-    extractAsync,
-    pack,
-    read,
-    write,
-    clear,
-    getByteLength,
-    getStringCount,
-    getROMOffset,
-    setROMOffset,
-    getPatchOffsets,
-    _strToBytes,
-    StringTable,
-  };
-})();
+}

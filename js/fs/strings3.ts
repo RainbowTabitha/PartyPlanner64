@@ -1,7 +1,12 @@
-PP64.ns("fs");
+namespace PP64.fs.strings3 {
+  interface IOffsetInfo {
+    upper: number;
+    lower: number;
+  }
 
-PP64.fs.strings3 = (function() {
-  let _stringOffsets = {};
+  type ILocale = "jp" | "en" | "de" | "es" | "it" | "fr";
+
+  let _stringOffsets: { [game in PP64.types.Game]?: { [locale in ILocale]: IOffsetInfo[] } } = {};
   _stringOffsets[$gameType.MP3_USA] = {
     "jp": [
       { upper: 0x0000F142, lower: 0x0000F14A }, // 0x1209850, len 0x13250
@@ -24,7 +29,7 @@ PP64.fs.strings3 = (function() {
     ],
   };
 
-  function getROMOffset(locale = "en") {
+  export function getROMOffset(locale: ILocale = "en") {
     let romView = PP64.romhandler.getDataView();
     let romOffset = getPatchOffsets(locale)[0];
     if (!romOffset)
@@ -38,10 +43,10 @@ PP64.fs.strings3 = (function() {
     return offset;
   }
 
-  function setROMOffset(newOffset, buffer) {
+  export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
     let curOffset = newOffset;
-    let locales = getLocales(PP64.romhandler.getROMGame());
+    let locales = getLocales(PP64.romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
       let patchOffsets = getPatchOffsets(locale);
@@ -54,20 +59,22 @@ PP64.fs.strings3 = (function() {
         romView.setUint16(patchOffsets[i].lower, lower);
       }
       $$log(`Strings3.setROMOffset[${locale}] -> ${$$hex((upper << 16) | lower)}`);
-      curOffset += $$number.makeDivisibleBy(_strFsInstances[locale].getByteLength(), 16);
+      curOffset += $$number.makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
     }
   }
 
-  function getPatchOffsets(locale = "en") {
-    return _stringOffsets[PP64.romhandler.getROMGame()][locale];
+  export function getPatchOffsets(locale: ILocale = "en") {
+    return _stringOffsets[PP64.romhandler.getROMGame()!]![locale];
   }
 
   class StringTableSet {
-    constructor(dataView) {
+    private dirs: PP64.fs.strings.StringTable[];
+
+    constructor(dataView: DataView) {
       this.dirs = this._extract(dataView)
     }
 
-    _extract(view) {
+    _extract(view: DataView) {
       let dirCount = this._getDirectoryCountFromView(view);
       let dirs = new Array(dirCount);
       for (let d = 0; d < dirCount; d++) {
@@ -76,47 +83,50 @@ PP64.fs.strings3 = (function() {
       return dirs;
     }
 
-    _getDirectoryCountFromView(view) {
+    _getDirectoryCountFromView(view: DataView) {
       return view.getUint32(0);
     }
 
-    _readDirFromView(view, dir) {
+    _readDirFromView(view: DataView, dir: number) {
       let entryOffset = this._getDirOffsetFromView(view, dir);
       let entryView = new DataView(view.buffer, view.byteOffset + entryOffset);
       let decompressedDir = this._decompressDir(entryView);
       return new PP64.fs.strings.StringTable(new DataView(decompressedDir));
     }
 
-    _decompressDir(view) {
+    _decompressDir(view: DataView) {
       let decompressedSize = view.getUint32(0);
       let compressionType = view.getUint32(4);
       let dirStartView = new DataView(view.buffer, view.byteOffset + 8);
       return PP64.utils.compression.decompress(compressionType, dirStartView, decompressedSize)
     }
 
-    _getDirOffsetFromView(view, dir) {
+    _getDirOffsetFromView(view: DataView, dir: number) {
       return view.getUint32(4 * (1 + dir));
     }
 
-    read(dir, index, raw = false) {
+    public read(dir: number, index: number, raw: true): ArrayBuffer;
+    public read(dir: number, index: number, raw?: false): string;
+    public read(dir: number, index: number, raw: boolean): ArrayBuffer | string;
+    public read(dir: number, index: number, raw: boolean = false): ArrayBuffer | string {
       if (dir < 0 || dir >= this.getDirectoryCount())
         throw "Requesting non-existent string directory";
       return this.dirs[dir].read(index, raw);
     }
 
-    write(dir, index, content) {
+    write(dir: number, index: number, content: ArrayBuffer) {
       this.dirs[dir].write(index, content);
     }
 
-    getDirectoryCount() {
+    getDirectoryCount(): number {
       return this.dirs.length;
     }
 
-    getStringCount(dir) {
+    getStringCount(dir: number): number {
       return this.dirs[dir].getStringCount();
     }
 
-    getByteLength() {
+    getByteLength(): number {
       let byteLen = 0;
       let dirCount = this.dirs.length;
 
@@ -133,7 +143,7 @@ PP64.fs.strings3 = (function() {
       return byteLen;
     }
 
-    pack(buffer, offset = 0) {
+    pack(buffer: ArrayBuffer, offset: number = 0) {
       let view = new DataView(buffer, offset);
 
       let dirCount = this.getDirectoryCount();
@@ -155,7 +165,7 @@ PP64.fs.strings3 = (function() {
       return curDirWriteOffset;
     }
 
-    _packDir(d, view, offset) {
+    _packDir(d: number, view: DataView, offset: number) {
       let decompressedBuffer = new ArrayBuffer(this.dirs[d].getByteLength());
       this.dirs[d].pack(decompressedBuffer, 0);
       let compressedBuffer = PP64.utils.compression.compress(1, new DataView(decompressedBuffer));
@@ -169,86 +179,74 @@ PP64.fs.strings3 = (function() {
     }
   }
 
-  var _strFsInstances;
+  var _strFsInstances: { [locale: string]: StringTableSet } | null;
 
-  function clear() {
+  export function clear() {
     _strFsInstances = null;
   }
 
-  function extract() {
+  export function extract() {
     _strFsInstances = {};
-    let locales = getLocales(PP64.romhandler.getROMGame());
+    let locales = getLocales(PP64.romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
-      let localeView = PP64.romhandler.getDataView(getROMOffset(locale));
+      let localeView = PP64.romhandler.getDataView(getROMOffset(locale)!);
       _strFsInstances[locale] = new StringTableSet(localeView);
     }
     return _strFsInstances;
   }
 
-  function extractAsync() {
+  export function extractAsync() {
     return new Promise((resolve, reject) => {
       extract();
       resolve();
     });
   }
 
-  function pack(buffer, offset = 0) {
+  export function pack(buffer: ArrayBuffer, offset: number = 0) {
     let nextOffset = offset;
-    let locales = getLocales(PP64.romhandler.getROMGame());
+    let locales = getLocales(PP64.romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
-      let instance = _strFsInstances[locale];
+      let instance = _strFsInstances![locale];
       nextOffset = nextOffset + instance.pack(buffer, nextOffset);
       nextOffset = $$number.makeDivisibleBy(nextOffset, 16);
     }
     return nextOffset;
   }
 
-  function read(locale, dir, index, raw = false) {
-    return _strFsInstances[locale].read(dir, index, raw);
+  export function read(locale: ILocale, dir: number, index: number, raw: true): ArrayBuffer;
+  export function read(locale: ILocale, dir: number, index: number, raw?: false): string;
+  export function read(locale: ILocale, dir: number, index: number, raw: boolean): ArrayBuffer | string;
+  export function read(locale: ILocale, dir: number, index: number, raw: boolean = false) {
+    return _strFsInstances![locale].read(dir, index, raw);
   }
 
   // Writes a pre-made buffer for now.
-  function write(locale, dir, index, content) {
-    _strFsInstances[locale].write(dir, index, content);
+  export function write(locale: ILocale, dir: number, index: number, content: ArrayBuffer) {
+    _strFsInstances![locale].write(dir, index, content);
   }
 
-  function getLocales(game) {
-    return Object.keys(_stringOffsets[game]);
+  export function getLocales(game: PP64.types.Game): ILocale[] {
+    return Object.keys(_stringOffsets[game]!) as ILocale[];
   }
 
-  function getDirectoryCount(locale) {
-    return _strFsInstances[locale].getDirectoryCount();
+  export function getDirectoryCount(locale: ILocale) {
+    return _strFsInstances![locale].getDirectoryCount();
   }
 
-  function getStringCount(locale, dir) {
-    return _strFsInstances[locale].getStringCount(dir);
+  export function getStringCount(locale: ILocale, dir: number) {
+    return _strFsInstances![locale].getStringCount(dir);
   }
 
   // Gets the required byte length of the string section of the ROM.
-  function getByteLength() {
+  export function getByteLength() {
     let byteLen = 0;
-    let locales = getLocales(PP64.romhandler.getROMGame());
+    let locales = getLocales(PP64.romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
-      byteLen += $$number.makeDivisibleBy(_strFsInstances[locale].getByteLength(), 16);
+      byteLen += $$number.makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
     }
     return byteLen;
   }
-
-  return {
-    read,
-    write,
-    extract,
-    extractAsync,
-    pack,
-    clear,
-    getByteLength,
-    getStringCount,
-    getDirectoryCount,
-    getROMOffset,
-    setROMOffset,
-    getPatchOffsets,
-  };
-})();
+}
