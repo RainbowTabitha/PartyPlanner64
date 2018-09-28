@@ -8,6 +8,7 @@ dist/css/*
 !dist/css/app.min.css
 
 # TypeScript generated
+js/fs/scenes.js
 js/patches/gameshark/compiler.js
 js/patches/gameshark/hook.MP1.U.js
 js/patches/gameshark/hook.MP2.U.js
