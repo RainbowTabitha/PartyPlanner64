@@ -1,15 +1,15 @@
 namespace PP64.utils {
   export class localstorage {
     /** Get boards that were saved the last time the browser window closed. */
-    public static getSavedBoards() {
-      let boards = window.localStorage && localStorage.getItem("boards");
+    public static getSavedBoards(): PP64.boards.IBoard[] | null {
+      let boards: string | PP64.boards.IBoard[] | null = window.localStorage && localStorage.getItem("boards");
       if (boards) {
         boards = JSON.parse(boards);
       }
       if (!boards || !boards.length) {
         return null;
       }
-      return boards;
+      return boards as PP64.boards.IBoard[];
     }
 
     /** Get events that were saved the last time the browser window closed. */

@@ -39,6 +39,7 @@ js/utils/localstorage.js
 js/utils/MIPS.js
 js/utils/utils.js
 js/about.js
+js/boards.js
 js/controls.js
 js/gameshark.js
 js/images.js

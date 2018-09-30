@@ -1,8 +1,32 @@
-PP64.boards = (function() {
+namespace PP64.boards {
+  export interface IBoard {
+    name: string;
+    description: string;
+    type: PP64.types.BoardType;
+    difficulty: number;
+    spaces: ISpace[];
+    links: { [startingSpaceIndex: number]: (number | number[]) };
+    game: 1 | 2 | 3;
+    bg: any;
+    otherbg: any;
+    animbg?: any;
+    audioIndex: number;
+    _rom?: boolean;
+  }
+
+  export interface ISpace {
+    x: number;
+    y: number;
+    rotation?: number;
+    type: PP64.types.Space;
+    subtype?: PP64.types.SpaceSubtype;
+    events?: any[];
+  }
+
   let currentBoard = 0;
 
-  function _makeDefaultBoard(gameVersion = 1, type = PP64.types.BoardType.NORMAL) {
-    const board = {
+  function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: PP64.types.BoardType = PP64.types.BoardType.NORMAL): IBoard {
+    const board: any = {
       name: "Untitled",
       description: "Use your Star Power to finish\nthis board.",
       type: type,
@@ -91,12 +115,12 @@ PP64.boards = (function() {
     return board;
   }
 
-  let boards;
+  let boards: IBoard[];
   let cachedBoards = PP64.utils.localstorage.getSavedBoards();
   if (cachedBoards && cachedBoards.length) {
     boards = [];
     // Go through addBoard to collect any custom events.
-    cachedBoards.forEach(addBoard);
+    cachedBoards.forEach(board => addBoard(board));
   }
   else {
     boards = [ _makeDefaultBoard(1) ];
@@ -109,7 +133,7 @@ PP64.boards = (function() {
    * @param opts.type Board type to use
    * @param opts.game Game version for the board
    */
-  function addBoard(board, opts = {}) {
+  export function addBoard(board?: IBoard, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: PP64.types.BoardType } = {}) {
     if (!board)
       board = _makeDefaultBoard(opts.game || 1, opts.type || PP64.types.BoardType.NORMAL);
 
@@ -120,29 +144,29 @@ PP64.boards = (function() {
 
     boards.push(board);
 
-    if (PP64.app)
-      PP64.app.boardsChanged();
+    if ((window as any).PP64.app)
+      (window as any).PP64.app.boardsChanged();
 
     return boards.length - 1;
   }
 
-  function getCurrentBoard(forExport = false) {
+  export function getCurrentBoard(forExport: boolean = false) {
     let board = boards[currentBoard];
     if (forExport)
       board = stripPrivateProps(board);
     return board;
   }
 
-  function indexOf(board) {
+  export function indexOf(board: IBoard) {
     return boards.indexOf(board);
   }
 
-  function setCurrentBoard(index) {
+  export function setCurrentBoard(index: number) {
     currentBoard = index;
-    PP64.app.currentBoardChanged();
+    (window as any).PP64.app.currentBoardChanged();
   }
 
-  function boardIsROM(board) {
+  export function boardIsROM(board: IBoard) {
      return !!board._rom;
   }
 
@@ -150,11 +174,11 @@ PP64.boards = (function() {
    * Tests if there is a connection from startIdx to endIdx.
    * If endIdx is "*"" or not passed, test if any connection is outbound from startIdx.
    */
-  function hasConnection(startIdx, endIdx, board = getCurrentBoard()) {
+  export function hasConnection(startIdx: number, endIdx: number | "*", board: IBoard = getCurrentBoard()) {
     if (Array.isArray(board.links[startIdx])) {
       if (endIdx === "*" || endIdx === undefined)
         return true; // Asking if any connections exist out of startIdx
-      return board.links[startIdx].indexOf(endIdx) >= 0;
+      return (board.links[startIdx] as number[]).indexOf(endIdx) >= 0;
     }
     if (board.links[startIdx] !== undefined && board.links[startIdx] !== null) {
       if (endIdx === "*" || endIdx === undefined)
@@ -165,7 +189,7 @@ PP64.boards = (function() {
   }
 
   // Removes all connections to a certain space.
-  function _removeConnections(spaceIdx, board) {
+  function _removeConnections(spaceIdx: number, board: IBoard) {
     if (!board.links)
       return;
 
@@ -187,8 +211,8 @@ PP64.boards = (function() {
     }
   }
 
-  function _removeAssociations(spaceIdx, board) {
-    _forEachEventParameter(board, (parameter, event) => {
+  function _removeAssociations(spaceIdx: number, board: IBoard) {
+    _forEachEventParameter(board, (parameter: any, event: any) => {
       if (parameter.type === "Space") {
         if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
           if (event.parameterValues[parameter.name] === spaceIdx) {
@@ -199,7 +223,7 @@ PP64.boards = (function() {
     });
   }
 
-  function _forEachEventParameter(board, fn) {
+  function _forEachEventParameter(board: IBoard, fn: any) {
     const spaces = board.spaces;
     if (spaces && spaces.length) {
       for (let s = 0; s < spaces.length; s++) {
@@ -220,7 +244,7 @@ PP64.boards = (function() {
   }
 
   // Removes any _ prefixed property from a board.
-  function stripPrivateProps(obj = {}) {
+  function stripPrivateProps(obj: any = {}): any {
     if (typeof obj !== "object")
       return obj;
 
@@ -236,7 +260,7 @@ PP64.boards = (function() {
     return obj;
   }
 
-  function addEventToSpace(space, event, toStart) {
+  export function addEventToSpace(space: ISpace, event: any, toStart?: boolean) {
     space.events = space.events || [];
     if (event) {
       if (toStart)
@@ -246,7 +270,7 @@ PP64.boards = (function() {
     }
   }
 
-  function removeEventFromSpace(space, event) {
+  export function removeEventFromSpace(space: ISpace, event: any) {
     if (!space || !event || !space.events)
       return;
 
@@ -260,7 +284,7 @@ PP64.boards = (function() {
     // Otherwise, try to search for essentially the same thing?
   }
 
-  function applyTheme(board, name = "default") {
+  function applyTheme(board: IBoard, name = "default") {
     const themePathPrefix = "img/themes/";
 
     if (board.otherbg.boardselect)
@@ -288,15 +312,15 @@ PP64.boards = (function() {
     }
   }
 
-  function getDeadEnds(board) {
-    const deadEnds = [];
+  export function getDeadEnds(board: IBoard) {
+    const deadEnds: number[] = [];
     let spaces = _getSpacesCopy(board);
 
-    function _getSpacesCopy(board) {
+    function _getSpacesCopy(board: IBoard) {
       return PP64.utils.obj.copy(board.spaces);
     }
 
-    function _checkDeadEnd(spaceIndex) {
+    function _checkDeadEnd(spaceIndex: number): boolean | undefined {
       if (spaces[spaceIndex]._seen)
         return false; // We have reached a previous space - no dead end.
       if (!board.links.hasOwnProperty(spaceIndex)) {
@@ -322,13 +346,13 @@ PP64.boards = (function() {
     }
 
     // Build a reverse lookup of space to _pointing_ spaces.
-    var pointingMap = {};
+    var pointingMap: { [index: number]: number[] } = {};
     for (let s = 0; s < spaces.length; s++) {
       if (spaces[s])
         pointingMap[s] = [];
     }
     for (let startIdx in board.links) {
-      let ends = PP64.boards.getConnections(startIdx, board);
+      let ends = PP64.boards.getConnections(startIdx as any, board)!;
       ends.forEach(end => {
         pointingMap[end].push(Number(startIdx));
       });
@@ -336,7 +360,7 @@ PP64.boards = (function() {
 
     // Returns true if the given space is linked to from another space besides
     // the previous space.
-    function spaceIsLinkedFromByAnother(spaceIdx, prevIdx) {
+    function spaceIsLinkedFromByAnother(spaceIdx: number, prevIdx?: number) {
       // If no previous index passed, just see if anything points.
       if (prevIdx === undefined)
         return !!pointingMap[spaceIdx].length;
@@ -362,7 +386,7 @@ PP64.boards = (function() {
 
       // The latter condition is not totally necessary, but I don't know that
       // we want to or can handle single-space chains.
-      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, null, board)) {
+      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, null as any, board)) { // FIXME: passing null?
         _checkDeadEnd(s);
       }
     }
@@ -370,10 +394,10 @@ PP64.boards = (function() {
     return deadEnds;
   }
 
-  function _findAllCustomEvents(board) {
+  function _findAllCustomEvents(board: IBoard) {
     if (!board.spaces)
       return;
-    if (!PP64.adapters)
+    if (!("adapters" in PP64))
       return; // To early in website loading phase.
 
     for (let s = 0; s < board.spaces.length; s++) {
@@ -386,11 +410,11 @@ PP64.boards = (function() {
         if (!event.asm)
           continue;
 
-        if (PP64.adapters.events.getEvent(event.id))
+        if ((window as any).PP64.adapters.events.getEvent(event.id))
           continue; // Already exists
 
         try {
-          PP64.adapters.events.createCustomEvent(event.asm);
+          (window as any).PP64.adapters.events.createCustomEvent(event.asm);
         }
         catch (e) {
           console.error("Error reading custom event from loaded board: " + e.toString());
@@ -401,274 +425,256 @@ PP64.boards = (function() {
     }
   }
 
-  return {
-    getCurrentBoard,
+  export function getCurrentBoardIndex() {
+    return currentBoard;
+  }
 
-    indexOf,
+  export function currentBoardIsROM() {
+    return !!getCurrentBoard()._rom;
+  }
 
-    getCurrentBoardIndex: function() {
-      return currentBoard;
-    },
+  export function getBoardCount() {
+    return boards.length;
+  }
 
-    setCurrentBoard,
+  export function getBoards() {
+    return boards;
+  }
 
-    currentBoardIsROM: function() {
-      return !!getCurrentBoard()._rom;
-    },
+  export function getROMBoards() {
+    return boards.filter(board => {
+      return boardIsROM(board);
+    });
+  }
 
-    boardIsROM,
+  export function setBG(bg: any, board = getCurrentBoard()) {
+    board.bg.src = bg;
+  }
 
-    getBoardCount: function() {
-      return boards.length;
-    },
+  export function addAnimBG(bg: any, board = getCurrentBoard()) {
+    board.animbg = board.animbg || [];
+    board.animbg.push(bg);
+  }
 
-    getBoards: function() {
-      return boards;
-    },
+  export function removeAnimBG(index: number, board = getCurrentBoard()) {
+    if (!board.animbg || board.animbg.length <= index || index < 0)
+      return;
 
-    getROMBoards: function() {
-      return boards.filter(board => {
-        return boardIsROM(board);
-      });
-    },
+    board.animbg.splice(index, 1);
+  }
 
-    setBG: function(bg, board = getCurrentBoard()) {
-      board.bg.src = bg;
-    },
+  export function deleteBoard(boardIdx: number) {
+    if (isNaN(boardIdx) || boardIdx < 0 || boardIdx >= boards.length)
+      return;
 
-    addAnimBG: function(bg, board = getCurrentBoard()) {
-      board.animbg = board.animbg || [];
-      board.animbg.push(bg);
-    },
+    if (boards.length === 1)
+      addBoard(); // Can never be empty.
 
-    removeAnimBG: function(index, board = getCurrentBoard()) {
-      if (!board.animbg || board.animbg.length <= index || index < 0)
-        return;
+    boards.splice(boardIdx, 1);
 
-      board.animbg.splice(index, 1);
-    },
+    if (currentBoard > boardIdx)
+      setCurrentBoard(currentBoard - 1);
+    else if (boards.length === 1)
+      setCurrentBoard(0); // We deleted the last remaining board
+    else if (currentBoard === boardIdx && currentBoard === boards.length)
+      setCurrentBoard(currentBoard - 1); // We deleted the end and current entry.
 
-    addBoard,
+    (window as any).PP64.app.boardsChanged();
+    (window as any).PP64.app.currentBoardChanged();
+  }
 
-    deleteBoard: function(boardIdx) {
-      if (isNaN(boardIdx) || boardIdx < 0 || boardIdx >= boards.length)
-        return;
+  export function copyCurrentBoard() {
+    let source = boards[currentBoard];
+    let copy = JSON.parse(JSON.stringify(source));
+    delete copy._rom;
+    copy.name = "Copy of " + copy.name;
+    boards.splice(currentBoard + 1, 0, copy);
 
-      if (boards.length === 1)
-        addBoard(); // Can never be empty.
+    (window as any).PP64.app.boardsChanged();
+  }
 
-      boards.splice(boardIdx, 1);
+  export function addSpace(x: number, y: number, type: PP64.types.Space,
+    subtype: PP64.types.SpaceSubtype, board: IBoard = getCurrentBoard()) {
+    let newSpace: any = {
+      x,
+      y,
+      z: 0,
+      type: type
+    };
 
-      if (currentBoard > boardIdx)
-        setCurrentBoard(currentBoard - 1);
-      else if (boards.length === 1)
-        setCurrentBoard(0); // We deleted the last remaining board
-      else if (currentBoard === boardIdx && currentBoard === boards.length)
-        setCurrentBoard(currentBoard - 1); // We deleted the end and current entry.
+    if (subtype !== undefined)
+      newSpace.subtype = subtype;
 
-      PP64.app.boardsChanged();
-      PP64.app.currentBoardChanged();
-    },
+    let adapter = (window as any).PP64.adapters.getAdapter(board.game || 1);
+    if (adapter)
+      adapter.hydrateSpace(newSpace);
 
-    copyCurrentBoard: function() {
-      let source = boards[currentBoard];
-      let copy = JSON.parse(JSON.stringify(source));
-      delete copy._rom;
-      copy.name = "Copy of " + copy.name;
-      boards.splice(currentBoard + 1, 0, copy);
+    for (let i = 0; i < board.spaces.length; i++) {
+      // FIXME: This was clearly not working.
+      // if (board.spaces === null) {
+      //   board.spaces[i] = newSpace;
+      //   return i;
+      // }
+    }
 
-      PP64.app.boardsChanged();
-    },
+    board.spaces.push(newSpace);
+    return board.spaces.length - 1;
+  }
 
-    addSpace: function(x, y, type, subtype, board = getCurrentBoard()) {
-      let newSpace = {
-        x,
-        y,
-        z: 0,
-        type: type
-      };
+  export function removeSpace(index: number, board: IBoard = getCurrentBoard()) {
+    if (index < 0 || index >= board.spaces.length)
+      return;
 
-      if (subtype !== undefined)
-        newSpace.subtype = subtype;
+    // Remove any attached connections.
+    _removeConnections(index, board);
+    _removeAssociations(index, board);
 
-      let adapter = PP64.adapters.getAdapter(board.game || 1);
-      if (adapter)
-        adapter.hydrateSpace(newSpace);
+    // Remove the actual space.
+    let oldSpaceLen = board.spaces.length;
+    board.spaces.splice(index, 1);
 
-      for (let i = 0; i < board.spaces.length; i++) {
-        if (board.spaces === null) {
-          board.spaces[i] = newSpace;
-          return i;
+    function _adjust(oldIdx: any) {
+      return parseInt(oldIdx) > parseInt(index as any) ? oldIdx - 1 : oldIdx;
+    }
+
+    // Update the links that are at a greater index.
+    let start, end;
+    for (let i = 0; i < oldSpaceLen; i++) {
+      if (!board.links.hasOwnProperty(i))
+        continue;
+
+      start = _adjust(i);
+      end = board.links[i];
+      if (start !== i)
+        delete board.links[i];
+      if (Array.isArray(end))
+        board.links[start] = end.map(_adjust);
+      else
+        board.links[start] = _adjust(end);
+    }
+
+    // Update space event parameter indices
+    _forEachEventParameter(board, (parameter: any, event: any) => {
+      if (parameter.type === "Space") {
+        if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
+          event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
         }
       }
+    });
+  }
 
-      board.spaces.push(newSpace);
-      return board.spaces.length - 1;
-    },
+  export function getSpaceIndex(space: ISpace, board = getCurrentBoard()) {
+    return board.spaces.indexOf(space);
+  }
 
-    removeSpace: function(index, board = getCurrentBoard()) {
-      if (index < 0 || index >= board.spaces.length)
-        return;
+  export function getStartSpaceIndex(board: IBoard) {
+    let spaces = board.spaces;
+    for (let i = 0; i < spaces.length; i++) {
+      if (!spaces[i])
+        continue;
+      if (spaces[i].type === PP64.types.Space.START)
+        return i;
+    }
+    return -1;
+  }
 
-      // Remove any attached connections.
-      _removeConnections(index, board);
-      _removeAssociations(index, board);
+  export function getSpacesOfType(type: PP64.types.Space, board: IBoard = getCurrentBoard()) {
+    let spaces = board.spaces;
+    let typeSpaces = [];
+    for (let i = 0; i < spaces.length; i++) {
+      if (!spaces[i])
+        continue;
+      if (spaces[i].type === type)
+        typeSpaces.push(i);
+    }
+    return typeSpaces;
+  }
 
-      // Remove the actual space.
-      let oldSpaceLen = board.spaces.length;
-      board.spaces.splice(index, 1);
-
-      function _adjust(oldIdx) {
-        return parseInt(oldIdx) > parseInt(index) ? oldIdx - 1 : oldIdx;
-      }
-
-      // Update the links that are at a greater index.
-      let start, end;
-      for (let i = 0; i < oldSpaceLen; i++) {
-        if (!board.links.hasOwnProperty(i))
-          continue;
-
-        start = _adjust(i);
-        end = board.links[i];
-        if (start !== i)
-          delete board.links[i];
-        if (Array.isArray(end))
-          board.links[start] = end.map(_adjust);
-        else
-          board.links[start] = _adjust(end);
-      }
-
-      // Update space event parameter indices
-      _forEachEventParameter(board, (parameter, event) => {
-        if (parameter.type === "Space") {
-          if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
-            event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
-          }
-        }
-      });
-    },
-
-    getSpaceIndex: function(space, board = getCurrentBoard()) {
-      return board.spaces.indexOf(space);
-    },
-
-    getStartSpaceIndex: function(board) {
-      let spaces = board.spaces;
-      for (let i = 0; i < spaces.length; i++) {
-        if (!spaces[i])
-          continue;
-        if (spaces[i].type === PP64.types.Space.START)
-          return i;
-      }
-      return -1;
-    },
-
-    getSpacesOfType: function(type, board = getCurrentBoard()) {
-      let spaces = board.spaces;
-      let typeSpaces = [];
-      for (let i = 0; i < spaces.length; i++) {
-        if (!spaces[i])
-          continue;
-        if (spaces[i].type === type)
-          typeSpaces.push(i);
-      }
-      return typeSpaces;
-    },
-
-    getSpacesOfSubType: function(subtype, board = getCurrentBoard()) {
-      let spaces = board.spaces;
-      let subtypeSpaces = [];
-      for (let i = 0; i < spaces.length; i++) {
-        if (!spaces[i])
-          continue;
-        if (spaces[i].subtype === subtype)
-          subtypeSpaces.push(i);
-      }
-      return subtypeSpaces;
-    },
-
-    hasConnection,
+  export function getSpacesOfSubType(subtype: PP64.types.SpaceSubtype, board: IBoard = getCurrentBoard()) {
+    let spaces = board.spaces;
+    let subtypeSpaces = [];
+    for (let i = 0; i < spaces.length; i++) {
+      if (!spaces[i])
+        continue;
+      if (spaces[i].subtype === subtype)
+        subtypeSpaces.push(i);
+    }
+    return subtypeSpaces;
+  }
 
     // Returns array of space indices connected to from a space.
-    getConnections: function(spaceIndex, board = getCurrentBoard()) {
-      if (spaceIndex < 0)
-        return null;
+  export function getConnections(spaceIndex: number, board: IBoard = getCurrentBoard()) {
+    if (spaceIndex < 0)
+      return null;
 
-      board.links = board.links || {};
-      if (Array.isArray(board.links[spaceIndex]))
-        return board.links[spaceIndex].slice(0);
+    board.links = board.links || {};
+    if (Array.isArray(board.links[spaceIndex]))
+      return (board.links[spaceIndex] as number[]).slice(0);
 
-      if (typeof board.links[spaceIndex] === "number")
-        return [board.links[spaceIndex]];
+    if (typeof board.links[spaceIndex] === "number")
+      return [board.links[spaceIndex] as number];
 
-      return [];
-    },
+    return [];
+  }
 
-    addConnection: function(startIdx, endIdx, board = getCurrentBoard()) {
-      if (startIdx === endIdx || hasConnection(startIdx, endIdx, board))
-        return;
+  export function addConnection(startIdx: number, endIdx: number, board = getCurrentBoard()) {
+    if (startIdx === endIdx || hasConnection(startIdx, endIdx, board))
+      return;
 
-      board.links = board.links || {};
-      if (Array.isArray(board.links[startIdx]))
-        board.links[startIdx].push(endIdx);
-      else if (typeof board.links[startIdx] === "number")
-        board.links[startIdx] = [board.links[startIdx], endIdx];
-      else if (endIdx >= 0)
-        board.links[startIdx] = endIdx;
-    },
+    board.links = board.links || {};
+    if (Array.isArray(board.links[startIdx]))
+      (board.links[startIdx] as number[]).push(endIdx);
+    else if (typeof board.links[startIdx] === "number")
+      board.links[startIdx] = [board.links[startIdx] as number, endIdx];
+    else if (endIdx >= 0)
+      board.links[startIdx] = endIdx;
+  }
 
-    addAssociation: function(startIdx, endIdx, board = getCurrentBoard()) { // TODO: WHAT IS THIS
-      board.associations = board.associations || {};
-      let startIsSubtype = isNaN(board.spaces[startIdx].subtype);
-      let endIsSubtype = isNaN(board.spaces[endIdx].subtype);
+  export function addAssociation(startIdx: number, endIdx: number, board: any = getCurrentBoard()) { // TODO: WHAT IS THIS
+    board.associations = board.associations || {};
+    let startIsSubtype = isNaN(board.spaces[startIdx].subtype);
+    let endIsSubtype = isNaN(board.spaces[endIdx].subtype);
 
-      // Cannot associate two subtype spaces or two regular spaces.
-      if (startIsSubtype === endIsSubtype)
-        return;
-    },
+    // Cannot associate two subtype spaces or two regular spaces.
+    if (startIsSubtype === endIsSubtype)
+      return;
+  }
 
-    setSpaceRotation: function(spaceIdx, angleYAxisDeg, board = getCurrentBoard()) {
-      const space = board.spaces[spaceIdx];
-      if (!space) {
-        throw new Error("setSpaceRotation: Invalid space index " + spaceIdx);
-      }
-
-      space.rotation = Math.round(angleYAxisDeg);
-    },
-
-    addEventByIndex: function(board, spaceIdx, event, toStart) {
-      const space = board.spaces[spaceIdx];
-      addEventToSpace(space, event, toStart);
-    },
-
-    addEventToSpace,
-
-    removeEventFromSpace,
-
-    getDeadEnds,
-
-    loadBoardsFromROM: function() {
-      let adapter = PP64.adapters.getROMAdapter();
-      if (!adapter)
-        return;
-
-      let gameBoards = adapter.loadBoards();
-      for (let i = 0; i < gameBoards.length; i++) {
-        gameBoards[i]._rom = true;
-        boards.push(gameBoards[i]);
-      }
-
-      PP64.app.boardsChanged();
-    },
-
-    clearBoardsFromROM: function() {
-      for (let i = boards.length - 1; i >= 0; i--) {
-        if (boards[i]._rom)
-          boards.splice(i, 1);
-      }
-
-      if (!boards.length)
-        addBoard(); // Can never be empty.
+  export function setSpaceRotation(spaceIdx: number, angleYAxisDeg: number, board = getCurrentBoard()) {
+    const space = board.spaces[spaceIdx];
+    if (!space) {
+      throw new Error("setSpaceRotation: Invalid space index " + spaceIdx);
     }
-  };
-})();
+
+    space.rotation = Math.round(angleYAxisDeg);
+  }
+
+  export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart: boolean) {
+    const space = board.spaces[spaceIdx];
+    addEventToSpace(space, event, toStart);
+  }
+
+  export function loadBoardsFromROM() {
+    let adapter = (window as any).PP64.adapters.getROMAdapter();
+    if (!adapter)
+      return;
+
+    let gameBoards = adapter.loadBoards();
+    for (let i = 0; i < gameBoards.length; i++) {
+      gameBoards[i]._rom = true;
+      boards.push(gameBoards[i]);
+    }
+
+    (window as any).PP64.app.boardsChanged();
+  }
+
+  export function clearBoardsFromROM() {
+    for (let i = boards.length - 1; i >= 0; i--) {
+      if (boards[i]._rom)
+        boards.splice(i, 1);
+    }
+
+    if (!boards.length)
+      addBoard(); // Can never be empty.
+  }
+}
