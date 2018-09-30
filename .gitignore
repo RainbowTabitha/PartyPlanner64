@@ -32,6 +32,8 @@ js/utils/img/ImgPack.js
 js/utils/img/RGBA32.js
 js/utils/img/RGBA5551.js
 js/utils/img/tiler.js
+js/utils/lib/mp-mips-autocomplete.js
+js/utils/lib/mp-mips-codemirror.js
 js/utils/CIC.js
 js/utils/compression.js
 js/utils/dump.js

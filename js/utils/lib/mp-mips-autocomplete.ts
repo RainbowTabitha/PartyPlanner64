@@ -1,5 +1,5 @@
 // CodeMirror autocompletion for MIPS / Mario Party assembly.
-CodeMirror.registerHelper("hint", "mips-pp64", function(cm) {
+CodeMirror.registerHelper("hint", "mips-pp64", function(cm: any) {
   const cur = cm.getCursor();
   const token = cm.getTokenAt(cur);
   const tokenString = token.string;
@@ -30,8 +30,9 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm) {
     };
   }
 
-  const supportedGames = PP64.events.getActiveEditorSupportedGames();
-  function getSymbols(games, type) {
+  const supportedGames = (PP64 as any).events.getActiveEditorSupportedGames();
+
+  function getSymbols(games: PP64.types.Game[], type?: any) {
     if (!games.length)
       return [];
     if (games.length === 1)
@@ -60,8 +61,8 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm) {
     return _showSyms(syms);
   }
 
-  function _showSyms(syms) {
-    syms = syms.map(sym => {
+  function _showSyms(symbols: PP64.symbols.ISymbol[]) {
+    let syms = symbols.map(sym => {
       return sym.name;
     });
     let startOffset = 1; // Default: place sym one space after any previous value.
@@ -80,7 +81,7 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm) {
     };
   }
 
-  function _filterByToken(tokenString, values) {
+  function _filterByToken(tokenString: string, values: string[]) {
     return values.filter(value => {
       return value.startsWith(tokenString);
     });

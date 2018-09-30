@@ -16,7 +16,13 @@ namespace PP64.symbols {
   }
 
   interface ISymbols {
-    [symName: string]: any[];
+    [symName: string]: ISymbol[];
+  }
+
+  export interface ISymbol {
+    name: string;
+    type: string;
+    addr: number;
   }
 
   /** Retrieves the array of symbols for a game, optionally filtered by type. */

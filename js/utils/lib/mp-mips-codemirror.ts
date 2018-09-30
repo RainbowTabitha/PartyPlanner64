@@ -3,7 +3,7 @@
 // Derived originally from https://github.com/naphipps/brackets-mips-syntax-highlighter
 
 (function () {
-  if (!window.CodeMirror) {
+  if (!("CodeMirror" in window)) {
     console.error("mips-pp64: CodeMirror global not found");
     return;
   }
