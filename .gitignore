@@ -8,6 +8,7 @@ dist/css/*
 !dist/css/app.min.css
 
 # TypeScript generated
+js/adapter/eventtable.js
 js/components/codemirrorwrapper.js
 js/fs/animationfs.js
 js/fs/mainfs.js
@@ -49,4 +50,5 @@ js/patches.js
 js/romhandler.js
 js/spaces.js
 js/settings.js
+js/texteditor.js
 js/types.js
