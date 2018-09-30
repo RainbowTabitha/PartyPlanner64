@@ -1,13 +1,20 @@
-PP64.ns("components");
+namespace PP64.components {
+  export interface ICodeMirrorWrapperProps {
+    className?: string;
+    value?: string;
+    defaultValue?: string;
+    preserveScrollPosition?: boolean;
+    options?: any;
+    onChange: Function;
+  }
 
-// Wrapper around the non-React CodeMirror library.
-// Heavily based off of https://github.com/JedWatson/react-codemirror
-
-Object.assign(PP64.components, function() {
-  const CodeMirrorWrapper = class CodeMirrorWrapper extends React.Component {
-    constructor(props) {
-      super(props);
-    }
+  /**
+   * Wrapper around the non-React CodeMirror library.
+   * Heavily based off of https://github.com/JedWatson/react-codemirror
+   */
+  export const CodeMirrorWrapper = class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> {
+    private el: HTMLElement | null = null;
+    private codemirror: CodeMirror.Editor | null = null;
 
     render() {
       return (
@@ -17,7 +24,7 @@ Object.assign(PP64.components, function() {
     }
 
     componentDidMount() {
-      const closureEl = this.el;
+      const closureEl = this.el!;
       this.codemirror = CodeMirror(function(el) {
         closureEl.appendChild(el);
       }, {
@@ -31,7 +38,7 @@ Object.assign(PP64.components, function() {
       this.codemirror = null;
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentWillReceiveProps(nextProps: ICodeMirrorWrapperProps) {
       if (this.codemirror && nextProps.value !== undefined
         && nextProps.value !== this.props.value
         && PP64.utils.string.normalizeLineEndings(this.codemirror.getValue())
@@ -53,21 +60,17 @@ Object.assign(PP64.components, function() {
       }
     }
 
-    onInternalValueChanged = (doc, change) => {
+    onInternalValueChanged = (doc: any, change: any) => {
       if (this.props.onChange && change.origin !== "setValue") {
         this.props.onChange(doc.getValue(), change);
       }
     }
 
-    setOptionIfChanged = (optionName, newValue) => {
-      const oldValue = this.codemirror.getOption(optionName);
-      if (!isEqual(oldValue, newValue)) {
-        this.codemirror.setOption(optionName, newValue);
-      }
+    setOptionIfChanged = (optionName: string, newValue: any) => {
+      // const oldValue = this.codemirror!.getOption(optionName);
+      // if (!isEqual(oldValue, newValue)) {
+      //   this.codemirror!.setOption(optionName, newValue);
+      // }
     }
   }
-
-  return {
-    CodeMirrorWrapper,
-  };
-}());
+}
