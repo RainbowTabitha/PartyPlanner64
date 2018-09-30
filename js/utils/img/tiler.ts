@@ -36,7 +36,7 @@ namespace PP64.utils.img {
     }
 
     /** Takes an image and splits it into tiles. */
-    static toTiles(imgArr: number[], tileXCount: number, tileYCount: number, tileXWidth: number, tileYWidth: number) {
+    static toTiles(imgArr: ReadonlyArray<number> | Uint8ClampedArray, tileXCount: number, tileYCount: number, tileXWidth: number, tileYWidth: number) {
       let width = tileXCount * tileXWidth;
       let height = tileYCount * tileYWidth;
 

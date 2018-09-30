@@ -1,13 +1,22 @@
-PP64.ns("fs");
+namespace PP64.fs.animationfs {
+  interface IOffsetInfo {
+    upper: number;
+    lower: number;
+  }
 
-PP64.fs.animationfs = (function() {
-  let _animFSOffsets = {};
+  interface IAnimationFsReadInfo {
+    compressionType: number;
+    decompressed: ArrayBuffer;
+    compressed?: ArrayBuffer;
+  }
+
+  let _animFSOffsets: { [game: string]: IOffsetInfo[] } = {};
   _animFSOffsets[$gameType.MP2_USA] = [
     // 0x16EC470
     { upper: 0x000546C6, lower: 0x000546CA },
   ];
 
-  function getROMOffset() {
+  export function getROMOffset() {
     let romView = PP64.romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
@@ -22,7 +31,7 @@ PP64.fs.animationfs = (function() {
     return offset;
   }
 
-  function setROMOffset(newOffset, buffer) {
+  export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
@@ -38,29 +47,29 @@ PP64.fs.animationfs = (function() {
     $$log(`AnimationFS.setROMOffset -> ${$$hex((upper << 16) | lower)}`);
   }
 
-  function getPatchOffsets() {
-    return _animFSOffsets[PP64.romhandler.getROMGame()];
+  export function getPatchOffsets() {
+    return _animFSOffsets[PP64.romhandler.getROMGame()!];
   }
 
-  function get(set, entry, index) {
-    return _animfsCache[set][entry][index].decompressed;
+  export function get(set: number, entry: number, index: number) {
+    return _animfsCache![set][entry][index].decompressed;
   }
 
-  function write(set, entry, tileBuffer, index) {
+  export function write(set: number, entry: number, tileBuffer: ArrayBuffer, index: number) {
     let compressed = PP64.utils.compression.compress(3, new DataView(tileBuffer));
 
-    if (!_animfsCache[set])
-      _animfsCache[set] = [];
-    if (!_animfsCache[set][entry])
-      _animfsCache[set][entry] = {};
-    _animfsCache[set][entry][index] = {
+    if (!_animfsCache![set])
+      _animfsCache![set] = [];
+    if (!_animfsCache![set][entry])
+      _animfsCache![set][entry] = {};
+    _animfsCache![set][entry][index] = {
       compressionType: 3,
       decompressed: tileBuffer,
       compressed,
     };
   }
 
-  function _createOrderedTiles(imgData, width, height) {
+  function _createOrderedTiles(imgData: ImageData, width: number, height: number) {
     let tileXCount = width / 64;
     let tileYCount = height / 48;
 
@@ -77,7 +86,7 @@ PP64.fs.animationfs = (function() {
     return orderedTiles;
   }
 
-  function writeAnimationBackground(set, entry, mainImgData, animImgData, width, height) {
+  export function writeAnimationBackground(set: number, entry: number, mainImgData: ImageData, animImgData: ImageData, width: number, height: number) {
     $$log(`AnimationFS.writeAnimationBackground, set: ${set}, entry: ${entry}, img is ${width}x${height}`);
 
     let orderedMainTiles = _createOrderedTiles(mainImgData, width, height);
@@ -92,7 +101,7 @@ PP64.fs.animationfs = (function() {
     }
   }
 
-  function _unorderTiles(tiles, tileXCount, tileYCount) {
+  function _unorderTiles(tiles: any[], tileXCount: number, tileYCount: number) {
     let unordered = [];
     for (let y = tileYCount - 1; y >= 0; y--) {
       for (let x = 0; x < tileXCount; x++) {
@@ -102,11 +111,11 @@ PP64.fs.animationfs = (function() {
     return unordered;
   }
 
-  function _readAnimationBackground(set, entry, orderedMainTiles, width, height) {
+  function _readAnimationBackground(set: number, entry: number, orderedMainTiles: ArrayBuffer[], width: number, height: number) {
     let orderedAnimBgTiles = [];
     for (let i = 0; i < orderedMainTiles.length; i++) {
-      if (_animfsCache[set][entry].hasOwnProperty(i + 1))
-        orderedAnimBgTiles.push(new DataView(_animfsCache[set][entry][i + 1].decompressed));
+      if (_animfsCache![set][entry].hasOwnProperty(i + 1))
+        orderedAnimBgTiles.push(new DataView(_animfsCache![set][entry][i + 1].decompressed));
       else
         orderedAnimBgTiles.push(new DataView(orderedMainTiles[i]));
     }
@@ -133,7 +142,7 @@ PP64.fs.animationfs = (function() {
     return canvasCtx.canvas.toDataURL();
   }
 
-  function readAnimationBackgrounds(set, mainImgData, width, height) {
+  export function readAnimationBackgrounds(set: number, mainImgData: ImageData, width: number, height: number) {
     let entries = getSetEntryCount(set);
 
     let orderedMainTiles = _createOrderedTiles(mainImgData, width, height);
@@ -146,27 +155,27 @@ PP64.fs.animationfs = (function() {
     return bgs;
   }
 
-  let _animfsCache;
+  let _animfsCache: { [index: number]: IAnimationFsReadInfo }[][] | null;
 
-  function clearCache() {
+  export function clearCache() {
     _animfsCache = null;
   }
 
-  function extract() {
-    let startingOffset = getROMOffset();
+  export function extract() {
+    let startingOffset = getROMOffset()!;
     let view = PP64.romhandler.getDataView();
-    _animfsCache = _extractSets(view, startingOffset, 1);
+    _animfsCache = _extractSets(view, startingOffset);
     return _animfsCache;
   }
 
-  function extractAsync() {
+  export function extractAsync() {
     return new Promise((resolve, reject) => {
       extract();
       resolve();
     });
   }
 
-  function _extractSets(view, offset) {
+  function _extractSets(view: DataView, offset: number) {
     let sets = [];
     let count = view.getUint32(offset) - 1; // Extra offset
     for (let i = 0; i < count; i++) {
@@ -176,7 +185,7 @@ PP64.fs.animationfs = (function() {
     return sets;
   }
 
-  function _extractSetEntries(view, offset) {
+  function _extractSetEntries(view: DataView, offset: number) {
     let setEntries = [];
     let count = view.getUint32(offset);
     for (let i = 0; i < count; i++) {
@@ -186,8 +195,8 @@ PP64.fs.animationfs = (function() {
     return setEntries;
   }
 
-  function _extractTiles(view, offset) {
-    let tiles = {};
+  function _extractTiles(view: DataView, offset: number) {
+    let tiles: { [index: number]: IAnimationFsReadInfo } = {};
     let count = view.getUint32(offset) - 1; // Extra offset
     for (let i = 0; i < count; i++) {
       let tileOffset = view.getUint32(offset + 4 + (i * 4));
@@ -201,14 +210,14 @@ PP64.fs.animationfs = (function() {
     return tiles;
   }
 
-  function _readTile(view, offset) {
+  function _readTile(view: DataView, offset: number) {
     let index = view.getUint32(offset);
     let compressionType = view.getUint32(offset + 4); // 3
     let decompressedSize = view.getUint32(offset + 8); // 0x1800
     let buffer = view.buffer;
     let fileStartOffset = offset + 12;
     let fileStartView = new DataView(buffer, fileStartOffset);
-    let compressedSize = PP64.utils.compression.getCompressedSize(compressionType, fileStartView, decompressedSize); // TODO perf
+    let compressedSize = PP64.utils.compression.getCompressedSize(compressionType, fileStartView, decompressedSize)!; // TODO perf
     return {
       index,
       compressionType,
@@ -217,7 +226,7 @@ PP64.fs.animationfs = (function() {
     };
   }
 
-  function pack(buffer, offset = 0) {
+  export function pack(buffer: ArrayBuffer, offset: number = 0) {
     let view = new DataView(buffer, offset);
 
     let setCount = getSetCount();
@@ -237,7 +246,7 @@ PP64.fs.animationfs = (function() {
     return curSetWriteOffset;
   }
 
-  function _writeSet(s, view, offset) {
+  function _writeSet(s: number, view: DataView, offset: number) {
     let setEntryCount = getSetEntryCount(s);
     view.setUint32(offset, setEntryCount); // No extra offsets at middle layer
 
@@ -253,14 +262,14 @@ PP64.fs.animationfs = (function() {
     return curSetEntryWriteOffset;
   }
 
-  function _writeTiles(s, e, view, offset) {
+  function _writeTiles(s: number, e: number, view: DataView, offset: number) {
     let tileCount = getSetEntryTileCount(s, e);
     view.setUint32(offset, tileCount + 1); // Extra offset
 
     let curTileIndexOffset = offset + 4;
     let curTileWriteOffset = offset + 4 + ((tileCount + 1) * 4);
-    for (let t in _animfsCache[s][e]) {
-      if (!_animfsCache[s][e].hasOwnProperty(t))
+    for (let t in _animfsCache![s][e]) {
+      if (!_animfsCache![s][e].hasOwnProperty(t))
         continue;
 
       view.setUint32(curTileIndexOffset, curTileWriteOffset - offset);
@@ -274,37 +283,37 @@ PP64.fs.animationfs = (function() {
     return curTileWriteOffset;
   }
 
-  function _writeTile(s, e, t, view, offset) {
-    let tile = _animfsCache[s][e][t];
+  function _writeTile(s: number, e: number, t: string, view: DataView, offset: number) {
+    const tile = _animfsCache![s][e][t as any];
     view.setUint32(offset, parseInt(t));
     view.setUint32(offset + 4, 3); // Compression type
     view.setUint32(offset + 8, tile.decompressed.byteLength); // Decompressed size
-    PP64.utils.arrays.copyRange(view, tile.compressed, offset + 12, 0, tile.compressed.byteLength);
-    return offset + 12 + tile.compressed.byteLength;
+    PP64.utils.arrays.copyRange(view, tile.compressed!, offset + 12, 0, tile.compressed!.byteLength);
+    return offset + 12 + tile.compressed!.byteLength;
   }
 
-  function getSetCount() {
-    return _animfsCache.length;
+  export function getSetCount() {
+    return _animfsCache!.length;
   }
 
-  function getSetEntryCount(set) {
-    return _animfsCache[set].length;
+  export function getSetEntryCount(set: number) {
+    return _animfsCache![set].length;
   }
 
   // This is exposed so that we can blow away animations for a stock board (count = 0)
-  function setSetEntryCount(set, count) {
-    return _animfsCache[set].length = count;
+  export function setSetEntryCount(set: number, count: number) {
+    return _animfsCache![set].length = count;
   }
 
-  function clearSetEntry(set, entry) {
-    return _animfsCache[set][entry] = {};
+  export function clearSetEntry(set: number, entry: number) {
+    return _animfsCache![set][entry] = {};
   }
 
-  function getSetEntryTileCount(set, entry) {
-    return Object.keys(_animfsCache[set][entry]).length;
+  export function getSetEntryTileCount(set: number, entry: number) {
+    return Object.keys(_animfsCache![set][entry]).length;
   }
 
-  function getByteLength() {
+  export function getByteLength() {
     let byteLen = 0;
 
     let setCount = getSetCount();
@@ -322,14 +331,14 @@ PP64.fs.animationfs = (function() {
         byteLen += 4; // Count of tiles
         byteLen += 4 * (tileCount + 1); // Tile offsets + the extra offset
 
-        for (let t in _animfsCache[s][e]) {
-          if (!_animfsCache[s][e].hasOwnProperty(t))
+        for (let t in _animfsCache![s][e]) {
+          if (!_animfsCache![s][e].hasOwnProperty(t))
             continue;
-          let tile = _animfsCache[s][e][t];
+          let tile = _animfsCache![s][e][t];
           byteLen += 4; // Index
           byteLen += 4; // Compression type
           byteLen += 4; // Decompressed size
-          byteLen += tile.compressed.byteLength;
+          byteLen += tile.compressed!.byteLength;
           byteLen = $$number.makeDivisibleBy(byteLen, 4);
         }
       }
@@ -337,21 +346,4 @@ PP64.fs.animationfs = (function() {
 
     return byteLen;
   }
-
-  return {
-    write,
-    writeAnimationBackground,
-    readAnimationBackgrounds,
-    get,
-    extract,
-    extractAsync,
-    pack,
-    clearCache,
-    getByteLength,
-    getROMOffset,
-    setROMOffset,
-    getPatchOffsets,
-    getSetCount,
-    setSetEntryCount,
-  };
-})();
+}
