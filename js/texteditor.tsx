@@ -1,9 +1,46 @@
 // Rich text editor for strings in Mario Party.
-PP64.texteditor = (function() {
+namespace PP64.texteditor {
   const {Editor, EditorState, ContentState, SelectionState, Modifier, RichUtils, Entity, CompositeDecorator} = Draft;
 
-  class MPEditor extends React.Component {
-    constructor(props) {
+  export enum MPEditorTheme {
+    Light = 0,
+    Dark = 1,
+  };
+
+  export enum MPEditorDisplayMode {
+    Edit = 0,
+    Readonly = 1,
+    Display = 2,
+  };
+
+  export enum MPEditorToolbarPlacement {
+    Top = 0,
+    Bottom = 1,
+  };
+
+  export interface IMPEditorProps {
+    value?: string;
+    id?: string;
+    theme?: MPEditorTheme;
+    displayMode?: MPEditorDisplayMode;
+    showToolbar?: boolean;
+    toolbarPlacement?: MPEditorToolbarPlacement;
+    itemBlacklist?: any;
+    onValueChange?: any;
+    onBlur?: any;
+    onFocus?: any;
+    maxlines?: number;
+  }
+
+  export interface IMPEditorState {
+    editorState: Draft.EditorState;
+    theme: MPEditorTheme;
+  }
+
+  export class MPEditor extends React.Component<IMPEditorProps, IMPEditorState> {
+    private editor: any;
+
+    constructor(props: IMPEditorProps) {
       super(props);
 
       let editorState;
@@ -15,7 +52,7 @@ PP64.texteditor = (function() {
       }
 
       // Take a specified theme, or make an educated guess.
-      let theme = props.theme;
+      let theme: MPEditorTheme = props.theme as MPEditorTheme;
       if (typeof props.theme !== "number") {
         if (props.value && props.value.indexOf("WHITE") >= 0)
           theme = MPEditorTheme.Dark;
@@ -29,12 +66,12 @@ PP64.texteditor = (function() {
       };
     }
 
-    componentWillReceiveProps = (nextProps) => {
+    componentWillReceiveProps = (nextProps: IMPEditorProps) => {
       const oldValue = MPEditorStringAdapter.editorStateToString(this.state.editorState, {
         theme: this.state.theme,
       });
       if (oldValue !== nextProps.value) {
-        const newEditorState = MPEditorStringAdapter.stringToEditorState(nextProps.value);
+        const newEditorState = MPEditorStringAdapter.stringToEditorState(nextProps.value!);
         this.setState({ editorState: newEditorState });
       }
     }
@@ -75,7 +112,7 @@ PP64.texteditor = (function() {
         <div className={className}>
           {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
           <div className="mpEditorWrapper">
-            <Editor ref="editor"
+            <Editor ref={editor => { this.editor = editor; }}
               editorState={editorState}
               stripPastedStyles={true}
               readOnly={displayMode !== MPEditorDisplayMode.Edit}
@@ -91,12 +128,12 @@ PP64.texteditor = (function() {
     }
 
     focus = () => {
-      this.refs.editor.focus();
+      this.editor.focus();
     }
 
-    onChange = editorState => {
+    onChange = (editorState: Draft.EditorState) => {
       this.setState({editorState});
-      this.setState((prevState, props) => {
+      this.setState((prevState, props: IMPEditorProps) => {
         if (props.onValueChange)
           props.onValueChange(props.id, MPEditorStringAdapter.editorStateToString(prevState.editorState, {
             theme: prevState.theme,
@@ -104,7 +141,7 @@ PP64.texteditor = (function() {
       });
     }
 
-    handleReturn = (e, editorState) => {
+    handleReturn = (e: any, editorState: any) => {
       if (this.props.maxlines) {
         let text = editorState.getCurrentContent().getPlainText();
 
@@ -116,23 +153,23 @@ PP64.texteditor = (function() {
       return "not-handled";
     }
 
-    onFocus = event => {
+    onFocus = (event: any) => {
       if (this.props.onFocus)
         this.props.onFocus(event);
     }
 
-    onBlur = event => {
+    onBlur = (event: any) => {
       if (this.props.onBlur)
         this.props.onBlur(event);
     }
 
-    onToolbarClick = item => {
+    onToolbarClick = (item: IToolbarItem) => {
       switch (item.type) {
         case "COLOR":
           this.toggleColor(item.key);
           break;
         case "IMAGE":
-          this.addImage(item.char);
+          this.addImage(item.char!);
           break;
         case "ACTION":
           switch (item.key) {
@@ -151,7 +188,7 @@ PP64.texteditor = (function() {
       }, 0);
     }
 
-    toggleColor = toggledColor => {
+    toggleColor = (toggledColor: string) => {
       const {editorState} = this.state;
       const selection = editorState.getSelection();
       const prevContentState = editorState.getCurrentContent();
@@ -172,7 +209,7 @@ PP64.texteditor = (function() {
       // Unset style override for current color.
       if (selection.isCollapsed()) {
         nextEditorState = currentStyle.reduce((state, color) => {
-          return RichUtils.toggleInlineStyle(state, color);
+          return RichUtils.toggleInlineStyle(state!, color!);
         }, nextEditorState);
       }
 
@@ -187,7 +224,7 @@ PP64.texteditor = (function() {
       this.onChange(nextEditorState);
     }
 
-    addImage = char => {
+    addImage = (char: string) => {
       const {editorState} = this.state;
       const selection = editorState.getSelection();
 
@@ -208,7 +245,7 @@ PP64.texteditor = (function() {
     }
   };
 
-  function imageStrategy(contentBlock, callback) {
+  function imageStrategy(contentBlock: Draft.ContentBlock, callback: any) {
     const text = contentBlock.getText();
     for (let i = 0; i < text.length; i++) {
       if (_ToolbarCharToKey[text.charAt(i)])
@@ -216,7 +253,7 @@ PP64.texteditor = (function() {
     }
   }
 
-  const MPImageComponent = (props) => {
+  const MPImageComponent = (props: any) => {
     let ch = props.children[0].props.text; // 1337 draft.js h4x
     let className = "mpImage";
     let key = _ToolbarCharToKey[ch];
@@ -228,14 +265,14 @@ PP64.texteditor = (function() {
     );
   };
 
-  const MPCompositeDecorator = new CompositeDecorator([
+  export const MPCompositeDecorator = new CompositeDecorator([
     {
       strategy: imageStrategy,
       component: MPImageComponent,
     }
   ]);
 
-  const colorStyleMap = {
+  const colorStyleMap: { [name: string]: { color: string } } = {
     DEFAULT: {
       color: "#200E71",
     },
@@ -262,7 +299,16 @@ PP64.texteditor = (function() {
     },
   };
 
-  const _ToolbarItems = [
+  interface IToolbarItem {
+    key: string;
+    type: string;
+    icon: string;
+    desc: string;
+    char?: string;
+    items?: IToolbarItem[];
+  }
+
+  const _ToolbarItems: IToolbarItem[] = [
     { key: "COLOR", type: "SUBMENU", icon: "img/richtext/default.png", desc: "Font color",
       items: [
         { key: "DEFAULT", type: "COLOR", icon: "img/richtext/default.png", desc: "Default" },
@@ -300,10 +346,10 @@ PP64.texteditor = (function() {
     { key: "DARKLIGHT", type: "ACTION", icon: "img/richtext/darklight.png", desc: "Toggle background color (has no effect on actual game)" },
   ];
 
-  let _ToolbarCharToKey = {};
-  let _ToolbarKeyToChar = {};
+  let _ToolbarCharToKey: { [char: string]: string } = {};
+  let _ToolbarKeyToChar: { [char: string]: string } = {};
   _ToolbarItems.forEach(_populateItemMaps);
-  function _populateItemMaps(item) {
+  function _populateItemMaps(item: any) {
     if (item.items) {
       item.items.forEach(_populateItemMaps);
     }
@@ -313,7 +359,7 @@ PP64.texteditor = (function() {
     }
   }
 
-  function _toolbarItemToComponent(item, onItemClick) {
+  function _toolbarItemToComponent(item: IToolbarItem, onItemClick: any) {
     // if (item.type === "SEP") {
     //   return (
     //     <MPEditorToolbarSeparator key={key} />
@@ -326,7 +372,7 @@ PP64.texteditor = (function() {
           <MPEditorToolbarSubmenu key={item.key}
             item={item}
             onItemClick={onItemClick}
-            items={item.items} />
+            items={item.items!} />
         );
 
       default:
@@ -338,7 +384,12 @@ PP64.texteditor = (function() {
     }
   }
 
-  class MPEditorToolbar extends React.Component {
+  interface MPEditorToolbarProps {
+    itemBlacklist: any;
+    onItemClick: any;
+  }
+
+  class MPEditorToolbar extends React.Component<MPEditorToolbarProps> {
     state = {}
 
     render() {
@@ -357,13 +408,21 @@ PP64.texteditor = (function() {
       );
     }
 
-    onItemClick = item => {
+    onItemClick = (item: any) => {
       if (this.props.onItemClick)
         this.props.onItemClick(item);
     }
   };
 
-  class MPEditorToolbarSubmenu extends React.Component {
+  interface MPEditorToolbarSubmenuProps {
+    item: IToolbarItem;
+    items: IToolbarItem[];
+    onItemClick: any;
+  }
+
+  class MPEditorToolbarSubmenu extends React.Component<MPEditorToolbarSubmenuProps> {
+    private expMenu: HTMLDivElement | null = null;
+
     state = {
       expanded: false,
     }
@@ -396,12 +455,12 @@ PP64.texteditor = (function() {
 
     componentDidMount() {
       if (this.state.expanded)
-        this.expMenu.focus();
+        this.expMenu!.focus();
     }
 
     componentDidUpdate() {
       if (this.state.expanded)
-        this.expMenu.focus();
+        this.expMenu!.focus();
     }
 
     onBlur = () => {
@@ -412,13 +471,18 @@ PP64.texteditor = (function() {
       this.setState({ expanded: !this.state.expanded });
     }
 
-    onItemClick = item => {
+    onItemClick = (item: IToolbarItem) => {
       if (this.props.onItemClick)
         this.props.onItemClick(item);
     }
   };
 
-  class MPEditorToolbarButton extends React.Component {
+  interface MPEditorToolbarButtonProps {
+    item: IToolbarItem;
+    onItemClick: any;
+  }
+
+  class MPEditorToolbarButton extends React.Component<MPEditorToolbarButtonProps> {
     state = {}
 
     onClick = () => {
@@ -448,11 +512,11 @@ PP64.texteditor = (function() {
   /**
    * Converts bReadonlyetween game strings and Draft.js editor state.
    */
-  const MPEditorStringAdapter = new class MPEditorStringAdapter {
-    editorStateToString(editorState, args) {
+  export const MPEditorStringAdapter = new class MPEditorStringAdapter {
+    editorStateToString(editorState: Draft.EditorState, args: { theme: MPEditorTheme }) {
       const contentState = editorState.getCurrentContent();
 
-      let textBlocks = [];
+      let textBlocks: string[] = [];
 
       const defaultColor = args.theme === MPEditorTheme.Light ? "DEFAULT" : "WHITE";
 
@@ -461,12 +525,13 @@ PP64.texteditor = (function() {
       blockMap.forEach((block) => {
         blockIndex++;
 
-        let currentColor, defaulting;
-        const changes = {};
-        block.findStyleRanges(
+        let currentColor: string;
+        let defaulting: boolean;
+        const changes: { [index: number]: string} = {};
+        block!.findStyleRanges(
           (characterMetadata) => {
             const style = characterMetadata.getStyle();
-            let color = style.find(value => { return !!colorStyleMap[value]; });
+            let color = style.find(value => { return !!colorStyleMap[value!]; });
             if (!color) {
               defaulting = true;
               color = defaultColor;
@@ -485,7 +550,7 @@ PP64.texteditor = (function() {
         );
 
         let currentIndexOffset = 0;
-        let blockText = block.getText();
+        let blockText = block!.getText();
         for (let index in changes) {
           const replaceIndex = currentIndexOffset + parseInt(index);
           blockText = PP64.utils.string.splice(blockText, replaceIndex, 0, changes[index]);
@@ -498,7 +563,7 @@ PP64.texteditor = (function() {
       return textBlocks.join("\n");
     }
 
-    stringToEditorState(str) {
+    stringToEditorState(str: string) {
       let contentState = ContentState.createFromText(str || "");
 
       // Go through each block (line) and convert color tags to Draft.js inline styles.
@@ -511,7 +576,7 @@ PP64.texteditor = (function() {
         while (styleTag) {
           // Create a "selection" around the <tag>
           let contentBlockKey = contentBlock.getKey();
-          let selection = SelectionState.createEmpty(contentBlock.getKey());
+          let selection: any = SelectionState.createEmpty(contentBlock.getKey());
           selection = selection.merge({
             anchorOffset: tagStartIndex,
             focusKey: contentBlockKey,
@@ -537,7 +602,7 @@ PP64.texteditor = (function() {
           }, contentState);
 
           // Apply the new tag.
-          contentState = Modifier.applyInlineStyle(contentState, selection, styleTag);
+          contentState = Modifier.applyInlineStyle(contentState, selection, styleTag as string);
 
           contentBlocks = contentState.getBlocksAsArray();
           contentBlock = contentBlocks[i];
@@ -550,7 +615,7 @@ PP64.texteditor = (function() {
     }
   }
 
-  function _getNextStyleTag(rawString) {
+  function _getNextStyleTag(rawString: string) {
     let startingIndex = 0;
     while (startingIndex < rawString.length) {
       let styleStart = rawString.indexOf("<", startingIndex) + 1;
@@ -573,28 +638,4 @@ PP64.texteditor = (function() {
 
     return [];
   }
-
-  const MPEditorDisplayMode = {
-    Edit: 0,
-    Readonly: 1,
-    Display: 2,
-  };
-
-  const MPEditorToolbarPlacement = {
-    Top: 0,
-    Bottom: 1,
-  };
-
-  const MPEditorTheme = {
-    Light: 0,
-    Dark: 1,
-  };
-
-  return {
-    MPEditor,
-    MPCompositeDecorator,
-    MPEditorStringAdapter,
-    MPEditorDisplayMode,
-    MPEditorToolbarPlacement,
-  };
-})();
+}

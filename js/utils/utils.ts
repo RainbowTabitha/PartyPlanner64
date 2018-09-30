@@ -275,7 +275,7 @@ namespace PP64.utils {
       }
       return str;
     }
-    public static splice(value: string, start: number, delCount: number, newSubStr: number) {
+    public static splice(value: string, start: number, delCount: number, newSubStr: string) {
       return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
     }
     public static normalizeLineEndings(str: string) {
