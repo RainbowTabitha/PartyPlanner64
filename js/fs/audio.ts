@@ -1,7 +1,16 @@
-PP64.ns("fs");
+namespace PP64.fs.audio {
+  interface IOffsetInfo {
+    upper: number;
+    lower: number;
+  }
 
-PP64.fs.audio = (function() {
-  const _audioOffsets = {};
+  interface IOffsetObj {
+    relative: number;
+    offsets: IOffsetInfo[];
+  }
+
+  const _audioOffsets: { [game: string]: IOffsetObj[] } = {};
+
   _audioOffsets[$gameType.MP1_USA] = [ // Length 0x7B3DF0
     // 15396A0
     {
@@ -126,7 +135,7 @@ PP64.fs.audio = (function() {
     // E0F 0x1EFDA80
   ];
 
-  function getROMOffset(subsection = 0) {
+  export function getROMOffset(subsection = 0) {
     let romView = PP64.romhandler.getDataView();
     let patchInfo = getPatchInfo()[subsection];
     if (!patchInfo)
@@ -141,7 +150,7 @@ PP64.fs.audio = (function() {
     return offset;
   }
 
-  function setROMOffset(newOffset, buffer) {
+  export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     $$log(`Audio.setROMOffset(${$$hex(newOffset)})`);
     let romView = new DataView(buffer);
     let patchSubsections = getPatchInfo();
@@ -159,26 +168,26 @@ PP64.fs.audio = (function() {
     }
   }
 
-  function getPatchInfo() {
-    return _audioOffsets[PP64.romhandler.getROMGame()];
+  export function getPatchInfo() {
+    return _audioOffsets[PP64.romhandler.getROMGame()!];
   }
 
-  function read(index) {
+  export function read(index: number) {
     throw "audio.read not implemented";
   }
 
-  function write(index, value) {
+  export function write(index: number, value: any) {
     throw "audio.write not implemented";
   }
 
-  let _audioCache;
+  let _audioCache: ArrayBuffer | null;
 
-  function clearCache() {
+  export function clearCache() {
     _audioCache = null;
   }
 
-  function extract() {
-    let buffer = PP64.romhandler.getROMBuffer();
+  export function extract() {
+    let buffer = PP64.romhandler.getROMBuffer()!;
     let offset = getROMOffset();
     if (offset === null)
       return;
@@ -186,20 +195,20 @@ PP64.fs.audio = (function() {
     _audioCache = buffer.slice(offset, offset + len);
   }
 
-  function extractAsync() {
+  export function extractAsync() {
     return new Promise((resolve, reject) => {
       extract();
       resolve();
     });
   }
 
-  function pack(buffer, offset = 0) {
-    PP64.utils.arrays.copyRange(buffer, _audioCache, offset, 0, _audioCache.byteLength);
-    return _audioCache.byteLength;
+  export function pack(buffer: ArrayBuffer, offset: number = 0) {
+    PP64.utils.arrays.copyRange(buffer, _audioCache!, offset, 0, _audioCache!.byteLength);
+    return _audioCache!.byteLength;
   }
 
   // Gets the full byte length of the audio section of the ROM.
-  function getByteLength() {
+  export function getByteLength() {
     // Who knows how to interpret the audio section? Hard code for now.
     let gameID = PP64.romhandler.getROMGame();
     switch(gameID) {
@@ -217,20 +226,24 @@ PP64.fs.audio = (function() {
   }
 
   class S2 {
-    constructor(dataView) {
-      this.__type = "S2";
+    private __type: string = "S2";
+
+    public midis: any[] = [];
+    public tbl!: ArrayBuffer;
+    public soundbanks!: B1;
+
+    constructor(dataView: DataView) {
       if (dataView.getUint16(0) !== 0x5332) // "S2"
         throw "S2 constructor encountered non-S2 structure";
 
       this._extract(dataView);
     }
 
-    _extract(view) {
+    _extract(view: DataView) {
       let midiCount = view.getUint16(2);
       let extendedS2TableOffset = 4 + (midiCount * 8);
 
       // Extract midi buffers
-      this.midis = [];
       for (let i = 0; i < midiCount; i++) {
         let midiOffset = view.getUint32(4 + (i * 4 * 2));
         let midiSize = view.getUint32(8 + (i * 4 * 2));
@@ -257,17 +270,19 @@ PP64.fs.audio = (function() {
   }
 
   class B1 {
-    constructor(dataView) {
-      this.__type = "B1";
+    private __type: string = "B1";
+
+    public banks: ALBank[] = [];
+
+    constructor(dataView: DataView) {
       if (dataView.getUint16(0) !== 0x4231) // "B1"
         throw "B1 constructor encountered non-B1 structure";
 
       this._extract(dataView);
     }
 
-    _extract(view) {
+    _extract(view: DataView) {
       let bankCount = view.getUint16(2);
-      this.banks = [];
       for (let i = 0; i < bankCount; i++) {
         let bankOffset = view.getUint32(4 + (i * 4));
         this.banks.push(new ALBank(view, bankOffset));
@@ -276,12 +291,18 @@ PP64.fs.audio = (function() {
   }
 
   class ALBank {
-    constructor(B1view, bankOffset) {
-      this.__type = "ALBank";
+    private __type: string = "ALBank";
+
+    public flags!: number;
+    public pad!: number;
+    public sampleRate!: number;
+    public instruments: ALInst[] = [];
+
+    constructor(B1view: DataView, bankOffset: number) {
       this._extract(B1view, bankOffset);
     }
 
-    _extract(B1view, bankOffset) {
+    _extract(B1view: DataView, bankOffset: number) {
       this.flags = B1view.getUint16(bankOffset + 2);
       this.pad = B1view.getUint16(bankOffset + 4);
       this.sampleRate = B1view.getUint16(bankOffset + 6);
@@ -291,7 +312,6 @@ PP64.fs.audio = (function() {
         throw `Need to parse percussion at bank offset ${$$hex(B1view.byteOffset + bankOffset)}`;
 
       let instrumentCount = B1view.getUint16(bankOffset);
-      this.instruments = [];
       for (let i = 0; i < instrumentCount; i++) {
         let instrumentOffset = B1view.getUint32(bankOffset + 12 + (i * 4));
         this.instruments.push(new ALInst(B1view, instrumentOffset));
@@ -300,12 +320,28 @@ PP64.fs.audio = (function() {
   }
 
   class ALInst {
-    constructor(B1view, instOffset) {
-      this.__type = "ALInst";
+    private __type: string = "ALInst";
+
+    public volume!: number;
+    public pan!: number;
+    public priority!: number;
+    public flags!: number;
+    public tremType!: number;
+    public tremRate!: number;
+    public tremDepth!: number;
+    public tremDelay!: number;
+    public vibType!: number;
+    public vibRate!: number;
+    public vibDepth!: number;
+    public vibDelay!: number;
+    public bendRange!: number;
+    public sounds: ALSound[] = [];
+
+    constructor(B1view: DataView, instOffset: number) {
       this._extract(B1view, instOffset);
     }
 
-    _extract(B1view, instOffset) {
+    _extract(B1view: DataView, instOffset: number) {
       this.volume = B1view.getUint8(instOffset);
       this.pan = B1view.getUint8(instOffset + 1);
       this.priority = B1view.getUint8(instOffset + 2);
@@ -321,7 +357,6 @@ PP64.fs.audio = (function() {
       this.bendRange = B1view.getUint16(instOffset + 12);
 
       let soundCount = B1view.getUint16(instOffset + 14);
-      this.sounds = [];
       for (let i = 0; i < soundCount; i++) {
         let soundOffset = B1view.getUint32(instOffset + 16 + (i * 4));
         this.sounds.push(new ALSound(B1view, soundOffset));
@@ -330,12 +365,20 @@ PP64.fs.audio = (function() {
   }
 
   class ALSound {
-    constructor(B1view, soundOffset) {
-      this.__type = "ALSound";
+    private __type: string = "ALSound";
+
+    public env!: ALEnv;
+    public keymap!: ALKey;
+    public wave!: ALWave;
+    public samplePan!: number;
+    public sampleVolume!: number;
+    public flags!: number;
+
+    constructor(B1view: DataView, soundOffset: number) {
       this._extract(B1view, soundOffset);
     }
 
-    _extract(B1view, soundOffset) {
+    _extract(B1view: DataView, soundOffset: number) {
       let envOffset = B1view.getUint32(soundOffset);
       this.env = new ALEnv(B1view, envOffset);
 
@@ -352,12 +395,20 @@ PP64.fs.audio = (function() {
   }
 
   class ALEnv {
-    constructor(B1view, envOffset) {
-      this.__type = "ALEnv";
+    private __type: string = "ALEnv";
+
+    public attackTime!: number;
+    public decayTime!: number;
+    public releaseTime!: number;
+    public attackVolume!: number;
+    public decayVolume!: number;
+    public zeroPad!: number;
+
+    constructor(B1view: DataView, envOffset: number) {
       this._extract(B1view, envOffset);
     }
 
-    _extract(B1view, envOffset) {
+    _extract(B1view: DataView, envOffset: number) {
       this.attackTime = B1view.getUint32(envOffset);
       this.decayTime = B1view.getUint32(envOffset + 4);
       this.releaseTime = B1view.getUint32(envOffset + 8);
@@ -368,12 +419,20 @@ PP64.fs.audio = (function() {
   }
 
   class ALKey {
-    constructor(B1view, keymapOffset) {
-      this.__type = "ALKey";
+    private __type: string = "ALKey";
+
+    public velocityMin!: number;
+    public velocityMax!: number;
+    public keyMin!: number;
+    public keyMax!: number;
+    public keyBase!: number;
+    public detune!: number;
+
+    constructor(B1view: DataView, keymapOffset: number) {
       this._extract(B1view, keymapOffset);
     }
 
-    _extract(B1view, keymapOffset) {
+    _extract(B1view: DataView, keymapOffset: number) {
       this.velocityMin = B1view.getUint8(keymapOffset);
       this.velocityMax = B1view.getUint8(keymapOffset + 1);
       this.keyMin = B1view.getUint8(keymapOffset + 2);
@@ -384,12 +443,21 @@ PP64.fs.audio = (function() {
   }
 
   class ALWave {
-    constructor(B1view, waveOffset) {
-      this.__type = "ALWave";
+    private __type: string = "ALWave";
+
+    public waveBase!: number;
+    public waveLen!: number;
+    public type!: number;
+    public flags!: number;
+    public zeroes!: number;
+    public loopOffset!: number;
+    public predictorOffset!: number;
+
+    constructor(B1view: DataView, waveOffset: number) {
       this._extract(B1view, waveOffset);
     }
 
-    _extract(B1view, waveOffset) {
+    _extract(B1view: DataView, waveOffset: number) {
       this.waveBase = B1view.getUint32(waveOffset); // Offset into TBL
       this.waveLen = B1view.getUint32(waveOffset + 4);
       this.type = B1view.getUint8(waveOffset + 8); // ALWaveType
@@ -410,37 +478,26 @@ PP64.fs.audio = (function() {
   };
 
   class ALADPCMLoop {
-    constructor(B1view, loopOffset) {
-      this.__type = "ALADPCMLoop";
+    private __type: string = "ALADPCMLoop";
+
+    constructor(B1view: DataView, loopOffset: number) {
       this._extract(B1view, loopOffset);
     }
 
-    _extract(B1view, loopOffset) {
+    _extract(B1view: DataView, loopOffset: number) {
       // TODO
     }
   }
 
   class ALADPCMBook {
-    constructor(B1view, loopOffset) {
-      this.__type = "ALADPCMBook";
+    private __type: string = "ALADPCMBook";
+
+    constructor(B1view: DataView, loopOffset: number) {
       this._extract(B1view, loopOffset);
     }
 
-    _extract(B1view, loopOffset) {
+    _extract(B1view: DataView, loopOffset: number) {
       // TODO
     }
   }
-
-  return {
-    read,
-    write,
-    extract,
-    extractAsync,
-    pack,
-    clearCache,
-    getByteLength,
-    getROMOffset,
-    setROMOffset,
-    getPatchInfo,
-  };
-})();
+}

@@ -16,6 +16,7 @@ js/components/codemirrorwrapper.js
 js/events/customevents.js
 js/events/events.js
 js/fs/animationfs.js
+js/fs/audio.js
 js/fs/hvqfs.js
 js/fs/mainfs.js
 js/fs/scenes.js
