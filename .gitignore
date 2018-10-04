@@ -9,6 +9,7 @@ dist/css/*
 
 # TypeScript generated
 js/adapter/boarddef.js
+js/adapter/eventlist.js
 js/adapter/eventtable.js
 js/components/codemirrorwrapper.js
 js/fs/animationfs.js
