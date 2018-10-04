@@ -17,6 +17,7 @@ namespace PP64.boards {
   export interface ISpace {
     x: number;
     y: number;
+    z: number;
     rotation?: number;
     type: PP64.types.Space;
     subtype?: PP64.types.SpaceSubtype;
@@ -494,7 +495,7 @@ namespace PP64.boards {
   }
 
   export function addSpace(x: number, y: number, type: PP64.types.Space,
-    subtype: PP64.types.SpaceSubtype, board: IBoard = getCurrentBoard()) {
+    subtype?: PP64.types.SpaceSubtype, board: IBoard = getCurrentBoard()) {
     let newSpace: any = {
       x,
       y,

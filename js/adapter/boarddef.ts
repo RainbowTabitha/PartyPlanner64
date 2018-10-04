@@ -1,17 +1,23 @@
-PP64.ns("adapters");
+namespace PP64.adapters.boarddef {
 
-PP64.adapters.boarddef = (function() {
-  function parse(buffer, board) {
+  export function parse(buffer: ArrayBuffer, board: PP64.boards.IBoard) {
     let header = _parseHeader(buffer);
     board.spaces = _parseSpaces(buffer, header);
     let linkResult = _parseLinks(buffer, header);
     board.links = linkResult.links;
-    board._chains = linkResult.chains; // We need this for event parsing.
+    (board as any)._chains = linkResult.chains; // We need this for event parsing.
     $$log(`Parsing board def, ${$$hex(header.spaceCount)} (${header.spaceCount}) spaces`);
     return board;
   }
 
-  function _parseHeader(buffer) {
+  interface IHeader {
+    spaceCount: number;
+    chainCount: number;
+    spaceStartOffset: number;
+    linkStartOffset: number;
+  }
+
+  function _parseHeader(buffer: ArrayBuffer): IHeader {
     let board16View = new DataView(buffer);
     let game = PP64.romhandler.getGameVersion();
     switch (game) {
@@ -31,9 +37,11 @@ PP64.adapters.boarddef = (function() {
           linkStartOffset: board16View.getUint16(6),
         };
     }
+
+    throw new Error("Unrecongized game " + game);
   }
 
-  function _parseSpaces(buffer, header) {
+  function _parseSpaces(buffer: ArrayBuffer, header: IHeader) {
     let spaceView = new DataView(buffer, header.spaceStartOffset);
     let spaces = [];
     let bufferIdx = 0;
@@ -50,9 +58,9 @@ PP64.adapters.boarddef = (function() {
     return spaces;
   }
 
-  function _parseLinks(buffer, header) {
+  function _parseLinks(buffer: ArrayBuffer, header: IHeader) {
     let chains = new Array(header.chainCount);
-    let links = {};
+    let links: any = {};
     let linksView = new DataView(buffer, header.linkStartOffset);
     for (let i = 0; i < header.chainCount; i++) {
       let chainOffset = linksView.getUint16(i * 2);
@@ -87,7 +95,7 @@ PP64.adapters.boarddef = (function() {
     };
   }
 
-  function create(board, chains = determineChains(board)) {
+  export function create(board: PP64.boards.IBoard, chains = determineChains(board)) {
     let boardDefBuffer = new ArrayBuffer(_boardDefSize(board, chains));
     _writeHeader(boardDefBuffer, board, chains);
     _writeSpaces(boardDefBuffer, board.spaces);
@@ -96,8 +104,8 @@ PP64.adapters.boarddef = (function() {
   }
 
   // Calculates the byte length needed to create a board def.
-  function _boardDefSize(board, chains) {
-    let headerSize, spacesSize, chainsSize;
+  function _boardDefSize(board: PP64.boards.IBoard, chains: number[][]) {
+    let headerSize, spacesSize, chainsSize: number;
 
     headerSize = _boardDefHeaderSize();
 
@@ -129,7 +137,7 @@ PP64.adapters.boarddef = (function() {
     return headerSize;
   }
 
-  function _writeHeader(boardDefBuffer, board, chains) {
+  function _writeHeader(boardDefBuffer: ArrayBuffer, board: PP64.boards.IBoard, chains: number[][]) {
     let boardDefView = new DataView(boardDefBuffer);
     let game = PP64.romhandler.getGameVersion();
     let chainOffset = _boardDefHeaderSize() + (board.spaces.length * 16);
@@ -151,7 +159,7 @@ PP64.adapters.boarddef = (function() {
     }
   }
 
-  function _writeSpaces(boardDefBuffer, spaces) {
+  function _writeSpaces(boardDefBuffer: ArrayBuffer, spaces: PP64.boards.ISpace[]) {
     let boardDefView = new DataView(boardDefBuffer);
     let curOffset = _boardDefHeaderSize();
     spaces.forEach((space) => {
@@ -163,7 +171,7 @@ PP64.adapters.boarddef = (function() {
     });
   }
 
-  function _writeChains(boardDefBuffer, chains) {
+  function _writeChains(boardDefBuffer: ArrayBuffer, chains: number[][]) {
     let boardDefView = new DataView(boardDefBuffer);
 
     let chainRegionOffset, offsetsOffset;
@@ -188,16 +196,18 @@ PP64.adapters.boarddef = (function() {
     }
   }
 
+  type ISpaceInternal = PP64.boards.ISpace & { "_seen"?: boolean };
+
   // Builds an array of arrays of space indices representing the board chains.
-  function determineChains(board) {
+  export function determineChains(board: PP64.boards.IBoard) {
     board = PP64.utils.obj.copy(board);
-    let spaces = board.spaces;
+    let spaces = board.spaces as ISpaceInternal[];
     let links = board.links;
-    let chains = [];
+    let chains: number[][] = [];
 
     // Recursive chain parsing function.
-    function parseChain(startingSpaceIdx) {
-      let chain = []; // Given first space always goes in.
+    function parseChain(startingSpaceIdx: number) {
+      let chain: number[] = []; // Given first space always goes in.
       let curSpaceIdx = startingSpaceIdx;
       let nextSpaceIdx;
       while (!spaces[curSpaceIdx]._seen) {
@@ -238,13 +248,13 @@ PP64.adapters.boarddef = (function() {
     }
 
     // Build a reverse lookup of space to _pointing_ spaces.
-    var pointingMap = {};
+    var pointingMap: { [end: number]: number[] } = {};
     for (let s = 0; s < spaces.length; s++) {
       if (spaces[s])
         pointingMap[s] = [];
     }
     for (let startIdx in links) {
-      let ends = PP64.boards.getConnections(startIdx, board);
+      let ends = PP64.boards.getConnections(parseInt(startIdx, 10), board)!;
       ends.forEach(end => {
         pointingMap[end].push(Number(startIdx));
       });
@@ -252,7 +262,7 @@ PP64.adapters.boarddef = (function() {
 
     // Returns true if the given space is linked to from another space besides
     // the previous space.
-    function spaceIsLinkedFromByAnother(spaceIdx, prevIdx) {
+    function spaceIsLinkedFromByAnother(spaceIdx: number, prevIdx?: number) {
       // If no previous index passed, just see if anything points.
       if (prevIdx === undefined)
         return !!pointingMap[spaceIdx].length;
@@ -308,7 +318,7 @@ PP64.adapters.boarddef = (function() {
   // If we don't overwrite these and have a 1-length chain, it becomes part of the chain and CRASH.
   // If we pad to at least 2-length chains, we guarantee to overwrite it, and
   // who knows if 1-length chains actually work anyways.
-  function padChains(board, chains) {
+  export function padChains(board: PP64.boards.IBoard, chains: number[][]) {
     let spaces = board.spaces;
     let links = board.links;
     for (let i = 0; i < chains.length; i++) {
@@ -361,7 +371,7 @@ PP64.adapters.boarddef = (function() {
     }
   }
 
-  function trimChains(board, chains) {
+  export function trimChains(board: PP64.boards.IBoard, chains: number[][]) {
     // TODO: This would make board parsing not have weird extra spaces.
   }
 
@@ -369,7 +379,7 @@ PP64.adapters.boarddef = (function() {
    * Gets the "chain index" and "chain space index" for an absolute
    * space index found somewhere within the chains.
    */
-  function getChainIndexValuesFromAbsoluteIndex(chains, absSpaceIndex) {
+  export function getChainIndexValuesFromAbsoluteIndex(chains: number[][], absSpaceIndex: number) {
     for (let c = 0; c < chains.length; c++) {
       const chain = chains[c];
       const chainSpaceIndex = chain.indexOf(absSpaceIndex);
@@ -379,13 +389,4 @@ PP64.adapters.boarddef = (function() {
     }
     return [-1, -1];
   }
-
-  return {
-    parse,
-    create,
-    determineChains,
-    padChains,
-    trimChains,
-    getChainIndexValuesFromAbsoluteIndex,
-  };
-})();
+}
