@@ -117,7 +117,7 @@ namespace PP64.adapters.events {
     return event;
   }
 
-  interface IEventParseInfo {
+  export interface IEventParseInfo {
     addr: number;
     offset: number;
     board: PP64.boards.IBoard;
@@ -172,7 +172,7 @@ namespace PP64.adapters.events {
     return events;
   }
 
-  interface IEventWriteInfo {
+  export interface IEventWriteInfo {
     boardIndex: number;
     board: PP64.boards.IBoard;
     curSpaceIndex: number;
@@ -182,7 +182,7 @@ namespace PP64.adapters.events {
     addr: number;
     game: PP64.types.Game;
     gameVersion: 1 | 2 | 3;
-    parameterValues: number;
+    parameterValues: { [name: string]: number };
     argsAddr?: number;
   }
 

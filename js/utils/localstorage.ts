@@ -13,15 +13,15 @@ namespace PP64.utils {
     }
 
     /** Get events that were saved the last time the browser window closed. */
-    public static getSavedEvents() {
-      let events = window.localStorage && localStorage.getItem("events");
+    public static getSavedEvents(): PP64.adapters.events.IEvent[] | null {
+      let events: string | PP64.adapters.events.IEvent[] | null = window.localStorage && localStorage.getItem("events");
       if (events) {
         events = JSON.parse(events);
       }
       if (!events || !events.length) {
         return null;
       }
-      return events;
+      return events as PP64.adapters.events.IEvent[];
     }
   }
 

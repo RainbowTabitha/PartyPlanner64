@@ -1,7 +1,11 @@
-PP64.ns("fs");
+namespace PP64.fs.hvqfs {
+  interface IOffsetInfo {
+    upper: number;
+    lower: number;
+  }
 
-PP64.fs.hvqfs = (function() {
-  let _HVQFSOffsets = {};
+  let _HVQFSOffsets: { [game: string]: IOffsetInfo[] } = {};
+
   _HVQFSOffsets[$gameType.MP1_USA] = [ // Default at 0x00FE2310
     { upper: 0x00057626, lower: 2 }, // Too lazy, lower is space inbetween.
     { upper: 0x0005D012, lower: 2 },
@@ -151,7 +155,7 @@ PP64.fs.hvqfs = (function() {
     { upper: 0x005505C6, lower: 6 },
   ];
 
-  function getROMOffset() {
+  export function getROMOffset() {
     let romView = PP64.romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
@@ -178,7 +182,7 @@ PP64.fs.hvqfs = (function() {
     return offset;
   }
 
-  function setROMOffset(newOffset, buffer) {
+  export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     $$log(`HVQFS.setROMOffset(0x${Number(newOffset).toString(16)})`);
     let romView = new DataView(buffer);
     let patchOffsets = getPatchOffsets();
@@ -193,8 +197,8 @@ PP64.fs.hvqfs = (function() {
     $$log(`HVQFS.setROMOffset -> ${$$hex((upper << 16) | lower)}`);
   }
 
-  function getPatchOffsets() {
-    return _HVQFSOffsets[PP64.romhandler.getROMGame()].map(offset => {
+  export function getPatchOffsets() {
+    return _HVQFSOffsets[PP64.romhandler.getROMGame()!].map(offset => {
       return {
         upper: offset.upper,
         lower: offset.upper + 2 + offset.lower
@@ -202,14 +206,14 @@ PP64.fs.hvqfs = (function() {
     });
   }
 
-  function get(dir, file) {
-    return _hvqCache[dir][file];
+  export function get(dir: number, file: number) {
+    return _hvqCache![dir][file];
   }
 
-  function read(dir, file) {
-    let buffer = PP64.romhandler.getROMBuffer();
+  export function read(dir: number, file: number) {
+    let buffer = PP64.romhandler.getROMBuffer()!;
 
-    let fsOffset = getROMOffset();
+    let fsOffset = getROMOffset()!;
     let fsView = new DataView(buffer, fsOffset);
 
     let bgOffset = fsOffset + fsView.getUint32(4 * (1 + dir));
@@ -221,17 +225,17 @@ PP64.fs.hvqfs = (function() {
     return buffer.slice(fileOffset, nextFileOffset);
   }
 
-  function write(dir, file, content) {
-    _hvqCache[dir][file] = content.slice(0);
+  export function write(dir: number, file: number, content: ArrayBuffer) {
+    _hvqCache![dir][file] = content.slice(0);
   }
 
-  let _hvqCache;
+  let _hvqCache: ArrayBuffer[][] | null;
 
-  function clearCache() {
+  export function clearCache() {
     _hvqCache = null;
   }
 
-  function extract() {
+  export function extract() {
     let t0, t1;
     if ($$debug && window.performance)
       t0 = performance.now();
@@ -254,14 +258,14 @@ PP64.fs.hvqfs = (function() {
     return _hvqCache;
   }
 
-  function extractAsync() {
+  export function extractAsync() {
     return new Promise((resolve, reject) => {
       extract();
       resolve();
     });
   }
 
-  function pack(buffer, offset = 0) {
+  export function pack(buffer: ArrayBuffer, offset: number = 0) {
     let view = new DataView(buffer, offset);
 
     let bgCount = getDirectoryCount();
@@ -281,7 +285,7 @@ PP64.fs.hvqfs = (function() {
     return curBgWriteOffset;
   }
 
-  function _writeBg(b, view, offset) {
+  function _writeBg(b: number, view: DataView, offset: number) {
     let fileCount = getHVQFileCount(b);
     view.setUint32(offset, fileCount + 1);
 
@@ -299,14 +303,14 @@ PP64.fs.hvqfs = (function() {
     return curFileWriteOffset;
   }
 
-  function _writeFile(b, f, view, offset) {
-    let fileBytes = _hvqCache[b][f];
+  function _writeFile(b: number, f: number, view: DataView, offset: number) {
+    let fileBytes = _hvqCache![b][f];
     PP64.utils.arrays.copyRange(view, fileBytes, offset, 0, fileBytes.byteLength);
     return offset + fileBytes.byteLength;
   }
 
-  function _getBgDimensions(dir) {
-    let infoView = new DataView(_hvqCache[dir][0], 0);
+  function _getBgDimensions(dir: number) {
+    let infoView = new DataView(_hvqCache![dir][0], 0);
     let tile_width = infoView.getUint32(0);
     let tile_height = infoView.getUint32(4);
     let tile_x_count = infoView.getUint32(8);
@@ -317,10 +321,10 @@ PP64.fs.hvqfs = (function() {
     return [width, height];
   }
 
-  function readBackgroundImgData(dir) {
-    let tileCount = _hvqCache[dir].length - 1;
+  export function readBackgroundImgData(dir: number) {
+    let tileCount = _hvqCache![dir].length - 1;
 
-    let infoView = new DataView(_hvqCache[dir][0], 0);
+    let infoView = new DataView(_hvqCache![dir][0], 0);
     let tile_width = infoView.getUint32(0);
     let tile_height = infoView.getUint32(4);
     let tile_x_count = infoView.getUint32(8);
@@ -331,18 +335,18 @@ PP64.fs.hvqfs = (function() {
 
     $$log(`HVQFS.readBackground, dir: ${dir}, tiles: ${tileCount}, board is ${width}x${height}`);
 
-    if (dir === 39) { // _boardLocData[4].bgNum) { // FIXME: Save away the black tile until HVQ is ready.
-      //var black_tile_offset = dir_offset + dirView.getUint32(4 + (211 * 4));
-      let blackTileView = new DataView(_hvqCache[39][211]);
-      PP64.utils.img.HVQ._black = blackTileView;
-    }
+    // if (dir === 39) { // _boardLocData[4].bgNum) { // FIXME: Save away the black tile until HVQ is ready.
+    //   //var black_tile_offset = dir_offset + dirView.getUint32(4 + (211 * 4));
+    //   let blackTileView = new DataView(_hvqCache![39][211]);
+    //   PP64.utils.img.HVQ._black = blackTileView;
+    // }
 
     // Grab DataViews of all of the tiles.
     let hvqTiles = [];
     let game = PP64.romhandler.getGameVersion();
     let adjust = game === 1 ? 1 : 2; // Skip HVQ-MPS in newer games
-    for (let i = adjust; i < _hvqCache[dir].length; i++) {
-      hvqTiles.push(new DataView(_hvqCache[dir][i]));
+    for (let i = adjust; i < _hvqCache![dir].length; i++) {
+      hvqTiles.push(new DataView(_hvqCache![dir][i]));
     }
     let rgba16Tiles = hvqTiles.map(PP64.utils.img.HVQ.decode);
     let rgba16Views = rgba16Tiles.map(tile => {
@@ -368,7 +372,7 @@ PP64.fs.hvqfs = (function() {
     return bgImageData;
   }
 
-  function readBackground(dir) {
+  export function readBackground(dir: number) {
     let [width, height] = _getBgDimensions(dir);
     let canvasCtx = PP64.utils.canvas.createContext(width, height);
     let bgImageData = readBackgroundImgData(dir);
@@ -380,7 +384,7 @@ PP64.fs.hvqfs = (function() {
     };
   }
 
-  function writeBackground(dir, imgData, width, height) {
+  export function writeBackground(dir: number, imgData: ImageData, width: number, height: number) {
     let tileXCount = width / 64;
     let tileYCount = height / 48;
     let tileCount = tileXCount * tileYCount;
@@ -405,21 +409,21 @@ PP64.fs.hvqfs = (function() {
     let game = PP64.romhandler.getGameVersion();
     if (game === 1) {
       for (let i = 1; i <= tileCount; i++) {
-        _hvqCache[dir][i] = orderedHVQTiles[i - 1];
+        _hvqCache![dir][i] = orderedHVQTiles[i - 1];
       }
     }
     else { // MP2/3 also has the HVQ-MPS to skip
       for (let i = 2; i <= tileCount + 1; i++) {
-        _hvqCache[dir][i] = orderedHVQTiles[i - 2];
+        _hvqCache![dir][i] = orderedHVQTiles[i - 2];
       }
     }
   }
 
-  function getDirectoryCount() {
+  export function getDirectoryCount() {
     if (_hvqCache)
       return _hvqCache.length;
 
-    let buffer = PP64.romhandler.getROMBuffer();
+    let buffer = PP64.romhandler.getROMBuffer()!;
     let hvqFsOffset = getROMOffset();
     if (hvqFsOffset === null)
       return 0;
@@ -427,11 +431,11 @@ PP64.fs.hvqfs = (function() {
     return hvqFsView.getUint32(0) - 1; // The last dir is a fake.
   }
 
-  function getHVQFileCount(dir) {
+  export function getHVQFileCount(dir: number) {
     if (_hvqCache && _hvqCache[dir])
       return _hvqCache[dir].length;
 
-    let buffer = PP64.romhandler.getROMBuffer();
+    let buffer = PP64.romhandler.getROMBuffer()!;
     let hvqFsOffset = getROMOffset();
     if (hvqFsOffset === null)
       return 0;
@@ -442,45 +446,26 @@ PP64.fs.hvqfs = (function() {
     return hvqFileView.getUint32(0) - 1; // The last file is a lie.
   }
 
-  function getByteLength() {
+  export function getByteLength() {
     let byteLen = 0;
 
-    let bgCount = _hvqCache.length;
+    let bgCount = _hvqCache!.length;
 
     byteLen += 4; // Count of backgrounds
     byteLen += 4 * (bgCount + 1); // Background offsets + the extra offset
 
     for (let b = 0; b < bgCount; b++) {
-      let fileCount = _hvqCache[b].length;
+      let fileCount = _hvqCache![b].length;
 
       byteLen += 4; // Count of files
       byteLen += 4 * (fileCount + 1); // File offsets + the extra offset
 
       for (let f = 0; f < fileCount; f++) {
-        byteLen += _hvqCache[b][f].byteLength;
+        byteLen += _hvqCache![b][f].byteLength;
         byteLen = $$number.makeDivisibleBy(byteLen, 4);
       }
     }
 
     return byteLen;
   }
-
-  return {
-    read,
-    write,
-    get,
-    extract,
-    extractAsync,
-    pack,
-    clearCache,
-    readBackground,
-    readBackgroundImgData,
-    writeBackground,
-    getByteLength,
-    getDirectoryCount,
-    getHVQFileCount,
-    getROMOffset,
-    setROMOffset,
-    getPatchOffsets,
-  };
-})();
+}

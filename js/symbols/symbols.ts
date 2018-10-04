@@ -26,7 +26,7 @@ namespace PP64.symbols {
   }
 
   /** Retrieves the array of symbols for a game, optionally filtered by type. */
-  export function getSymbols(game: PP64.types.Game, type: any) {
+  export function getSymbols(game: PP64.types.Game, type?: any) {
     const symName = _getSymbolNameFromGame(game);
 
     let symbols = (PP64.symbols as any as ISymbols)[symName];

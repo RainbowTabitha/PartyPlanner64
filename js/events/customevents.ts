@@ -1,9 +1,16 @@
-PP64.ns("adapters.events");
+namespace PP64.adapters.events {
+  export interface ICustomEventParameter {
+    name: string;
+    type: string;
+  }
 
-Object.assign(PP64.adapters.events, (function() {
+  interface ICustomEvent extends IEvent {
+    asm: string;
+    parameters?: ICustomEventParameter[];
+  }
 
-  const CustomAsmHelper = {
-    readDiscreteProperty: function(asm, propName) {
+  export const CustomAsmHelper = {
+    readDiscreteProperty: function(asm: string, propName: string) {
       const regex = new RegExp("^\\s*[;\\/]+\\s*" + propName + ":(.+)$", "gim");
       let regexMatch = regex.exec(asm);
       if (regexMatch) {
@@ -12,7 +19,7 @@ Object.assign(PP64.adapters.events, (function() {
       return null;
     },
 
-    readDiscretePropertySet: function(asm, propName) {
+    readDiscretePropertySet: function(asm: string, propName: string) {
       const regex = new RegExp("^\\s*[;\\/]+\\s*" + propName + ":(.+)$", "gim");
       let lastFind = null;
       const matches = [];
@@ -25,15 +32,15 @@ Object.assign(PP64.adapters.events, (function() {
       return matches;
     },
 
-    readSupportedGames: function(asm) {
+    readSupportedGames: function(asm: string) {
       let value = CustomAsmHelper.readDiscreteProperty(asm, "GAMES");
       if (value !== null) {
-        let ids = value.trim().split(",");
+        let ids: string[] = value.trim().split(",");
         const supportedGames = [];
         for (let i = 0; i < ids.length; i++) {
           let id = ids[i];
-          if ($gameType[id]) {
-            supportedGames.push($gameType[id]);
+          if (($gameType as any)[id]) {
+            supportedGames.push(($gameType as any)[id]);
           }
         }
         return supportedGames;
@@ -41,14 +48,16 @@ Object.assign(PP64.adapters.events, (function() {
       return null;
     },
 
-    readExecutionType: function(asm) {
+    readExecutionType: function(asm: string) {
       let value = CustomAsmHelper.readDiscreteProperty(asm, "EXECUTION");
-      return PP64.types.getExecutionTypeByName(value.trim());
+      if (value) {
+        return PP64.types.getExecutionTypeByName(value.trim());
+      }
     },
 
-    readParameters: function(asm) {
+    readParameters: function(asm: string) {
       const entryStrings = CustomAsmHelper.readDiscretePropertySet(asm, "PARAM");
-      const parameters = [];
+      const parameters: ICustomEventParameter[] = [];
       entryStrings.forEach(entryStr => {
         const pieces = entryStr.split("|");
         if (pieces.length !== 2)
@@ -68,7 +77,7 @@ Object.assign(PP64.adapters.events, (function() {
 
     validParameterNameRegex: /^[\w\?\!]*$/,
 
-    validateParameters: function(parameters) {
+    validateParameters: function(parameters: ICustomEventParameter[]) {
       if (!parameters)
         return;
       parameters.forEach(parameter => {
@@ -84,9 +93,9 @@ Object.assign(PP64.adapters.events, (function() {
     },
 
     /** Does a test assembly of a custom event. */
-    testAssemble: function(asm, parameters, info = {}) {
+    testAssemble: function(asm: string, parameters?: ICustomEventParameter[], info: Partial<IEventWriteInfo> = {}) {
       // Make fake parameterValues
-      const parameterValues = {};
+      const parameterValues: any = {};
       if (parameters && parameters.length) {
         parameters.forEach(parameter => {
           parameterValues[parameter.name] = 0;
@@ -96,14 +105,14 @@ Object.assign(PP64.adapters.events, (function() {
       const preppedAsm = prepAsm(asm, parameters, Object.assign({
         addr: 0,
         parameterValues,
-      }, info));
-      const bytes = MIPSAssem.assemble(preppedAsm);
+      }, info) as IEventWriteInfo);
+      const bytes = (window as any).MIPSAssem.assemble(preppedAsm);
       return bytes;
     }
   };
 
   /** Creates a custom event object from string assembly. */
-  function createCustomEvent(asm) {
+  export function createCustomEvent(asm: string) {
     let eventName = CustomAsmHelper.readDiscreteProperty(asm, "NAME");
     if (!eventName || !eventName.trim()) {
       throw new Error("Custom event must have a name");
@@ -136,7 +145,7 @@ Object.assign(PP64.adapters.events, (function() {
       }
     }
 
-    const custEvent = PP64.adapters.events.createEvent(eventId, eventName);
+    const custEvent: ICustomEvent = PP64.adapters.events.createEvent(eventId, eventName);
     custEvent.custom = true;
     custEvent.asm = asm;
     custEvent.activationType = $activationType.LANDON;
@@ -144,22 +153,22 @@ Object.assign(PP64.adapters.events, (function() {
     custEvent.supportedGames = supportedGames;
     custEvent.parameters = parameters;
 
-    custEvent.parse = function(dataView, info) {
+    custEvent.parse = function(dataView: DataView, info: IEventParseInfo) {
       // TODO: Can we generically parse custom events?
       return false;
     };
-    custEvent.write = function(dataView, event, info, temp) {
+    custEvent.write = function(dataView: DataView, event: ICustomEvent, info: IEventWriteInfo, temp: any) {
       $$log("Writing custom event", event, info);
 
       // Assemble and write
       const asm = prepAsm(event.asm, event.parameters, info);
-      const bytes = MIPSAssem.assemble(asm);
+      const bytes = (window as any).MIPSAssem.assemble(asm);
 
       PP64.utils.arrays.copyRange(dataView, bytes, 0, 0, bytes.byteLength);
 
       return [info.offset, bytes.byteLength];
     }
-    custEvent.sizeOf = function(n) {
+    custEvent.sizeOf = function(n: number) {
       // Fake-assemble to determine size.
       // TODO: This is never called?
       const bytes = CustomAsmHelper.testAssemble(asm);
@@ -174,15 +183,15 @@ Object.assign(PP64.adapters.events, (function() {
    * Takes the event asm that someone wrote and merges in all the assumed
    * global variables.
    */
-  function prepAsm(asm, parameters, info) {
+  function prepAsm(asm: string, parameters: ICustomEventParameter[] | undefined, info: IEventWriteInfo) {
     const orgDirective = `.org 0x${info.addr.toString(16)}`;
 
-    let syms = PP64.symbols.getSymbols(info.game);
-    syms = syms.map(symbol => {
+    let symbols = PP64.symbols.getSymbols(info.game);
+    let syms = symbols.map(symbol => {
       return `.definelabel ${symbol.name},0x${symbol.addr.toString(16)}`;
     });
 
-    let parameterSymbols = [];
+    let parameterSymbols: string[] = [];
     if (parameters && parameters.length && info.parameterValues) {
       parameters.forEach(parameter => {
         const parameterValue = info.parameterValues[parameter.name];
@@ -224,11 +233,11 @@ Object.assign(PP64.adapters.events, (function() {
   // Yes, right here, load cached events...
   const cachedEvents = PP64.utils.localstorage.getSavedEvents();
   if (cachedEvents && cachedEvents.length) {
-    cachedEvents.forEach(eventObj => {
-      if (!eventObj || !eventObj.asm)
+    cachedEvents.forEach((eventObj: IEvent) => {
+      if (!eventObj || !(eventObj as ICustomEvent).asm)
         return;
       try {
-        createCustomEvent(eventObj.asm);
+        createCustomEvent((eventObj as ICustomEvent).asm);
       }
       catch (e) {
         // Just let the error slide, event format changed or something?
@@ -236,9 +245,4 @@ Object.assign(PP64.adapters.events, (function() {
       }
     });
   }
-
-  return {
-    createCustomEvent,
-    CustomAsmHelper,
-  };
-})());
+}
