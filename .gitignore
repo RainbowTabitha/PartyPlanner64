@@ -13,6 +13,7 @@ js/adapter/boardinfo.js
 js/adapter/eventlist.js
 js/adapter/eventtable.js
 js/components/codemirrorwrapper.js
+js/events/events.js
 js/fs/animationfs.js
 js/fs/mainfs.js
 js/fs/scenes.js
