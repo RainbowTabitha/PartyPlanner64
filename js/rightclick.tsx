@@ -1,8 +1,20 @@
-PP64.rightclick = (function() {
-  let _globalHandler;
+namespace PP64.rightclick {
 
-  const RightClickMenu = class RightClickMenu extends React.Component {
-    state = {}
+  let _globalHandler: any;
+
+  interface IRightClickMenuProps {
+    space: PP64.boards.ISpace;
+  }
+
+  interface IRightClickMenuState {
+    oldX?: number;
+    oldY?: number;
+  }
+
+  export class RightClickMenu extends React.Component<IRightClickMenuProps, IRightClickMenuState> {
+    state: IRightClickMenuState = {}
+
+    private rcMenu: any;
 
     componentDidMount() {
       //console.log("RightClickMenu.componentDidMount");
@@ -16,49 +28,49 @@ PP64.rightclick = (function() {
       _globalHandler = null;
     }
 
-    globalClickHandler = event => {
+    globalClickHandler = (event: any) => {
       // console.log("globalClickHandler", event);
 
       // If we click inside the menu, don't close obviously.
       // But also let the canvas handlers decide what happens if they are clicked.
       if (this.elementIsWithin(event.target) || event.target.tagName.toUpperCase() === "CANVAS")
         return;
-      PP64.renderer.updateRightClickMenu(null);
+      (PP64 as any).renderer.updateRightClickMenu(null);
     }
 
-    handleClick = event => {
+    handleClick = (event: any) => {
       event.stopPropagation();
       event.nativeEvent.stopImmediatePropagation();
     }
 
-    onContextMenu = event => {
+    onContextMenu = (event: any) => {
       event.preventDefault(); // No right click on right click menu.
     }
 
-    onTypeChanged = (type, subtype) => {
+    onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
       if (type !== undefined)
         this.props.space.type = type;
       if (subtype !== undefined)
         this.props.space.subtype = subtype;
       else
         delete this.props.space.subtype;
-      PP64.renderer.render();
+      (PP64 as any).renderer.render();
       this.forceUpdate();
     }
 
-    getPlacement(space) {
-      let x = (!isNaN(this.state.oldX) ? this.state.oldX : space.x) - 8;
-      let y = (!isNaN(this.state.oldY) ? this.state.oldY : space.y) + 15;
+    getPlacement(space: PP64.boards.ISpace) {
+      let x = (!isNaN(this.state.oldX!) ? this.state.oldX! : space.x) - 8;
+      let y = (!isNaN(this.state.oldY!) ? this.state.oldY! : space.y) + 15;
       return "translateX(" + x + "px) translateY(" + y + "px)";
     }
 
-    elementIsWithin(el) {
-      if (!el || !this.refs || !this.refs.rcMenu)
+    elementIsWithin(el: HTMLElement) {
+      if (!el || !this.refs || !this.rcMenu)
         return true;
-      return this.refs.rcMenu.contains(el);
+      return this.rcMenu.contains(el);
     }
 
-    onChangeX = event => {
+    onChangeX = (event: any) => {
       let newX = parseInt(event.target.value, 10);
       let isBlank = event.target.value === "";
       let curBgWidth = PP64.boards.getCurrentBoard().bg.width;
@@ -66,11 +78,11 @@ PP64.rightclick = (function() {
         return;
       if (!this.state.oldX)
         this.setState({ oldX: this.props.space.x });
-      this.props.space.x = isBlank ? "" : newX;
+      (this as any).props.space.x = isBlank ? "" : newX;
       this.forceUpdate();
     }
 
-    onChangeY = event => {
+    onChangeY = (event: any) => {
       let newY = parseInt(event.target.value, 10);
       let isBlank = event.target.value === "";
       let curBgHeight = PP64.boards.getCurrentBoard().bg.height;
@@ -78,19 +90,19 @@ PP64.rightclick = (function() {
         return;
       if (!this.state.oldY)
         this.setState({ oldY: this.props.space.y });
-      this.props.space.y = isBlank ? "" : newY;
+      (this as any).props.space.y = isBlank ? "" : newY;
       this.forceUpdate();
     }
 
-    onCoordSet = event => {
+    onCoordSet = (event?: any) => {
       this.props.space.x = this.props.space.x || 0;
       this.props.space.y = this.props.space.y || 0;
-      PP64.renderer.render();
+      (PP64 as any).renderer.render();
       this.setState({ oldX: undefined, oldY: undefined });
       this.forceUpdate();
     }
 
-    onKeyUp = event => {
+    onKeyUp = (event: any) => {
       if (event.key === "Enter")
         this.onCoordSet();
     }
@@ -102,7 +114,9 @@ PP64.rightclick = (function() {
 
       let style = { transform: this.getPlacement(space) };
       return (
-        <div ref="rcMenu" className="rcMenu" style={style} onClick={this.handleClick} onContextMenu={this.onContextMenu}>
+        <div ref={(menu) => this.rcMenu = menu} className="rcMenu" style={style}
+          onClick={this.handleClick}
+          onContextMenu={this.onContextMenu}>
           &nbsp;&nbsp;<span>X:</span>
           <input type="text" value={space.x} onChange={this.onChangeX}
             onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
@@ -115,7 +129,15 @@ PP64.rightclick = (function() {
     }
   };
 
-  const RCSpaceTypeToggleTypes_1 = [
+  interface IRCMenuItem {
+    name: string;
+    icon: string;
+    type?: PP64.types.Space;
+    subtype?: PP64.types.SpaceSubtype;
+    advanced?: boolean;
+  }
+
+  const RCSpaceTypeToggleTypes_1: IRCMenuItem[] = [
     { name: "Change to blue space", icon: "img/toolbar/blue.png", type: $spaceType.BLUE },
     { name: "Change to red space", icon: "img/toolbar/red.png", type: $spaceType.RED },
     { name: "Change to happening space", icon: "img/toolbar/happening.png", type: $spaceType.HAPPENING },
@@ -127,14 +149,14 @@ PP64.rightclick = (function() {
     { name: "Change to star space", icon: "img/toolbar/star.png", type: $spaceType.STAR, advanced: true },
     { name: "Change to start space", icon: "img/toolbar/start.png", type: $spaceType.START, advanced: true },
   ];
-  const RCSpaceTypeToggleSubTypes_1 = [
+  const RCSpaceTypeToggleSubTypes_1: IRCMenuItem[] = [
     { name: "Show Toad", icon: "img/toolbar/toad.png", subtype: $spaceSubType.TOAD },
     { name: "Show Boo", icon: "img/toolbar/boo.png", subtype: $spaceSubType.BOO },
     { name: "Show Bowser", icon: "img/toolbar/bowsercharacter.png", subtype: $spaceSubType.BOWSER },
     { name: "Show Koopa Troopa", icon: "img/toolbar/koopa.png", subtype: $spaceSubType.KOOPA },
   ];
 
-  const RCSpaceTypeToggleTypes_2 = [
+  const RCSpaceTypeToggleTypes_2: IRCMenuItem[] = [
     { name: "Change to blue space", icon: "img/toolbar/blue.png", type: $spaceType.BLUE },
     { name: "Change to red space", icon: "img/toolbar/red.png", type: $spaceType.RED },
     { name: "Change to happening space", icon: "img/toolbar/happening.png", type: $spaceType.HAPPENING },
@@ -149,7 +171,7 @@ PP64.rightclick = (function() {
     { name: "Change to start space", icon: "img/toolbar/start.png", type: $spaceType.START, advanced: true },
     { name: "Change to arrow space", icon: "img/toolbar/arrow.png", type: $spaceType.ARROW, advanced: true },
   ];
-  const RCSpaceTypeToggleSubTypes_2 = [
+  const RCSpaceTypeToggleSubTypes_2: IRCMenuItem[] = [
     { name: "Show Toad", icon: "img/toolbar/toad.png", subtype: $spaceSubType.TOAD },
     { name: "Show Boo", icon: "img/toolbar/boo.png", subtype: $spaceSubType.BOO },
     { name: "Show bank", icon: "img/toolbar/banksubtype2.png", subtype: $spaceSubType.BANK },
@@ -157,7 +179,7 @@ PP64.rightclick = (function() {
     { name: "Show item shop", icon: "img/toolbar/itemshopsubtype2.png", subtype: $spaceSubType.ITEMSHOP },
   ];
 
-  const RCSpaceTypeToggleTypes_3 = [
+  const RCSpaceTypeToggleTypes_3: IRCMenuItem[] = [
     { name: "Change to blue space", icon: "img/toolbar/blue3.png", type: $spaceType.BLUE },
     { name: "Change to red space", icon: "img/toolbar/red3.png", type: $spaceType.RED },
     { name: "Change to happening space", icon: "img/toolbar/happening3.png", type: $spaceType.HAPPENING },
@@ -172,7 +194,7 @@ PP64.rightclick = (function() {
     { name: "Change to start space", icon: "img/toolbar/start.png", type: $spaceType.START, advanced: true },
     { name: "Change to arrow space", icon: "img/toolbar/arrow.png", type: $spaceType.ARROW, advanced: true },
   ];
-  const RCSpaceTypeToggleSubTypes_3 = [
+  const RCSpaceTypeToggleSubTypes_3: IRCMenuItem[] = [
     { name: "Show Millenium Star", icon: "img/toolbar/mstar.png", subtype: $spaceSubType.TOAD },
     { name: "Show Boo", icon: "img/toolbar/boo.png", subtype: $spaceSubType.BOO },
     { name: "Show bank", icon: "img/toolbar/banksubtype.png", subtype: $spaceSubType.BANK },
@@ -180,7 +202,7 @@ PP64.rightclick = (function() {
     { name: "Show item shop", icon: "img/toolbar/itemshopsubtype.png", subtype: $spaceSubType.ITEMSHOP },
   ];
 
-  const RCSpaceTypeToggleTypes_3_Duel = [
+  const RCSpaceTypeToggleTypes_3_Duel: IRCMenuItem[] = [
     // Types
     { name: "Change to basic space", icon: "img/toolbar/basic3.png", type: $spaceType.DUEL_BASIC },
     { name: "Change to Mini-Game space", icon: "img/toolbar/minigameduel3.png", type: $spaceType.MINIGAME },
@@ -195,7 +217,7 @@ PP64.rightclick = (function() {
 
   function _getRCSpaceTypeToggles() {
     const curBoard = PP64.boards.getCurrentBoard();
-    let types;
+    let types: IRCMenuItem[] = [];
     switch (curBoard.game) {
       case 1:
         types = RCSpaceTypeToggleTypes_1;
@@ -225,7 +247,7 @@ PP64.rightclick = (function() {
 
   function _getRCSpaceSubTypeToggles() {
     const curBoard = PP64.boards.getCurrentBoard();
-    let types;
+    let types: IRCMenuItem[] = [];
     switch (curBoard.game) {
       case 1:
         types = RCSpaceTypeToggleSubTypes_1;
@@ -246,14 +268,20 @@ PP64.rightclick = (function() {
     }
 
     if (!PP64.settings.get($setting.uiAdvanced)) {
-      types = types.filter(a => !a.advanced);
+      types = types!.filter((a: IRCMenuItem) => !a.advanced);
     }
 
     return types;
   }
 
-  const RCSpaceTypeToggle = class RCSpaceTypeToggle extends React.Component {
-    onTypeChanged = (type, subtype) => {
+  interface IRCSpaceTypeToggleProps {
+    type: PP64.types.Space;
+    subtype?: PP64.types.SpaceSubtype;
+    typeChanged: (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => any;
+  }
+
+  const RCSpaceTypeToggle = class RCSpaceTypeToggle extends React.Component<IRCSpaceTypeToggleProps> {
+    onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
       this.props.typeChanged(type, subtype);
     }
 
@@ -263,7 +291,7 @@ PP64.rightclick = (function() {
         return null; // Can't switch start space type
       let subtype = this.props.subtype;
       let onTypeChanged = this.onTypeChanged;
-      let makeToggle = item => {
+      let makeToggle = (item: any) => {
         let key = item.type + "-" + item.subtype;
         let selected = type === item.type || (type === $spaceType.OTHER && subtype !== undefined && subtype === item.subtype);
         //if (type !== $spaceType.OTHER && item.subtype !== undefined)
@@ -273,8 +301,8 @@ PP64.rightclick = (function() {
             icon={item.icon} title={item.name} selected={selected} typeChanged={onTypeChanged} />
         );
       };
-      let typeToggles = _getRCSpaceTypeToggles().map(makeToggle);
-      let subTypeToggles = _getRCSpaceSubTypeToggles().map(makeToggle);
+      let typeToggles = _getRCSpaceTypeToggles()!.map(makeToggle);
+      let subTypeToggles = _getRCSpaceSubTypeToggles()!.map(makeToggle);
 
       return (
         <div className="rcSpaceToggleContainer">
@@ -286,7 +314,16 @@ PP64.rightclick = (function() {
     }
   };
 
-  const RCSpaceTypeToggleBtn = class RCSpaceTypeToggleBtn extends React.Component {
+  interface IRCSpaceTypeToggleBtnProps {
+    type: PP64.types.Space;
+    subtype: PP64.types.SpaceSubtype;
+    selected?: boolean;
+    icon?: string;
+    title?: string;
+    typeChanged: (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => any;
+  }
+
+  const RCSpaceTypeToggleBtn = class RCSpaceTypeToggleBtn extends React.Component<IRCSpaceTypeToggleBtnProps> {
     onTypeChanged = () => {
       if (this.props.subtype !== undefined && this.props.selected)
         this.props.typeChanged(this.props.type, undefined);
@@ -306,8 +343,4 @@ PP64.rightclick = (function() {
       );
     }
   };
-
-  return {
-    RightClickMenu
-  };
-})();
+}
