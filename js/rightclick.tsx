@@ -3,7 +3,7 @@ namespace PP64.rightclick {
   let _globalHandler: any;
 
   interface IRightClickMenuProps {
-    space: PP64.boards.ISpace;
+    space?: PP64.boards.ISpace | null;
   }
 
   interface IRightClickMenuState {
@@ -49,11 +49,11 @@ namespace PP64.rightclick {
 
     onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
       if (type !== undefined)
-        this.props.space.type = type;
+        this.props.space!.type = type;
       if (subtype !== undefined)
-        this.props.space.subtype = subtype;
+        this.props.space!.subtype = subtype;
       else
-        delete this.props.space.subtype;
+        delete this.props.space!.subtype;
       (PP64 as any).renderer.render();
       this.forceUpdate();
     }
@@ -77,7 +77,7 @@ namespace PP64.rightclick {
       if ((!isBlank && isNaN(newX)) || newX < 0 || newX > curBgWidth)
         return;
       if (!this.state.oldX)
-        this.setState({ oldX: this.props.space.x });
+        this.setState({ oldX: this.props.space!.x });
       (this as any).props.space.x = isBlank ? "" : newX;
       this.forceUpdate();
     }
@@ -89,14 +89,14 @@ namespace PP64.rightclick {
       if ((!isBlank && isNaN(newY)) || newY < 0 || newY > curBgHeight)
         return;
       if (!this.state.oldY)
-        this.setState({ oldY: this.props.space.y });
+        this.setState({ oldY: this.props.space!.y });
       (this as any).props.space.y = isBlank ? "" : newY;
       this.forceUpdate();
     }
 
     onCoordSet = (event?: any) => {
-      this.props.space.x = this.props.space.x || 0;
-      this.props.space.y = this.props.space.y || 0;
+      this.props.space!.x = this.props.space!.x || 0;
+      this.props.space!.y = this.props.space!.y || 0;
       (PP64 as any).renderer.render();
       this.setState({ oldX: undefined, oldY: undefined });
       this.forceUpdate();

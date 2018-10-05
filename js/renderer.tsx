@@ -1,5 +1,8 @@
-PP64.renderer = (function() {
-  function getEditorContentTransform(board, editor) {
+namespace PP64.renderer {
+  type Canvas = HTMLCanvasElement;
+  type CanvasContext = CanvasRenderingContext2D;
+
+  function getEditorContentTransform(board: PP64.boards.IBoard, editor: HTMLElement) {
     let board_offset_x = Math.floor((editor.offsetWidth - board.bg.width) / 2);
     board_offset_x = Math.max(0, board_offset_x);
     let board_offset_y = Math.floor((editor.offsetHeight - board.bg.height) / 2);
@@ -8,7 +11,7 @@ PP64.renderer = (function() {
     return `translateX(${board_offset_x}px) translateY(${board_offset_y}px)`;
   }
 
-  function renderConnections(lineCanvas, lineCtx, board, clear = true) {
+  function _renderConnections(lineCanvas: Canvas, lineCtx: CanvasContext, board: PP64.boards.IBoard, clear: boolean = true) {
     if (clear)
       lineCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
 
@@ -18,16 +21,16 @@ PP64.renderer = (function() {
       const x1 = board.spaces[startSpace].x;
       const y1 = board.spaces[startSpace].y;
 
-      const endLinks = PP64.boards.getConnections(startSpace, board);
+      const endLinks = PP64.boards.getConnections(parseInt(startSpace), board)!;
       let x2, y2;
       let bidirectional = false;
       for (let i = 0; i < endLinks.length; i++) {
         x2 = board.spaces[endLinks[i]].x;
         y2 = board.spaces[endLinks[i]].y;
         bidirectional = _isConnectedTo(links, endLinks[i], startSpace);
-        if (bidirectional && startSpace > endLinks[i])
+        if (bidirectional && parseInt(startSpace) > endLinks[i])
           continue;
-        drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
+        _drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
       }
     }
 
@@ -60,7 +63,7 @@ PP64.renderer = (function() {
     }
   }
 
-  function _isConnectedTo(links, start, end) {
+  function _isConnectedTo(links: any, start: number, end: any) {
     let startLinks = links[start];
     if (Array.isArray(startLinks))
       return startLinks.indexOf(parseInt(end)) >= 0;
@@ -68,10 +71,16 @@ PP64.renderer = (function() {
       return startLinks == end; // Can be string vs int
   }
 
+  export interface ISpaceRenderOpts {
+    skipHiddenSpaces?: boolean;
+    skipBadges?: boolean;
+    skipCharacters?: boolean;
+  }
+
   // opts:
   //   skipHiddenSpaces: true to not render start, invisible spaces
   //   skipBadges: false to skip event and star badges
-  function renderSpaces(spaceCanvas, spaceCtx, board, clear = true, opts = {}) {
+  function _renderSpaces(spaceCanvas: Canvas, spaceCtx: CanvasContext, board: PP64.boards.IBoard, clear: boolean = true, opts: ISpaceRenderOpts = {}) {
     if (clear)
       spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
@@ -89,7 +98,7 @@ PP64.renderer = (function() {
     }
   }
 
-  function drawSpace(spaceCtx, space, game, boardType, opts = {}) {
+  function drawSpace(spaceCtx: CanvasContext, space: PP64.boards.ISpace, game: number, boardType: PP64.types.BoardType, opts: ISpaceRenderOpts = {}) {
     const x = space.x;
     const y = space.y;
     const rotation = space.rotation;
@@ -277,7 +286,7 @@ PP64.renderer = (function() {
     }
   }
 
-  function drawCharacters(spaceCtx, x, y, subtype, game) {
+  function drawCharacters(spaceCtx: CanvasContext, x: number, y: number, subtype: PP64.types.SpaceSubtype | undefined, game: number) {
     // Draw the standing Toad.
     if (subtype === $spaceSubType.TOAD) {
       if (game === 3)
@@ -329,7 +338,7 @@ PP64.renderer = (function() {
   }
 
   const _PIOver1 = (Math.PI / 1);
-  function drawConnection(lineCtx, x1, y1, x2, y2, bidirectional) {
+  function _drawConnection(lineCtx: CanvasContext, x1: number, y1: number, x2: number, y2: number, bidirectional?: boolean) {
     lineCtx.save();
     lineCtx.beginPath();
     lineCtx.strokeStyle = "rgba(255, 185, 105, 0.75)";
@@ -361,7 +370,7 @@ PP64.renderer = (function() {
     lineCtx.restore();
   }
 
-  function drawAssociation(lineCtx, x1, y1, x2, y2) {
+  function drawAssociation(lineCtx: CanvasContext, x1: number, y1: number, x2: number, y2: number) {
     lineCtx.save();
     lineCtx.beginPath();
     lineCtx.strokeStyle = "rgba(0, 0, 0, 0.5)";
@@ -386,7 +395,7 @@ PP64.renderer = (function() {
   }
 
   /** Adds a glow around the selected spaces in the editor. */
-  function renderSelectedSpaces(canvas, context, spaces) {
+  function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, spaces?: PP64.boards.ISpace[]) {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!spaces || !spaces.length)
@@ -414,7 +423,7 @@ PP64.renderer = (function() {
   }
 
   /** Does a strong red highlight around some spaces. */
-  function highlightSpaces(canvas, context, spaces) {
+  function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number[]) {
     const currentBoard = PP64.boards.getCurrentBoard();
     let radius = currentBoard.game === 3 ? 18 : 12;
 
@@ -433,7 +442,7 @@ PP64.renderer = (function() {
     }
   }
 
-  function __determineSpaceEventImg(space) {
+  function __determineSpaceEventImg(space: PP64.boards.ISpace) {
     if (space.events && space.events.length) {
       for (let i = 0; i < space.events.length; i++) {
         const event = space.events[i];
@@ -450,8 +459,13 @@ PP64.renderer = (function() {
     return PP64.images.get("eventImg");
   }
 
-  let _boardBG;
-  const BoardBG = class BoardBG extends React.Component {
+  let _boardBG: BoardBG | null;
+
+  interface BoardBGProps {
+    board: PP64.boards.IBoard;
+  }
+
+  class BoardBG extends React.Component<BoardBGProps> {
     state = {}
 
     componentDidMount() {
@@ -471,11 +485,11 @@ PP64.renderer = (function() {
       let board = this.props.board;
       let bgImg = this.getImage();
       let editor = bgImg.parentElement;
-      let transformStyle = getEditorContentTransform(board, editor);
+      let transformStyle = getEditorContentTransform(board, editor!);
       bgImg.style.transform = transformStyle;
 
       // Update the background image.
-      if (bgImg._src !== board.bg.src || bgImg.width !== board.bg.width || bgImg.height !== board.bg.height) {
+      if ((bgImg as any)._src !== board.bg.src || bgImg.width !== board.bg.width || bgImg.height !== board.bg.height) {
         bgImg.width = board.bg.width;
         bgImg.height = board.bg.height;
         this.setSource(board.bg.src, bgImg);
@@ -483,12 +497,12 @@ PP64.renderer = (function() {
     }
 
     getImage() {
-      return ReactDOM.findDOMNode(this);
+      return ReactDOM.findDOMNode(this) as HTMLImageElement;
     }
 
-    setSource(src, bgImg = this.getImage()) {
+    setSource(src: string, bgImg = this.getImage()) {
       bgImg.src = src;
-      bgImg._src = src; // src can change after setting, and trick the renderContent check.
+      (bgImg as any)._src = src; // src can change after setting, and trick the renderContent check.
     }
 
     render() {
@@ -498,16 +512,16 @@ PP64.renderer = (function() {
     }
   };
 
-  let _animInterval;
+  let _animInterval: any;
   let _currentFrame = -1;
 
-  function _startAnimation() {
+  export function playAnimation() {
     if (!_animInterval) {
       _animInterval = setInterval(_animationStep, 800);
     }
   }
 
-  function _stopAnimation() {
+  export function stopAnimation() {
     if (_animInterval) {
       clearInterval(_animInterval);
     }
@@ -522,7 +536,7 @@ PP64.renderer = (function() {
     const board = PP64.boards.getCurrentBoard();
     const animbgs = board.animbg;
     if (!_boardBG || !animbgs || !animbgs.length) {
-      _stopAnimation();
+      stopAnimation();
       return;
     }
 
@@ -540,8 +554,13 @@ PP64.renderer = (function() {
     }
   }
 
-  let _boardLines;
-  let BoardLines = class BoardLines extends React.Component {
+  let _boardLines: BoardLines | null;
+
+  interface BoardLinesProps {
+    board: PP64.boards.IBoard;
+  }
+
+  class BoardLines extends React.Component<BoardLinesProps> {
     state = {}
 
     componentDidMount() {
@@ -559,8 +578,8 @@ PP64.renderer = (function() {
 
     renderContent() {
       // Update lines connecting spaces
-      let lineCanvas = ReactDOM.findDOMNode(this);
-      let editor = lineCanvas.parentElement;
+      let lineCanvas = ReactDOM.findDOMNode(this) as Canvas;
+      let editor = lineCanvas.parentElement!;
       let board = this.props.board;
       let transformStyle = getEditorContentTransform(board, editor);
       lineCanvas.style.transform = transformStyle;
@@ -568,7 +587,7 @@ PP64.renderer = (function() {
         lineCanvas.width = board.bg.width;
         lineCanvas.height = board.bg.height;
       }
-      renderConnections(lineCanvas, lineCanvas.getContext("2d"), board);
+      _renderConnections(lineCanvas, lineCanvas.getContext("2d")!, board);
     }
 
     render() {
@@ -578,8 +597,14 @@ PP64.renderer = (function() {
     }
   };
 
-  let _boardSelectedSpaces;
-  const BoardSelectedSpaces = class BoardSelectedSpaces extends React.Component {
+  let _boardSelectedSpaces: BoardSelectedSpaces | null;
+
+  interface BoardSelectedSpacesProps {
+    board: PP64.boards.IBoard;
+    selectedSpaces?: PP64.boards.ISpace[]
+  }
+
+  class BoardSelectedSpaces extends React.Component<BoardSelectedSpacesProps> {
     state = {}
 
     componentDidMount() {
@@ -597,8 +622,8 @@ PP64.renderer = (function() {
 
     renderContent() {
       // Update the current space indication
-      const selectedSpacesCanvas = ReactDOM.findDOMNode(this);
-      const editor = selectedSpacesCanvas.parentElement;
+      const selectedSpacesCanvas = ReactDOM.findDOMNode(this) as Canvas;
+      const editor = selectedSpacesCanvas.parentElement!;
       const board = this.props.board;
       const transformStyle = getEditorContentTransform(board, editor);
       selectedSpacesCanvas.style.transform = transformStyle;
@@ -606,12 +631,12 @@ PP64.renderer = (function() {
         selectedSpacesCanvas.width = board.bg.width;
         selectedSpacesCanvas.height = board.bg.height;
       }
-      renderSelectedSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d"), this.props.selectedSpaces);
+      _renderSelectedSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d")!, this.props.selectedSpaces);
     }
 
-    highlightSpaces(spaces) {
-      const selectedSpacesCanvas = ReactDOM.findDOMNode(this);
-      highlightSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d"), spaces);
+    highlightSpaces(spaces: number[]) {
+      const selectedSpacesCanvas = ReactDOM.findDOMNode(this) as Canvas;
+      _highlightSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d")!, spaces);
     }
 
     render() {
@@ -621,13 +646,18 @@ PP64.renderer = (function() {
     }
   };
 
-  let _boardSpaces;
-  const BoardSpaces = class BoardSpaces extends React.Component {
+  let _boardSpaces: BoardSpaces | null;
+
+  interface BoardSpacesProps {
+    board: PP64.boards.IBoard;
+  }
+
+  class BoardSpaces extends React.Component<BoardSpacesProps> {
     state = {}
 
     componentDidMount() {
       const canvas = ReactDOM.findDOMNode(this);
-      PP64.interaction.attachToCanvas(canvas);
+      (PP64 as any).interaction.attachToCanvas(canvas);
 
       this.renderContent();
       _boardSpaces = this;
@@ -635,7 +665,7 @@ PP64.renderer = (function() {
 
     componentWillUnmount() {
       const canvas = ReactDOM.findDOMNode(this);
-      PP64.interaction.detachFromCanvas(canvas);
+      (PP64 as any).interaction.detachFromCanvas(canvas);
       _boardSpaces = null;
     }
 
@@ -645,8 +675,8 @@ PP64.renderer = (function() {
 
     renderContent() {
       // Update spaces
-      const spaceCanvas = ReactDOM.findDOMNode(this);
-      const editor = spaceCanvas.parentElement;
+      const spaceCanvas = ReactDOM.findDOMNode(this) as Canvas;
+      const editor = spaceCanvas.parentElement!;
       const board = this.props.board;
       const transformStyle = getEditorContentTransform(board, editor);
       spaceCanvas.style.transform = transformStyle;
@@ -654,20 +684,20 @@ PP64.renderer = (function() {
         spaceCanvas.width = board.bg.width;
         spaceCanvas.height = board.bg.height;
       }
-      renderSpaces(spaceCanvas, spaceCanvas.getContext("2d"), board);
+      _renderSpaces(spaceCanvas, spaceCanvas.getContext("2d")!, board);
     }
 
     render() {
       return (
-        <canvas className="editor_space_canvas" tabIndex="-1"
-          onDragOver={this.preventDefault}></canvas>
+        <canvas className="editor_space_canvas" tabIndex={-1}
+          onDragOver={undefined}></canvas>
       );
     }
 
     /** Draws the box as the user drags to select spaces. */
-    drawSelectionBox = (xs, ys, xf, yf) => {
-      const spaceCanvas = ReactDOM.findDOMNode(this);
-      const ctx = spaceCanvas.getContext("2d");
+    drawSelectionBox = (xs: number, ys: number, xf: number, yf: number) => {
+      const spaceCanvas = ReactDOM.findDOMNode(this) as Canvas;
+      const ctx = spaceCanvas.getContext("2d")!;
       ctx.save();
       ctx.beginPath();
       ctx.fillStyle = "rgba(47, 70, 95, 0.5)";
@@ -679,9 +709,18 @@ PP64.renderer = (function() {
   };
 
   // Right-click menu overlay
-  let _boardOverlay;
-  const BoardOverlay = class BoardOverlay extends React.Component {
-    state = {
+  let _boardOverlay: BoardOverlay | null;
+
+  interface BoardOverlayProps {
+    board: PP64.boards.IBoard;
+  }
+
+  interface BoardOverlayState {
+    rightClickSpace: PP64.boards.ISpace | null;
+  }
+
+  class BoardOverlay extends React.Component<BoardOverlayProps> {
+    state: BoardOverlayState = {
       rightClickSpace: null
     }
 
@@ -699,13 +738,13 @@ PP64.renderer = (function() {
     }
 
     renderContent() {
-      let overlay = ReactDOM.findDOMNode(this);
-      let editor = overlay.parentElement;
+      let overlay = ReactDOM.findDOMNode(this) as HTMLElement;
+      let editor = overlay.parentElement!;
       let transformStyle = getEditorContentTransform(this.props.board, editor);
       overlay.style.transform = transformStyle;
     }
 
-    setRightClickMenu(space) {
+    setRightClickMenu(space: PP64.boards.ISpace) {
       this.setState({rightClickSpace: space});
     }
 
@@ -725,7 +764,12 @@ PP64.renderer = (function() {
     }
   };
 
-  const Editor = class Editor extends React.Component {
+  interface IEditorProps {
+    board: PP64.boards.IBoard;
+    selectedSpaces: PP64.boards.ISpace[];
+  }
+
+  export const Editor = class Editor extends React.Component<IEditorProps> {
     state = {}
 
     componentDidMount() {
@@ -752,76 +796,70 @@ PP64.renderer = (function() {
     }
   };
 
-  return {
-    render: function() {
-      if (_boardBG)
-        _boardBG.renderContent();
-      if (_boardLines)
-        _boardLines.renderContent();
-      if (_boardSelectedSpaces)
-        _boardSelectedSpaces.renderContent();
-      if (_boardSpaces)
-        _boardSpaces.renderContent();
-    },
-    renderBG: function() {
-      if (_boardBG)
-        _boardBG.renderContent();
-    },
-    renderConnections: function() {
-      if (_boardLines)
-        _boardLines.renderContent();
-    },
-    renderSelectedSpaces: function() {
-      if (_boardSelectedSpaces)
-        _boardSelectedSpaces.renderContent();
-    },
-    renderSpaces: function() {
-      if (_boardSpaces)
-        _boardSpaces.renderContent();
-    },
-    updateRightClickMenu: function(space) {
-      if (_boardOverlay)
-        _boardOverlay.setRightClickMenu(space);
-    },
-    rightClickOpen: function() {
-      if (_boardOverlay)
-        return _boardOverlay.rightClickOpen();
-      return false;
-    },
-    drawConnection: function(x1, y1, x2, y2) {
-      if (!_boardLines)
-        return;
-      let lineCtx = ReactDOM.findDOMNode(_boardLines).getContext("2d");
-      drawConnection(lineCtx, x1, y1, x2, y2);
-    },
+  export function render() {
+    if (_boardBG)
+      _boardBG.renderContent();
+    if (_boardLines)
+      _boardLines.renderContent();
+    if (_boardSelectedSpaces)
+      _boardSelectedSpaces.renderContent();
+    if (_boardSpaces)
+      _boardSpaces.renderContent();
+  }
+  export function renderBG() {
+    if (_boardBG)
+      _boardBG.renderContent();
+  }
+  export function renderConnections() {
+    if (_boardLines)
+      _boardLines.renderContent();
+  }
+  export function renderSelectedSpaces() {
+    if (_boardSelectedSpaces)
+      _boardSelectedSpaces.renderContent();
+  }
+  export function renderSpaces() {
+    if (_boardSpaces)
+      _boardSpaces.renderContent();
+  }
+  export function updateRightClickMenu(space: PP64.boards.ISpace) {
+    if (_boardOverlay)
+      _boardOverlay.setRightClickMenu(space);
+  }
+  export function rightClickOpen() {
+    if (_boardOverlay)
+      return _boardOverlay.rightClickOpen();
+    return false;
+  }
+  export function drawConnection(x1: number, y1: number, x2: number, y2: number) {
+    if (!_boardLines)
+      return;
+    let lineCtx = (ReactDOM.findDOMNode(_boardLines) as Canvas).getContext("2d")!;
+    _drawConnection(lineCtx, x1, y1, x2, y2);
+  }
 
-    highlightSpaces: function(spaces) {
-      if (_boardSelectedSpaces)
-        _boardSelectedSpaces.highlightSpaces(spaces);
-    },
+  export function highlightSpaces(spaces: number[]) {
+    if (_boardSelectedSpaces)
+      _boardSelectedSpaces.highlightSpaces(spaces);
+  }
 
-    drawSelectionBox: function(xs, ys, xf, yf) {
-      if (_boardSpaces)
-      _boardSpaces.drawSelectionBox(xs, ys, xf, yf);
-    },
+  export function drawSelectionBox(xs: number, ys: number, xf: number, yf: number) {
+    if (_boardSpaces)
+    _boardSpaces.drawSelectionBox(xs, ys, xf, yf);
+  }
 
-    playAnimation: _startAnimation,
-    stopAnimation: _stopAnimation,
-    animationPlaying: function() {
-      return !!_animInterval;
-    },
+  export function animationPlaying() {
+    return !!_animInterval;
+  }
 
-    external: {
-      getBGImage: function() {
-        return _boardBG.getImage();
-      },
-      setBGImage: function(src) {
-        _boardBG.setSource(src);
-      },
-      renderConnections: renderConnections,
-      renderSpaces: renderSpaces
+  export const external = {
+    getBGImage: function() {
+      return _boardBG!.getImage();
     },
-
-    Editor,
+    setBGImage: function(src: string) {
+      _boardBG!.setSource(src);
+    },
+    renderConnections: renderConnections,
+    renderSpaces: renderSpaces
   };
-})();
+}

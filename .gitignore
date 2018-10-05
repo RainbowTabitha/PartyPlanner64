@@ -54,6 +54,7 @@ js/controls.js
 js/gameshark.js
 js/images.js
 js/patches.js
+js/renderer.js
 js/rightclick.js
 js/romhandler.js
 js/spaces.js

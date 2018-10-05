@@ -22,6 +22,7 @@ namespace PP64.boards {
     type: PP64.types.Space;
     subtype?: PP64.types.SpaceSubtype;
     events?: any[];
+    star?: boolean;
   }
 
   let currentBoard = 0;

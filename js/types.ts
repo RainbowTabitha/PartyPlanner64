@@ -132,8 +132,9 @@ namespace PP64.types {
     MP3_PAL = "NMVP",
   }
 
-  export function getGameName(id: string) {
-    for (const [key, value] of Object.entries(PP64.types.Game)) {
+  export function getGameName(id: string): string | null {
+    for (let key in PP64.types.Game) {
+      const value = PP64.types.Game[key];
       if (value === id)
         return key;
     }
