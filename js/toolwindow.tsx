@@ -1,5 +1,18 @@
-PP64.toolwindow = (function() {
-  const ToolWindow = class ToolWindow extends React.Component {
+namespace PP64.toolwindow {
+
+  export interface IToolWindowProps {
+    name: string;
+    position?: string;
+    visible?: boolean;
+  }
+
+  export interface IToolWindowState {
+    left: number;
+    top: number;
+    manuallyPlaced: boolean;
+  }
+
+  export class ToolWindow extends React.Component<IToolWindowProps, IToolWindowState> {
     state = {
       left: -1000,
       top: -1000,
@@ -45,16 +58,16 @@ PP64.toolwindow = (function() {
       this.attachMutationObserver();
     }
 
-    shouldComponentUpdate(nextProps, nextState, nextContext) {
+    shouldComponentUpdate(nextProps: IToolWindowProps, nextState: IToolWindowState) {
       return !this.tryUpdatePosition(nextState);
     }
 
     attachMutationObserver() {
       let container = ReactDOM.findDOMNode(this);
-      if (container && window.MutationObserver) {
-        let observer = new MutationObserver(function(mutations) {
+      if (container && "MutationObserver" in window) {
+        let observer = new MutationObserver((mutations: MutationRecord[]) => {
           this.updatePositionState();
-        }.bind(this));
+        });
         let observerConfig = { childList: true, subtree: true };
         observer.observe(container, observerConfig);
 
@@ -65,27 +78,27 @@ PP64.toolwindow = (function() {
     detachMutationObserver() {
       if (_mutationObservers[this.props.name]) {
         _mutationObservers[this.props.name].disconnect();
-        _mutationObservers[this.props.name] = null;
+        delete _mutationObservers[this.props.name];
       }
     }
 
-    tryUpdatePosition(newState) {
+    tryUpdatePosition(newState: IToolWindowState) {
       let changed = this.state.left !== newState.left || this.state.top !== newState.top;
       if (changed)
         this.updatePosition(newState);
       return changed;
     }
 
-    updatePosition(state) {
+    updatePosition(state: IToolWindowState) {
       state = state || this.state;
-      let el = ReactDOM.findDOMNode(this);
+      let el = ReactDOM.findDOMNode(this) as HTMLElement;
       if (el) {
         el.style.left = state.left + "px";
         el.style.top = state.top + "px";
       }
     }
 
-    tryUpdatePositionState(newState) {
+    tryUpdatePositionState(newState: any) {
       let changed = this.state.left !== newState.left || this.state.top !== newState.top;
       if (changed)
         this.setState(newState);
@@ -95,8 +108,8 @@ PP64.toolwindow = (function() {
     updatePositionState() {
       if (!this.state.manuallyPlaced) {
         // Do the default positioning based on the prop setting.
-        let newPos = {};
-        let pos = this.props.position;
+        let newPos: { left?: number, top?: number } = {};
+        let pos = this.props.position!;
         if (pos.indexOf("Left") !== -1)
           newPos.left = 0;
         if (pos.indexOf("Right") !== -1)
@@ -115,12 +128,12 @@ PP64.toolwindow = (function() {
     }
 
     getWidth() {
-      let el = ReactDOM.findDOMNode(this);
+      let el = ReactDOM.findDOMNode(this) as HTMLElement;
       return el && el.offsetWidth || 0;
     }
 
     getHeight() {
-      let el = ReactDOM.findDOMNode(this);
+      let el = ReactDOM.findDOMNode(this) as HTMLElement;
       return el && el.offsetHeight || 0;
     }
 
@@ -135,11 +148,11 @@ PP64.toolwindow = (function() {
     }
 
     getContainerEl() {
-      let el = ReactDOM.findDOMNode(this);
-      return el && el.offsetParent || null;
+      let el = ReactDOM.findDOMNode(this) as HTMLElement;
+      return el && (el.offsetParent as HTMLElement) || null;
     }
 
-    mouseDown = (event) => {
+    mouseDown = (event: React.MouseEvent) => {
       //console.log("ToolWindow.mousedown", event, event.clientX, event.clientY);
       _movingToolWindow = this;
       [_lastX, _lastY] = [event.clientX, event.clientY];
@@ -157,30 +170,30 @@ PP64.toolwindow = (function() {
     }
   };
 
-  let _lastX = null;
-  let _lastY = null;
-  let _movingToolWindow = null;
-  let _mutationObservers = {};
+  let _lastX: number | null = null;
+  let _lastY: number | null = null;
+  let _movingToolWindow: ToolWindow | null = null;
+  let _mutationObservers: { [name: string]: MutationObserver} = {};
 
-  function _mousemove(event) {
+  function _mousemove(event: MouseEvent) {
     //console.log("ToolWindow.mousemove", event);
     let [curX, curY] = [event.clientX, event.clientY];
-    let [diffX, diffY] = [curX - _lastX, curY - _lastY];
+    let [diffX, diffY] = [curX - _lastX!, curY - _lastY!];
     //console.log("ToolWindow.mousemove", "diffX", diffX, "diffY", diffY);
-    let newState = {
-      left: _movingToolWindow.state.left + diffX,
-      top: _movingToolWindow.state.top + diffY,
+    let newState: IToolWindowState = {
+      left: _movingToolWindow!.state.left + diffX,
+      top: _movingToolWindow!.state.top + diffY,
       manuallyPlaced: true,
     };
-    newState = _keepInBounds(_movingToolWindow, newState);
-    _movingToolWindow.setState(newState);
+    newState = _keepInBounds(_movingToolWindow!, newState);
+    _movingToolWindow!.setState(newState);
 
     [_lastX, _lastY] = [curX, curY];
   }
 
-  function _mouseend(event) {
+  function _mouseend(event: MouseEvent) {
     //console.log("ToolWindow.mouseup", event);
-    let movetarget = _movingToolWindow.getContainerEl();
+    let movetarget = _movingToolWindow!.getContainerEl();
 
     if (event.type === "mouseleave" && event.target !== movetarget)
       return;
@@ -195,25 +208,21 @@ PP64.toolwindow = (function() {
     _lastX = _lastY = null;
   }
 
-  function _keepInBounds(toolwindow, newState) {
-    if (newState.left < 0)
+  function _keepInBounds(toolwindow: ToolWindow, newState: Partial<IToolWindowState>): IToolWindowState {
+    if (newState.left! < 0)
       newState.left = 0;
     else {
       let maxLeft = toolwindow.getContainerWidth() - toolwindow.getWidth();
-      if (newState.left > maxLeft)
+      if (newState.left! > maxLeft)
         newState.left = maxLeft;
     }
-    if (newState.top < 0)
+    if (newState.top! < 0)
       newState.top = 0;
     else {
       let maxTop = toolwindow.getContainerHeight() - toolwindow.getHeight();
-      if (newState.top > maxTop)
+      if (newState.top! > maxTop)
         newState.top = maxTop;
     }
-    return newState;
+    return newState as IToolWindowState;
   }
-
-  return {
-    ToolWindow
-  };
-})();
+}

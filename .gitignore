@@ -60,4 +60,5 @@ js/romhandler.js
 js/spaces.js
 js/settings.js
 js/texteditor.js
+js/toolwindow.js
 js/types.js
