@@ -661,6 +661,10 @@
     "@types/prop-types" "*"
     csstype "^2.2.0"
 
+"@types/three@^0.92.24":
+  version "0.92.24"
+  resolved "https://registry.yarnpkg.com/@types/three/-/three-0.92.24.tgz#ad5cba7950579daf5253ec819d706ff802fb1e8c"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"

@@ -40,6 +40,7 @@
     "@types/filesaver": "^0.0.30",
     "@types/react": "^16.4.14",
     "@types/react-dom": "^16.0.7",
+    "@types/three": "^0.92.24",
     "gulp": "^3.9.1",
     "gulp-babel": "^8.0.0",
     "gulp-cached": "^1.1.0",

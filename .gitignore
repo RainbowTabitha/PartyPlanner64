@@ -23,6 +23,7 @@ js/fs/scenes.js
 js/fs/strings.js
 js/fs/strings3.js
 js/models/FORM.js
+js/models/FormToThreeJs.js
 js/models/MTNX.js
 js/patches/gameshark/compiler.js
 js/patches/gameshark/hook.MP1.U.js

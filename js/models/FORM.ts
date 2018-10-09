@@ -5,13 +5,41 @@ namespace PP64.utils {
 
   type IFormObjDict = { [key in IFormObjType]: IFormObjEntry[] };
 
-  interface IFormObj extends IFormObjDict {
+  export interface IFormObj extends IFormObjDict {
     entries: IFormObjType[];
   }
 
   interface IFormObjEntry {
     raw: ArrayBuffer;
     parsed?: any;
+  }
+
+  export interface IFAC1VertexEntry {
+    vertexIndex: number;
+    materialIndex: number;
+    u: number;
+    v: number;
+  }
+
+  export interface IFAC1Parsed {
+    materialIndex: number;
+    atrIndex: number;
+    mystery3: number;
+    vtxEntries: IFAC1VertexEntry[];
+  }
+
+  export interface IVTXParsed {
+    vertices: IVTX1Vertex[];
+    scale: number;
+  }
+
+  export interface IVTX1Vertex {
+    x: number;
+    y: number;
+    z: number;
+    normalX: number;
+    normalY: number;
+    normalZ: number;
   }
 
   interface ISLK1Parsed {
@@ -340,7 +368,7 @@ namespace PP64.utils {
 
     static parseVTX1(raw: ArrayBuffer) {
       let rawView = new DataView(raw);
-      let result: any = {
+      let result: IVTXParsed = {
         vertices: [],
         scale: rawView.getFloat32(4),
       };
@@ -375,9 +403,9 @@ namespace PP64.utils {
         if (faceType !== 0x35 && faceType !== 0x16 && faceType !== 0x30) // 0x30 in mainfs 9/81 mp1
           throw new Error(`Unrecognized faceType in FAC1: ${$$hex(faceType)}`);
 
-        let face: any = {
+        let face: IFAC1Parsed = {
           vtxEntries: [],
-        };
+        } as any;
         result.faces.push(face);
 
         faceOffset += 1; // Start after face_type
@@ -394,7 +422,7 @@ namespace PP64.utils {
               materialIndex: rawView.getInt16(faceOffset + 2),
               u: rawView.getFloat32(faceOffset + 4),
               v: rawView.getFloat32(faceOffset + 8),
-            }
+            };
             faceOffset += 12; // sizeof(FAC1VtxEntry)
           }
         }
