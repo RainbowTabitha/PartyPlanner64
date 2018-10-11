@@ -859,7 +859,7 @@ namespace PP64.renderer {
     setBGImage: function(src: string) {
       _boardBG!.setSource(src);
     },
-    renderConnections: renderConnections,
-    renderSpaces: renderSpaces
+    renderConnections: _renderConnections,
+    renderSpaces: _renderSpaces
   };
 }
