@@ -1,13 +1,14 @@
 
-var $setting = {
-  "uiAdvanced": "ui.advanced",
-  "uiDebug": "ui.debug",
-  "uiSkipValidation": "ui.skipvalidation",
-  "uiAllowAllRoms": "ui.allowallroms",
-  "writeBranding": "write.branding",
-  "writeDecompressed": "write.decompressed",
-  "limitModelFPS": "models.limitfps",
-  "limitModelAnimations": "models.limitAnimations",
+enum $setting {
+  "uiAdvanced" = "ui.advanced",
+  "uiDebug" = "ui.debug",
+  "uiSkipValidation" = "ui.skipvalidation",
+  "uiAllowAllRoms" = "ui.allowallroms",
+  "uiShowRomBoards" = "ui.showromboards",
+  "writeBranding" = "write.branding",
+  "writeDecompressed" = "write.decompressed",
+  "limitModelFPS" = "models.limitfps",
+  "limitModelAnimations" = "models.limitAnimations",
 };
 
 namespace PP64.settings {
@@ -36,6 +37,8 @@ namespace PP64.settings {
       desc: "Enables debug output and UI that may aid development." },
     { id: "ui.skipvalidation", type: "checkbox", "default": false, name: "Skip Overwrite Validation", advanced: true,
       desc: "Allow all boards to be written regardless of warnings." },
+    { id: "ui.showromboards", type: "checkbox", "default": false, name: "Show ROM Boards", advanced: true,
+      desc: "Show boards parsed from the ROM in the editor." },
     { id: "ui.allowallroms", type: "checkbox", "default": false, name: "Allow All ROMs", advanced: true,
       desc: "Allows more than just the officially supported ROMs to attempt to load." },
     { name: "ROM", type: "section" },
@@ -200,10 +203,10 @@ namespace PP64.settings {
     }
   };
 
-  export function get(id: string) {
+  export function get(id: $setting) {
     return _settingsManager.getSetting(id);
   }
-  export function set(id: string, value: any) {
+  export function set(id: $setting, value: any) {
     return _settingsManager.setSetting(id, value);
   }
 }
