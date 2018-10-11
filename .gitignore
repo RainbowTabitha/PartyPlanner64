@@ -49,6 +49,7 @@ js/utils/dump.js
 js/utils/localstorage.js
 js/utils/MIPS.js
 js/utils/utils.js
+js/validation/validation.js
 js/about.js
 js/boardmenu.js
 js/boards.js

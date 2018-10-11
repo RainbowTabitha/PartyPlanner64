@@ -159,7 +159,7 @@ namespace PP64.boards {
     return collection.length - 1;
   }
 
-  export function getCurrentBoard(forExport: boolean = false) {
+  export function getCurrentBoard(forExport: boolean = false): IBoard {
     let board;
     if (currentBoardIsRom) {
       board = romBoards[currentBoard];

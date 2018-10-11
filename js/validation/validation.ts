@@ -1,11 +1,21 @@
-PP64.validation = (function() {
+namespace PP64.validation {
   const _rules = Object.create(null);
 
-  const ValidationRuleBase = {
+  interface IValidationRule {
+    id: string;
+    name: string;
+    level: PP64.types.ValidationLevel;
+    fails(board: PP64.boards.IBoard, args: any): void;
+  }
+
+  const ValidationRuleBase: IValidationRule = {
+    id: "",
+    name: "",
+    level: PP64.types.ValidationLevel.ERROR,
     fails: function(board, args) { throw "fails not implemented"; },
   };
 
-  function createRule(id, name, level) {
+  export function createRule(id: string, name: string, level: PP64.types.ValidationLevel): IValidationRule {
     let rule = Object.create(ValidationRuleBase);
     rule.id = id;
     rule.name = name;
@@ -15,12 +25,12 @@ PP64.validation = (function() {
   }
 
   // var NAMEHERE = createRule("", "");
-  // NAMEHERE.fails = function(board, args) {
+  // NAMEHERE.fails = function(board: PP64.boards.IBoard, args: any) {
     
   // };
 
   const HasStart = createRule("HASSTART", "Has start space", $validationLevel.ERROR);
-  HasStart.fails = function(board, args) {
+  HasStart.fails = function(board: PP64.boards.IBoard, args: any) {
     let curIdx = PP64.boards.getStartSpaceIndex(board);
     if (curIdx < 0)
       return "No start space found on board.";
@@ -28,7 +38,7 @@ PP64.validation = (function() {
   };
 
   const GameVersionMatch = createRule("GAMEVERSION", "Game version mismatch", $validationLevel.ERROR);
-  GameVersionMatch.fails = function(board, args) {
+  GameVersionMatch.fails = function(board: PP64.boards.IBoard, args: any) {
     let romGame = PP64.romhandler.getGameVersion();
     if (romGame !== board.game)
       return `Board is for MP${board.game}, but ROM is MP${romGame}`;
@@ -36,7 +46,7 @@ PP64.validation = (function() {
   };
 
   const DeadEnd = createRule("DEADEND", "No dead ends", $validationLevel.WARNING);
-  DeadEnd.fails = function(board, args) {
+  DeadEnd.fails = function(board: PP64.boards.IBoard, args: any) {
     const deadEnds = PP64.boards.getDeadEnds(board);
 
     const startIndex = PP64.boards.getStartSpaceIndex(board);
@@ -53,21 +63,21 @@ PP64.validation = (function() {
   };
 
   const TooManySpaces = createRule("TOOMANYSPACES", "Too many spaces", $validationLevel.ERROR);
-  TooManySpaces.fails = function(board, args) {
+  TooManySpaces.fails = function(board: PP64.boards.IBoard, args: any) {
     if (board.spaces.length > 0xFFFF)
       return "There is a hard limit of 65535 spaces.";
     return false;
   };
 
   const OverRecommendedSpaces = createRule("OVERRECOMMENDEDSPACES", "Over recommended spaces", $validationLevel.WARNING);
-  OverRecommendedSpaces.fails = function(board, args) {
+  OverRecommendedSpaces.fails = function(board: PP64.boards.IBoard, args: any) {
     const spaceCount = board.spaces.length;
     if (spaceCount > args.max)
       return `${spaceCount} spaces present, more than ${args.max} spaces can be unstable.`;
     return false;
   };
 
-  const _makeTooManyOfSubtypeRule = function(subtype, name) {
+  const _makeTooManyOfSubtypeRule = function(subtype: PP64.types.SpaceSubtype, name: string) {
     let rule = createRule(`TOOMANY${name.toUpperCase().replace(/\s+/g, "")}`, `Too many ${name}`, $validationLevel.ERROR);
     rule.fails = function(board, args = {}) {
       let limit = args.limit || 0;
@@ -88,7 +98,7 @@ PP64.validation = (function() {
   const TooManyGates = _makeTooManyOfSubtypeRule($spaceSubType.GATE, "Gates");
 
   const BadStarCount = createRule("BADSTARCOUNT", "Bad star count", $validationLevel.ERROR);
-  BadStarCount.fails = function(board, args = {}) {
+  BadStarCount.fails = function(board: PP64.boards.IBoard, args: any = {}) {
     let low = args.low || 1;
     let high = args.high || 1;
     let count = board.spaces.filter(space => {
@@ -103,7 +113,7 @@ PP64.validation = (function() {
     return false;
   };
 
-  const _makeTooFewOfSpaceTypeRule = function(type, name) {
+  const _makeTooFewOfSpaceTypeRule = function(type: PP64.types.Space, name: string) {
     let rule = createRule(`TOOFEW${name.toUpperCase().replace(/\s+/g, "")}SPACES`, `Too few ${name} spaces`, $validationLevel.ERROR);
     rule.fails = function(board, args = {}) {
       let low = args.low || 0;
@@ -120,7 +130,7 @@ PP64.validation = (function() {
   _makeTooFewOfSpaceTypeRule($spaceType.RED, "Red");
 
   const TooManyOfEvent = createRule("TOOMANYOFEVENT", "Too many of event", $validationLevel.ERROR);
-  TooManyOfEvent.fails = function(board, args) {
+  TooManyOfEvent.fails = function(board: PP64.boards.IBoard, args: any) {
     let count = 0;
     board.spaces.forEach(space => {
       if (!space || !space.events)
@@ -145,7 +155,7 @@ PP64.validation = (function() {
   };
 
   const UnrecognizedEvents = createRule("UNRECOGNIZEDEVENTS", "Unrecognized events", $validationLevel.ERROR);
-  UnrecognizedEvents.fails = function(board, args) {
+  UnrecognizedEvents.fails = function(board: PP64.boards.IBoard, args: any) {
     let unrecognizedEvents = Object.create(null);
     board.spaces.forEach(space => {
       if (!space || !space.events)
@@ -172,9 +182,9 @@ PP64.validation = (function() {
   };
 
   const UnsupportedEvents = createRule("UNSUPPORTEDEVENTS", "Unsupported events", $validationLevel.ERROR);
-  UnsupportedEvents.fails = function(board, args) {
+  UnsupportedEvents.fails = function(board: PP64.boards.IBoard, args: any) {
     let unsupportedEvents = Object.create(null);
-    let gameID = PP64.romhandler.getROMGame();
+    let gameID = PP64.romhandler.getROMGame()!;
     board.spaces.forEach(space => {
       if (!space || !space.events)
         return;
@@ -203,9 +213,9 @@ PP64.validation = (function() {
   };
 
   const FailingCustomEvents = createRule("CUSTOMEVENTFAIL", "Custom event errors", $validationLevel.ERROR);
-  FailingCustomEvents.fails = function(board, args) {
+  FailingCustomEvents.fails = function(board: PP64.boards.IBoard, args: any) {
     let failingEvents = Object.create(null);
-    let gameID = PP64.romhandler.getROMGame();
+    let gameID = PP64.romhandler.getROMGame()!;
     board.spaces.forEach(space => {
       if (!space || !space.events)
         return;
@@ -244,7 +254,7 @@ PP64.validation = (function() {
   };
 
   const BadCustomEventParameters = createRule("CUSTOMEVENTBADPARAMS", "Custom event parameter issues", $validationLevel.ERROR);
-  BadCustomEventParameters.fails = function(board, args) {
+  BadCustomEventParameters.fails = function(board: PP64.boards.IBoard, args: any) {
     const missingParams = Object.create(null);
     board.spaces.forEach(space => {
       if (!space || !space.events)
@@ -257,7 +267,7 @@ PP64.validation = (function() {
 
         const parameters = event.parameters;
         if (parameters && parameters.length) {
-          parameters.forEach(parameter => {
+          parameters.forEach((parameter: PP64.adapters.events.ICustomEventParameter) => {
             if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
               if (!missingParams[parameter.name])
                 missingParams[parameter.name] = 0;
@@ -283,7 +293,7 @@ PP64.validation = (function() {
   };
 
   const TooManyPathOptions = createRule("TOOMANYPATHOPTIONS", "Too many path options", $validationLevel.ERROR);
-  TooManyPathOptions.fails = function(board, args = {}) {
+  TooManyPathOptions.fails = function(board: PP64.boards.IBoard, args: any = {}) {
     let limit = args.limit || 2;
     for (var space in board.links) {
       let links = board.links[space];
@@ -294,7 +304,7 @@ PP64.validation = (function() {
   };
 
   const CharactersOnPath = createRule("CHARACTERSONPATH", "Characters are on path", $validationLevel.WARNING);
-  CharactersOnPath.fails = function(board, args = {}) {
+  CharactersOnPath.fails = function(board: PP64.boards.IBoard, args: any = {}) {
     for (var spaceIdx in board.links) {
       let space = board.spaces[spaceIdx];
       if (space.hasOwnProperty("subtype") && space.subtype !== $spaceSubType.GATE)
@@ -304,7 +314,7 @@ PP64.validation = (function() {
   };
 
   const SplitAtNonInvisibleSpace = createRule("SPLITATNONINVISIBLESPACE", "Split at non-invisible space", $validationLevel.WARNING);
-  SplitAtNonInvisibleSpace.fails = function(board, args = {}) {
+  SplitAtNonInvisibleSpace.fails = function(board: PP64.boards.IBoard, args: any = {}) {
     const preferredSplitTypes = [
       $spaceType.OTHER,
       $spaceType.STAR,
@@ -313,7 +323,7 @@ PP64.validation = (function() {
       $spaceType.ARROW,
     ];
     for (let spaceIdx in board.links) {
-      let links = PP64.boards.getConnections(spaceIdx, board);
+      let links = PP64.boards.getConnections(parseInt(spaceIdx), board)!;
       if (links.length > 1) {
         let space = board.spaces[spaceIdx];
         if (preferredSplitTypes.indexOf(space.type) === -1)
@@ -324,7 +334,7 @@ PP64.validation = (function() {
   };
 
   const TooManyArrowRotations = createRule("TOOMANYARROWROTATIONS", "Too many arrow rotations", $validationLevel.WARNING);
-  TooManyArrowRotations.fails = function(board, args = {}) {
+  TooManyArrowRotations.fails = function(board: PP64.boards.IBoard, args: any = {}) {
     let rotationCount = 0;
     board.spaces.forEach(space => {
       if (!space)
@@ -340,7 +350,7 @@ PP64.validation = (function() {
   };
 
   const GateSetup = createRule("GATESETUP", "Incorrect gate setup", $validationLevel.ERROR);
-  GateSetup.fails = function(board, args = {}) {
+  GateSetup.fails = function(board: PP64.boards.IBoard, args: any = {}) {
     let gateSpaceIndices = PP64.boards.getSpacesOfSubType($spaceSubType.GATE, board);
 
     for (let i = 0; i < gateSpaceIndices.length; i++) {
@@ -352,7 +362,7 @@ PP64.validation = (function() {
         return "Only invisible spaces can have gates."; // UI should prevent this pretty well
 
       // Check space/link structure after gate space.
-      let exitingSpaces = PP64.boards.getConnections(gateSpaceIndex, board);
+      let exitingSpaces = PP64.boards.getConnections(gateSpaceIndex, board)!;
       if (exitingSpaces.length !== 1)
         return "A single path should leave a gate space.";
       let exitSpaceIndex = exitingSpaces[0];
@@ -364,7 +374,7 @@ PP64.validation = (function() {
       if (_getPointingSpaceIndices(exitSpaceIndex).length !== 1)
         return "A single path should connect to the space after a gate space.";
 
-      let nextSpaces = PP64.boards.getConnections(exitSpaceIndex, board);
+      let nextSpaces = PP64.boards.getConnections(exitSpaceIndex, board)!;
       if (nextSpaces.length !== 1)
         return "A single path should leave the space after a gate space";
       let nextSpaceIndex = nextSpaces[0];
@@ -386,14 +396,15 @@ PP64.validation = (function() {
       let prevSpaces = _getPointingSpaceIndices(enteringSpaceIndex);
       if (prevSpaces.length !== 1)
         return "A single path should connect to the space before a gate space.";
-      if (prevSpaces[0].subtype === $spaceSubType.GATE)
-        return "Gate spaces must be 2 or more spaces apart.";
+      //FIXME: This is broken.
+      //if (prevSpaces[0].subtype === $spaceSubType.GATE)
+      //  return "Gate spaces must be 2 or more spaces apart.";
     };
 
-    function _getPointingSpaceIndices(pointedAtIndex) {
-      let pointingIndices = [];
+    function _getPointingSpaceIndices(pointedAtIndex: number) {
+      let pointingIndices: number[] = [];
       for (let startIdx in board.links) {
-        let ends = PP64.boards.getConnections(startIdx, board);
+        let ends = PP64.boards.getConnections(parseInt(startIdx), board)!;
         ends.forEach(end => {
           if (end === pointedAtIndex)
             pointingIndices.push(Number(startIdx));
@@ -405,11 +416,11 @@ PP64.validation = (function() {
     return false;
   };
 
-  function _overwriteAvailable(boardIndex) {
+  function _overwriteAvailable(boardIndex: number) {
     return boardIndex === 0 || PP64.settings.get($setting.uiSkipValidation);
   }
 
-  function _dontShowInUI(romBoard, boardIndex, boardType) {
+  function _dontShowInUI(romBoard: PP64.boards.IBoard, boardIndex: number, boardType: PP64.types.BoardType) {
     if (typeof boardType !== "string") {
       // Because default is normal
       return romBoard.type === PP64.types.BoardType.DUEL;
@@ -417,7 +428,7 @@ PP64.validation = (function() {
     return romBoard.type !== boardType;
   }
 
-  function _getRulesForBoard(gameID, boardIndex) {
+  function _getRulesForBoard(gameID: PP64.types.Game, boardIndex: number): IValidationRule[] {
     let rules = [
       PP64.validation.getRule("HASSTART"),
       PP64.validation.getRule("GAMEVERSION"),
@@ -435,27 +446,34 @@ PP64.validation = (function() {
     switch(gameID) {
       case $gameType.MP1_USA:
       case $gameType.MP1_JPN:
-        rules = rules.concat(PP64.validation.MP1.getValidationRulesForBoard(gameID, boardIndex));
+        rules = rules.concat((PP64 as any).validation.MP1.getValidationRulesForBoard(gameID, boardIndex));
         break;
       case $gameType.MP2_USA:
       case $gameType.MP2_JPN:
-        rules = rules.concat(PP64.validation.MP2.getValidationRulesForBoard(gameID, boardIndex));
+        rules = rules.concat((PP64 as any).validation.MP2.getValidationRulesForBoard(gameID, boardIndex));
         break;
       case $gameType.MP3_USA:
       case $gameType.MP3_JPN:
-        rules = rules.concat(PP64.validation.MP3.getValidationRulesForBoard(gameID, boardIndex));
+        rules = rules.concat((PP64 as any).validation.MP3.getValidationRulesForBoard(gameID, boardIndex));
         break;
     }
 
     return rules;
   }
 
-  function validateCurrentBoardForOverwrite() {
-    let gameID = PP64.romhandler.getROMGame();
+  interface IValidationResult {
+    name: string;
+    unavailable: boolean;
+    errors: string[];
+    warnings: string[];
+  }
+
+  export function validateCurrentBoardForOverwrite() {
+    let gameID = PP64.romhandler.getROMGame()!;
     if (!gameID)
       return null;
 
-    let results = [];
+    let results: IValidationResult[] = [];
     let romBoards = PP64.boards.getROMBoards();
     let currentBoard = PP64.boards.getCurrentBoard();
     romBoards.forEach((board, boardIndex) => {
@@ -464,8 +482,8 @@ PP64.validation = (function() {
 
       let unavailable = !_overwriteAvailable(boardIndex);
 
-      let errors = [];
-      let warnings = [];
+      let errors: string[] = [];
+      let warnings: string[] = [];
       if (!unavailable && !PP64.settings.get($setting.uiSkipValidation)) {
         let rules = _getRulesForBoard(gameID, boardIndex);
         rules.forEach(rule => {
@@ -494,20 +512,16 @@ PP64.validation = (function() {
     return results;
   }
 
-  return {
-    createRule,
-    getRule(id, args) {
-      let rule = _rules[id];
-      let newRule = {
-        id: rule.id,
-        name: rule.name,
-        level: rule.level,
-        fails: function(board) {
-          return rule.fails(board, args);
-        }
-      };
-      return newRule;
-    },
-    validateCurrentBoardForOverwrite,
-  };
-})();
+  export function getRule(id: string, args?: any) {
+    let rule = _rules[id];
+    let newRule = {
+      id: rule.id,
+      name: rule.name,
+      level: rule.level,
+      fails: function(board: PP64.boards.IBoard) {
+        return rule.fails(board, args);
+      }
+    };
+    return newRule;
+  }
+}
