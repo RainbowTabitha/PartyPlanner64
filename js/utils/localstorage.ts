@@ -42,12 +42,9 @@ namespace PP64.utils {
       }
 
       // Save off the current boards.
-      let boards = (PP64 as any).boards.getBoards();
-      let myBoards = boards.filter((val: any) => {
-        return !(PP64 as any).boards.boardIsROM(val);
-      });
+      let boards = PP64.boards.getBoards();
       try {
-        localStorage.setItem("boards", JSON.stringify(myBoards));
+        localStorage.setItem("boards", JSON.stringify(boards));
       }
       catch (e) {
         // Browsers don't really let you save much...

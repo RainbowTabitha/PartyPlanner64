@@ -42,8 +42,8 @@ PP64.interaction = (function() {
     // ROM boards cannot be edited, so create a copy right now and switch to it.
     if (PP64.boards.currentBoardIsROM() && spaceWasClicked) {
       PP64.app.changeCurrentAction($actType.MOVE); // Avoid destructive actions like delete.
-      PP64.boards.copyCurrentBoard();
-      PP64.boards.setCurrentBoard(PP64.boards.getCurrentBoardIndex() + 1);
+      const insertionIndex = PP64.boards.copyCurrentBoard();
+      PP64.boards.setCurrentBoard(insertionIndex);
     }
 
     const curAction = PP64.app.getCurrentAction();

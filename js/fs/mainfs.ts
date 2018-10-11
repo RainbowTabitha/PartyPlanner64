@@ -149,7 +149,7 @@ namespace PP64.fs.mainfs {
 
   let _mainfsCache: IMainFsReadInfo[][] | null;
 
-  function clearCache() {
+  export function clearCache() {
     _mainfsCache = null;
   }
 
@@ -246,8 +246,8 @@ namespace PP64.fs.mainfs {
     if (_mainfsCache)
       return _mainfsCache.length;
 
-    let buffer = PP64.romhandler.getROMBuffer()!;
-    let fsView = new DataView(buffer, getROMOffset()!);
+    const buffer = PP64.romhandler.getROMBuffer()!;
+    const fsView = new DataView(buffer, getROMOffset()!);
     return fsView.getUint32(0);
   }
 
@@ -255,24 +255,24 @@ namespace PP64.fs.mainfs {
     if (_mainfsCache && _mainfsCache[dir])
       return _mainfsCache[dir].length;
 
-    let buffer = PP64.romhandler.getROMBuffer()!;
-    let fs_offset = getROMOffset()!;
-    let fsView = new DataView(buffer, fs_offset);
-    let dir_offset = fs_offset + fsView.getUint32(4 * (1 + dir));
-    let dirView = new DataView(buffer, dir_offset);
+    const buffer = PP64.romhandler.getROMBuffer()!;
+    const fs_offset = getROMOffset()!;
+    const fsView = new DataView(buffer, fs_offset);
+    const dir_offset = fs_offset + fsView.getUint32(4 * (1 + dir));
+    const dirView = new DataView(buffer, dir_offset);
     return dirView.getUint32(0);
   }
 
   export function getByteLength() {
-    let byteLen = 0;
-    let dirCount = _mainfsCache!.length;
-    let writeDecompressed = PP64.settings.get($setting.writeDecompressed);
+    const dirCount = _mainfsCache!.length;
+    const writeDecompressed = PP64.settings.get($setting.writeDecompressed);
 
+    let byteLen = 0;
     byteLen += 4; // Count of directories
     byteLen += 4 * dirCount; // Directory offsets
 
     for (let d = 0; d < dirCount; d++) {
-      let fileCount = _mainfsCache![d].length;
+      const fileCount = _mainfsCache![d].length;
 
       byteLen += 4; // Count of files
       byteLen += 4 * fileCount; // File offsets

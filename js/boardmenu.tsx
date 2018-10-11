@@ -5,17 +5,27 @@ namespace PP64.boardmenu {
 
   export class BoardMenu extends React.Component<IBoardMenuProps> {
     render() {
-      let i = 0;
-      let boards = this.props.boards.map(function(item) {
-        let idx = i++;
+      let boards = this.props.boards.map(function(item, idx) {
         return (
           <Board key={idx} board={item} index={idx} />
         );
       });
+
+      const showRomBoards = PP64.settings.get($setting.uiShowRomBoards);
+      let romBoards;
+      if (showRomBoards) {
+        romBoards = PP64.boards.getROMBoards().map(function(item, idx) {
+          return (
+            <Board key={"r" + idx} board={item} index={idx} />
+          );
+        });
+      }
+
       return (
         <div className="boardMenu" role="listbox">
           <div className="boardMenuInner" role="presentation">
             {boards}
+            {romBoards}
           </div>
         </div>
       );
@@ -29,12 +39,13 @@ namespace PP64.boardmenu {
 
   const Board = class Board extends React.Component<IBoardProps> {
     handleClick = () => {
-      PP64.boards.setCurrentBoard(this.props.index);
+      const boardIsRom = PP64.boards.boardIsROM(this.props.board);
+      PP64.boards.setCurrentBoard(this.props.index, boardIsRom);
     }
 
     onDragStart = (event: any) => {
       // Cannot delete courses that are within the ROM.
-      if (this.props.board._rom) {
+      if (PP64.boards.boardIsROM(this.props.board)) {
         event.preventDefault();
         return;
       }
@@ -78,7 +89,7 @@ namespace PP64.boardmenu {
     render() {
       let tooltip = `Open "${this.props.board.name}"`;
       let className = "boardEntry";
-      if (PP64.boards.getCurrentBoardIndex() === this.props.index)
+      if (PP64.boards.getCurrentBoard() === this.props.board)
         className += " boardEntryCurrent";
       let boardImg = this.props.board.otherbg.boardlogo || "";
       let imgEl;
@@ -89,9 +100,9 @@ namespace PP64.boardmenu {
         imgEl = <div className="boardEntryNoImg" />;
       }
 
-      let boardName = this.props.board.name;
-      let boardIsROM = PP64.boards.boardIsROM(this.props.board);
-      let onKeyDown = PP64.utils.react.makeKeyClick(this.handleClick, this);
+      const boardName = this.props.board.name;
+      const boardIsROM = PP64.boards.boardIsROM(this.props.board);
+      const onKeyDown = PP64.utils.react.makeKeyClick(this.handleClick, this);
       return (
         <div className={className} title={tooltip} role="option" tabIndex={0}
           onClick={this.handleClick} onKeyDown={onKeyDown} onContextMenu={this.onRightClick}

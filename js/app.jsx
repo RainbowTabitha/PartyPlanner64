@@ -83,7 +83,9 @@ PP64.app = new class app {
           case window.PP64.types.View.DETAILS:
             sidebar = (
               <div className="sidebar">
-                <window.PP64.boardmenu.BoardMenu boards={this.state.boards} currentBoard={this.state.currentBoard} />
+                <window.PP64.boardmenu.BoardMenu
+                  boards={this.state.boards}
+                  currentBoard={this.state.currentBoard} />
               </div>
             );
             break;

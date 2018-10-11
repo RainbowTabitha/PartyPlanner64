@@ -25,7 +25,8 @@ namespace PP64.boards {
     star?: boolean;
   }
 
-  let currentBoard = 0;
+  let currentBoard: number = 0;
+  let currentBoardIsRom: boolean = false;
 
   function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: PP64.types.BoardType = PP64.types.BoardType.NORMAL): IBoard {
     const board: any = {
@@ -118,6 +119,8 @@ namespace PP64.boards {
   }
 
   let boards: IBoard[];
+  let romBoards: IBoard[] = [];
+
   let cachedBoards = PP64.utils.localstorage.getSavedBoards();
   if (cachedBoards && cachedBoards.length) {
     boards = [];
@@ -134,26 +137,36 @@ namespace PP64.boards {
    * @param opts.rom The board is from the ROM
    * @param opts.type Board type to use
    * @param opts.game Game version for the board
+   * @returns The index of the inserted board.
    */
   export function addBoard(board?: IBoard, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: PP64.types.BoardType } = {}) {
     if (!board)
       board = _makeDefaultBoard(opts.game || 1, opts.type || PP64.types.BoardType.NORMAL);
 
-    if (opts.rom)
+    const collection = opts.rom ? romBoards : boards;
+    if (opts.rom) {
       board._rom = true;
+      collection.push(board);
+    }
+    else
+      collection.push(board);
 
     _findAllCustomEvents(board);
-
-    boards.push(board);
 
     if ((window as any).PP64.app)
       (window as any).PP64.app.boardsChanged();
 
-    return boards.length - 1;
+    return collection.length - 1;
   }
 
   export function getCurrentBoard(forExport: boolean = false) {
-    let board = boards[currentBoard];
+    let board;
+    if (currentBoardIsRom) {
+      board = romBoards[currentBoard];
+    }
+    else {
+      board = boards[currentBoard];
+    }
     if (forExport)
       board = stripPrivateProps(board);
     return board;
@@ -163,7 +176,8 @@ namespace PP64.boards {
     return boards.indexOf(board);
   }
 
-  export function setCurrentBoard(index: number) {
+  export function setCurrentBoard(index: number, isRom?: boolean) {
+    currentBoardIsRom = !!isRom;
     currentBoard = index;
     (window as any).PP64.app.currentBoardChanged();
   }
@@ -432,7 +446,7 @@ namespace PP64.boards {
   }
 
   export function currentBoardIsROM() {
-    return !!getCurrentBoard()._rom;
+    return currentBoardIsRom;
   }
 
   export function getBoardCount() {
@@ -444,9 +458,7 @@ namespace PP64.boards {
   }
 
   export function getROMBoards() {
-    return boards.filter(board => {
-      return boardIsROM(board);
-    });
+    return romBoards;
   }
 
   export function setBG(bg: any, board = getCurrentBoard()) {
@@ -485,14 +497,31 @@ namespace PP64.boards {
     (window as any).PP64.app.currentBoardChanged();
   }
 
-  export function copyCurrentBoard() {
-    let source = boards[currentBoard];
+  export function copyCurrentBoard(): number {
+    let source;
+    if (currentBoardIsRom) {
+      source = romBoards[currentBoard];
+    }
+    else {
+      source = boards[currentBoard];
+    }
     let copy = JSON.parse(JSON.stringify(source));
     delete copy._rom;
     copy.name = "Copy of " + copy.name;
-    boards.splice(currentBoard + 1, 0, copy);
+
+    let insertionIndex;
+    if (currentBoardIsRom) {
+      insertionIndex = boards.length;
+      boards.push(copy);
+    }
+    else {
+      insertionIndex = currentBoard + 1;
+      boards.splice(insertionIndex, 0, copy);
+    }
 
     (window as any).PP64.app.boardsChanged();
+
+    return insertionIndex;
   }
 
   export function addSpace(x: number, y: number, type: PP64.types.Space,
@@ -664,17 +693,14 @@ namespace PP64.boards {
     let gameBoards = adapter.loadBoards();
     for (let i = 0; i < gameBoards.length; i++) {
       gameBoards[i]._rom = true;
-      boards.push(gameBoards[i]);
+      romBoards.push(gameBoards[i]);
     }
 
     (window as any).PP64.app.boardsChanged();
   }
 
   export function clearBoardsFromROM() {
-    for (let i = boards.length - 1; i >= 0; i--) {
-      if (boards[i]._rom)
-        boards.splice(i, 1);
-    }
+    romBoards = [];
 
     if (!boards.length)
       addBoard(); // Can never be empty.
