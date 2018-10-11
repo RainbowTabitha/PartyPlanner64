@@ -139,7 +139,7 @@ namespace PP64.boards {
    * @param opts.game Game version for the board
    * @returns The index of the inserted board.
    */
-  export function addBoard(board?: IBoard, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: PP64.types.BoardType } = {}) {
+  export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: PP64.types.BoardType } = {}) {
     if (!board)
       board = _makeDefaultBoard(opts.game || 1, opts.type || PP64.types.BoardType.NORMAL);
 

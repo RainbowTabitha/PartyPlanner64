@@ -1,5 +1,14 @@
-PP64.header = (function() {
-  const actions_norom = [
+namespace PP64.header {
+  interface IHeaderActionItem {
+    name: string;
+    icon: string;
+    type: PP64.types.Action;
+    details: string;
+    dropdownFn?: Function;
+    advanced?: boolean;
+  }
+
+  const actions_norom: IHeaderActionItem[] = [
     { "name": "Load ROM", "icon": "img/header/romcart.png", "type": $actType.ROM_LOAD, "details": "Load a ROM image and read its boards" },
     { "name": "New board", "icon": "img/header/newboard.png",
       "type": $actType.BOARD_NEW, "details": "Create a new board",
@@ -19,7 +28,7 @@ PP64.header = (function() {
     { "name": "About", "icon": "img/header/about.png", "type": $actType.ABOUT, "details": "About PartyPlanner64" },
   ];
 
-  const actions_rom_romboard = [
+  const actions_rom_romboard: IHeaderActionItem[] = [
     { "name": "Close ROM", "icon": "img/header/romclose.png", "type": $actType.ROM_UNLOAD, "details": "Close the ROM file and remove its boards" },
     { "name": "Save ROM", "icon": "img/header/romsave.png", "type": $actType.ROM_SAVE, "details": "Save changes out to a ROM file" },
     { "name": "New board", "icon": "img/header/newboard.png",
@@ -44,7 +53,7 @@ PP64.header = (function() {
     { "name": "About", "icon": "img/header/about.png", "type": $actType.ABOUT, "details": "About PartyPlanner64" },
   ];
 
-  const actions_rom_normalboard = [
+  const actions_rom_normalboard: IHeaderActionItem[] = [
     { "name": "Close ROM", "icon": "img/header/romclose.png", "type": $actType.ROM_UNLOAD, "details": "Close the ROM file and remove its boards" },
     { "name": "Save ROM", "icon": "img/header/romsave.png", "type": $actType.ROM_SAVE, "details": "Save changes out to a ROM file" },
     {
@@ -75,24 +84,24 @@ PP64.header = (function() {
     { "name": "About", "icon": "img/header/about.png", "type": $actType.ABOUT, "details": "About PartyPlanner64" },
   ];
 
-  const actions_back = [
+  const actions_back: IHeaderActionItem[] = [
     { "name": "Back to editor", "icon": "img/header/back.png", "type": $actType.BOARD_EDITOR, "details": "Return to the board editor" },
   ];
 
-  const actions_events = actions_back.concat([
+  const actions_events: IHeaderActionItem[] = actions_back.concat([
     { "name": "Create Event", "icon": "img/header/add.png", "type": $actType.CREATEEVENT, "details": "Create your own event code" },
     { "name": "Import Event", "icon": "img/header/eventload.png", "type": $actType.EVENT_LOAD, "details": "Load event code from a file" },
   ]);
 
-  const actions_createevent = [
+  const actions_createevent: IHeaderActionItem[] = [
     { "name": "Back to event list", "icon": "img/header/back.png", "type": $actType.BACK_TO_EVENTS, "details": "Return to the event list" },
     { "name": "Save", "icon": "img/header/save.png", "type": $actType.SAVE_EVENT, "details": "Save the event" },
   ];
 
   //const action_overflow = { "name": "", "icon": "img/header/more.png", "type": "MORE", "details": "More options" };
-  const action_overflow = { "name": "", "type": "MORE", "details": "More options" };
+  const action_overflow: IHeaderActionItem = { "name": "", "icon": "", "type": "MORE" as any, "details": "More options" };
 
-  function _handleAction(action) {
+  function _handleAction(action: PP64.types.Action) {
     switch(action) {
       case $actType.ROM_LOAD:
         PP64.utils.input.openFile(".z64,.v64,.rom,.n64", romSelected);
@@ -100,18 +109,18 @@ PP64.header = (function() {
       case $actType.ROM_UNLOAD:
         PP64.romhandler.clear();
         PP64.boards.clearBoardsFromROM();
-        PP64.app.boardsChanged();
+        (PP64 as any).app.boardsChanged();
         PP64.boards.setCurrentBoard(0);
-        PP64.app.romLoadedChanged();
+        (PP64 as any).app.romLoadedChanged();
         break;
       case $actType.ROM_SAVE:
-        PP64.app.blockUI(true);
+        (PP64 as any).app.blockUI(true);
         setTimeout(() => {
           PP64.romhandler.saveROM();
-          PP64.app.blockUI(false);
+          (PP64 as any).app.blockUI(false);
 
           setTimeout(() => {
-            PP64.app.showMessageHTML(`Before trying the game, review
+            (PP64 as any).app.showMessageHTML(`Before trying the game, review
               <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup" target="_blank">emulator setup instructions</a>.`);
           }, 0);
         }, 0);
@@ -128,52 +137,52 @@ PP64.header = (function() {
         PP64.boards.copyCurrentBoard();
         break;
       case $actType.BOARD_DETAILS:
-        PP64.app.changeView($viewType.DETAILS);
+        (PP64 as any).app.changeView($viewType.DETAILS);
         break;
       case $actType.BOARD_EDITOR:
-        PP64.app.changeView($viewType.EDITOR);
+        (PP64 as any).app.changeView($viewType.EDITOR);
         break;
       case $actType.SETTINGS:
-        PP64.app.changeView($viewType.SETTINGS);
+        (PP64 as any).app.changeView($viewType.SETTINGS);
         break;
       case $actType.ABOUT:
-        PP64.app.changeView($viewType.ABOUT);
+        (PP64 as any).app.changeView($viewType.ABOUT);
         break;
       case $actType.MODEL_VIEWER:
-        PP64.app.changeView($viewType.MODELS);
+        (PP64 as any).app.changeView($viewType.MODELS);
         break;
       case $actType.EVENTS:
-        PP64.app.changeView($viewType.EVENTS);
+        (PP64 as any).app.changeView($viewType.EVENTS);
         break;
       case $actType.BACK_TO_EVENTS:
-        if (PP64.events.createEventPromptExit()) {
-          PP64.app.changeCurrentEvent(null);
-          PP64.app.changeView($viewType.EVENTS);
+        if ((PP64 as any).events.createEventPromptExit()) {
+          (PP64 as any).app.changeCurrentEvent(null);
+          (PP64 as any).app.changeView($viewType.EVENTS);
         }
         break;
       case $actType.EVENT_LOAD:
         PP64.utils.input.openFile(".s", eventFileSelected);
         break;
       case $actType.SAVE_EVENT:
-        PP64.events.saveEvent();
+        (PP64 as any).events.saveEvent();
         break;
       case $actType.CREATEEVENT:
-        PP64.app.changeView($viewType.CREATEEVENT);
+        (PP64 as any).app.changeView($viewType.CREATEEVENT);
         break;
       case $actType.STRINGS_EDITOR:
-        PP64.app.changeView($viewType.STRINGS);
+        (PP64 as any).app.changeView($viewType.STRINGS);
         break;
       case $actType.PATCHES:
-        PP64.app.changeView($viewType.PATCHES);
+        (PP64 as any).app.changeView($viewType.PATCHES);
         break;
       case $actType.SET_BG:
-        PP64.utils.input.openFile("image/*", bgSelected);
+        (PP64 as any).utils.input.openFile("image/*", bgSelected);
         break;
       case $actType.DUMP_LOAD:
-        PP64.utils.input.openFile(".zip", dumpSelected);
+        (PP64 as any).utils.input.openFile(".zip", dumpSelected);
         break;
       case $actType.DUMP_SAVE:
-        PP64.app.blockUI(true);
+        (PP64 as any).app.blockUI(true);
         PP64.utils.dump.create(dumpCreated);
         break;
       default:
@@ -181,16 +190,16 @@ PP64.header = (function() {
     }
   }
 
-  function romSelected(event) {
+  function romSelected(event: any) {
     let file = event.target.files[0];
     if (!file)
       return;
 
-    PP64.app.blockUI(true);
+    (PP64 as any).app.blockUI(true);
     let reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e: any) => {
       if (!e.target.result) {
-        PP64.app.blockUI(false);
+        (PP64 as any).app.blockUI(false);
         return;
       }
 
@@ -199,25 +208,25 @@ PP64.header = (function() {
         return; // The ROM handler showed a message, so we don't need to unblock UI
 
       promise.then(value => {
-        PP64.app.romLoadedChanged();
+        (PP64 as any).app.romLoadedChanged();
         PP64.boards.loadBoardsFromROM();
-        PP64.app.blockUI(false);
+        (PP64 as any).app.blockUI(false);
         $$log("ROM loaded");
       }, reason => {
         $$log(`Error loading ROM: ${reason}`);
-        PP64.app.showMessage("Error loading the ROM file.");
+        (PP64 as any).app.showMessage("Error loading the ROM file.");
       });
     };
     reader.readAsArrayBuffer(file);
   }
 
-  function boardSelected(event) {
+  function boardSelected(event: any) {
     let file = event.target.files[0];
     if (!file)
       return;
 
     let reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = (e: any) => {
       let board;
       try {
         board = JSON.parse(e.target.result);
@@ -231,7 +240,7 @@ PP64.header = (function() {
     reader.readAsText(file);
   }
 
-  function bgSelected(event) {
+  function bgSelected(event: any) {
     let file = event.target.files[0];
     if (!file)
       return;
@@ -244,20 +253,20 @@ PP64.header = (function() {
     reader.readAsDataURL(file);
   }
 
-  function eventFileSelected(event) {
+  function eventFileSelected(event: any) {
     const files = event.target && event.target.files;
     if (!(files && files[0]))
       return;
 
     for (let i = 0; i < files.length; i++) {
       let reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = (e: any) => {
         try {
           let asm = e.target.result;
           PP64.adapters.events.createCustomEvent(asm);
-          PP64.events.refreshEventsView();
+          (PP64 as any).events.refreshEventsView();
         } catch (e) {
-          PP64.app.showMessage("Event file load failed. " + e.toString());
+          (PP64 as any).app.showMessage("Event file load failed. " + e.toString());
           return;
         }
       };
@@ -265,7 +274,7 @@ PP64.header = (function() {
     }
   }
 
-  function dumpSelected(event) {
+  function dumpSelected(event: any) {
     let file = event.target.files[0];
     if (!file)
       return;
@@ -273,17 +282,17 @@ PP64.header = (function() {
     let reader = new FileReader();
     reader.onload = error => {
       // Extract the dump and replace ROM files.
-      PP64.utils.dump.load(reader.result);
+      PP64.utils.dump.load(reader.result as ArrayBuffer);
     };
     reader.readAsArrayBuffer(file);
   }
 
-  function dumpCreated(blob) {
+  function dumpCreated(blob: Blob) {
     saveAs(blob, `mp${PP64.romhandler.getGameVersion()}-files.zip`);
-    PP64.app.blockUI(false);
+    (PP64 as any).app.blockUI(false);
   }
 
-  function getActions(view, board, romLoaded) {
+  function getActions(view: PP64.types.View, board: PP64.boards.IBoard, romLoaded: boolean) {
     // Pick the set of actions based on the state.
     let actions;
     if (view !== $viewType.EDITOR) {
@@ -308,8 +317,22 @@ PP64.header = (function() {
     return actions;
   }
 
-  const Header = class Header extends React.Component {
-    constructor(props) {
+  interface IHeaderProps {
+    view: PP64.types.View;
+    board: PP64.boards.IBoard;
+    romLoaded: boolean;
+  }
+
+  interface IHeaderState {
+    actions: IHeaderActionItem[];
+    totalActions: IHeaderActionItem[];
+    overflow: any[];
+  }
+
+  export const Header = class Header extends React.Component<IHeaderProps, IHeaderState> {
+    private actionsEl: HTMLElement | null = null;
+
+    constructor(props: IHeaderProps) {
       super(props);
 
       const actions = getActions(props.view, props.board, props.romLoaded);
@@ -320,7 +343,7 @@ PP64.header = (function() {
       };
     }
 
-    componentWillReceiveProps = (nextProps) => {
+    componentWillReceiveProps = (nextProps: IHeaderProps) => {
       const newActions = getActions(nextProps.view, nextProps.board, nextProps.romLoaded);
 
       if (!PP64.utils.arrays.equal(this.state.totalActions, newActions)) {
@@ -347,16 +370,17 @@ PP64.header = (function() {
       let actions = actionsList.map(item => {
         if (item.dropdownFn) {
           return (
-            <HeaderDropdown key={item.type} action={item} fn={item.dropdownFn} index={i++} />
+            <HeaderDropdown key={item.type} action={item} fn={item.dropdownFn} />
           );
         }
         return (
-          <HeaderButton key={item.type} action={item} index={i++} />
+          <HeaderButton key={item.type} action={item} />
         );
       });
       let overflowAction;
       if (this.state.overflow.length) {
-        overflowAction = <HeaderDropdown key={action_overflow.type} action={action_overflow} overflow={this.state.overflow} fn={moreDropdown} index={i++} />;
+        overflowAction = <HeaderDropdown key={action_overflow.type}
+          action={action_overflow} overflow={this.state.overflow} fn={moreDropdown} />;
       }
       return (
         <div className="header" role="toolbar">
@@ -390,17 +414,17 @@ PP64.header = (function() {
       let actions = this.state.actions.slice();
       let hasOverflow = this.state.overflow.length;
       let overflow = this.state.overflow.slice();
-      let el = ReactDOM.findDOMNode(this);
-      let actionsEl = this.actionsEl;
+      let el = ReactDOM.findDOMNode(this) as HTMLElement;
+      let actionsEl = this.actionsEl!;
       while (actionsEl.offsetWidth > (el.offsetWidth - 215 - (hasOverflow ? 0 : 80))) { // Cut out logo and more if existing
-        let lastAction = actionsEl.children[actions.length - (hasOverflow ? 2 : 1)]; // Skip more
+        let lastAction = actionsEl.children[actions.length - (hasOverflow ? 2 : 1)] as HTMLElement; // Skip more
         if (!lastAction)
           break;
         lastAction.style.display = "none";
         overflow.unshift(actions.pop());
       }
       for (let i = 0; i < actionsEl.children.length - (hasOverflow ? 2 : 1); i++) {
-        let actionEl = actionsEl.children[i];
+        let actionEl = actionsEl.children[i] as HTMLElement;
         actionEl.style.display = "";
       }
       if (actions.length === this.state.actions.length && overflow.length === this.state.overflow.length)
@@ -420,7 +444,11 @@ PP64.header = (function() {
     }
   };
 
-  const HeaderButton = class HeaderButton extends React.Component {
+  interface IHeaderButtonProps {
+    action: IHeaderActionItem;
+  }
+
+  const HeaderButton = class HeaderButton extends React.Component<IHeaderButtonProps> {
     handleClick = () => {
       _handleAction(this.props.action.type);
     }
@@ -432,7 +460,7 @@ PP64.header = (function() {
       }
       return (
         <div className="headerButton" title={this.props.action.details}
-          role="button" tabIndex="0"
+          role="button" tabIndex={0}
           onClick={this.handleClick}
           onKeyDown={PP64.utils.react.makeKeyClick(this.handleClick, this)}>
           {iconImg}
@@ -442,10 +470,18 @@ PP64.header = (function() {
     }
   };
 
-  const HeaderDropdown = class HeaderDropdown extends React.Component {
+  interface IHeaderDropdownProps {
+    action: IHeaderActionItem;
+    fn: Function;
+    overflow?: any;
+  }
+
+  const HeaderDropdown = class HeaderDropdown extends React.Component<IHeaderDropdownProps> {
+    private dropdown: HTMLElement | null = null;
+
     state = { opened: false }
 
-    globalClickHandler = event => {
+    globalClickHandler = (event: any) => {
       if (this.elementIsWithin(event.target))
         return;
       this.close();
@@ -459,10 +495,10 @@ PP64.header = (function() {
       document.removeEventListener("click", this.globalClickHandler);
     }
 
-    elementIsWithin(el) {
-      if (!this.refs || !this.refs.dropdown)
+    elementIsWithin(el: HTMLElement) {
+      if (!this.dropdown)
         return true;
-      return this.refs.dropdown.contains(el);
+      return this.dropdown.contains(el);
     }
 
     componentDidMount() {
@@ -475,7 +511,7 @@ PP64.header = (function() {
       window.removeEventListener("resize", this.close);
     }
 
-    onButtonClick = (event) => {
+    onButtonClick = (event: any) => {
       if (this.state.opened) {
         event.stopPropagation();
         event.nativeEvent.stopImmediatePropagation();
@@ -483,7 +519,7 @@ PP64.header = (function() {
       this.setState({ opened: !this.state.opened });
     }
 
-    onDropdownClick = (event) => {
+    onDropdownClick = (event: any) => {
       event.stopPropagation(); // So that clicking inside the dropdown doesn't call onButtonClick.
     }
 
@@ -509,8 +545,10 @@ PP64.header = (function() {
         iconImg = <img className="headerButtonIcon" src={this.props.action.icon}></img>;
       }
       return (
-        <div className={btnClass} title={this.props.action.details} ref="dropdown"
-          onClick={this.onButtonClick} tabIndex="0" role="button" aria-haspopup="true">
+        <div className={btnClass} tabIndex={0} role="button" aria-haspopup="true"
+          title={this.props.action.details}
+          ref={(el) => this.dropdown = el}
+          onClick={this.onButtonClick}>
           {iconImg}
           <span className="headerButtonText">{this.props.action.name}</span>
           <div className="headerDropdownArrow">▾</div>
@@ -520,12 +558,12 @@ PP64.header = (function() {
     }
   };
 
-  function overwriteDropdown(closeFn, props) {
-    let validationResults = PP64.validation.validateCurrentBoardForOverwrite();
+  function overwriteDropdown(closeFn: any) {
+    let validationResults = (PP64 as any).validation.validateCurrentBoardForOverwrite();
     if (!validationResults)
       return null;
 
-    return validationResults.map(function(result, index) {
+    return validationResults.map(function(result: any, index: number) {
       return (
         <HeaderOverwriteBoardDropdownEntry
           name={result.name}
@@ -539,8 +577,17 @@ PP64.header = (function() {
     });
   }
 
-  const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntry extends React.Component {
-    boardClicked = event => {
+  interface IHeaderOverwriteBoardDropdownEntryProps {
+    unavailable: boolean;
+    boardIndex: number;
+    closeCallback: Function;
+    name: string;
+    errors: string[];
+    warnings: string[];
+  }
+
+  const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntry extends React.Component<IHeaderOverwriteBoardDropdownEntryProps> {
+    boardClicked = (event: any) => {
       // Links inside the errors messages should not cause overwrites from warnings.
       if (event.target && event.target.tagName.toUpperCase() === "A") {
         event.stopPropagation();
@@ -550,13 +597,13 @@ PP64.header = (function() {
       if (!this.hasErrors() && !this.props.unavailable) {
         this.props.closeCallback();
 
-        let adapter = PP64.adapters.getROMAdapter();
+        let adapter = (PP64 as any).adapters.getROMAdapter();
         if (!adapter)
           return;
-        PP64.app.blockUI(true);
+        (PP64 as any).app.blockUI(true);
         let currentBoard = PP64.boards.getCurrentBoard();
         let promise = adapter.overwriteBoard(this.props.boardIndex, currentBoard);
-        promise.then(value => {
+        promise.then(() => {
           $$log("Board overwritten");
           PP64.boards.clearBoardsFromROM();
           PP64.boards.loadBoardsFromROM();
@@ -572,10 +619,10 @@ PP64.header = (function() {
             "event_label": currentBoard.name,
           });
 
-          PP64.app.blockUI(false);
-        }, reason => {
+          (PP64 as any).app.blockUI(false);
+        }, (reason: any) => {
           $$log(`Error overriding board: ${reason}`);
-          PP64.app.showMessage("Error overwriting the board.");
+          (PP64 as any).app.showMessage("Error overwriting the board.");
         });
       }
     }
@@ -592,7 +639,7 @@ PP64.header = (function() {
       let ddClass = "overwriteBoardEntry";
       let tooltip = `Overwrite ${this.props.name} with the current board.`;
 
-      let failNodes = [];
+      let failNodes: any = [];
       if (this.props.unavailable) {
         ddClass += " unavailable";
         failNodes.push(
@@ -642,12 +689,12 @@ PP64.header = (function() {
     }
   };
 
-  function moreDropdown(closeFn, props) {
+  function moreDropdown(closeFn: Function, props: any) {
     let overflowItems = props.overflow;
     if (!overflowItems.length)
       return null;
 
-    return overflowItems.map(item => {
+    return overflowItems.map((item: IHeaderActionItem) => {
       if (item.dropdownFn) {
         return (
           <HeaderDropdown key={item.type} action={item} fn={item.dropdownFn} />
@@ -659,8 +706,8 @@ PP64.header = (function() {
     });
   }
 
-  function newboardDropdown(closeFn, props) {
-    function onAccept(gameVersion, type, theme) {
+  function newboardDropdown(closeFn: Function) {
+    function onAccept(gameVersion: 1 | 2 | 3, type: PP64.types.BoardType, theme: any) {
       closeFn();
       const newBoardIdx = PP64.boards.addBoard(null, {
         game: gameVersion,
@@ -668,13 +715,14 @@ PP64.header = (function() {
       });
       PP64.boards.setCurrentBoard(newBoardIdx);
     }
+    const NewBoard = (PP64 as any).newboard.NewBoard;
     return (
-      <PP64.newboard.NewBoard onAccept={onAccept} />
+      <NewBoard onAccept={onAccept} />
     );
   }
 
-  function screenshotDropdown(closeFn, props) {
-    function onAccept(dataUri) {
+  function screenshotDropdown(closeFn: Function) {
+    function onAccept(dataUri: string) {
       let win = window.open();
       if (win) {
         let doc = win.document;
@@ -685,19 +733,16 @@ PP64.header = (function() {
           doc.close();
           doc.body.appendChild(doc.createElement('img')).src = dataUri;
         }
-        else if (win.eval) { // But in Electron, we have some stupid proxy object instead.
-          win.eval("document.write(''); document.close(); document.body.appendChild(document.createElement('img')).src = \"" + dataUri + "\";");
+        else if ((win as any).eval) { // But in Electron, we have some stupid proxy object instead.
+          (win as any).eval("document.write(''); document.close(); document.body.appendChild(document.createElement('img')).src = \"" + dataUri + "\";");
         }
       }
 
       closeFn();
     }
+    const Screenshot = (PP64 as any).screenshot.Screenshot;
     return (
-      <PP64.screenshot.Screenshot onAccept={onAccept} />
+      <Screenshot onAccept={onAccept} />
     );
   }
-
-  return {
-    Header: Header
-  };
-})();
+}

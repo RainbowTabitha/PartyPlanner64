@@ -55,6 +55,7 @@ js/boards.js
 js/boot.js
 js/controls.js
 js/gameshark.js
+js/header.js
 js/images.js
 js/patches.js
 js/renderer.js
