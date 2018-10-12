@@ -180,7 +180,7 @@ namespace PP64.toolbar {
 
         if (_itemIsSpacer(item)) {
           return (
-            <ToolbarSpacer key={"spacer" + i} />
+            <ToolbarSpacer key={"spacer" + i++} />
           );
         }
 
