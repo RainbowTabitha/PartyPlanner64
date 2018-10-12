@@ -1,8 +1,9 @@
-PP64.ns("properties");
+namespace PP64.properties {
+  interface IBoardPropertiesProps {
+    currentBoard: PP64.boards.IBoard;
+  }
 
-PP64.properties.BoardProperties = (function() {
-
-  const BoardProperties = class BoardProperties extends React.Component {
+  export class BoardProperties extends React.Component<IBoardPropertiesProps> {
     state = { }
 
     render() {
@@ -34,14 +35,19 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const BGSelect = class BGSelect extends React.Component {
+  interface IBGSelectProps {
+    gameVersion: number;
+    boardType: PP64.types.BoardType;
+  }
+
+  const BGSelect = class BGSelect extends React.Component<IBGSelectProps> {
     state = { }
 
     onChangeBg = () => {
       PP64.utils.input.openFile("image/*", this.bgSelected);
     }
 
-    bgSelected = (event) => {
+    bgSelected = (event: any) => {
       let file = event.target.files[0];
       if (!file)
         return;
@@ -78,11 +84,15 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const EditDetails = class EditDetails extends React.Component {
+  interface IEditDetailsProps {
+    romBoard: boolean;
+  }
+
+  const EditDetails = class EditDetails extends React.Component<IEditDetailsProps> {
     state = { }
 
     onEditDetails() {
-      PP64.app.changeView($viewType.DETAILS);
+      (PP64 as any).app.changeView($viewType.DETAILS);
     }
 
     render() {
@@ -96,7 +106,13 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const CheckDeadEnds = class CheckDeadEnds extends React.Component {
+  interface ICheckDeadEndsProps {
+    board: PP64.boards.IBoard;
+  }
+
+  class CheckDeadEnds extends React.Component<ICheckDeadEndsProps> {
+    private _noDeadEndsTimeout: any;
+
     state = {
       noDeadEnds: false, // Set to true briefly after running
     }
@@ -142,7 +158,11 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const AnimationBGList = class AnimationBGList extends React.Component {
+  interface IAnimationBGListProps {
+    board: PP64.boards.IBoard;
+  }
+
+  const AnimationBGList = class AnimationBGList extends React.Component<IAnimationBGListProps> {
     state = { }
 
     onAnimBgsChanged = () => {
@@ -152,7 +172,7 @@ PP64.properties.BoardProperties = (function() {
     render() {
       let bgs = this.props.board.animbg || [];
       let i = 0;
-      let entries = bgs.map(bg => {
+      let entries = bgs.map((bg: string) => {
         i++;
         return (
           <AnimationBGEntry bg={bg} text={"Frame " + i} key={i} index={i-1}
@@ -180,7 +200,14 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const AnimationBGEntry = class AnimationBGEntry extends React.Component {
+  interface IAnimationBGEntryProps {
+    bg: string;
+    index: number;
+    text: string;
+    onAnimBgsChanged(): any;
+  }
+
+  class AnimationBGEntry extends React.Component<IAnimationBGEntryProps> {
     state = { }
 
     onMouseDown = () => {
@@ -210,14 +237,18 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const AnimationBGAddButton = class AnimationBGAddButton extends React.Component {
+  interface IAnimationBGAddButtonProps {
+    onAnimBgsChanged(): any;
+  }
+
+  class AnimationBGAddButton extends React.Component<IAnimationBGAddButtonProps> {
     state = { }
 
     onAddAnimBg = () => {
       PP64.utils.input.openFile("image/*", this.bgSelected);
     }
 
-    bgSelected = (event) => {
+    bgSelected = (event: any) => {
       let file = event.target.files[0];
       if (!file)
         return;
@@ -240,8 +271,12 @@ PP64.properties.BoardProperties = (function() {
     }
   };
 
-  const AnimationPlayButton = class AnimationPlayButton extends React.Component {
-    constructor(props) {
+  interface IAnimationPlayButtonState {
+    playing: boolean;
+  }
+
+  const AnimationPlayButton = class AnimationPlayButton extends React.Component<{}, IAnimationPlayButtonState> {
+    constructor(props: {}) {
       super(props);
 
       this.state = {
@@ -269,6 +304,4 @@ PP64.properties.BoardProperties = (function() {
       PP64.renderer.stopAnimation();
     }
   };
-
-  return BoardProperties;
-})();
+}
