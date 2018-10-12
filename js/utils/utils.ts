@@ -196,9 +196,9 @@ namespace PP64.utils {
       document.getElementById("dragZone")!.ondrop = null;
     }
 
-    private static __eventParamDropHandler: Function;
+    private static __eventParamDropHandler: Function | null;
 
-    public static setEventParamDropHandler(fn: Function) {
+    public static setEventParamDropHandler(fn: Function | null) {
       PP64.utils.drag.__eventParamDropHandler = fn;
     }
     public static getEventParamDropHandler() {

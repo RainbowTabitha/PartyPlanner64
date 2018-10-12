@@ -1,11 +1,14 @@
-PP64.ns("properties");
+namespace PP64.properties {
+  interface ISpacePropertiesProps {
+    boardType: PP64.types.BoardType;
+    gameVersion: 1 | 2 | 3;
+    selectedSpaces: PP64.boards.ISpace[];
+  }
 
-PP64.properties.SpaceProperties = (function() {
-
-  const SpaceProperties = class SpaceProperties extends React.Component {
+  export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
     state = { }
 
-    onTypeChanged = (type, subtype) => {
+    onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
       const selectedSpaces = this.props.selectedSpaces;
       for (const space of selectedSpaces) {
         if (type !== undefined)
@@ -19,7 +22,7 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
-    onStarCheckChanged = checked => {
+    onStarCheckChanged = (checked: boolean) => {
       const selectedSpaces = this.props.selectedSpaces;
       for (const space of selectedSpaces) {
         space.star = !!checked;
@@ -28,28 +31,28 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
-    onEventAdded = event => {
+    onEventAdded = (event: any) => {
       const space = this.props.selectedSpaces[0];
       PP64.boards.addEventToSpace(space, event);
       PP64.renderer.render();
       this.forceUpdate();
     }
 
-    onEventDeleted = event => {
+    onEventDeleted = (event: any) => {
       const space = this.props.selectedSpaces[0];
       PP64.boards.removeEventFromSpace(space, event);
       PP64.renderer.render();
       this.forceUpdate();
     }
 
-    onEventActivationTypeToggle = event => {
+    onEventActivationTypeToggle = (event: any) => {
       if (event.activationType === PP64.types.EventActivationType.WALKOVER)
         event.activationType = PP64.types.EventActivationType.LANDON;
       else
         event.activationType = PP64.types.EventActivationType.WALKOVER;
     }
 
-    onEventParameterSet = (event, name, value) => {
+    onEventParameterSet = (event: any, name: string, value: number) => {
       if (!event.parameterValues) {
         event.parameterValues = {};
       }
@@ -82,7 +85,7 @@ PP64.properties.SpaceProperties = (function() {
         </span>;
       }
 
-      let currentType = curSpace.type;
+      let currentType: PP64.types.Space | undefined = curSpace.type;
       let currentSubtype = curSpace.subtype;
       let hostsStarChecked = curSpace.star || false;
       let hostsStarIndeterminate = false;
@@ -128,10 +131,14 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceCoords = class SpaceCoords extends React.Component {
-    state = {}
+  interface ISpaceCoordsProps {
+    space: PP64.boards.ISpace;
+  }
 
-    onChangeX = event => {
+  class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
+    state: any = {}
+
+    onChangeX = (event: any) => {
       var newX = parseInt(event.target.value, 10);
       var isBlank = event.target.value === "";
       var curBgWidth = PP64.boards.getCurrentBoard().bg.width;
@@ -139,11 +146,11 @@ PP64.properties.SpaceProperties = (function() {
         return;
       if (!this.state.oldX)
         this.setState({ oldX: this.props.space.x });
-      this.props.space.x = isBlank ? "" : newX;
+      (this as any).props.space.x = isBlank ? "" : newX;
       this.forceUpdate();
     }
 
-    onChangeY = event => {
+    onChangeY = (event: any) => {
       let newY = parseInt(event.target.value, 10);
       let isBlank = event.target.value === "";
       let curBgHeight = PP64.boards.getCurrentBoard().bg.height;
@@ -151,11 +158,11 @@ PP64.properties.SpaceProperties = (function() {
         return;
       if (!this.state.oldY)
         this.setState({ oldY: this.props.space.y });
-      this.props.space.y = isBlank ? "" : newY;
+      (this as any).props.space.y = isBlank ? "" : newY;
       this.forceUpdate();
     }
 
-    onChangeRotation = event => {
+    onChangeRotation = (event: any) => {
       let newRot = parseInt(event.target.value, 10);
       let isBlank = event.target.value === "";
       if ((!isBlank && isNaN(newRot)) || newRot < 0 || newRot > 360)
@@ -169,7 +176,7 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
-    onCoordSet = event => {
+    onCoordSet = () => {
       this.props.space.x = this.props.space.x || 0;
       this.props.space.y = this.props.space.y || 0;
       PP64.renderer.render();
@@ -177,7 +184,7 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
-    onKeyUp = event => {
+    onKeyUp = (event: any) => {
       if (event.key === "Enter")
         this.onCoordSet();
     }
@@ -211,7 +218,15 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceTypeToggleTypes_1 = [
+  interface SpaceTypeToggleItem {
+    name: string;
+    icon: string;
+    type?: PP64.types.Space
+    subtype?: PP64.types.SpaceSubtype;
+    advanced?: boolean;
+  }
+
+  const SpaceTypeToggleTypes_1: SpaceTypeToggleItem[] = [
     // Types
     { name: "Change to blue space", icon: "img/toolbar/blue.png", type: $spaceType.BLUE },
     { name: "Change to red space", icon: "img/toolbar/red.png", type: $spaceType.RED },
@@ -224,7 +239,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Change to star space", icon: "img/toolbar/star.png", type: $spaceType.STAR, advanced: true },
     { name: "Change to start space", icon: "img/toolbar/start.png", type: $spaceType.START, advanced: true },
   ];
-  const SpaceSubTypeToggleTypes_1 = [
+  const SpaceSubTypeToggleTypes_1: SpaceTypeToggleItem[] = [
     // Subtypes
     { name: "Show Toad", icon: "img/toolbar/toad.png", subtype: $spaceSubType.TOAD },
     { name: "Show Boo", icon: "img/toolbar/boo.png", subtype: $spaceSubType.BOO },
@@ -232,7 +247,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Show Koopa Troopa", icon: "img/toolbar/koopa.png", subtype: $spaceSubType.KOOPA },
   ];
 
-  const SpaceTypeToggleTypes_2 = [
+  const SpaceTypeToggleTypes_2: SpaceTypeToggleItem[] = [
     // Types
     { name: "Change to blue space", icon: "img/toolbar/blue.png", type: $spaceType.BLUE },
     { name: "Change to red space", icon: "img/toolbar/red.png", type: $spaceType.RED },
@@ -248,7 +263,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Change to start space", icon: "img/toolbar/start.png", type: $spaceType.START, advanced: true },
     { name: "Change to arrow space", icon: "img/toolbar/arrow.png", type: $spaceType.ARROW, advanced: true },
   ];
-  const SpaceSubTypeToggleTypes_2 = [
+  const SpaceSubTypeToggleTypes_2: SpaceTypeToggleItem[] = [
     // Subtypes
     { name: "Show Toad", icon: "img/toolbar/toad.png", subtype: $spaceSubType.TOAD },
     { name: "Show Boo", icon: "img/toolbar/boo.png", subtype: $spaceSubType.BOO },
@@ -257,7 +272,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Show item shop", icon: "img/toolbar/itemshopsubtype2.png", subtype: $spaceSubType.ITEMSHOP },
   ];
 
-  const SpaceTypeToggleTypes_3 = [
+  const SpaceTypeToggleTypes_3: SpaceTypeToggleItem[] = [
     // Types
     { name: "Change to blue space", icon: "img/toolbar/blue3.png", type: $spaceType.BLUE },
     { name: "Change to red space", icon: "img/toolbar/red3.png", type: $spaceType.RED },
@@ -273,7 +288,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Change to start space", icon: "img/toolbar/start.png", type: $spaceType.START, advanced: true },
     { name: "Change to arrow space", icon: "img/toolbar/arrow.png", type: $spaceType.ARROW, advanced: true },
   ];
-  const SpaceSubTypeToggleTypes_3 = [
+  const SpaceSubTypeToggleTypes_3: SpaceTypeToggleItem[] = [
     // Subtypes
     { name: "Show Millenium Star", icon: "img/toolbar/mstar.png", subtype: $spaceSubType.TOAD },
     { name: "Show Boo", icon: "img/toolbar/boo.png", subtype: $spaceSubType.BOO },
@@ -282,7 +297,7 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Show item shop", icon: "img/toolbar/itemshopsubtype.png", subtype: $spaceSubType.ITEMSHOP },
   ];
 
-  const SpaceTypeToggleTypes_3_Duel = [
+  const SpaceTypeToggleTypes_3_Duel: SpaceTypeToggleItem[] = [
     // Types
     { name: "Change to basic space", icon: "img/toolbar/basic3.png", type: $spaceType.DUEL_BASIC },
     { name: "Change to Mini-Game space", icon: "img/toolbar/minigameduel3.png", type: $spaceType.MINIGAME },
@@ -295,8 +310,8 @@ PP64.properties.SpaceProperties = (function() {
     { name: "Change to red start space", icon: "img/toolbar/startred.png", type: $spaceType.DUEL_START_RED, advanced: true },
   ];
 
-  function _getSpaceTypeToggles(gameVersion, boardType) {
-    let types;
+  function _getSpaceTypeToggles(gameVersion: 1 | 2 | 3, boardType: PP64.types.BoardType) {
+    let types: SpaceTypeToggleItem[] = [];
     switch (gameVersion) {
       case 1:
         types = SpaceTypeToggleTypes_1;
@@ -323,8 +338,8 @@ PP64.properties.SpaceProperties = (function() {
     return types;
   }
 
-  function _getSpaceSubTypeToggles(gameVersion, boardType) {
-    let types;
+  function _getSpaceSubTypeToggles(gameVersion: 1 | 2 | 3, boardType: PP64.types.BoardType) {
+    let types: SpaceTypeToggleItem[] = [];
     switch (gameVersion) {
       case 1:
         types = SpaceSubTypeToggleTypes_1;
@@ -351,8 +366,15 @@ PP64.properties.SpaceProperties = (function() {
     return types;
   }
 
-  const SpaceTypeToggle = class SpaceTypeToggle extends React.Component {
-    onTypeChanged = (type, subtype) => {
+  interface ISpaceTypeToggleProps {
+    type?: PP64.types.Space;
+    subtype?: PP64.types.SpaceSubtype;
+    toggleTypes: any;
+    typeChanged(type?: PP64.types.Space, subtype?: PP64.types.SpaceSubtype): any;
+  }
+
+  class SpaceTypeToggle extends React.Component<ISpaceTypeToggleProps> {
+    onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
       this.props.typeChanged(type, subtype);
     }
 
@@ -363,7 +385,7 @@ PP64.properties.SpaceProperties = (function() {
       const subtype = this.props.subtype;
       const onTypeChanged = this.onTypeChanged;
       const toggleTypes = this.props.toggleTypes || [];
-      const toggles = toggleTypes.map(item => {
+      const toggles = toggleTypes.map((item: any) => {
         const key = item.type + "-" + item.subtype;
         const selected = (item.type !== undefined && type === item.type)
           || (item.subtype !== undefined && subtype !== undefined && subtype === item.subtype);
@@ -381,7 +403,16 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceTypeToggleBtn = class SpaceTypeToggleBtn extends React.Component {
+  interface ISpaceTypeToggleBtnProps {
+    selected: boolean;
+    icon: string;
+    title: string;
+    type: PP64.types.Space;
+    subtype?: PP64.types.SpaceSubtype;
+    typeChanged(type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype): any;
+  }
+
+  class SpaceTypeToggleBtn extends React.Component<ISpaceTypeToggleBtnProps> {
     onTypeChanged = () => {
       if (this.props.subtype !== undefined && this.props.selected)
         this.props.typeChanged(this.props.type, undefined);
@@ -396,7 +427,7 @@ PP64.properties.SpaceProperties = (function() {
       let size = this.props.subtype !== undefined ? 25 : 20;
       let onKeyDown = PP64.utils.react.makeKeyClick(this.onTypeChanged, this);
       return (
-        <div className={btnClass} title={this.props.title} tabIndex="0"
+        <div className={btnClass} title={this.props.title} tabIndex={0}
           onClick={this.onTypeChanged} onKeyDown={onKeyDown}>
           <img src={this.props.icon} height={size} width={size} />
         </div>
@@ -404,39 +435,55 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceStarCheckbox = class SpaceStarCheckbox extends React.Component {
+  interface ISpaceStarCheckboxProps {
+    checked: boolean;
+    indeterminate: boolean;
+    onStarCheckChanged(changed: boolean): any;
+  }
+
+  class SpaceStarCheckbox extends React.Component<ISpaceStarCheckboxProps> {
+    private checkboxEl: HTMLInputElement | null = null;
+
     render() {
       return (
         <div className="starCheckbox">
           <label><input type="checkbox"
             ref={el => this.checkboxEl = el}
             checked={this.props.checked}
-            value={this.props.checked}
+            value={this.props.checked as any}
             onChange={this.onChange} /> Hosts star</label>
         </div>
       );
     }
 
-    onChange = event => {
+    onChange = (event: any) => {
       this.props.onStarCheckChanged(event.target.checked);
     }
 
     componentDidMount() {
-      this.checkboxEl.indeterminate = this.props.indeterminate;
+      this.checkboxEl!.indeterminate = this.props.indeterminate;
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: ISpaceStarCheckboxProps) {
       if (prevProps.indeterminate !== this.props.indeterminate) {
-        this.checkboxEl.indeterminate = this.props.indeterminate;
+        this.checkboxEl!.indeterminate = this.props.indeterminate;
       }
     }
   };
 
-  const SpaceEventsList = class SpaceEventsList extends React.Component {
+  interface ISpaceEventsListProps {
+    events?: any[];
+    onEventAdded(event: any): any;
+    onEventDeleted(event: any): any;
+    onEventActivationTypeToggle(event: any): any;
+    onEventParameterSet(event: any, name: string, value: any): any;
+  }
+
+  class SpaceEventsList extends React.Component<ISpaceEventsListProps> {
     render() {
       let events = this.props.events || [];
       let id = 0;
-      let entries = events.map(event => {
+      let entries = events.map((event: any) => {
         return (
           <SpaceEventEntry event={event} key={`${event.id}-${id++}`}
             onEventDeleted={this.props.onEventDeleted}
@@ -459,7 +506,14 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceEventEntry = class SpaceEventEntry extends React.Component {
+  interface ISpaceEventEntryProps {
+    event: PP64.adapters.events.IEvent;
+    onEventDeleted(event: any): any;
+    onEventActivationTypeToggle(event: any): any;
+    onEventParameterSet(event: any, name: string, value: number): any;
+  }
+
+  class SpaceEventEntry extends React.Component<ISpaceEventEntryProps> {
     onEventDeleted = () => {
       this.props.onEventDeleted(this.props.event);
     }
@@ -469,7 +523,7 @@ PP64.properties.SpaceProperties = (function() {
       this.forceUpdate();
     }
 
-    onEventParameterSet = (name, value) => {
+    onEventParameterSet = (name: string, value: any) => {
       this.props.onEventParameterSet(this.props.event, name, value);
       this.forceUpdate();
     }
@@ -479,9 +533,10 @@ PP64.properties.SpaceProperties = (function() {
       let name = PP64.adapters.events.getName(event.id) || event.id;
 
       let parameterButtons;
-      if (event.parameters) {
-        parameterButtons = event.parameters.map(parameter => {
-          const parameterValue = event.parameterValues && event.parameterValues[parameter.name];
+      if ((event as PP64.adapters.events.ICustomEvent).parameters) {
+        parameterButtons = (event as any).parameters.map((parameter: PP64.adapters.events.ICustomEventParameter) => {
+          const parameterValue = (event as any).parameterValues
+            && (event as any).parameterValues[parameter.name];
           switch (parameter.type) {
             case "Boolean":
               return (
@@ -532,7 +587,12 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceEventActivationTypeToggle = class SpaceEventActivationTypeToggle extends React.Component {
+  interface ISpaceEventActivationTypeToggleProps {
+    activationType: PP64.types.EventActivationType;
+    onEventActivationTypeToggle(): any;
+  }
+
+  class SpaceEventActivationTypeToggle extends React.Component<ISpaceEventActivationTypeToggleProps> {
     onTypeToggle = () => {
       this.props.onEventActivationTypeToggle();
     }
@@ -541,14 +601,14 @@ PP64.properties.SpaceProperties = (function() {
       let activationType = this.props.activationType;
       const activationTypes = PP64.types.EventActivationType;
 
-      let activationTypeImages = {};
+      let activationTypeImages: any = {};
       activationTypeImages[activationTypes.WALKOVER] = "img/toolbar/eventpassing.png";
       activationTypeImages[activationTypes.LANDON] = "img/toolbar/eventstanding.png";
       let activationTypeToggleImg = activationTypeImages[activationType];
       if (!activationTypeToggleImg)
         return null;
 
-      let activationTypeTitles = {};
+      let activationTypeTitles: any = {};
       activationTypeTitles[activationTypes.WALKOVER] = "Occurs when passing over the space";
       activationTypeTitles[activationTypes.LANDON] = "Occurs when landing on the space";
 
@@ -572,7 +632,14 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceEventNumberParameterButton = class SpaceEventNumberParameterButton extends React.Component {
+  interface ISpaceEventNumberParameterButtonProps {
+    parameter: any;
+    parameterValue: any;
+    positiveOnly?: boolean;
+    onEventParameterSet(name: string, value: number): any;
+  }
+
+  class SpaceEventNumberParameterButton extends React.Component<ISpaceEventNumberParameterButtonProps> {
     render() {
       const parameterValue = this.props.parameterValue;
       const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
@@ -601,18 +668,25 @@ PP64.properties.SpaceProperties = (function() {
       }
       const value = parseInt(userValue);
       if (isNaN(value)) {
-        PP64.app.showMessage("The value entered could not be parsed into a number");
+        (PP64 as any).app.showMessage("The value entered could not be parsed into a number");
         return;
       }
       if (this.props.positiveOnly && value <= 0) {
-        PP64.app.showMessage("The value entered must be a positive number");
+        (PP64 as any).app.showMessage("The value entered must be a positive number");
         return;
       }
       this.props.onEventParameterSet(name, value);
     }
   };
 
-  const SpaceEventBooleanParameterButton = class SpaceEventBooleanParameterButton extends React.Component {
+  interface ISpaceEventBooleanParameterButtonProps {
+    parameter: any;
+    parameterValue: any;
+    positiveOnly?: boolean;
+    onEventParameterSet(name: string, value: boolean): any;
+  }
+
+  class SpaceEventBooleanParameterButton extends React.Component<ISpaceEventBooleanParameterButtonProps> {
     render() {
       const parameterValue = this.props.parameterValue;
       const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
@@ -636,7 +710,14 @@ PP64.properties.SpaceProperties = (function() {
     }
   };
 
-  const SpaceEventSpaceParameterButton = class SpaceEventSpaceParameterButton extends React.Component {
+  interface ISpaceEventSpaceParameterButtonProps {
+    parameter: any;
+    parameterValue: any;
+    positiveOnly?: boolean;
+    onEventParameterSet(name: string, value: number): any;
+  }
+
+  class SpaceEventSpaceParameterButton extends React.Component<ISpaceEventSpaceParameterButtonProps> {
     render() {
       const parameterValue = this.props.parameterValue;
       const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
@@ -658,7 +739,7 @@ PP64.properties.SpaceProperties = (function() {
       );
     }
 
-    onDragStart = (event) => {
+    onDragStart = (event: any) => {
       PP64.utils.drag.setEventParamDropHandler(this.onSpaceDroppedOn);
       event.dataTransfer.setDragImage(PP64.images.get("targetImg"), 3, 0);
       event.dataTransfer.setData("text", JSON.stringify({
@@ -666,7 +747,7 @@ PP64.properties.SpaceProperties = (function() {
       }));
     }
 
-    onSpaceDroppedOn = (spaceIndex) => {
+    onSpaceDroppedOn = (spaceIndex: number) => {
       PP64.utils.drag.setEventParamDropHandler(null);
       if (spaceIndex >= 0) {
         this.props.onEventParameterSet(this.props.parameter.name, spaceIndex);
@@ -674,11 +755,15 @@ PP64.properties.SpaceProperties = (function() {
     }
 
     onParameterClicked = () => {
-      PP64.app.showMessage("To associate a space with this event, click and drag from this list entry and release over the target space.");
+      (PP64 as any).app.showMessage("To associate a space with this event, click and drag from this list entry and release over the target space.");
     }
   };
 
-  const SpaceEventAdd = class SpaceEventAdd extends React.Component {
+  interface ISpaceEventAddProps {
+    onEventAdded(event: any): any;
+  }
+
+  class SpaceEventAdd extends React.Component<ISpaceEventAddProps> {
     state = {
       selectedValue: -1,
       possibleEvents: PP64.adapters.events.getAvailableEvents().sort((a, b) => {
@@ -688,7 +773,7 @@ PP64.properties.SpaceProperties = (function() {
       })
     }
 
-    onSelection = e => {
+    onSelection = (e: any) => {
       let selectedOption = e.target.value;
       if (selectedOption == "-1")
         return;
@@ -719,6 +804,4 @@ PP64.properties.SpaceProperties = (function() {
       );
     }
   };
-
-  return SpaceProperties;
-})();
+}

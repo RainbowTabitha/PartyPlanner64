@@ -70,6 +70,7 @@ js/renderer.js
 js/rightclick.js
 js/romhandler.js
 js/screenshot.js
+js/spaceproperties.js
 js/spaces.js
 js/settings.js
 js/texteditor.js
