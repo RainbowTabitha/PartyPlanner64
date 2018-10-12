@@ -1,5 +1,12 @@
-PP64.screenshot = (function() {
-  function takeScreeny(opts = {}) {
+namespace PP64.screenshot {
+  interface ITakeScreenyOpts {
+    renderConnections?: boolean;
+    renderCharacters?: boolean;
+    renderHiddenSpaces?: boolean;
+    renderBadges?: boolean;
+  }
+
+  function takeScreeny(opts: ITakeScreenyOpts = {}) {
     let curBoard = PP64.boards.getCurrentBoard();
     let screenCtx = PP64.utils.canvas.createContext(curBoard.bg.width, curBoard.bg.height);
 
@@ -24,7 +31,18 @@ PP64.screenshot = (function() {
     return screenCtx.canvas.toDataURL();
   }
 
-  const Screenshot = class Screenshot extends React.Component {
+  interface IScreenshotProps {
+    onAccept: (dataUri: string) => any;
+  }
+
+  interface IScreenshotState {
+    renderConnections?: boolean;
+    renderCharacters?: boolean;
+    renderHiddenSpaces?: boolean;
+    renderBadges?: boolean;
+  }
+
+  export const Screenshot = class Screenshot extends React.Component<IScreenshotProps, IScreenshotState> {
     state = {
       renderConnections: true,
       renderCharacters: true,
@@ -43,9 +61,9 @@ PP64.screenshot = (function() {
         this.props.onAccept(dataUri);
     }
 
-    onCheckChanged = (id) => {
-      let partialState = {};
-      partialState[id] = !this.state[id]
+    onCheckChanged = (id: any) => {
+      let partialState: any = {};
+      partialState[id] = !(this as any).state[id]
       this.setState(partialState);
     }
 
@@ -70,7 +88,15 @@ PP64.screenshot = (function() {
     }
   };
 
-  const Checkbox = class Checkbox extends React.Component {
+  interface ICheckboxProps {
+    onChange: Function;
+    id: string;
+    css?: string;
+    text?: string;
+    checked?: boolean;
+  }
+
+  const Checkbox = class Checkbox extends React.Component<ICheckboxProps> {
     state = {
     }
 
@@ -90,8 +116,4 @@ PP64.screenshot = (function() {
       );
     }
   };
-
-  return {
-    Screenshot,
-  };
-})();
+}

@@ -1,7 +1,7 @@
 namespace PP64.controls {
   export interface IButtonProps {
-    onClick: (id: string) => any;
-    id: string;
+    onClick: (id?: string) => any;
+    id?: string;
     css?: string;
     title?: string;
   }

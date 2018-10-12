@@ -50,6 +50,9 @@ js/utils/localstorage.js
 js/utils/MIPS.js
 js/utils/utils.js
 js/validation/validation.js
+js/validation/validation.MP1.js
+js/validation/validation.MP2.js
+js/validation/validation.MP3.js
 js/about.js
 js/boardmenu.js
 js/boards.js
@@ -62,6 +65,7 @@ js/patches.js
 js/renderer.js
 js/rightclick.js
 js/romhandler.js
+js/screenshot.js
 js/spaces.js
 js/settings.js
 js/texteditor.js
