@@ -1,5 +1,14 @@
-PP64.details = (function() {
-  const _details_mp1 = [
+namespace PP64.details {
+  interface IDetailsItemBase {
+    type: string;
+    id?: string;
+    desc?: string;
+    maxlines?: number;
+    width?: number;
+    height?: number;
+  }
+
+  const _details_mp1: IDetailsItemBase[] = [
     { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
     { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
     { type: "br" },
@@ -13,7 +22,7 @@ PP64.details = (function() {
     { type: "image", id: "detailBoardSplashscreenBg", desc: "Splashscreen background", width: 320, height: 240  },
   ];
 
-  const _details_mp2 = [
+  const _details_mp2: IDetailsItemBase[] = [
     { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
     { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
     { type: "br" },
@@ -26,7 +35,7 @@ PP64.details = (function() {
     { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
   ];
 
-  const _details_mp3 = [
+  const _details_mp3: IDetailsItemBase[] = [
     { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
     { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
     { type: "br" },
@@ -39,7 +48,7 @@ PP64.details = (function() {
     { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
   ];
 
-  const _details_mp3_duel = [
+  const _details_mp3_duel: IDetailsItemBase[] = [
     { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
     { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
     { type: "br" },
@@ -50,7 +59,7 @@ PP64.details = (function() {
     { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
   ];
 
-  function _getGameDetails() {
+  function _getGameDetails(): IDetailsItemBase[] {
     const board = PP64.boards.getCurrentBoard();
     const gameVersion = board.game;
     const boardType = board.type;
@@ -69,7 +78,7 @@ PP64.details = (function() {
     }
   }
 
-  function _getValue(id, props) {
+  function _getValue(id: string | undefined, props: IDetailsProps) {
     switch (id) {
       case "detailBoardName":
         return props.board.name;
@@ -97,11 +106,11 @@ PP64.details = (function() {
     return "";
   }
 
-  function _setValue(id, value, board) {
+  function _setValue(id: string, value: any, board: PP64.boards.IBoard) {
     switch (id) {
       case "detailBoardName":
         board.name = value;
-        PP64.app.refresh();
+        (PP64 as any).app.refresh();
         break;
       case "detailBoardDesc":
         board.description = value;
@@ -123,7 +132,7 @@ PP64.details = (function() {
         break;
       case "detailBoardAudio":
         board.audioIndex = value;
-        PP64.app.refresh();
+        (PP64 as any).app.refresh();
         break;
       case "detailBoardLargeSceneBg":
         board.otherbg.largescene = value;
@@ -137,7 +146,7 @@ PP64.details = (function() {
     }
   }
 
-  function _processImage(id, buffer) {
+  function _processImage(id: string, buffer: ArrayBuffer) {
     if (id === "detailBoardSelectImg" && PP64.boards.getCurrentBoard().game === 1) { // Apply masking
       let rgba32 = new Uint32Array(buffer);
 
@@ -191,25 +200,25 @@ PP64.details = (function() {
 
       // Validate that the image meets the color limits
       // Technically this is 256 colors when split into 4 tiles
-      let colors = {};
+      let colors: { [color: number]: boolean } = {};
       for (let y = 0; y < 32; y++) {
         for (let x = 0; x < 64; x++) {
           colors[rgba32[(y * 128) + x]] = true;
         }
       }
-      let colors2 = {};
+      let colors2: { [color: number]: boolean } = {};
       for (let y = 0; y < 32; y++) {
         for (let x = 64; x < 128; x++) {
           colors2[rgba32[(y * 128) + 64 + x]] = true;
         }
       }
-      let colors3 = {};
+      let colors3: { [color: number]: boolean } = {};
       for (let y = 32; y < 64; y++) {
         for (let x = 0; x < 64; x++) {
           colors3[rgba32[(y * 128) + x]] = true;
         }
       }
-      let colors4 = {};
+      let colors4: { [color: number]: boolean } = {};
       for (let y = 32; y < 64; y++) {
         for (let x = 64; x < 128; x++) {
           colors4[rgba32[(y * 128) + 64 + x]] = true;
@@ -218,27 +227,31 @@ PP64.details = (function() {
 
       if (Object.keys(colors).length > 256 || Object.keys(colors2).length > 256 ||
           Object.keys(colors3).length > 256 || Object.keys(colors4).length > 256) {
-        PP64.app.showMessage(`Sorry, but the palette limit for this image is 256 unique colors. For now, the image has been reduced to 8-bit, but most image editors should be able to reduce the palette for you with higher quality.`);
+        (PP64 as any).app.showMessage(`Sorry, but the palette limit for this image is 256 unique colors. For now, the image has been reduced to 8-bit, but most image editors should be able to reduce the palette for you with higher quality.`);
         PP64.utils.img.RGBA32.make8Bit(rgba32, 128, 64);
       }
     }
     return buffer;
   }
 
-  let Details = class Details extends React.Component {
+  interface IDetailsProps {
+    board: PP64.boards.IBoard;
+  }
+
+  export class Details extends React.Component<IDetailsProps> {
     state = {}
 
-    onTextChange = (id, event) => {
+    onTextChange = (id: string, event: any) => {
       _setValue(id, event.target.value, this.props.board);
       this.forceUpdate();
     }
 
-    onRichTextChange = (id, value) => {
+    onRichTextChange = (id: string, value: any) => {
       _setValue(id, value, this.props.board);
       this.forceUpdate();
     }
 
-    onValueChange = (id, value) => {
+    onValueChange = (id: string, value: any) => {
       _setValue(id, value, this.props.board);
       this.forceUpdate();
     }
@@ -253,8 +266,8 @@ PP64.details = (function() {
         switch (detail.type) {
           case "text":
             return (
-              <DetailsTextInput id={detail.id} desc={detail.desc} readonly={readonly}
-                value={value} onTextChange={this.onTextChange} key={detail.id} type={detail.type} />
+              <DetailsTextInput id={detail.id!} desc={detail.desc!} readonly={readonly}
+                value={value} onTextChange={this.onTextChange} key={detail.id} />
             );
             break;
           case "richtext":
@@ -276,20 +289,20 @@ PP64.details = (function() {
             break;
           case "image":
             return (
-              <DetailsImage id={detail.id} desc={detail.desc} readonly={readonly}
+              <DetailsImage id={detail.id!} desc={detail.desc!} readonly={readonly}
                 value={value} key={detail.id} onImageSelected={this.onValueChange}
-                width={detail.width} height={detail.height} />
+                width={detail.width!} height={detail.height!} />
             );
             break;
           case "audio":
             return (
-              <DetailsAudio id={detail.id} desc={detail.desc} readonly={readonly}
+              <DetailsAudio id={detail.id!} desc={detail.desc!} readonly={readonly}
                 value={value} key={detail.id} onAudioSelected={this.onValueChange} />
             );
             break;
           case "difficulty":
             return (
-              <DetailsDifficulty id={detail.id} desc={detail.desc} readonly={readonly}
+              <DetailsDifficulty id={detail.id!} desc={detail.desc!} readonly={readonly}
                 value={value} key={detail.id} onDifficultySelected={this.onValueChange} />
             );
             break;
@@ -308,8 +321,16 @@ PP64.details = (function() {
     }
   };
 
-  let DetailsTextInput = class DetailsTextInput extends React.Component {
-    onTextChange = event => {
+  interface IDetailsTextInputProps {
+    id: string;
+    desc: string;
+    readonly: boolean;
+    value: string;
+    onTextChange(id: string, event: any): any;
+  }
+
+  class DetailsTextInput extends React.Component<IDetailsTextInputProps> {
+    onTextChange = (event: any) => {
       this.props.onTextChange(this.props.id, event); // Pass up to parent.
     }
 
@@ -327,7 +348,17 @@ PP64.details = (function() {
     }
   };
 
-  let DetailsImage = class DetailsImage extends React.Component {
+  interface IDetailsImageProps {
+    id: string;
+    desc: string;
+    readonly: boolean;
+    width: number;
+    height: number;
+    value: string;
+    onImageSelected(id: string, src: string): any;
+  }
+
+  class DetailsImage extends React.Component<IDetailsImageProps> {
     handleClick = () => {
       if (PP64.boards.currentBoardIsROM())
         return;
@@ -335,7 +366,7 @@ PP64.details = (function() {
       PP64.utils.input.openFile("image/*", this.imageSelected.bind(this));
     }
 
-    imageSelected(event) {
+    imageSelected(event: any) {
       let file = event.target.files[0];
       if (!file)
         return;
@@ -344,9 +375,9 @@ PP64.details = (function() {
       reader.onload = e => {
         let onImageSelected = this.props.onImageSelected;
         let id = this.props.id;
-        let detailImg = document.getElementById(id);
+        let detailImg = document.getElementById(id) as HTMLImageElement;
         let img = new Image();
-        img.onload = function() { // Extra level of indirection so we can manipulate the image sometimes.
+        img.onload = () => { // Extra level of indirection so we can manipulate the image sometimes.
           let width = this.props.width;
           let height = this.props.height;
           let ctx = PP64.utils.canvas.createContext(width, height);
@@ -357,8 +388,8 @@ PP64.details = (function() {
           let newSrc = PP64.utils.arrays.arrayBufferToDataURL(rgba32, width, height);
           detailImg.src = newSrc;
           onImageSelected(id, newSrc);
-        }.bind(this);
-        img.src = reader.result;
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -372,7 +403,7 @@ PP64.details = (function() {
       let hoverCover = null;
       if (!this.props.readonly) {
         let hoverCoverSize = `${width} × ${height}`;
-        if (width > 100 & height > 50) {
+        if (width > 100 && height > 50) {
           let hoverCoverMsg = "Choose a new image";
           hoverCover = (
             <div className="detailImgHoverCover">
@@ -404,17 +435,25 @@ PP64.details = (function() {
     }
   };
 
-  const DetailsAudio = class DetailsAudio extends React.Component {
+  interface IDetailsAudioProps {
+    id: string;
+    desc: string;
+    readonly: boolean;
+    value: number;
+    onAudioSelected(id: string, index: number): any;
+  }
+
+  class DetailsAudio extends React.Component<IDetailsAudioProps> {
     state = {}
 
-    onSelection = e => {
+    onSelection = (e: any) => {
       this.props.onAudioSelected(this.props.id, parseInt(e.target.value));
     }
 
     render() {
       let index = 0;
-      let audioNames = PP64.adapters.getAdapter(PP64.boards.getCurrentBoard().game).getAudioMap();
-      let audioOptions = audioNames.map(song => {
+      let audioNames = (PP64 as any).adapters.getAdapter(PP64.boards.getCurrentBoard().game).getAudioMap();
+      let audioOptions = audioNames.map((song: string) => {
         let curIndex = index++;
         if (!song)
           return null;
@@ -435,19 +474,31 @@ PP64.details = (function() {
     }
   };
 
-  const DetailsDifficulty = class DetailsDifficulty extends React.Component {
-    constructor(props) {
+  interface IDetailsDifficultyProps {
+    id: string;
+    desc: string;
+    readonly: boolean;
+    value: any;
+    onDifficultySelected(id: string, level: number): any;
+  }
+
+  interface IDetailsDifficultyState {
+    focusedLevel: number;
+  }
+
+  class DetailsDifficulty extends React.Component<IDetailsDifficultyProps, IDetailsDifficultyState> {
+    constructor(props: IDetailsDifficultyProps) {
       super(props);
       this.state = { focusedLevel: 0 };
     }
 
-    onSelection = level => {
+    onSelection = (level: number) => {
       if (this.props.readonly)
         return;
       this.props.onDifficultySelected(this.props.id, level);
     }
 
-    onDifficultyFocused = level => {
+    onDifficultyFocused = (level: number) => {
       if (this.props.readonly)
         return;
       this.setState({ focusedLevel: level });
@@ -457,7 +508,7 @@ PP64.details = (function() {
       const levels = [];
       for (let i = 1; i <= 5; i++) {
         levels.push(<DetailsDifficultyLevel
-          level={i.toString()}
+          level={i}
           key={i.toString()}
           readonly={this.props.readonly}
           currentLevel={this.props.value}
@@ -478,7 +529,16 @@ PP64.details = (function() {
     }
   };
 
-  const DetailsDifficultyLevel = class DetailsDifficultyLevel extends React.Component {
+  interface IDetailsDifficultyLevelProps {
+    level: number;
+    currentLevel: number;
+    focusedLevel: number;
+    readonly: boolean;
+    onDifficultyLevelSelected(level: number): any;
+    onDifficultyFocused(level: number): any;
+  }
+
+  class DetailsDifficultyLevel extends React.Component<IDetailsDifficultyLevelProps> {
     state = {}
 
     onClick = () => {
@@ -513,8 +573,4 @@ PP64.details = (function() {
       );
     }
   };
-
-  return {
-    Details
-  };
-})();
+}
