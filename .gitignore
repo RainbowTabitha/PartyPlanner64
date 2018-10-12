@@ -71,5 +71,6 @@ js/screenshot.js
 js/spaces.js
 js/settings.js
 js/texteditor.js
+js/toolbar.js
 js/toolwindow.js
 js/types.js

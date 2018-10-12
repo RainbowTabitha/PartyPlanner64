@@ -1,6 +1,20 @@
 // This used to be a toolbar... now it is the toolbox contents.
-PP64.toolbar = (function() {
-  const mp1_actions = [
+namespace PP64.toolbar {
+  interface IToolbarItem {
+    name: string;
+    icon: string;
+    type: PP64.types.Action;
+    draggable?: boolean;
+    advanced?: boolean;
+  }
+
+  interface IToolbarSpacer {
+    spacer: true;
+  }
+
+  type ToolbarItem = IToolbarItem | IToolbarSpacer
+
+  const mp1_actions: ToolbarItem[] = [
     { "name": "Move spaces", "icon": "img/toolbar/move.png", "type": $actType.MOVE },
     { "name": "Connect spaces", "icon": "img/toolbar/line.png", "type": $actType.LINE },
     { "name": "Connect multiple spaces in one click", "icon": "img/toolbar/stickyline.png", "type": $actType.LINE_STICKY },
@@ -30,7 +44,7 @@ PP64.toolbar = (function() {
     // }
   ];
 
-  const mp2_actions = [
+  const mp2_actions: ToolbarItem[] = [
     { "name": "Move spaces", "icon": "img/toolbar/move.png", "type": $actType.MOVE },
     { "name": "Connect spaces", "icon": "img/toolbar/line.png", "type": $actType.LINE },
     { "name": "Connect multiple spaces in one click", "icon": "img/toolbar/stickyline.png", "type": $actType.LINE_STICKY },
@@ -58,7 +72,7 @@ PP64.toolbar = (function() {
     { "name": "Mark space as hosting star", "icon": "img/toolbar/markstar.png", "type": $actType.MARK_STAR },
   ];
 
-  const mp3_actions = [
+  const mp3_actions: ToolbarItem[] = [
     { "name": "Move spaces", "icon": "img/toolbar/move.png", "type": $actType.MOVE },
     { "name": "Connect spaces", "icon": "img/toolbar/line.png", "type": $actType.LINE },
     { "name": "Connect multiple spaces in one click", "icon": "img/toolbar/stickyline.png", "type": $actType.LINE_STICKY },
@@ -88,7 +102,7 @@ PP64.toolbar = (function() {
     { "name": "Mark space as Skeleton Key gate", "icon": "img/toolbar/markgate.png", "type": $actType.MARK_GATE },
   ];
 
-  const mp3_duel_actions = [
+  const mp3_duel_actions: ToolbarItem[] = [
     { "name": "Move spaces", "icon": "img/toolbar/move.png", "type": $actType.MOVE },
     { "name": "Connect spaces", "icon": "img/toolbar/line.png", "type": $actType.LINE },
     { "name": "Connect multiple spaces in one click", "icon": "img/toolbar/stickyline.png", "type": $actType.LINE_STICKY },
@@ -105,7 +119,11 @@ PP64.toolbar = (function() {
     { "name": "Add red start space", "icon": "img/toolbar/startred.png", "type": $actType.ADD_DUEL_START_RED, draggable: true, advanced: true },
   ];
 
-  function _getActions(gameVersion, boardType) {
+  function _itemIsSpacer(item: ToolbarItem): item is IToolbarSpacer {
+    return "spacer" in item && item.spacer;
+  }
+
+  function _getActions(gameVersion: number, boardType: PP64.types.BoardType) {
     let actions;
     switch (gameVersion) {
       case 1:
@@ -125,17 +143,23 @@ PP64.toolbar = (function() {
     }
 
     if (!PP64.settings.get($setting.uiAdvanced)) {
-      actions = actions.filter(a => !a.advanced);
+      actions = actions.filter(a => !(a as IToolbarItem).advanced);
     }
 
     return actions;
   }
 
-  function _buttonClicked(type) {
-    PP64.app.changeCurrentAction(type);
+  function _buttonClicked(type: PP64.types.Action) {
+    (PP64 as any).app.changeCurrentAction(type);
   }
 
-  const Toolbar = class Toolbar extends React.Component {
+  interface IToolbarProps {
+    currentAction: PP64.types.Action;
+    gameVersion: number;
+    boardType: PP64.types.BoardType;
+  }
+
+  export class Toolbar extends React.Component<IToolbarProps> {
     state = {}
 
     render() {
@@ -147,14 +171,14 @@ PP64.toolbar = (function() {
 
       let i = 0;
       let actions = _getActions(this.props.gameVersion, this.props.boardType);
-      actions = actions.map(item => {
-        if (item.group) {
-          return (
-            <ToolbarGroup key={item.group} icon={item.icon} actions={item.actions} currentAction={this.props.currentAction} />
-          )
-        }
+      let actionElements = actions.map(item => {
+        // if (item.group) {
+        //   return (
+        //     <ToolbarGroup key={item.group} icon={item.icon} actions={item.actions} currentAction={this.props.currentAction} />
+        //   )
+        // }
 
-        if (item.spacer) {
+        if (_itemIsSpacer(item)) {
           return (
             <ToolbarSpacer key={"spacer" + i} />
           );
@@ -167,52 +191,57 @@ PP64.toolbar = (function() {
       });
       return (
         <div className="toolbar" role="toolbar">
-          {actions}
+          {actionElements}
         </div>
       );
     }
   };
 
-  const ToolbarGroup = class ToolbarGroup extends React.Component {
-    render() {
-      var btnClass = "toolbarGroup";
-      var icon;
-      var actions = this.props.actions.map(item => {
-        if (item.type === this.props.currentAction)
-          icon = item.icon;
-        var isCurrentAction = this.props.currentAction === item.type;
-        return (
-          <ToolbarButton key={item.type} action={item} current={isCurrentAction} />
-        );
-      });
-      if (icon)
-        btnClass += " selected"; // Select the group if one of its actions is selected.
-      else
-        icon = this.props.icon;
-      var left = actions.length * -50;
-      var maxWidth = actions.length * 50;
-      if (actions.length >= 5) {
-        left /= 2;
-        maxWidth /= 2;
-      }
-      var panelStyle = { left: left, maxWidth: maxWidth };
-      return (
-        <div className={btnClass} title={this.props.group} role="button" tabIndex="0">
-          <img className="toolbarIcon" src={icon}></img>
-          <div className="toolbarGroupPanel" style={panelStyle}>
-            {actions}
-          </div>
-        </div>
-      );
-    }
-  };
+  // const ToolbarGroup = class ToolbarGroup extends React.Component {
+  //   render() {
+  //     var btnClass = "toolbarGroup";
+  //     var icon;
+  //     var actions = this.props.actions.map(item => {
+  //       if (item.type === this.props.currentAction)
+  //         icon = item.icon;
+  //       var isCurrentAction = this.props.currentAction === item.type;
+  //       return (
+  //         <ToolbarButton key={item.type} action={item} current={isCurrentAction} />
+  //       );
+  //     });
+  //     if (icon)
+  //       btnClass += " selected"; // Select the group if one of its actions is selected.
+  //     else
+  //       icon = this.props.icon;
+  //     var left = actions.length * -50;
+  //     var maxWidth = actions.length * 50;
+  //     if (actions.length >= 5) {
+  //       left /= 2;
+  //       maxWidth /= 2;
+  //     }
+  //     var panelStyle = { left: left, maxWidth: maxWidth };
+  //     return (
+  //       <div className={btnClass} title={this.props.group} role="button" tabIndex="0">
+  //         <img className="toolbarIcon" src={icon}></img>
+  //         <div className="toolbarGroupPanel" style={panelStyle}>
+  //           {actions}
+  //         </div>
+  //       </div>
+  //     );
+  //   }
+  // };
 
-  const ToolbarButton = class ToolbarButton extends React.Component {
+  interface IToolbarButtonProps {
+    action: IToolbarItem;
+    current: boolean;
+  }
+
+  class ToolbarButton extends React.Component<IToolbarButtonProps> {
     handleClick = () => {
       _buttonClicked(this.props.action.type);
     }
 
-    onDragStart = (event) => {
+    onDragStart = (event: any) => {
       if (!this.props.action.draggable)
         return; // Disobeying draggable? Its more likely than you think!
 
@@ -228,7 +257,8 @@ PP64.toolbar = (function() {
         btnClass += " selected";
       let onKeyDown = PP64.utils.react.makeKeyClick(this.handleClick, this);
       return (
-        <div className={btnClass} title={this.props.action.name} role="button" tabIndex="0"
+        <div className={btnClass} title={this.props.action.name}
+          role="button" tabIndex={0}
           onClick={this.handleClick} onKeyDown={onKeyDown}
           draggable={this.props.action.draggable} onDragStart={this.onDragStart}>
           <img className="toolbarIcon" src={this.props.action.icon}></img>
@@ -244,8 +274,4 @@ PP64.toolbar = (function() {
       );
     }
   };
-
-  return {
-    Toolbar
-  };
-})();
+}
