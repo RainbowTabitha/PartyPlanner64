@@ -1,32 +1,37 @@
-PP64.newboard = (function() {
+namespace PP64.newboard {
   const Themes = [
     { name: "Blank", id: "default" }
   ];
 
-  const NewBoard = class NewBoard extends React.Component {
+  interface INewBoardProps {
+    theme: any;
+    onAccept(version: number, type: PP64.types.BoardType, theme: any): any;
+  }
+
+  export class NewBoard extends React.Component<INewBoardProps> {
     state = {
       version: 1,
       type: PP64.types.BoardType.NORMAL,
       theme: 0,
     }
 
-    onVersionChange = (version) => {
+    onVersionChange = (version: number) => {
       this.setState({ version });
       if (version !== 3)
         this.setState({ type: PP64.types.BoardType.NORMAL });
     }
 
-    onTypeChange = (type) => {
+    onTypeChange = (type: PP64.types.BoardType) => {
       this.setState({ type });
     }
 
-    onThemeChange = (theme) => {
+    onThemeChange = (theme: any) => {
       this.setState({ theme });
     }
 
     submit = () => {
       if (this.state.type === PP64.types.BoardType.DUEL) {
-        PP64.app.showMessage("Duel board support is partially finished, coming soon!");
+        (PP64 as any).app.showMessage("Duel board support is partially finished, coming soon!");
         if (!$$debug)
           return;
       }
@@ -51,12 +56,16 @@ PP64.newboard = (function() {
     }
   };
 
-  const NewBoardVersionSelect = class NewBoardVersionSelect extends React.Component {
+  interface INewBoardVersionSelectProps {
+    onVersionChange(id: number): any;
+  }
+
+  class NewBoardVersionSelect extends React.Component<INewBoardVersionSelectProps> {
     state = {
       version: 1,
     }
 
-    onVersionChange = (id, pressed) => {
+    onVersionChange = (id: number, pressed: boolean) => {
       this.setState({ version: id });
       this.props.onVersionChange(id);
     }
@@ -94,8 +103,13 @@ PP64.newboard = (function() {
     }
   };
 
-  const NewBoardTypeSelect = class extends React.Component {
-    onTypeChange = (type) => {
+  interface INewBoardTypeSelect {
+    type: PP64.types.BoardType;
+    onTypeChange(type: PP64.types.BoardType): any;
+  }
+
+  class NewBoardTypeSelect extends React.Component<INewBoardTypeSelect> {
+    onTypeChange = (type: PP64.types.BoardType) => {
       this.props.onTypeChange(type);
     }
 
@@ -122,12 +136,16 @@ PP64.newboard = (function() {
     }
   };
 
-  const NewBoardThemeSelect = class NewBoardThemeSelect extends React.Component {
+  interface INewBoardThemeSelectProps {
+    onThemeChange(id: any): any;
+  }
+
+  class NewBoardThemeSelect extends React.Component<INewBoardThemeSelectProps> {
     state = {
       theme: 0,
     }
 
-    onThemeChange = (id, pressed) => {
+    onThemeChange = (id: any, pressed: boolean) => {
       this.setState({ theme: id });
       this.props.onThemeChange(id);
     }
@@ -156,8 +174,4 @@ PP64.newboard = (function() {
       );
     }
   };
-
-  return {
-    NewBoard,
-  };
-})();
+}
