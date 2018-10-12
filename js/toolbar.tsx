@@ -186,7 +186,7 @@ namespace PP64.toolbar {
 
         let isCurrentAction = this.props.currentAction === item.type;
         return (
-          <ToolbarButton key={item.type} current={isCurrentAction} action={item} index={i++} />
+          <ToolbarButton key={item.type} current={isCurrentAction} action={item} />
         );
       });
       return (

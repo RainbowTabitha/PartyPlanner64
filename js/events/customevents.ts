@@ -4,7 +4,7 @@ namespace PP64.adapters.events {
     type: string;
   }
 
-  interface ICustomEvent extends IEvent {
+  export interface ICustomEvent extends IEvent {
     asm: string;
     parameters?: ICustomEventParameter[];
   }

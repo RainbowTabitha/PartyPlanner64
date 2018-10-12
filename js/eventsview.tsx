@@ -1,11 +1,16 @@
-PP64.ns("events");
+namespace PP64.events {
+  let _eventsViewInstance: EventsView | null;
 
-Object.assign(PP64.events, (function() {
-  let _eventsViewInstance;
+  interface IEventsViewProps {
+  }
+
+  interface IEventsViewState {
+    hasError: boolean;
+  }
 
   /** Custom events list view */
-  const EventsView = class EventsView extends React.Component {
-    constructor(props) {
+  export class EventsView extends React.Component<IEventsViewProps, IEventsViewState> {
+    constructor(props: IEventsViewProps) {
       super(props);
 
       this.state = {
@@ -67,12 +72,12 @@ Object.assign(PP64.events, (function() {
       _eventsViewInstance = null;
     }
 
-    componentDidCatch(error, info) {
+    componentDidCatch(error: any) {
       this.setState({ hasError: true });
       console.error(error);
     }
 
-    onDeleteEvent = (event) => {
+    onDeleteEvent = (event: PP64.adapters.events.IEvent) => {
       if (window.confirm(`Are you sure you want to delete ${event.name}?`)) {
         PP64.adapters.events.removeEvent(event.id);
         this.forceUpdate();
@@ -80,7 +85,12 @@ Object.assign(PP64.events, (function() {
     }
   }
 
-  const EventRow = class EventRow extends React.Component {
+  interface IEventRowProps {
+    event: PP64.adapters.events.ICustomEvent;
+    onDeleteEvent(event: PP64.adapters.events.ICustomEvent): any;
+  }
+
+  class EventRow extends React.Component<IEventRowProps> {
     render() {
       return (
         <tr className="eventTableRow">
@@ -104,8 +114,8 @@ Object.assign(PP64.events, (function() {
     }
 
     onEditEvent = () => {
-      PP64.app.changeCurrentEvent(this.props.event);
-      PP64.app.changeView($viewType.CREATEEVENT);
+      (PP64 as any).app.changeCurrentEvent(this.props.event);
+      (PP64 as any).app.changeView($viewType.CREATEEVENT);
     }
 
     onExportEvent = () => {
@@ -115,12 +125,9 @@ Object.assign(PP64.events, (function() {
     }
   }
 
-  return {
-    EventsView,
-    refreshEventsView: function() {
-      if (_eventsViewInstance) {
-        _eventsViewInstance.forceUpdate();
-      }
-    },
-  };
-})());
+  export function refreshEventsView() {
+    if (_eventsViewInstance) {
+      _eventsViewInstance.forceUpdate();
+    }
+  }
+}
