@@ -1,13 +1,11 @@
-PP64.ns("validation");
-
-PP64.validation.MP2 = (function() {
+namespace PP64.validation.MP2 {
   const commonRules = [
     PP64.validation.getRule("TOOMANYBOWSERS", { limit: 0 }),
     PP64.validation.getRule("TOOMANYKOOPAS", { limit: 0 }),
     PP64.validation.getRule("TOOMANYGATES", { limit: 0 }), // Someday
   ];
 
-  function getValidationRulesForBoard(gameID, boardIndex) {
+  export function getValidationRulesForBoard(gameID: PP64.types.Game, boardIndex: number) {
     const rules = commonRules.slice(0);
     const boardInfo = PP64.adapters.boardinfo.getBoardInfoByIndex(gameID, boardIndex);
 
@@ -22,8 +20,4 @@ PP64.validation.MP2 = (function() {
     }
     return rules;
   }
-
-  return {
-    getValidationRulesForBoard,
-  };
-})();
+}

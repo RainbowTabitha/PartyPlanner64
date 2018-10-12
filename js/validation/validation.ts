@@ -446,15 +446,15 @@ namespace PP64.validation {
     switch(gameID) {
       case $gameType.MP1_USA:
       case $gameType.MP1_JPN:
-        rules = rules.concat((PP64 as any).validation.MP1.getValidationRulesForBoard(gameID, boardIndex));
+        rules = rules.concat(PP64.validation.MP1.getValidationRulesForBoard(gameID, boardIndex));
         break;
       case $gameType.MP2_USA:
       case $gameType.MP2_JPN:
-        rules = rules.concat((PP64 as any).validation.MP2.getValidationRulesForBoard(gameID, boardIndex));
+        rules = rules.concat(PP64.validation.MP2.getValidationRulesForBoard(gameID, boardIndex));
         break;
       case $gameType.MP3_USA:
       case $gameType.MP3_JPN:
-        rules = rules.concat((PP64 as any).validation.MP3.getValidationRulesForBoard(gameID, boardIndex));
+        rules = rules.concat(PP64.validation.MP3.getValidationRulesForBoard(gameID, boardIndex));
         break;
     }
 

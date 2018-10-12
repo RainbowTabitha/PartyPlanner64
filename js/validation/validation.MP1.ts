@@ -1,11 +1,9 @@
-PP64.ns("validation");
-
-PP64.validation.MP1 = (function() {
+namespace PP64.validation.MP1 {
   const commonRules = [
     PP64.validation.getRule("TOOMANYGATES", { limit: 0 }),
   ];
 
-  function getValidationRulesForBoard(gameID, boardIndex) {
+  export function getValidationRulesForBoard(gameID: PP64.types.Game, boardIndex: number) {
     let rules = commonRules.slice(0);
     if (boardIndex === 0) {
       rules.push(PP64.validation.getRule("TOOMANYBOOS", { limit: 2 }));
@@ -15,8 +13,4 @@ PP64.validation.MP1 = (function() {
     }
     return rules;
   }
-
-  return {
-    getValidationRulesForBoard,
-  };
-})();
+}
