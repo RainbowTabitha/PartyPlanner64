@@ -1,27 +1,6 @@
 namespace PP64.utils {
-
-  interface ITrack {
-    type: number;
-    dimension: number;
-    mystery1: any;
-    mystery2: any;
-    mystery3: any;
-    totalFrames: number;
-    mystery4: any;
-    objIndex: number;
-    keyframeCount: number;
-    d: any;
-    keyframes: IKeyframe[];
-  }
-
-  interface IKeyframe {
-    value1: number;
-    value2: number;
-    value3: number;
-  }
-
   /** Animation file handling */
-  export const MTNX = class MTNX {
+  export class MTNX {
     static isMtnx(viewOrBuffer: ArrayBuffer | DataView): boolean {
       if (!viewOrBuffer)
         return false;
@@ -39,7 +18,7 @@ namespace PP64.utils {
       if (!PP64.utils.MTNX.isMtnx(mtnxView))
         return null;
 
-      const mtnxObj = Object.create(null);
+      const mtnxObj: MTNX.IMTNXObj = Object.create(null);
 
       mtnxObj.totalFrames = mtnxView.getUint16(0xA);
       mtnxObj.tracks = [];
@@ -64,7 +43,7 @@ namespace PP64.utils {
     }
 
     static parseTrack(trackView: DataView, trackIndex: number, dsView: DataView, keyframesView: DataView, dataView: DataView) {
-      const trackObj: ITrack = Object.create(null);
+      const trackObj: MTNX.ITrack = Object.create(null);
 
       trackObj.type = trackView.getUint8(0);
       trackObj.dimension = trackView.getUint8(1);
@@ -101,21 +80,44 @@ namespace PP64.utils {
 
       return data;
     }
+  }
 
-    static get TrackType() {
-      return {
-        Transform: 0x17,
-        Rotation: 0x4C,
-        Scale: 0x1B,
-      };
+  export namespace MTNX {
+    export enum Dimension {
+      X = 0x45,
+      Y = 0x46,
+      Z = 0x47,
     }
 
-    static get Dimension() {
-      return {
-        X: 0x45,
-        Y: 0x46,
-        Z: 0x47,
-      };
+    export enum TrackType {
+      Transform = 0x17,
+      Rotation = 0x4C,
+      Scale = 0x1B,
+    }
+
+    export interface IMTNXObj {
+      totalFrames: number;
+      tracks: ITrack[];
+    }
+
+    export interface ITrack {
+      type: number;
+      dimension: number;
+      mystery1: any;
+      mystery2: any;
+      mystery3: any;
+      totalFrames: number;
+      mystery4: any;
+      objIndex: number;
+      keyframeCount: number;
+      d: any;
+      keyframes: IKeyframe;
+    }
+
+    export interface IKeyframe {
+      value1: number;
+      value2: number;
+      value3: number;
     }
   }
 }

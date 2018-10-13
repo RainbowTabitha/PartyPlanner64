@@ -25,6 +25,7 @@ js/fs/strings3.js
 js/models/FORM.js
 js/models/FormToThreeJs.js
 js/models/MTNX.js
+js/models/MtnxToThreeJs.js
 js/patches/gameshark/compiler.js
 js/patches/gameshark/hook.MP1.U.js
 js/patches/gameshark/hook.MP2.U.js
@@ -64,6 +65,7 @@ js/eventsview.js
 js/gameshark.js
 js/header.js
 js/images.js
+js/models.js
 js/newboard.js
 js/patches.js
 js/renderer.js

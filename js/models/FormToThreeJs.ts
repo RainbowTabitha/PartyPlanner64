@@ -1,11 +1,11 @@
 namespace PP64.utils {
   // Converts extracted FORM data into a Three.js scene.
   export class FormToThreeJs {
-    private bgColor: number = 0x000000;
-    private showTextures: boolean = true;
-    private showWireframe: boolean = false;
-    private showVertexNormals: boolean = false;
-    private useFormCamera: boolean = false;
+    public bgColor: number = 0x000000;
+    public showTextures: boolean = true;
+    public showWireframe: boolean = false;
+    public showVertexNormals: boolean = false;
+    public useFormCamera: boolean = false;
 
     createModel(form: IFormObj) {
       const materials = this._parseMaterials(form);

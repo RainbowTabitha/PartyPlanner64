@@ -1,6 +1,34 @@
-PP64.models = (function() {
-  const ModelViewer = class ModelViewer extends React.Component {
-    constructor(props) {
+namespace PP64.models {
+  interface IModelViewerProps {
+    bgColor: number;
+    selectedAnim: number;
+    selectedModel: number;
+    selectedModelDir: number;
+    selectedModelFile: number;
+    showTextures: boolean;
+    showVertexNormals: boolean;
+    showWireframe: boolean;
+    useCamera: boolean;
+  }
+
+  interface IModelViewerState {
+    bgColor: number;
+    selectedAnim: string | null;
+    selectedAnimDir: number | null;
+    selectedAnimFile: number | null;
+    selectedModel: string;
+    selectedModelDir: number | null;
+    selectedModelFile: number | null;
+    showTextures: boolean;
+    showVertexNormals: boolean;
+    showWireframe: boolean;
+    useCamera: boolean;
+  }
+
+  export class ModelViewer extends React.Component<IModelViewerProps, IModelViewerState> {
+    private modelToolbar: ModelToolbar | null = null;
+
+    constructor(props: IModelViewerProps) {
       super(props);
 
       this.state = {
@@ -25,9 +53,9 @@ PP64.models = (function() {
           let file = PP64.fs.mainfs.get(d, f);
           if (PP64.utils.FORM.isForm(file)) {
             const name = d + "/" + f;
-            this.state.selectedModel = name;
-            this.state.selectedModelDir = d;
-            this.state.selectedModelFile = f;
+            (this as any).state.selectedModel = name;
+            (this as any).state.selectedModelDir = d;
+            (this as any).state.selectedModelFile = f;
             return;
           }
         }
@@ -36,7 +64,7 @@ PP64.models = (function() {
 
     render() {
       return (
-        <div className="modelViewerContainer" tabIndex="-1"
+        <div className="modelViewerContainer" tabIndex={-1}
           onKeyDownCapture={this.onKeyDown}>
           <ModelToolbar
             ref={(c) => { this.modelToolbar = c }}
@@ -69,7 +97,7 @@ PP64.models = (function() {
       );
     }
 
-    onModelSelected = (model) => {
+    onModelSelected = (model: string) => {
       const pieces = model.match(/^(\d+)\/(\d+)/);
       if (!pieces)
         throw `Could not parse selected model string ${this.props.selectedModel}`;
@@ -85,10 +113,10 @@ PP64.models = (function() {
         selectedAnim: "",
         selectedAnimDir: null,
         selectedAnimFile: null,
-      });
+      } as any);
     }
 
-    onAnimSelected = (anim) => {
+    onAnimSelected = (anim: string) => {
       if (!anim) {
         this.setState({
           selectedAnim: "",
@@ -109,20 +137,20 @@ PP64.models = (function() {
         selectedAnim: anim,
         selectedAnimDir: dir,
         selectedAnimFile: file,
-      });
+      } as any);
     }
 
-    onBgColorChange = (color) => {
+    onBgColorChange = (color: number) => {
       this.setState({
         bgColor: color,
       });
     }
 
-    onFeatureChange = (features) => {
+    onFeatureChange = (features: any) => {
       this.setState(features);
     }
 
-    onKeyDown = (event) => {
+    onKeyDown = (event: any) => {
       if (event.key && this.modelToolbar) {
         const key = event.key.toLowerCase();
         if (key === "m") {
@@ -135,10 +163,28 @@ PP64.models = (function() {
     }
   };
 
-  let _modelRenderer;
-  let renderTimeout = null;
-  let camera, scene, renderer, controls, clock, mixer;
-  const ModelRenderer = class ModelRenderer extends React.Component {
+  let _modelRenderer: ModelRenderer | null = null;
+  let renderTimeout: any = null;
+  let camera: THREE.PerspectiveCamera | null = null;
+  let scene: THREE.Scene | null = null;
+  let renderer: THREE.WebGLRenderer | null = null;
+  let controls: THREE.OrbitControls | null = null;
+  let clock: THREE.Clock | null = null;
+  let mixer: THREE.AnimationMixer | null = null;
+
+  interface IModelRendererProps {
+    selectedAnimFile: number | null;
+    selectedAnimDir: number | null;
+    selectedModelDir: number | null;
+    selectedModelFile: number | null;
+    bgColor: number;
+    showTextures: boolean;
+    showVertexNormals: boolean;
+    showWireframe: boolean;
+    useCamera: boolean;
+  }
+
+  class ModelRenderer extends React.Component<IModelRendererProps> {
     state = {
       hasError: false
     }
@@ -155,7 +201,7 @@ PP64.models = (function() {
       );
     }
 
-    componentDidCatch(error, info) {
+    componentDidCatch(error: Error, info: any) {
       this.setState({ hasError: true });
       console.error(error, info);
     }
@@ -194,7 +240,7 @@ PP64.models = (function() {
 
     onWindowResize = () => {
       if (renderer && camera) {
-        const container = ReactDOM.findDOMNode(this);
+        const container = ReactDOM.findDOMNode(this) as HTMLElement;
         const height = container.offsetHeight;
         const width = container.offsetWidth;
 
@@ -230,16 +276,16 @@ PP64.models = (function() {
       renderer.dispose();
       renderer.forceContextLoss();
 
-      let container = ReactDOM.findDOMNode(this);
+      let container = ReactDOM.findDOMNode(this) as HTMLElement;
       if (renderer.domElement.offsetParent)
         container.removeChild(renderer.domElement);
 
-      renderer.context = undefined;
-      renderer.domElement = undefined;
+      (renderer as any).context = undefined;
+      (renderer as any).domElement = undefined;
       renderer = null;
     }
 
-    disposeTHREEObj(obj) {
+    disposeTHREEObj(obj: any) {
       if (!obj) {
         return;
       }
@@ -261,7 +307,7 @@ PP64.models = (function() {
           materialArray = obj.material;
         }
         if (materialArray) {
-          materialArray.forEach(function (mtrl, idx) {
+          materialArray.forEach(function (mtrl: any) {
             if (mtrl.map) mtrl.map.dispose();
             if (mtrl.lightMap) mtrl.lightMap.dispose();
             if (mtrl.bumpMap) mtrl.bumpMap.dispose();
@@ -290,7 +336,7 @@ PP64.models = (function() {
 
       const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
 
-      const container = ReactDOM.findDOMNode(this);
+      const container = ReactDOM.findDOMNode(this) as HTMLElement;
       const height = container.offsetHeight;
       const width = container.offsetWidth;
 
@@ -299,7 +345,7 @@ PP64.models = (function() {
 
       $$log(`Rendering model ${dir}/${file}`);
 
-      const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
+      const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file!))!;
 
       $$log("form", form);
 
@@ -322,7 +368,7 @@ PP64.models = (function() {
 
       if (this.props.selectedAnimDir !== null) {
         const [dir, file] = [this.props.selectedAnimDir, this.props.selectedAnimFile];
-        const mtnx = PP64.utils.MTNX.unpack(PP64.fs.mainfs.get(dir, file));
+        const mtnx = PP64.utils.MTNX.unpack(PP64.fs.mainfs.get(dir, file!))!;
         $$log("mtnx", mtnx);
 
         const animConverter = new PP64.utils.MtnxToThreeJs();
@@ -350,14 +396,14 @@ PP64.models = (function() {
     }
 
     renderModel() {
-      renderer.render(scene, camera);
+      renderer!.render(scene!, camera!);
     }
 
     animate() {
       if (!_modelRenderer || !renderer)
         return;
 
-      controls.update();
+      controls!.update();
 
       if (clock) {
         const delta = clock.getDelta();
@@ -380,7 +426,28 @@ PP64.models = (function() {
 		}
   };
 
-  const ModelToolbar = class ModelToolbar extends React.Component {
+  interface IModelToolbarProps {
+    bgColor: number;
+    selectedAnim: string | null;
+    selectedAnimDir: number | null;
+    selectedAnimFile: number | null;
+    selectedModel: string;
+    selectedModelDir: number | null;
+    selectedModelFile: number | null;
+    showTextures: boolean;
+    showVertexNormals: boolean;
+    showWireframe: boolean;
+    useCamera: boolean;
+    onBgColorChange(color: number): any;
+    onFeatureChange(feature: any): any;
+    onModelSelected(model: string): any;
+    onAnimSelected(animation: string): any;
+  }
+
+  class ModelToolbar extends React.Component<IModelToolbarProps> {
+    private animSelect: AnimSelect | null = null;
+    private modelSelect: ModelSelect | null = null;
+
     state = {}
 
     render() {
@@ -425,7 +492,14 @@ PP64.models = (function() {
     }
   };
 
-  const ModelSelect = class ModelSelect extends React.Component {
+  interface IModelSelectProps {
+    selectedModel: string;
+    onModelSelected(model: string): any;
+  }
+
+  class ModelSelect extends React.Component<IModelSelectProps> {
+    private selectEl: HTMLElement | null = null;
+
     state = {}
 
     render() {
@@ -453,7 +527,7 @@ PP64.models = (function() {
         this.selectEl.focus();
     }
 
-    modelSelected = (e) => {
+    modelSelected = (e: any) => {
       if (this.props.onModelSelected)
         this.props.onModelSelected(e.target.value);
     }
@@ -483,7 +557,15 @@ PP64.models = (function() {
     }
   };
 
-  const AnimSelect = class AnimSelect extends React.Component {
+  interface IAnimSelectProps {
+    selectedAnim: string | null;
+    selectedModelDir: number | null;
+    onAnimSelected(animation: string): any;
+  }
+
+  class AnimSelect extends React.Component<IAnimSelectProps> {
+    private selectEl: HTMLElement | null = null;
+
     state = {}
 
     render() {
@@ -501,7 +583,7 @@ PP64.models = (function() {
           Animation:
           <select
             ref={(e) => { this.selectEl = e }}
-            value={this.props.selectedAnim}
+            value={this.props.selectedAnim!}
             onChange={this.animSelected}>
             {options}
           </select>
@@ -514,13 +596,13 @@ PP64.models = (function() {
         this.selectEl.focus();
     }
 
-    animSelected = (e) => {
+    animSelected = (e: any) => {
       if (this.props.onAnimSelected)
         this.props.onAnimSelected(e.target.value);
     }
 
     getAnimEntries() {
-      let entries = [];
+      let entries: string[] = [];
 
       if (this.props.selectedModelDir === null)
         return entries; // No model selected
@@ -537,7 +619,7 @@ PP64.models = (function() {
       }
     }
 
-    getAnimationsInDir(d) {
+    getAnimationsInDir(d: number) {
       const entries = [];
       let dirFileCount = PP64.fs.mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
@@ -559,7 +641,12 @@ PP64.models = (function() {
     }
   };
 
-  const ModelBGColorSelect = class ModelBGColorSelect extends React.Component {
+  interface IModelBGColorSelectProps {
+    selectedColor: number;
+    onColorChange(color: number): any;
+  }
+
+  class ModelBGColorSelect extends React.Component<IModelBGColorSelectProps> {
     state = {}
 
     render() {
@@ -593,13 +680,21 @@ PP64.models = (function() {
       );
     }
 
-    onColorChange = (id, pressed) => {
+    onColorChange = (id: number, pressed: boolean) => {
       this.setState({ color: id });
       this.props.onColorChange(id);
     }
   };
 
-  const ModelFeatureSelect = class ModelFeatureSelect extends React.Component {
+  interface IModelFeatureSelectProps {
+    showVertexNormals: boolean;
+    showTextures: boolean;
+    showWireframe: boolean;
+    useCamera: boolean;
+    onFeatureChange(features: any): any;
+  }
+
+  class ModelFeatureSelect extends React.Component<IModelFeatureSelectProps> {
     state = {}
 
     render() {
@@ -635,7 +730,7 @@ PP64.models = (function() {
       );
     }
 
-    onShowTextureChange = (event) => {
+    onShowTextureChange = (event: any) => {
       const pressed = event.target.checked;
       if (!pressed && !this.props.showWireframe) {
         this.props.onFeatureChange({
@@ -650,7 +745,7 @@ PP64.models = (function() {
       }
     }
 
-    onShowWireframeChange = (event) => {
+    onShowWireframeChange = (event: any) => {
       const pressed = event.target.checked;
       if (!pressed && !this.props.showTextures) {
         this.props.onFeatureChange({
@@ -665,14 +760,14 @@ PP64.models = (function() {
       }
     }
 
-    onShowNormalsChange = (event) => {
+    onShowNormalsChange = (event: any) => {
       const pressed = event.target.checked;
       this.props.onFeatureChange({
         showVertexNormals: pressed,
       });
     }
 
-    onUseCameraChange = (event) => {
+    onUseCameraChange = (event: any) => {
       const pressed = event.target.checked;
       this.props.onFeatureChange({
         useCamera: pressed,
@@ -680,7 +775,12 @@ PP64.models = (function() {
     }
   };
 
-  const ModelExportObjButton = class ModelExportObjButton extends React.Component {
+  interface IModelExportObjButtonProps {
+    selectedModelDir: number | null;
+    selectedModelFile: number | null;
+  }
+
+  class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
     state = {}
 
     render() {
@@ -696,15 +796,15 @@ PP64.models = (function() {
     export = () => {
       const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
 
-      const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir, file));
+      const form = PP64.utils.FORM.unpack(PP64.fs.mainfs.get(dir!, file!))!;
 
       const converter = new PP64.utils.FormToThreeJs();
 
       const modelObj = converter.createModel(form);
 
-      GLTFUtils.exportGLTF(GLTFUtils.glTFAssetFromTHREE(modelObj), {
-        jsZip: JSZip,
-      }).then(blob => {
+      (window as any).GLTFUtils.exportGLTF((window as any).GLTFUtils.glTFAssetFromTHREE(modelObj), {
+        jsZip: (window as any).JSZip,
+      }).then((blob: Blob) => {
         saveAs(blob, `model-${dir}-${file}.zip`);
       });
 
@@ -714,8 +814,4 @@ PP64.models = (function() {
       // });
     }
   };
-
-  return {
-    ModelViewer,
-  };
-})();
+}
