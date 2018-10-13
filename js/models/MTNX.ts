@@ -73,7 +73,7 @@ namespace PP64.utils {
     static parseData(dataView: DataView, dataIndex: number, keyframeIndex: number) {
       const SIZEOF_FRAME_DATA = 3 * 4;
 
-      const data = Object.create(null);
+      const data: MTNX.IKeyframe = Object.create(null);
       data.value1 = dataView.getFloat32((dataIndex * 4) + (keyframeIndex * SIZEOF_FRAME_DATA));
       data.value2 = dataView.getFloat32((dataIndex * 4) + (keyframeIndex * SIZEOF_FRAME_DATA) + 4);
       data.value3 = dataView.getFloat32((dataIndex * 4) + (keyframeIndex * SIZEOF_FRAME_DATA) + 8);
@@ -111,7 +111,7 @@ namespace PP64.utils {
       objIndex: number;
       keyframeCount: number;
       d: any;
-      keyframes: IKeyframe;
+      keyframes: { [frame: number]: IKeyframe };
     }
 
     export interface IKeyframe {
