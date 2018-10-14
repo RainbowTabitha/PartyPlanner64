@@ -23,8 +23,6 @@ ADDIU SP SP 4`;
     hasError?: boolean;
   }
 
-  const CodeMirrorWrapper = PP64.components.CodeMirrorWrapper;
-
   export class CreateEventView extends React.Component<{}, ICreateEventViewState> {
     private _codemirror: PP64.components.CodeMirrorWrapper | null = null;
 
@@ -59,6 +57,7 @@ ADDIU SP SP 4`;
         );
       }
 
+      const CodeMirrorWrapper = PP64.components.CodeMirrorWrapper;
       return (
         <div className="createEventViewContainer">
           <CodeMirrorWrapper ref={(cm) => { this._codemirror = cm; }}
