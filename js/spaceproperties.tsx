@@ -2,14 +2,14 @@ namespace PP64.properties {
   interface ISpacePropertiesProps {
     boardType: PP64.types.BoardType;
     gameVersion: 1 | 2 | 3;
-    selectedSpaces: PP64.boards.ISpace[];
+    selectedSpaces: PP64.boards.ISpace[] | null;
   }
 
   export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
     state = { }
 
     onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
-      const selectedSpaces = this.props.selectedSpaces;
+      const selectedSpaces = this.props.selectedSpaces!;
       for (const space of selectedSpaces) {
         if (type !== undefined)
           space.type = type;
@@ -23,7 +23,7 @@ namespace PP64.properties {
     }
 
     onStarCheckChanged = (checked: boolean) => {
-      const selectedSpaces = this.props.selectedSpaces;
+      const selectedSpaces = this.props.selectedSpaces!;
       for (const space of selectedSpaces) {
         space.star = !!checked;
       }
@@ -32,14 +32,14 @@ namespace PP64.properties {
     }
 
     onEventAdded = (event: any) => {
-      const space = this.props.selectedSpaces[0];
+      const space = this.props.selectedSpaces![0];
       PP64.boards.addEventToSpace(space, event);
       PP64.renderer.render();
       this.forceUpdate();
     }
 
     onEventDeleted = (event: any) => {
-      const space = this.props.selectedSpaces[0];
+      const space = this.props.selectedSpaces![0];
       PP64.boards.removeEventFromSpace(space, event);
       PP64.renderer.render();
       this.forceUpdate();

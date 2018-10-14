@@ -1,14 +1,14 @@
 namespace PP64.models {
   interface IModelViewerProps {
-    bgColor: number;
-    selectedAnim: number;
-    selectedModel: number;
-    selectedModelDir: number;
-    selectedModelFile: number;
-    showTextures: boolean;
-    showVertexNormals: boolean;
-    showWireframe: boolean;
-    useCamera: boolean;
+    // bgColor: number;
+    // selectedAnim: number;
+    // selectedModel: number;
+    // selectedModelDir: number;
+    // selectedModelFile: number;
+    // showTextures: boolean;
+    // showVertexNormals: boolean;
+    // showWireframe: boolean;
+    // useCamera: boolean;
   }
 
   interface IModelViewerState {
@@ -100,7 +100,7 @@ namespace PP64.models {
     onModelSelected = (model: string) => {
       const pieces = model.match(/^(\d+)\/(\d+)/);
       if (!pieces)
-        throw `Could not parse selected model string ${this.props.selectedModel}`;
+        throw `Could not parse selected model string ${this.state.selectedModel}`;
 
       const [, dir, file] = pieces;
 

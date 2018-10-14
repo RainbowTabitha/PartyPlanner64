@@ -395,7 +395,7 @@ namespace PP64.renderer {
   }
 
   /** Adds a glow around the selected spaces in the editor. */
-  function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, spaces?: PP64.boards.ISpace[]) {
+  function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, spaces?: PP64.boards.ISpace[] | null) {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!spaces || !spaces.length)
@@ -601,7 +601,7 @@ namespace PP64.renderer {
 
   interface BoardSelectedSpacesProps {
     board: PP64.boards.IBoard;
-    selectedSpaces?: PP64.boards.ISpace[]
+    selectedSpaces?: PP64.boards.ISpace[] | null;
   }
 
   class BoardSelectedSpaces extends React.Component<BoardSelectedSpacesProps> {
@@ -766,7 +766,7 @@ namespace PP64.renderer {
 
   interface IEditorProps {
     board: PP64.boards.IBoard;
-    selectedSpaces: PP64.boards.ISpace[];
+    selectedSpaces: PP64.boards.ISpace[] | null;
   }
 
   export const Editor = class Editor extends React.Component<IEditorProps> {
