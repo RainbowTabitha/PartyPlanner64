@@ -1,7 +1,5 @@
-PP64.ns("events");
-
-Object.assign(PP64.events, (function() {
-  let _createEventViewInstance;
+namespace PP64.events {
+  let _createEventViewInstance: CreateEventView | null = null;
 
   const _defaultEventAsm = `; NAME:
 ; GAMES:
@@ -16,11 +14,24 @@ LW RA 0(SP)
 JR RA
 ADDIU SP SP 4`;
 
-  const CreateEventView = class CreateEventView extends React.Component {
-    constructor(props) {
+  interface ICreateEventViewState {
+    eventName: string,
+    supportedGames: PP64.types.Game[],
+    executionType: PP64.types.EventExecutionType,
+    asm: string,
+    parameters: PP64.adapters.events.ICustomEventParameter[];
+    hasError?: boolean;
+  }
+
+  const CodeMirrorWrapper = PP64.components.CodeMirrorWrapper;
+
+  export class CreateEventView extends React.Component<{}, ICreateEventViewState> {
+    private _codemirror: PP64.components.CodeMirrorWrapper | null = null;
+
+    constructor(props: {}) {
       super(props);
 
-      const currentEvent = PP64.app.getCurrentEvent();
+      const currentEvent = PP64.app.getCurrentEvent() as PP64.adapters.events.ICustomEvent;
       if (currentEvent) {
         this.state = {
           eventName: currentEvent.name,
@@ -48,10 +59,9 @@ ADDIU SP SP 4`;
         );
       }
 
-      const CodeMirror = PP64.components.CodeMirrorWrapper;
       return (
         <div className="createEventViewContainer">
-          <CodeMirror ref={(cm) => { this._codemirror = cm; }}
+          <CodeMirrorWrapper ref={(cm) => { this._codemirror = cm; }}
             className="eventcodemirror"
             value={this.state.asm}
             onChange={this.onAsmChange} />
@@ -76,18 +86,18 @@ ADDIU SP SP 4`;
       _createEventViewInstance = null;
     }
 
-    onEventNameChange = (eventName) => {
+    onEventNameChange = (eventName: string) => {
       const newState = { ...this.state, eventName };
       this.setState({ eventName });
       this.syncTextToStateVars(newState, this.state.asm);
     }
 
-    onAsmChange = (asm) => {
+    onAsmChange = (asm: string) => {
       this.setState({ asm });
       this.syncStateVarsToText(asm);
     }
 
-    onGameToggleClicked = (id, pressed) => {
+    onGameToggleClicked = (id: any, pressed: boolean) => {
       const supportedGames = this.state.supportedGames;
       const gameIndex = supportedGames.indexOf(id);
 
@@ -113,21 +123,21 @@ ADDIU SP SP 4`;
       }
     }
 
-    onExecTypeToggleClicked = (id, pressed) => {
+    onExecTypeToggleClicked = (id: any, pressed: boolean) => {
       let newState = { ...this.state };
       newState.executionType = id;
       this.setState({ executionType: id });
       this.syncTextToStateVars(newState, this.state.asm);
     }
 
-    onAddEventParameter = (entry) => {
+    onAddEventParameter = (entry: PP64.adapters.events.ICustomEventParameter) => {
       let newState = { ...this.state };
       newState.parameters = [...this.state.parameters, entry];
       this.setState(newState);
       this.syncTextToStateVars(newState, this.state.asm);
     }
 
-    onRemoveEventParameter = (removedEntry) => {
+    onRemoveEventParameter = (removedEntry: PP64.adapters.events.ICustomEventParameter) => {
       let newState = { ...this.state };
       newState.parameters = this.state.parameters.filter(entry => {
         return entry.name !== removedEntry.name;
@@ -153,7 +163,7 @@ ADDIU SP SP 4`;
     }
 
     /** Ensures the ASM text includes the discrete properties. */
-    syncTextToStateVars = (newState, existingAsm) => {
+    syncTextToStateVars = (newState: ICreateEventViewState, existingAsm: string) => {
       let newAsm = this.__clearDiscreteProperties(existingAsm, [
         "NAME", "GAMES", "EXECUTION", "PARAM"
       ]);
@@ -171,8 +181,8 @@ ADDIU SP SP 4`;
     }
 
     /** Pulls out discrete properties from the ASM text back into state. */
-    syncStateVarsToText = (asm) => {
-      let value = this.__readDiscreteProperty(asm, "NAME");
+    syncStateVarsToText = (asm: string) => {
+      let value: any | null = this.__readDiscreteProperty(asm, "NAME");
       if (value !== null) {
         this.setState({ eventName: (value || "").trim() });
       }
@@ -193,7 +203,7 @@ ADDIU SP SP 4`;
       }
     }
 
-    __clearDiscreteProperties(asm, properties) {
+    __clearDiscreteProperties(asm: string, properties: string[]) {
       properties.forEach(propertyName => {
         const regex = new RegExp("^\\s*[;\\/]+\\s*" + propertyName + ":.*[\r\n]*", "gim");
         asm = asm.replace(regex, "");
@@ -201,24 +211,24 @@ ADDIU SP SP 4`;
       return asm;
     }
 
-    __writeDiscreteProperty(asm, propName, value) {
+    __writeDiscreteProperty(asm: string, propName: string, value: string) {
       return `; ${propName}: ${value}\n` + asm;
     }
 
-    __writeDiscretePropertyArray(asm, propName, values) {
+    __writeDiscretePropertyArray(asm: string, propName: string, values: string[]) {
       for (let i = values.length - 1; i >= 0; i--) {
         asm = `; ${propName}: ${values[i]}\n` + asm;
       }
       return asm;
     }
 
-    __readDiscreteProperty(asm, propName) {
+    __readDiscreteProperty(asm: string, propName: string) {
       return PP64.adapters.events.CustomAsmHelper.readDiscreteProperty(asm, propName);
     }
 
     promptExit = () => {
       const asm = this.state.asm;
-      const oldEvent = PP64.adapters.events.getEvent(this.state.eventName.toUpperCase());
+      const oldEvent = PP64.adapters.events.getEvent(this.state.eventName.toUpperCase()) as PP64.adapters.events.ICustomEvent;
       if (!oldEvent || (oldEvent.asm && oldEvent.asm !== asm)) {
         return !!window.confirm("Are you sure you want to exit without saving the event?");
       }
@@ -226,11 +236,19 @@ ADDIU SP SP 4`;
     }
   }
 
-  const EventDetailsForm = class EventDetailsForm extends React.Component {
-    constructor(props) {
-      super(props);
-    }
+  interface IEventDetailsFormProps {
+    name: string;
+    supportedGames: PP64.types.Game[];
+    executionType: PP64.types.EventExecutionType;
+    parameters: PP64.adapters.events.ICustomEventParameter[];
+    onGameToggleClicked(id: any, pressed: boolean): any;
+    onExecTypeToggleClicked(id: any, pressed: boolean): any;
+    onAddEventParameter(parameter: PP64.adapters.events.ICustomEventParameter): any;
+    onRemoveEventParameter(parameter: PP64.adapters.events.ICustomEventParameter): any;
+    onEventNameChange(name: string): any;
+  }
 
+  class EventDetailsForm extends React.Component<IEventDetailsFormProps> {
     render() {
       const gameToggles = [
         { id: $gameType.MP1_USA, text: "MP1 USA", selected: this._gameSupported($gameType.MP1_USA) },
@@ -276,20 +294,22 @@ ADDIU SP SP 4`;
       );
     }
 
-    onEventNameChange = (event) => {
+    onEventNameChange = (event: any) => {
       this.props.onEventNameChange(event.target.value);
     }
 
-    _gameSupported = (game) => {
+    _gameSupported = (game: PP64.types.Game) => {
       return this.props.supportedGames.indexOf(game) >= 0;
     }
   }
 
-  const EventParametersList = class EventParametersList extends React.Component {
-    constructor(props) {
-      super(props);
-    }
+  interface IEventParametersListProps {
+    parameters: PP64.adapters.events.ICustomEventParameter[];
+    onAddEventParameter(entry: PP64.adapters.events.ICustomEventParameter): any;
+    onRemoveEventParameter(entry: PP64.adapters.events.ICustomEventParameter): any;
+  }
 
+  class EventParametersList extends React.Component<IEventParametersListProps> {
     render() {
       const entries = this.props.parameters.map(entry => {
         return (
@@ -312,11 +332,12 @@ ADDIU SP SP 4`;
     }
   }
 
-  const EventParametersEntry = class EventParametersEntry extends React.Component {
-    constructor(props) {
-      super(props);
-    }
+  interface IEventParametersEntryProps {
+    entry: PP64.adapters.events.ICustomEventParameter;
+    onRemoveEntry(entry: PP64.adapters.events.ICustomEventParameter): any;
+  }
 
+  class EventParametersEntry extends React.Component<IEventParametersEntryProps> {
     render() {
       const { type, name } = this.props.entry;
 
@@ -337,7 +358,11 @@ ADDIU SP SP 4`;
     }
   }
 
-  const EventParametersAddNewEntry = class EventParametersAddNewEntry extends React.Component {
+  interface IEventParametersAddNewEntryProps {
+    onAddEntry(entry: PP64.adapters.events.ICustomEventParameter): any;
+  }
+
+  class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewEntryProps> {
     state = {
       selectedType: "",
       name: "",
@@ -363,7 +388,7 @@ ADDIU SP SP 4`;
       );
     }
 
-    onNameChange = (event) => {
+    onNameChange = (event: any) => {
       const newName = event.target.value;
 
       // Can only contain valid characters for a assembler label
@@ -373,7 +398,7 @@ ADDIU SP SP 4`;
       this.setState({ name: newName });
     }
 
-    onTypeChange = (event) => {
+    onTypeChange = (event: any) => {
       this.setState({ selectedType: event.target.value });
     }
 
@@ -392,57 +417,53 @@ ADDIU SP SP 4`;
     }
   }
 
-  return {
-    CreateEventView,
+  export function saveEvent() {
+    const eventName = _createEventViewInstance!.getEventName();
+    const supportedGames = _createEventViewInstance!.getSupportedGames();
+    const executionType = _createEventViewInstance!.getExecutionType();
+    const asm = _createEventViewInstance!.getEventAsm();
 
-    saveEvent: function() {
-      const eventName = _createEventViewInstance.getEventName();
-      const supportedGames = _createEventViewInstance.getSupportedGames();
-      const executionType = _createEventViewInstance.getExecutionType();
-      const asm = _createEventViewInstance.getEventAsm();
+    if (!eventName) {
+      PP64.app.showMessage("An event name must be specified.");
+      return;
+    }
 
-      if (!eventName) {
-        PP64.app.showMessage("An event name must be specified.");
-        return;
-      }
+    const existingEvent = PP64.adapters.events.getEvent(eventName);
+    if (existingEvent && !existingEvent.custom) {
+      PP64.app.showMessage("The event name collides with a reserved event name from the original boards.");
+      return;
+    }
 
-      const existingEvent = PP64.adapters.events.getEvent(eventName);
-      if (existingEvent && !existingEvent.custom) {
-        PP64.app.showMessage("The event name collides with a reserved event name from the original boards.");
-        return;
-      }
+    if (!supportedGames.length) {
+      PP64.app.showMessage("At least one game must be supported.");
+      return;
+    }
+    if (!asm) {
+      PP64.app.showMessage("No assembly code was provided.");
+      return;
+    }
 
-      if (!supportedGames.length) {
-        PP64.app.showMessage("At least one game must be supported.");
-        return;
-      }
-      if (!asm) {
-        PP64.app.showMessage("No assembly code was provided.");
-        return;
-      }
+    try {
+      PP64.adapters.events.createCustomEvent(asm);
+    }
+    catch (e) {
+      PP64.app.showMessage(e.toString());
+    }
+  }
 
-      try {
-        PP64.adapters.events.createCustomEvent(asm);
-      }
-      catch (e) {
-        PP64.app.showMessage(e.toString());
-      }
-    },
+  export function createEventPromptExit() {
+    if (_createEventViewInstance) {
+      return _createEventViewInstance.promptExit();
+    }
+  }
 
-    createEventPromptExit: function() {
-      if (_createEventViewInstance) {
-        return _createEventViewInstance.promptExit();
-      }
-    },
-
-    /**
-     * Get the supported games for the event currently being edited.
-     */
-    getActiveEditorSupportedGames: function() {
-      if (_createEventViewInstance) {
-        return _createEventViewInstance.getSupportedGames();
-      }
-      return [];
-    },
-  };
-})());
+  /**
+   * Get the supported games for the event currently being edited.
+   */
+  export function getActiveEditorSupportedGames() {
+    if (_createEventViewInstance) {
+      return _createEventViewInstance.getSupportedGames();
+    }
+    return [];
+  }
+}

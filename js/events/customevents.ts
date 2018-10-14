@@ -6,7 +6,7 @@ namespace PP64.adapters.events {
 
   export interface ICustomEvent extends IEvent {
     asm: string;
-    parameters?: ICustomEventParameter[];
+    parameters: ICustomEventParameter[];
   }
 
   export const CustomAsmHelper = {
@@ -32,7 +32,7 @@ namespace PP64.adapters.events {
       return matches;
     },
 
-    readSupportedGames: function(asm: string) {
+    readSupportedGames: function(asm: string): PP64.types.Game[] | null {
       let value = CustomAsmHelper.readDiscreteProperty(asm, "GAMES");
       if (value !== null) {
         let ids: string[] = value.trim().split(",");

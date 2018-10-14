@@ -61,6 +61,7 @@ js/boardproperties.js
 js/boards.js
 js/boot.js
 js/controls.js
+js/createevent.js
 js/details.js
 js/eventsview.js
 js/gameshark.js

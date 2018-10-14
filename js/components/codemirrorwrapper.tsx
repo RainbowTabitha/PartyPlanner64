@@ -12,7 +12,7 @@ namespace PP64.components {
    * Wrapper around the non-React CodeMirror library.
    * Heavily based off of https://github.com/JedWatson/react-codemirror
    */
-  export const CodeMirrorWrapper = class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> {
+  export class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> {
     private el: HTMLElement | null = null;
     private codemirror: CodeMirror.Editor | null = null;
 

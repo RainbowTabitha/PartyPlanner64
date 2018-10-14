@@ -62,7 +62,7 @@ namespace PP64.controls {
   export interface IToggleGroupProps {
     onToggleClick: (id: string | number, pressed: boolean) => any;
     groupCssClass?: string;
-    items: { id: string, selected: boolean, title: string, text: string }[];
+    items: { id: string | number, selected: boolean, title?: string, text: string }[];
     allowDeselect?: boolean;
   }
 

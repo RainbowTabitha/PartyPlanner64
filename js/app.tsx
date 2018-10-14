@@ -79,8 +79,7 @@ namespace PP64.app {
           mainView = <PP64.events.EventsView />;
           break;
         case PP64.types.View.CREATEEVENT:
-          const CreateEventView = (PP64 as any).events.CreateEventView;
-          mainView = <CreateEventView />;
+          mainView = <PP64.events.CreateEventView />;
           break;
         case PP64.types.View.STRINGS:
           mainView = <PP64.strings.StringsViewer />;

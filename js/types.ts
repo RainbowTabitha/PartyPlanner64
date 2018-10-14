@@ -164,13 +164,14 @@ namespace PP64.types {
     throw new Error(`Unknown execution type ${executionType}.`);
   }
 
-  export function getExecutionTypeByName(name: string) {
+  export function getExecutionTypeByName(name: string): PP64.types.EventExecutionType | null {
     switch (name) {
       case "Direct":
         return 1;
       case "Process":
         return 2;
     }
+    return null;
   }
 
   export enum ValidationLevel {
