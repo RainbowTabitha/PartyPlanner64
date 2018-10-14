@@ -171,7 +171,7 @@ namespace PP64.fs.strings {
     }
   }
 
-  export function _strToBytes(str: string) {
+  export function _strToBytes(str: string): number[] {
     let map = (PP64 as any).adapters.getROMAdapter().getCharacterMap();
     let result = [];
     let [curIdx, len] = [0, str.length];
@@ -199,7 +199,7 @@ namespace PP64.fs.strings {
       if (typeof lastMatch === "string")
         lastMatch = parseInt(lastMatch);
 
-      result.push(lastMatch);
+      result.push(lastMatch!);
       curIdx += lastMatchLen;
     }
 

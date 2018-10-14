@@ -1,8 +1,10 @@
-PP64.ns("strings");
+namespace PP64.strings {
+  interface IStringsViewerState {
+    hasError: boolean;
+  }
 
-PP64.strings = Object.assign((function() {
-  const StringsViewer = class StringsViewer extends React.Component {
-    constructor(props) {
+  export class StringsViewer extends React.Component<{}, IStringsViewerState> {
+    constructor(props: {}) {
       super(props);
 
       this.state = {
@@ -38,13 +40,19 @@ PP64.strings = Object.assign((function() {
       );
     }
 
-    componentDidCatch(error, info) {
+    componentDidCatch(error: Error, info: React.ErrorInfo) {
       this.setState({ hasError: true });
       console.error(error);
     }
   }
 
-  const StringEditWrapper = class StringEditWrapper extends React.Component {
+  interface IStringEditWrapperProps {
+    strIndex: number;
+  }
+
+  class StringEditWrapper extends React.Component<IStringEditWrapperProps> {
+    private editor: PP64.texteditor.MPEditor | null = null;
+
     state = {
       hasFocus: false,
     }
@@ -72,16 +80,16 @@ PP64.strings = Object.assign((function() {
 
     componentDidMount() {
       if (this.state.hasFocus)
-        this.editor.focus();
+        this.editor!.focus();
     }
 
     componentDidUpdate() {
       if (this.state.hasFocus)
-        this.editor.focus();
+        this.editor!.focus();
     }
 
-    onValueChanged = (id, val) => {
-      let game = PP64.romhandler.getGameVersion();
+    onValueChanged = (id: any, val: string) => {
+      let game = PP64.romhandler.getGameVersion()!;
       if (game === 3)
         return;
       else {
@@ -90,16 +98,16 @@ PP64.strings = Object.assign((function() {
       }
     }
 
-    onFocus = event => {
+    onFocus = () => {
       this.setState({ hasFocus: true });
     }
 
-    onBlur = event => {
+    onBlur = () => {
       this.setState({ hasFocus: false });
     }
   }
 
-  const StringEditorToolbar = class StringEditorToolbar extends React.Component {
+  class StringEditorToolbar extends React.Component {
     state = {}
 
     render() {
@@ -110,8 +118,4 @@ PP64.strings = Object.assign((function() {
       );
     }
   }
-
-  return {
-    StringsViewer,
-  };
-})());
+}

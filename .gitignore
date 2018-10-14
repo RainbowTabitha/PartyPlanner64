@@ -75,6 +75,7 @@ js/screenshot.js
 js/spaceproperties.js
 js/spaces.js
 js/settings.js
+js/strings.js
 js/texteditor.js
 js/toolbar.js
 js/toolwindow.js
