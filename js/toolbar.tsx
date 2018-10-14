@@ -150,7 +150,7 @@ namespace PP64.toolbar {
   }
 
   function _buttonClicked(type: PP64.types.Action) {
-    (PP64 as any).app.changeCurrentAction(type);
+    PP64.app.changeCurrentAction(type);
   }
 
   interface IToolbarProps {

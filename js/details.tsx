@@ -110,7 +110,7 @@ namespace PP64.details {
     switch (id) {
       case "detailBoardName":
         board.name = value;
-        (PP64 as any).app.refresh();
+        PP64.app.refresh();
         break;
       case "detailBoardDesc":
         board.description = value;
@@ -132,7 +132,7 @@ namespace PP64.details {
         break;
       case "detailBoardAudio":
         board.audioIndex = value;
-        (PP64 as any).app.refresh();
+        PP64.app.refresh();
         break;
       case "detailBoardLargeSceneBg":
         board.otherbg.largescene = value;
@@ -227,7 +227,7 @@ namespace PP64.details {
 
       if (Object.keys(colors).length > 256 || Object.keys(colors2).length > 256 ||
           Object.keys(colors3).length > 256 || Object.keys(colors4).length > 256) {
-        (PP64 as any).app.showMessage(`Sorry, but the palette limit for this image is 256 unique colors. For now, the image has been reduced to 8-bit, but most image editors should be able to reduce the palette for you with higher quality.`);
+        PP64.app.showMessage(`Sorry, but the palette limit for this image is 256 unique colors. For now, the image has been reduced to 8-bit, but most image editors should be able to reduce the palette for you with higher quality.`);
         PP64.utils.img.RGBA32.make8Bit(rgba32, 128, 64);
       }
     }

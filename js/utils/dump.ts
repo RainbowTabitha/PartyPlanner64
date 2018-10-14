@@ -46,7 +46,7 @@ namespace PP64.utils {
         });
       }, (error: any) => {
         $$log(error);
-        (PP64 as any).app.showMessage(`Something went wrong while loading the zip. ${error}`);
+        PP64.app.showMessage(`Something went wrong while loading the zip. ${error}`);
       });
     }
 

@@ -92,7 +92,7 @@ namespace PP64.properties {
     state = { }
 
     onEditDetails() {
-      (PP64 as any).app.changeView($viewType.DETAILS);
+      PP64.app.changeView($viewType.DETAILS);
     }
 
     render() {

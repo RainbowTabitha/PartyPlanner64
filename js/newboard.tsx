@@ -31,7 +31,7 @@ namespace PP64.newboard {
 
     submit = () => {
       if (this.state.type === PP64.types.BoardType.DUEL) {
-        (PP64 as any).app.showMessage("Duel board support is partially finished, coming soon!");
+        PP64.app.showMessage("Duel board support is partially finished, coming soon!");
         if (!$$debug)
           return;
       }

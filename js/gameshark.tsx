@@ -68,14 +68,14 @@ namespace PP64.patches.gameshark {
 
       const parsedCodes = PP64.patches.gameshark.Parser.parse(cheatText);
       if (!parsedCodes) {
-        (PP64 as any).app.showMessage("There was an error parsing the entered cheats");
+        PP64.app.showMessage("There was an error parsing the entered cheats");
         return;
       }
 
       const compiler = new PP64.patches.gameshark.Compiler();
       const codeBuffer = compiler.compile(parsedCodes);
       if (!codeBuffer) {
-        (PP64 as any).app.showMessage("There was an error compiling the entered cheats");
+        PP64.app.showMessage("There was an error compiling the entered cheats");
         return;
       }
 

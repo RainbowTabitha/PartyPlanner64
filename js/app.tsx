@@ -225,7 +225,7 @@ namespace PP64.app {
     return _instance.state.selectedSpaces;
   }
 
-  export function changeCurrentEvent(event: PP64.adapters.events.IEvent) {
+  export function changeCurrentEvent(event: PP64.adapters.events.IEvent | null) {
     _instance.setState({ currentEvent: event });
   }
 

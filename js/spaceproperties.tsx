@@ -668,11 +668,11 @@ namespace PP64.properties {
       }
       const value = parseInt(userValue);
       if (isNaN(value)) {
-        (PP64 as any).app.showMessage("The value entered could not be parsed into a number");
+        PP64.app.showMessage("The value entered could not be parsed into a number");
         return;
       }
       if (this.props.positiveOnly && value <= 0) {
-        (PP64 as any).app.showMessage("The value entered must be a positive number");
+        PP64.app.showMessage("The value entered must be a positive number");
         return;
       }
       this.props.onEventParameterSet(name, value);
@@ -755,7 +755,7 @@ namespace PP64.properties {
     }
 
     onParameterClicked = () => {
-      (PP64 as any).app.showMessage("To associate a space with this event, click and drag from this list entry and release over the target space.");
+      PP64.app.showMessage("To associate a space with this event, click and drag from this list entry and release over the target space.");
     }
   };
 

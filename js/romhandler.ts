@@ -57,13 +57,13 @@ namespace PP64 {
       this.byteSwapIfNeeded();
 
       if (!this.romRecognized()) {
-        (PP64 as any).app.showMessage("File is not recognized as any valid ROM.");
+        PP64.app.showMessage("File is not recognized as any valid ROM.");
         this.clear();
         return false;
       }
 
       if (!this.romSupported()) {
-        (PP64 as any).app.showMessage("This ROM is not supported right now.");
+        PP64.app.showMessage("This ROM is not supported right now.");
         this.clear();
         return false;
       }

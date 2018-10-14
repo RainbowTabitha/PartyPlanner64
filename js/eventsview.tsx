@@ -114,8 +114,8 @@ namespace PP64.events {
     }
 
     onEditEvent = () => {
-      (PP64 as any).app.changeCurrentEvent(this.props.event);
-      (PP64 as any).app.changeView($viewType.CREATEEVENT);
+      PP64.app.changeCurrentEvent(this.props.event);
+      PP64.app.changeView($viewType.CREATEEVENT);
     }
 
     onExportEvent = () => {

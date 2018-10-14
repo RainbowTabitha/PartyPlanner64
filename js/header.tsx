@@ -109,18 +109,18 @@ namespace PP64.header {
       case $actType.ROM_UNLOAD:
         PP64.romhandler.clear();
         PP64.boards.clearBoardsFromROM();
-        (PP64 as any).app.boardsChanged();
+        PP64.app.boardsChanged();
         PP64.boards.setCurrentBoard(0);
-        (PP64 as any).app.romLoadedChanged();
+        PP64.app.romLoadedChanged();
         break;
       case $actType.ROM_SAVE:
-        (PP64 as any).app.blockUI(true);
+        PP64.app.blockUI(true);
         setTimeout(() => {
           PP64.romhandler.saveROM();
-          (PP64 as any).app.blockUI(false);
+          PP64.app.blockUI(false);
 
           setTimeout(() => {
-            (PP64 as any).app.showMessageHTML(`Before trying the game, review
+            PP64.app.showMessageHTML(`Before trying the game, review
               <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup" target="_blank">emulator setup instructions</a>.`);
           }, 0);
         }, 0);
@@ -137,27 +137,27 @@ namespace PP64.header {
         PP64.boards.copyCurrentBoard();
         break;
       case $actType.BOARD_DETAILS:
-        (PP64 as any).app.changeView($viewType.DETAILS);
+        PP64.app.changeView($viewType.DETAILS);
         break;
       case $actType.BOARD_EDITOR:
-        (PP64 as any).app.changeView($viewType.EDITOR);
+        PP64.app.changeView($viewType.EDITOR);
         break;
       case $actType.SETTINGS:
-        (PP64 as any).app.changeView($viewType.SETTINGS);
+        PP64.app.changeView($viewType.SETTINGS);
         break;
       case $actType.ABOUT:
-        (PP64 as any).app.changeView($viewType.ABOUT);
+        PP64.app.changeView($viewType.ABOUT);
         break;
       case $actType.MODEL_VIEWER:
-        (PP64 as any).app.changeView($viewType.MODELS);
+        PP64.app.changeView($viewType.MODELS);
         break;
       case $actType.EVENTS:
-        (PP64 as any).app.changeView($viewType.EVENTS);
+        PP64.app.changeView($viewType.EVENTS);
         break;
       case $actType.BACK_TO_EVENTS:
         if ((PP64 as any).events.createEventPromptExit()) {
-          (PP64 as any).app.changeCurrentEvent(null);
-          (PP64 as any).app.changeView($viewType.EVENTS);
+          PP64.app.changeCurrentEvent(null);
+          PP64.app.changeView($viewType.EVENTS);
         }
         break;
       case $actType.EVENT_LOAD:
@@ -167,13 +167,13 @@ namespace PP64.header {
         (PP64 as any).events.saveEvent();
         break;
       case $actType.CREATEEVENT:
-        (PP64 as any).app.changeView($viewType.CREATEEVENT);
+        PP64.app.changeView($viewType.CREATEEVENT);
         break;
       case $actType.STRINGS_EDITOR:
-        (PP64 as any).app.changeView($viewType.STRINGS);
+        PP64.app.changeView($viewType.STRINGS);
         break;
       case $actType.PATCHES:
-        (PP64 as any).app.changeView($viewType.PATCHES);
+        PP64.app.changeView($viewType.PATCHES);
         break;
       case $actType.SET_BG:
         (PP64 as any).utils.input.openFile("image/*", bgSelected);
@@ -182,7 +182,7 @@ namespace PP64.header {
         (PP64 as any).utils.input.openFile(".zip", dumpSelected);
         break;
       case $actType.DUMP_SAVE:
-        (PP64 as any).app.blockUI(true);
+        PP64.app.blockUI(true);
         PP64.utils.dump.create(dumpCreated);
         break;
       default:
@@ -195,11 +195,11 @@ namespace PP64.header {
     if (!file)
       return;
 
-    (PP64 as any).app.blockUI(true);
+    PP64.app.blockUI(true);
     let reader = new FileReader();
     reader.onload = (e: any) => {
       if (!e.target.result) {
-        (PP64 as any).app.blockUI(false);
+        PP64.app.blockUI(false);
         return;
       }
 
@@ -208,13 +208,13 @@ namespace PP64.header {
         return; // The ROM handler showed a message, so we don't need to unblock UI
 
       promise.then(value => {
-        (PP64 as any).app.romLoadedChanged();
+        PP64.app.romLoadedChanged();
         PP64.boards.loadBoardsFromROM();
-        (PP64 as any).app.blockUI(false);
+        PP64.app.blockUI(false);
         $$log("ROM loaded");
       }, reason => {
         $$log(`Error loading ROM: ${reason}`);
-        (PP64 as any).app.showMessage("Error loading the ROM file.");
+        PP64.app.showMessage("Error loading the ROM file.");
       });
     };
     reader.readAsArrayBuffer(file);
@@ -266,7 +266,7 @@ namespace PP64.header {
           PP64.adapters.events.createCustomEvent(asm);
           (PP64 as any).events.refreshEventsView();
         } catch (e) {
-          (PP64 as any).app.showMessage("Event file load failed. " + e.toString());
+          PP64.app.showMessage("Event file load failed. " + e.toString());
           return;
         }
       };
@@ -289,7 +289,7 @@ namespace PP64.header {
 
   function dumpCreated(blob: Blob) {
     saveAs(blob, `mp${PP64.romhandler.getGameVersion()}-files.zip`);
-    (PP64 as any).app.blockUI(false);
+    PP64.app.blockUI(false);
   }
 
   function getActions(view: PP64.types.View, board: PP64.boards.IBoard, romLoaded: boolean) {
@@ -600,7 +600,7 @@ namespace PP64.header {
         let adapter = (PP64 as any).adapters.getROMAdapter();
         if (!adapter)
           return;
-        (PP64 as any).app.blockUI(true);
+        PP64.app.blockUI(true);
         let currentBoard = PP64.boards.getCurrentBoard();
         let promise = adapter.overwriteBoard(this.props.boardIndex, currentBoard);
         promise.then(() => {
@@ -619,10 +619,10 @@ namespace PP64.header {
             "event_label": currentBoard.name,
           });
 
-          (PP64 as any).app.blockUI(false);
+          PP64.app.blockUI(false);
         }, (reason: any) => {
           $$log(`Error overriding board: ${reason}`);
-          (PP64 as any).app.showMessage("Error overwriting the board.");
+          PP64.app.showMessage("Error overwriting the board.");
         });
       }
     }
