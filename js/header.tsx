@@ -437,9 +437,7 @@ namespace PP64.header {
   const HeaderLogo = class HeaderLogo extends React.Component {
     render() {
       return (
-        <a href=".">
-          <img className="headerLogo" src="img/header/logo.png" alt="PartyPlanner64 Logo" />
-        </a>
+        <img className="headerLogo" src="img/header/logo.png" alt="PartyPlanner64 Logo" />
       );
     }
   };

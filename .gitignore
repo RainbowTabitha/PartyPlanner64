@@ -1,4 +1,3 @@
-out/
 node_modules/
 
 dist/js/*
@@ -6,6 +5,13 @@ dist/js/*
 
 dist/css/*
 !dist/css/app.min.css
+
+dist/package.json
+dist/package-lock.json
+
+electron/dist
+
+TOKENS
 
 # TypeScript generated
 js/adapter/boarddef.js

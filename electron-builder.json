@@ -1,0 +1,24 @@
+{
+  "appId": "org.partyplanner64",
+  "directories": {
+    "app": "dist",
+    "output": "electron/dist",
+    "buildResources": "electron/build"
+  },
+  "win": {
+    "target": [
+      { "target": "nsis", "arch": "x64" },
+      { "target": "zip", "arch": "x64" }
+    ]
+  },
+  "linux": {
+    "target": [
+      { "target": "AppImage", "arch": "x64" },
+      { "target": "tar.gz", "arch": "x64" }
+    ]
+  },
+  "mac": {
+    "category": "public.app-category.utilities"
+  }
+}
+

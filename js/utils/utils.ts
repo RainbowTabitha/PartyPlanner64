@@ -463,3 +463,8 @@ namespace PP64.utils.img {
 var $$number = PP64.utils.number;
 var $$log = PP64.utils.debug.log;
 var $$hex = PP64.utils.debug.hex;
+
+var isElectron: boolean = (function() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.indexOf(' electron/') > -1;
+})();

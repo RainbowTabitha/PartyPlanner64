@@ -2,6 +2,8 @@
 
 const {app, BrowserWindow} = require("electron");
 
+require("electron-debug")({ enabled: true, showDevTools: false });
+
 let win;
 
 function createWindow() {
@@ -14,7 +16,6 @@ function createWindow() {
 
   win.loadURL(`file://${__dirname}/../index.html`);
 
-//  win.webContents.openDevTools();
   win.on("closed", () => {
     win = null;
   });

@@ -5,6 +5,7 @@ const cache = require("gulp-cached");
 const clean = require("gulp-clean");
 const cleanCSS = require('gulp-clean-css');
 const concat = require("gulp-concat");
+const del = require("del");
 //const imagemin = require('gulp-imagemin');
 const order = require('gulp-order');
 const preprocess = require('gulp-preprocess');
@@ -284,10 +285,10 @@ const DST_IMG = "dist/img";
 const SRC_FONT = ["css/fonts/*"];
 const DST_FONT = "dist/css/fonts";
 
-gulp.task("cleanhtml", function() {
-  return gulp.src(DST_HTML, { read: false })
-    .pipe(clean());
+gulp.task("cleandist", function() {
+  return del(["dist", "electron/dist"]);
 });
+
 gulp.task("copyhtml", function() {
   var JSLIB = LIB_JS.map(function(lib) { return JS_LIB_DEST + "/" + lib.dst });
   var CSSLIB = LIB_CSS.map(function(lib) { return CSS_LIB_DEST + "/" + lib.dst });
@@ -318,10 +319,6 @@ gulp.task("copyhtml-prod", function() {
     .pipe(gulp.dest("dist"));
 });
 
-gulp.task("cleanimg", function() {
-  return gulp.src(DST_IMG, { read: false })
-    .pipe(clean());
-});
 gulp.task("copyimg", function() {
   return gulp.src(SRC_IMG, { base: "./img" })
     .pipe(cache("img"))
@@ -333,10 +330,6 @@ gulp.task("copyimg-prod", function() {
     .pipe(gulp.dest(DST_IMG));
 });
 
-gulp.task("cleancss", function() {
-  return gulp.src(DST_CSS, { read: false })
-    .pipe(clean());
-});
 gulp.task("copycss", function() {
   return gulp.src(SRC_CSS, { base: "./css" })
     .pipe(cache("css"))
@@ -364,16 +357,11 @@ LIB_CSS.forEach(function(lib) {
 });
 gulp.task("copycsslib", csslibtasks);
 
-// No cleanfont, cleancss covers it
 gulp.task("copyfont", function() {
   return gulp.src(SRC_FONT, { base: "./css/fonts" })
     .pipe(gulp.dest(DST_FONT));
 });
 
-gulp.task("cleanjs", function() {
-  return gulp.src(DST_JS, { read: false })
-    .pipe(clean());
-});
 gulp.task("copyjs", function() {
   return gulp.src(SRC_JS, { base: "./js" })
     .pipe(cache("js"))
@@ -454,10 +442,6 @@ gulp.task("createdistzip", () => {
     .pipe(zip("PP64-" + (today.getMonth()+1) + "-" + today.getDate() + "-" + today.getFullYear() + ".zip"))
     .pipe(gulp.dest("dist"));
 });
-gulp.task("cleandistzip", function() {
-  return gulp.src("dist/*.zip", { read: false })
-    .pipe(clean());
-});
 
 const convertSymbols = function (text, options) {
   const sourcePath = options.sourcePath;
@@ -527,7 +511,7 @@ gulp.task("symbols", (callback) => {
   });
 });
 
-gulp.task("clean", ["cleanhtml", "cleanimg", "cleancss", "cleanjs", "cleandistzip"]);
+gulp.task("clean", ["cleandist"]);
 
 gulp.task("build", function(callback) {
   runSequence("clean", "buildts", [
@@ -559,15 +543,31 @@ gulp.task("copy-electron-boot", function() {
     .pipe(gulp.dest(DST_JS));
 });
 
-gulp.task("build-prod-electron", function(callback) {
-  runSequence("copy-electron-boot",
-  //"pack-electron",
-  callback);
+gulp.task("copy-electron-packagejson", function() {
+  return gulp.src("package.json")
+    .pipe(gulp.dest("dist"));
+});
+
+gulp.task("electron-package", function(callback) {
+  runSequence("build", [
+      "copy-electron-boot",
+      "copy-electron-packagejson"
+    ],
+    "electron-build",
+    callback
+  );
+});
+
+gulp.task("electron-build", function(callback) {
+  exec("npm run electron", function(err, stdout, stderr) {
+    process.stdout.write("electron-build done, " + err + ", " + stdout + ", " + stderr);
+    callback();
+  });
 });
 
 gulp.task("publish", function(callback) {
   exec("git subtree push --prefix dist origin gh-pages", function(err, stdout, stderr) {
-    // process.stdout.write("describe done, " + ervarr + ", " + stdout + ", " + stderr);
+    // process.stdout.write("describe done, " + err + ", " + stdout + ", " + stderr);
     callback();
   });
 });
@@ -580,5 +580,5 @@ gulp.task("watch", function() {
   gulp.watch(SRC_TS, ["buildts"]);
 });
 
-gulp.task("default", ["clean", "build"]);
-gulp.task("prod", ["clean", "build-prod"]);
+gulp.task("default", ["build"]);
+gulp.task("prod", ["build-prod"]);
