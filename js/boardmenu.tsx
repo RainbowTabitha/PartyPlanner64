@@ -74,7 +74,9 @@ namespace PP64.boardmenu {
         { title: 'Copy', fn: this.onCopyBoard },
         { title: 'Delete', fn: this.onDeleteBoard, visible: !PP64.boards.boardIsROM(this.props.board) },
       ];
-      (window as any).basicContext.show(items, event.nativeEvent);
+      // TODO: In Electron, basicContext is exported some weird place.
+      const basicContext = (window as any).basicContext || (window as any).module.exports;
+      basicContext.show(items, event.nativeEvent);
     }
 
     onDeleteBoard = () => {
@@ -137,7 +139,7 @@ namespace PP64.boardmenu {
     name: string;
   }
 
-  const BoardName = class BoardName extends React.Component<IBoardNameProps> {
+  class BoardName extends React.Component<IBoardNameProps> {
     state = { "editing": false }
 
     handleClick = () => {
@@ -161,7 +163,7 @@ namespace PP64.boardmenu {
     onDeleteBoard: Function;
   }
 
-  const BoardOptions = class BoardOptions extends React.Component<IBoardOptionsProps> {
+  class BoardOptions extends React.Component<IBoardOptionsProps> {
     handleClick = (event: any) => {
       event.preventDefault();
       let items = [
@@ -172,7 +174,10 @@ namespace PP64.boardmenu {
         // { },
         // { title: 'Logout', icon: 'ion-log-out', fn: this.onDeleteOption }
       ];
-      (window as any).basicContext.show(items, event.nativeEvent);
+
+      // TODO: In Electron, basicContext is exported some weird place.
+      const basicContext = (window as any).basicContext || (window as any).module.exports;
+      basicContext.show(items, event.nativeEvent);
     }
 
     render() {

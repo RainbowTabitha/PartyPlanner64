@@ -20,7 +20,7 @@ A ROM is not required to create and edit boards with PartyPlanner64, however to 
 * `Mario Party 2 (U).z64` ROM file (MD5 `04840612A35ECE222AFDB2DFBF926409`).
 * `Mario Party 3 (U).z64` ROM file (MD5 `76A8BBC81BC2060EC99C9645867237CC`).
 
-ROMs edited with PP64 are also supported by PartyPlanner64.
+ROMs that have been edited can also be re-opened.
 
 ROM files must be ran with Expansion Pak on hardware, emulators must be configured to use 8MB RAM or the game will crash.
 
@@ -45,16 +45,26 @@ To host a local copy of PartyPlanner64 clone the repository and do the following
 * Install Node.js and a package manager (npm or yarn).
 * Retrieve the dependencies for the editor and development.
     * `npm install --dev`
-    
+
       or
     * `yarn install`
 * `gulp` to copy the site in `dist/`.
     * `gulp prod` will build a minified production copy. The production build uses CDN assets when possible.
 * Open `index.html` from `dist/` to use the editor.
 
+With Chrome, you may need to run the `chrome` executable with the `--allow-file-access-from-files` flag to avoid cross domain permission issues related to working with local image files and Data URIs.
+
+### File Watching
+
 Before making changes, you can start `gulp watch` to monitor for file changes.
 
-With Chrome, you may need to run the `chrome` executable with the `--allow-file-access-from-files` flag to avoid cross domain permission issues related to working with local image files and Data URIs.
+    gulp watch
+
+### Electron Builds
+
+After setting up a local dev environment, run the following to create the various Electron builds.
+
+    gulp electron-package
 
 ## Contributors
 

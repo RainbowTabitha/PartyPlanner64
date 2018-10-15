@@ -425,7 +425,7 @@ gulp.task("version", function(callback) {
       var matchResult = verRegex.exec(versionNum);
       if (matchResult[0]) {
         versionNum = matchResult[1] + " (+" + matchResult[2] + " "
-          + "<a href='https://github.com/PartyPlanner64/PartyPlanner64/commit/"
+          + "<a target='_blank' href='https://github.com/PartyPlanner64/PartyPlanner64/commit/"
           + matchResult[3] + "'>" + matchResult[3] + "</a>)";
       }
       gulp.src(["./dist/js/about.js", "./dist/js/app.min.js"])
