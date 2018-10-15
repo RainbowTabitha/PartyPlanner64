@@ -288,7 +288,7 @@ const SRC_FONT = ["css/fonts/*"];
 const DST_FONT = "dist/css/fonts";
 
 gulp.task("cleandist", function() {
-  return del(["dist", "electron/dist"]);
+  return del(["dist"]);
 });
 
 gulp.task("copyhtml", function() {

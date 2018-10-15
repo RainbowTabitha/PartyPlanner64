@@ -1,6 +1,9 @@
 namespace PP64.about {
   export const About = class About extends React.Component {
-    state = {}
+    state = {
+      updateCheckInProgress: false,
+      foundUpdate: null, // true/false means we already searched.
+    }
 
     render() {
       let versionNum = "####VERSION####"; // Replaced during build.
@@ -13,12 +16,34 @@ namespace PP64.about {
       else
         mplText = "Visit";
 
+      let electronUpdate = null;
+      if (isElectron) {
+        if (this.state.foundUpdate === true) {
+          electronUpdate = (
+            <a className="aboutVersion" onClick={this.onStartUpdateClick} href="javascript:;">
+              {" "}
+              Update found! Click to install.
+            </a>
+          );
+        }
+        else {
+          electronUpdate = (
+            <a className="aboutVersion" onClick={this.onCheckForUpdatesClick} href="javascript:;">
+              {" "}
+              {this.state.updateCheckInProgress ? "Checking..." : "Check for Updates"}
+            </a>
+          );
+        }
+      }
+
       return (
         <div id="aboutForm">
           <div className="aboutHeader">
             <img src="img/logoloading.png" alt="PartyPlanner64" />
             <br />
             <span className="aboutVersion selectable">Version <span dangerouslySetInnerHTML={{__html: versionNum}}></span></span>
+            {isElectron && <br />}
+            {electronUpdate}
           </div>
           <br />
           <div className="aboutText">
@@ -58,6 +83,59 @@ namespace PP64.about {
           //    <li>Dominic</li>
           //  </ul>
           //</div>
+    }
+
+    componentDidMount() {
+      if (isElectron) {
+        const { ipcRenderer } = require("electron");
+        ipcRenderer.on("update-check-checking", this._onUpdateCheckStarted);
+        ipcRenderer.on("update-check-noupdate", this._onUpdateCheckNoUpdate);
+        ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+      }
+    }
+
+    componentWillUnmount() {
+      if (isElectron) {
+        const { ipcRenderer } = require("electron");
+        ipcRenderer.removeListener("update-check-checking", this._onUpdateCheckStarted);
+        ipcRenderer.removeListener("update-check-noupdate", this._onUpdateCheckNoUpdate);
+        ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+      }
+    }
+
+    onCheckForUpdatesClick = () => {
+      if (this.state.updateCheckInProgress) {
+        return;
+      }
+
+      const { ipcRenderer } = require("electron");
+      ipcRenderer.send("update-check-start");
+    }
+
+    onStartUpdateClick = () => {
+      const { ipcRenderer } = require("electron");
+      ipcRenderer.send("update-check-doupdate");
+    }
+
+    _onUpdateCheckStarted = () => {
+      this.setState({
+        updateCheckInProgress: true,
+        foundUpdate: null,
+      });
+    }
+
+    _onUpdateCheckNoUpdate = () => {
+      this.setState({
+        updateCheckInProgress: false,
+        foundUpdate: false,
+      });
+    }
+
+    _onUpdateCheckHasUpdate = () => {
+      this.setState({
+        updateCheckInProgress: false,
+        foundUpdate: true,
+      });
     }
   }
 }

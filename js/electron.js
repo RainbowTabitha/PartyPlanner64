@@ -1,6 +1,7 @@
 // PP64 Electron bootstrap
 
-const {app, BrowserWindow} = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
 
 require("electron-debug")({ enabled: true, showDevTools: false });
 
@@ -38,3 +39,31 @@ app.on("activate", () => {
   }
 });
 
+ipcMain.on("update-check-start", (event, arg) => {
+  autoUpdater.autoDownload = false;
+  autoUpdater.checkForUpdates();
+});
+
+ipcMain.on("update-check-doupdate", (event, arg) => {
+  autoUpdater.downloadUpdate();
+});
+
+autoUpdater.on('checking-for-update', () => {
+  if (!win) return;
+  win.webContents.send("update-check-checking");
+})
+autoUpdater.on('update-available', (info) => {
+  if (!win) return;
+  win.webContents.send("update-check-hasupdate");
+})
+autoUpdater.on('update-not-available', (info) => {
+  if (!win) return;
+  win.webContents.send("update-check-noupdate");
+})
+autoUpdater.on('error', (err) => {
+})
+autoUpdater.on('download-progress', (progressObj) => {
+})
+autoUpdater.on('update-downloaded', (info) => {
+  autoUpdater.quitAndInstall();
+})
