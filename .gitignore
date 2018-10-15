@@ -1,4 +1,5 @@
 node_modules/
+.env
 
 dist/js/*
 !dist/js/app.min.js
@@ -10,8 +11,6 @@ dist/package.json
 dist/package-lock.json
 
 electron/dist
-
-TOKENS
 
 # TypeScript generated
 js/adapter/boarddef.js

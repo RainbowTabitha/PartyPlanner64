@@ -21,6 +21,8 @@ const exec = require('child_process').exec;
 const fs = require("fs");
 const runSequence = require("run-sequence");
 
+require("dotenv").config();
+
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 
 const JS = [
@@ -558,9 +560,26 @@ gulp.task("electron-package", function(callback) {
   );
 });
 
+gulp.task("electron-package-publish", function(callback) {
+  runSequence("build", [
+      "copy-electron-boot",
+      "copy-electron-packagejson"
+    ],
+    "electron-build",
+    callback
+  );
+});
+
 gulp.task("electron-build", function(callback) {
   exec("npm run electron", function(err, stdout, stderr) {
     process.stdout.write("electron-build done, " + err + ", " + stdout + ", " + stderr);
+    callback();
+  });
+});
+
+gulp.task("electron-build-publish", function(callback) {
+  exec("npm run electron-publish", function(err, stdout, stderr) {
+    process.stdout.write("electron-build + publish done, " + err + ", " + stdout + ", " + stderr);
     callback();
   });
 });

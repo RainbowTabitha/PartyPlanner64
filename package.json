@@ -1,6 +1,6 @@
 {
   "name": "PartyPlanner64",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Mario Party board editor",
   "private": true,
   "main": "js/electron.js",
@@ -11,7 +11,8 @@
     "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"
   },
   "scripts": {
-    "electron": "electron-builder build -wl"
+    "electron": "electron-builder build -wl",
+    "electron-publish": "electron-builder build -wl --publish always"
   },
   "dependencies": {
     "basiccontext": "^3.5.1",
@@ -46,6 +47,7 @@
     "@types/react-dom": "^16.0.7",
     "@types/three": "^0.92.24",
     "del": "^3.0.0",
+    "dotenv": "^6.1.0",
     "electron-builder": "^20.28.4",
     "gulp": "^3.9.1",
     "gulp-babel": "^8.0.0",
