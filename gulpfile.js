@@ -565,7 +565,7 @@ gulp.task("electron-package-publish", function(callback) {
       "copy-electron-boot",
       "copy-electron-packagejson"
     ],
-    "electron-build",
+    "electron-build-publish",
     callback
   );
 });
