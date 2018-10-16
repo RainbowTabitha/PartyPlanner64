@@ -150,25 +150,25 @@ namespace PP64.app {
             {sidebar}
             <div className="main">
               {mainView}
+              <div className="mainOverlay">
+                <PP64.toolwindow.ToolWindow name="Toolbox" position="TopRight"
+                  visible={this.state.currentView === $viewType.EDITOR}>
+                  <PP64.toolbar.Toolbar currentAction={this.state.currentAction}
+                    gameVersion={this.state.currentBoard.game}
+                    boardType={this.state.currentBoard.type} />
+                </PP64.toolwindow.ToolWindow>
+                <PP64.toolwindow.ToolWindow name="Space Properties" position="BottomRight"
+                  visible={this.state.currentView === $viewType.EDITOR}>
+                  <PP64.properties.SpaceProperties selectedSpaces={this.state.selectedSpaces}
+                    gameVersion={this.state.currentBoard.game}
+                    boardType={this.state.currentBoard.type} />
+                </PP64.toolwindow.ToolWindow>
+                <PP64.toolwindow.ToolWindow name="Board Properties" position="BottomLeft"
+                  visible={this.state.currentView === $viewType.EDITOR}>
+                  <PP64.properties.BoardProperties currentBoard={this.state.currentBoard} />
+                </PP64.toolwindow.ToolWindow>
+              </div>
               <div id="dragZone"></div>
-            </div>
-            <div className="mainOverlay">
-              <PP64.toolwindow.ToolWindow name="Toolbox" position="TopRight"
-                visible={this.state.currentView === $viewType.EDITOR}>
-                <PP64.toolbar.Toolbar currentAction={this.state.currentAction}
-                  gameVersion={this.state.currentBoard.game}
-                  boardType={this.state.currentBoard.type} />
-              </PP64.toolwindow.ToolWindow>
-              <PP64.toolwindow.ToolWindow name="Space Properties" position="BottomRight"
-                visible={this.state.currentView === $viewType.EDITOR}>
-                <PP64.properties.SpaceProperties selectedSpaces={this.state.selectedSpaces}
-                  gameVersion={this.state.currentBoard.game}
-                  boardType={this.state.currentBoard.type} />
-              </PP64.toolwindow.ToolWindow>
-              <PP64.toolwindow.ToolWindow name="Board Properties" position="BottomLeft"
-                visible={this.state.currentView === $viewType.EDITOR}>
-                <PP64.properties.BoardProperties currentBoard={this.state.currentBoard} />
-              </PP64.toolwindow.ToolWindow>
             </div>
           </div>
           {blocked}

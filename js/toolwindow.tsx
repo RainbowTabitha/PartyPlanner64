@@ -138,12 +138,12 @@ namespace PP64.toolwindow {
     }
 
     getContainerWidth() {
-      let el = this.getContainerEl();
+      let el = document.getElementsByClassName("main")[0] as HTMLElement;//this.getContainerEl();
       return el && el.offsetWidth || 0;
     }
 
     getContainerHeight() {
-      let el = this.getContainerEl();
+      let el = document.getElementsByClassName("main")[0] as HTMLElement; //this.getContainerEl();
       return el && el.offsetHeight || 0;
     }
 
