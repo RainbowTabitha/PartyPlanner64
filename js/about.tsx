@@ -11,7 +11,7 @@ namespace PP64.about {
         versionNum = "unknown";
 
       let mplText;
-      if (document.location.href.indexOf("mariopartylegacy") >= 0)
+      if (document.location!.href.indexOf("mariopartylegacy") >= 0)
         mplText = "Hosted by"
       else
         mplText = "Visit";

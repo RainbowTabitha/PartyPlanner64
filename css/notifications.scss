@@ -1,0 +1,87 @@
+$notification-color-red: #c7212a;
+$notification-color-green: #278532;
+$notification-color-blue: #395db2;
+$notification-font-color: white;
+
+.notificationBar {
+  max-height: 36px;
+  min-height: 0;
+  max-width: 100%;
+  height: 36px;
+  width: 100%;
+  color: $notification-font-color;
+  flex-shrink: 1;
+}
+
+.notification {
+  height: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &.notificationRed {
+    background-color: $notification-color-red;
+  }
+
+  &.notificationGreen {
+    background-color: $notification-color-green;
+  }
+
+  &.notificationBlue {
+    background-color: $notification-color-blue;
+  }
+}
+
+.notificationContent {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 0.5em;
+}
+
+.notificationClose {
+  height: 100%;
+  width: 36px;
+  min-width: 36px;
+  flex: 0;
+  flex-shrink: 0;
+  opacity: 0.6;
+  cursor: pointer;
+  background: url("../img/notifications/close.png");
+  background-size: 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  &:hover, &:focus {
+    opacity: 1;
+  }
+}
+
+.notificationButton {
+  height: 23px;
+  padding: 1px 0.5em;
+  margin: 0 0.5em;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $notification-font-color;
+
+    .notificationRed & {
+      color: $notification-color-red;
+    }
+    .notificationGreen & {
+      color: $notification-color-green;
+    }
+    .notificationBlue & {
+      color: $notification-color-blue;
+    }
+  }
+}

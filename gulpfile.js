@@ -66,6 +66,7 @@ const JS = [
   "js/romhandler.js",
 
   "js/components/codemirrorwrapper.js",
+  "js/components/notifications.js",
 
   "js/patches.js",
   "js/gameshark.js",
@@ -162,6 +163,7 @@ const CSS = [
   "css/toolwindow.css",
   "css/toolbar.css",
   "css/properties.css",
+  "css/notifications.css",
   "css/details.css",
   "css/settings.css",
   "css/about.css",

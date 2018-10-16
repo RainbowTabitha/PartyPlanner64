@@ -11,6 +11,8 @@ namespace PP64.app {
     blocked: boolean,
     message: string,
     messageHTML: string,
+    updateExists: boolean,
+    updateHideNotification: boolean,
     error: Error | null,
     errorInfo: React.ErrorInfo | null,
   }
@@ -27,6 +29,8 @@ namespace PP64.app {
       blocked: false,
       message: "",
       messageHTML: "",
+      updateExists: false,
+      updateHideNotification: false,
       error: null,
       errorInfo: null,
     }
@@ -145,6 +149,9 @@ namespace PP64.app {
 
       return (
         <div className={bodyClass}>
+          <PP64.components.NotificationBar>
+            {this.getNotifications()}
+          </PP64.components.NotificationBar>
           <PP64.header.Header view={this.state.currentView} romLoaded={this.state.romLoaded} board={this.state.currentBoard} />
           <div className="content">
             {sidebar}
@@ -182,6 +189,57 @@ namespace PP64.app {
         errorInfo,
       });
       console.error(error, errorInfo);
+    }
+
+    componentDidMount() {
+      if (isElectron) {
+        const { ipcRenderer } = require("electron");
+        ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+        ipcRenderer.send("update-check-start");
+      }
+    }
+
+    componentWillUnmount() {
+      if (isElectron) {
+        const { ipcRenderer } = require("electron");
+        ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+      }
+    }
+
+    _onUpdateCheckHasUpdate = () => {
+      this.setState({ updateExists: true });
+    }
+
+    getNotifications(): React.ReactElement<any>[] {
+      const notifications = [];
+
+      if (this.state.updateExists && !this.state.updateHideNotification) {
+        notifications.push(
+          <PP64.components.Notification key="update"
+            color={PP64.components.NotificationColor.Blue}
+            onClose={this._onUpdateNotificationClosed}>
+            An update is available.
+            <PP64.components.NotificationButton onClick={this._onUpdateNotificationInstallClicked}>
+              Install
+            </PP64.components.NotificationButton>
+          </PP64.components.Notification>
+        );
+      }
+
+      return notifications;
+    }
+
+    _onUpdateNotificationClosed = () => {
+      this.setState({ updateHideNotification: true });
+    }
+
+    _onUpdateNotificationInstallClicked = () => {
+      this.setState({ updateHideNotification: true });
+
+      if (isElectron) {
+        const { ipcRenderer } = require("electron");
+        ipcRenderer.send("update-check-doupdate");
+      }
     }
   };
 
