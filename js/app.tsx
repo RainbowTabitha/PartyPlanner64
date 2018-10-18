@@ -89,10 +89,7 @@ namespace PP64.app {
           mainView = <PP64.strings.StringsViewer />;
           break;
         case PP64.types.View.PATCHES:
-          mainView = [<PP64.patches.PatchView key="PatchView" />];
-          if (PP64.patches.gameshark.romSupportsCheats()) {
-            mainView.push(<PP64.patches.gameshark.GamesharkView key="GamesharkView" />);
-          }
+          mainView = <PP64.patches.gameshark.GamesharkView />;
           break;
       }
 

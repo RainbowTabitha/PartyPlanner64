@@ -41,7 +41,6 @@ js/patches/gameshark/hook.MP2.U.js
 js/patches/gameshark/hook.MP3.U.js
 js/patches/gameshark/hook.js
 js/patches/gameshark/parser.js
-js/patches/PatchBase.js
 js/symbols/symbols.js
 js/utils/img/BMP.js
 js/utils/img/Grayscale.js
