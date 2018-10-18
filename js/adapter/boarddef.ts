@@ -1,13 +1,13 @@
 namespace PP64.adapters.boarddef {
 
-  export function parse(buffer: ArrayBuffer, board: PP64.boards.IBoard) {
+  export function parse(buffer: ArrayBuffer, board: Partial<PP64.boards.IBoard>): PP64.boards.IBoard {
     let header = _parseHeader(buffer);
     board.spaces = _parseSpaces(buffer, header);
     let linkResult = _parseLinks(buffer, header);
     board.links = linkResult.links;
     (board as any)._chains = linkResult.chains; // We need this for event parsing.
     $$log(`Parsing board def, ${$$hex(header.spaceCount)} (${header.spaceCount}) spaces`);
-    return board;
+    return board as PP64.boards.IBoard;
   }
 
   interface IHeader {

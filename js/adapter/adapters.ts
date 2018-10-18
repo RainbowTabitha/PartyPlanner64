@@ -1,21 +1,35 @@
-PP64.adapters = (function() {
-  const AdapterBase = class {
-    constructor() {
-      // The arbitrary upper bound size of the events ASM blob.
-      this.EVENT_MEM_SIZE = 0x50000;
+namespace PP64.adapters {
+  type IBoardInfo = any;
 
-      // Location that custom ASM will be placed in RAM.
-      this.EVENT_RAM_LOC = (0x80000000 | (0x800000 - this.EVENT_MEM_SIZE)) >>> 0;
-      // 0x807B0000 right now
+  export abstract class AdapterBase {
+    /** The arbitrary upper bound size of the events ASM blob. */
+    public EVENT_MEM_SIZE: number = 0x50000;
 
-      // We reserve a 16 byte header, mainly to allow the ASM hook to be flexible
-      // in where it transfers this blob to in RAM.
-      this.EVENT_HEADER_SIZE = 16;
-    }
+    /**
+     * Location that custom ASM will be placed in RAM.
+     * 0x807B0000 right now
+     */
+    public EVENT_RAM_LOC: number = (0x80000000 | (0x800000 - this.EVENT_MEM_SIZE)) >>> 0;
+
+    /**
+     * We reserve a 16 byte header, mainly to allow the ASM hook to be flexible
+     * in where it transfers this blob to in RAM.
+     */
+    public EVENT_HEADER_SIZE = 16;
+
+    public abstract gameVersion: 1 | 2 | 3;
+    public abstract boardDefDirectory: number;
+    public abstract nintendoLogoFSEntry?: number[];
+    public abstract hudsonLogoFSEntry?: number[];
+    public abstract MAINFS_READ_ADDR: number;
+    public abstract TABLE_HYDRATE_ADDR: number;
+    public abstract HEAP_FREE_ADDR: number;
+
+    constructor() {}
 
     loadBoards() {
       let boards = [];
-      let boardInfos = PP64.adapters.boardinfo.getBoardInfos(PP64.romhandler.getROMGame());
+      let boardInfos = PP64.adapters.boardinfo.getBoardInfos(PP64.romhandler.getROMGame()!);
 
       for (let i = 0; i < boardInfos.length; i++) {
         if ($$debug)
@@ -24,7 +38,7 @@ PP64.adapters = (function() {
         let boardInfo = boardInfos[i];
         let bgDir = boardInfo.bgDir;
         let background = PP64.fs.hvqfs.readBackground(bgDir);
-        let newBoard = {
+        let partialBoard = {
           "game": this.gameVersion,
           "type": boardInfo.type || PP64.types.BoardType.NORMAL,
           "bg": background,
@@ -32,9 +46,9 @@ PP64.adapters = (function() {
         };
 
         let boardBuffer = PP64.fs.mainfs.get(this.boardDefDirectory, boardInfo.boardDefFile);
-        PP64.adapters.boarddef.parse(boardBuffer, newBoard);
-        let chains = newBoard._chains;
-        delete newBoard._chains;
+        let newBoard = PP64.adapters.boarddef.parse(boardBuffer, partialBoard);
+        let chains: number[][] = (newBoard as any)._chains;
+        delete (newBoard as any)._chains;
         $$log(`Board ${i} chains: `, chains);
 
         this.onChangeBoardSpaceTypesFromGameSpaceTypes(newBoard, chains);
@@ -77,9 +91,12 @@ PP64.adapters = (function() {
       return boards;
     }
 
-    overwriteBoard(boardIndex, board) {
+    protected abstract onLoad?(board: PP64.boards.IBoard, boardInfo: IBoardInfo): void;
+    protected abstract onAfterOverwrite?(romView: DataView, boardCopy: PP64.boards.IBoard, boardInfo: IBoardInfo): void;
+
+    overwriteBoard(boardIndex: number, board: PP64.boards.IBoard) {
       let boardCopy = PP64.utils.obj.copy(board);
-      const boardInfo = PP64.adapters.boardinfo.getBoardInfoByIndex(PP64.romhandler.getROMGame(), boardIndex);
+      const boardInfo = PP64.adapters.boardinfo.getBoardInfoByIndex(PP64.romhandler.getROMGame()!, boardIndex);
 
       let chains = PP64.adapters.boarddef.determineChains(boardCopy);
       PP64.adapters.boarddef.padChains(boardCopy, chains);
@@ -133,24 +150,24 @@ PP64.adapters = (function() {
       return this.onOverwritePromises(board, boardInfo);
     }
 
-    onOverwritePromises(board, boardInfo) {
+    onOverwritePromises(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onOverwritePromises");
     }
 
     // Gives a new space the default things it would need.
-    hydrateSpace(space) {
+    hydrateSpace(space: PP64.boards.ISpace) {
       throw "hydrateSpace not implemented";
     }
 
-    onParseStrings(board, boardInfo) {
+    onParseStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onParseStrings");
     }
 
-    onWriteStrings(board, boardInfo) {
+    onWriteStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onWriteStrings");
     }
 
-    _applyPerspective(board, boardIndex) {
+    _applyPerspective(board: PP64.boards.IBoard, boardIndex: number) {
       let width = board.bg.width;
       let height = board.bg.height;
 
@@ -160,7 +177,7 @@ PP64.adapters = (function() {
       }
     }
 
-    onGetBoardCoordsFromGameCoords(x, y, z, width, height, boardIndex) {
+    onGetBoardCoordsFromGameCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       $$log("Adapter does not implement onGetBoardCoordsFromGameCoords");
       let newX = (width / 2) + x;
       let newY = (height / 2) + y;
@@ -168,7 +185,7 @@ PP64.adapters = (function() {
       return [Math.round(newX), Math.round(newY), Math.round(newZ)];
     }
 
-    _reversePerspective(board, boardIndex) {
+    _reversePerspective(board: PP64.boards.IBoard, boardIndex: number) {
       let width = board.bg.width;
       let height = board.bg.height;
 
@@ -178,7 +195,7 @@ PP64.adapters = (function() {
       }
     }
 
-    onGetGameCoordsFromBoardCoords(x, y, z, width, height, boardIndex) {
+    onGetGameCoordsFromBoardCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       $$log("Adapter does not implement onGetGameCoordsFromBoardCoords");
       let gameX = x - (width / 2);
       let gameY = y - (height / 2);
@@ -200,11 +217,11 @@ PP64.adapters = (function() {
     //   } catch(e) {}
     // }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board) {
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board: PP64.boards.IBoard, chains: number[][]) {
       $$log("Adapter does not implement onChangeBoardSpaceTypesFromGameSpaceTypes");
     }
 
-    onChangeGameSpaceTypesFromBoardSpaceTypes(board) {
+    onChangeGameSpaceTypesFromBoardSpaceTypes(board: PP64.boards.IBoard) {
       $$log("Adapter does not implement onChangeGameSpaceTypesFromBoardSpaceTypes");
     }
 
@@ -214,7 +231,7 @@ PP64.adapters = (function() {
      * @param {number} offset ROM offset to convert
      * @param {object} boardInfo Board info related to the offset
      */
-    _offsetToAddr(offset, boardInfo) {
+    _offsetToAddr(offset: number, boardInfo: IBoardInfo) {
       if (typeof boardInfo.sceneIndex === "number" && boardInfo.sceneIndex >= 0) {
         const sceneInfo = PP64.fs.scenes.getInfo(boardInfo.sceneIndex);
         return (sceneInfo.ram_start & 0x7FFFFFFF)
@@ -225,7 +242,7 @@ PP64.adapters = (function() {
           - (boardInfo.spaceEventsStartOffset - offset);
     }
 
-    _offsetToAddrBase(offset, base) {
+    _offsetToAddrBase(offset: number, base: number) {
       return (base + offset) >>> 0;
     }
 
@@ -235,7 +252,7 @@ PP64.adapters = (function() {
      * @param {number} addr Address to convert
      * @param {object} boardInfo Board info related to the address.
      */
-    _addrToOffset(addr, boardInfo) {
+    _addrToOffset(addr: number, boardInfo: IBoardInfo) {
       if (typeof boardInfo.sceneIndex === "number" && boardInfo.sceneIndex >= 0) {
         const sceneInfo = PP64.fs.scenes.getInfo(boardInfo.sceneIndex);
         return sceneInfo.rom_start
@@ -246,12 +263,12 @@ PP64.adapters = (function() {
           - (boardInfo.spaceEventsStartAddr - addr);
     }
 
-    _addrToOffsetBase(addr, base) {
+    _addrToOffsetBase(addr: number, base: number) {
       return ((addr & 0x7FFFFFFF) - (base & 0x7FFFFFFF)) >>> 0;
     }
 
     // Handles any _deadSpace we may have added in overwriteBoard
-    _cleanLoadedBoard(board) {
+    _cleanLoadedBoard(board: PP64.boards.IBoard) {
       let lastIdx = board.spaces.length - 1;
       let lastSpace = board.spaces[board.spaces.length - 1];
       if (lastSpace && (lastSpace.x > board.bg.width + 50) && (lastSpace.y > board.bg.height + 50)) {
@@ -260,17 +277,17 @@ PP64.adapters = (function() {
       }
     }
 
-    _findEventTableLocations(boardInfo) {
+    _findEventTableLocations(boardInfo: IBoardInfo) {
       if (typeof boardInfo.sceneIndex !== "number" || boardInfo.sceneIndex < 0)
         return;
 
-      const game = PP64.romhandler.getROMGame();
+      const game = PP64.romhandler.getROMGame()!;
       const hydrateEventTableAddr = PP64.symbols.getSymbol(game, "EventTableHydrate");
 
       const boardCodeDataView = PP64.fs.scenes.getCodeDataView(boardInfo.sceneIndex);
       const tableCalls = $MIPS.findCalls(boardCodeDataView, hydrateEventTableAddr);
 
-      const spaceEventTables = [];
+      const spaceEventTables: any[] = [];
       if (!boardInfo.spaceEventTables) {
         boardInfo.spaceEventTables = spaceEventTables;
       }
@@ -285,7 +302,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _extractEvents(boardInfo, board, boardIndex, chains) {
+    _extractEvents(boardInfo: IBoardInfo, board: PP64.boards.IBoard, boardIndex: number, chains: number[][]) {
       if (boardInfo.spaceEventTables) {
         this._extractEventsNew(boardInfo, board, boardIndex, chains);
         return;
@@ -295,7 +312,7 @@ PP64.adapters = (function() {
       if (!boardInfo.spaceEventsStartAddr)
         return;
 
-      let buffer = PP64.romhandler.getROMBuffer();
+      let buffer = PP64.romhandler.getROMBuffer()!;
       let boardView = new DataView(buffer);
       let curOffset = boardInfo.spaceEventsStartOffset;
 
@@ -329,9 +346,9 @@ PP64.adapters = (function() {
             boardIndex,
             curSpace,
             chains,
-            game: PP64.romhandler.getROMGame(),
+            game: PP64.romhandler.getROMGame()!,
             gameVersion: this.gameVersion,
-          });
+          } as any);
 
           // We parsed an actual event.
           if (eventInfo && eventInfo !== true) {
@@ -354,13 +371,14 @@ PP64.adapters = (function() {
       }
     }
 
-    _extractEventsNew(boardInfo, board, boardIndex, chains) {
+    _extractEventsNew(boardInfo: IBoardInfo, board: PP64.boards.IBoard, boardIndex: number, chains: number[][]) {
       if (!boardInfo.spaceEventTables)
         return;
 
       // PP64 sometimes stores board ASM in the main filesystem. We need to
       // be able to parse both that or the stock boards.
-      let buffer, bufferView;
+      let buffer: ArrayBuffer | undefined;
+      let bufferView: DataView | undefined;
       let eventTable = new PP64.adapters.SpaceEventTable();
       if (boardInfo.mainfsEventFile) {
         let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
@@ -373,10 +391,10 @@ PP64.adapters = (function() {
       }
 
       if (!buffer) {
-        buffer = PP64.romhandler.getROMBuffer();
+        buffer = PP64.romhandler.getROMBuffer()!;
         bufferView = PP64.romhandler.getDataView();
 
-        boardInfo.spaceEventTables.forEach(tableDeflateCall => {
+        boardInfo.spaceEventTables.forEach((tableDeflateCall: any) => {
           // Each board can have several event tables, which it "deflates" by
           // passing the table address to some function. We are parsing the table
           // addresses from those calls, because that gives us the flexibility
@@ -386,19 +404,19 @@ PP64.adapters = (function() {
             tableOffset = tableDeflateCall.tableOffset;
           }
           else {
-            let upper = bufferView.getUint32(tableDeflateCall.upper);
-            let lower = bufferView.getUint32(tableDeflateCall.lower);
+            let upper = bufferView!.getUint32(tableDeflateCall.upper);
+            let lower = bufferView!.getUint32(tableDeflateCall.lower);
             if (!upper && !lower)
               return;
             let tableAddr = $MIPS.getRegSetAddress(upper, lower);
             tableOffset = this._addrToOffset(tableAddr, boardInfo);
           }
 
-          eventTable.parse(buffer, tableOffset); // Build up all the events into one collection.
+          eventTable.parse(buffer!, tableOffset); // Build up all the events into one collection.
         });
       }
 
-      eventTable.forEach(eventTableEntry => {
+      eventTable.forEach((eventTableEntry: any) => {
         let curSpaceIndex = eventTableEntry.spaceIndex;
 
         // Figure out the current info struct offset in the ROM.
@@ -409,14 +427,14 @@ PP64.adapters = (function() {
         else
           curInfoOffset = this._addrToOffset(curInfoAddr, boardInfo);
         let boardList = new PP64.adapters.SpaceEventList();
-        boardList.parse(buffer, curInfoOffset);
+        boardList.parse(buffer!, curInfoOffset);
         boardList.forEach(listEntry => {
           // Figure out the event ASM info in ROM.
           let asmAddr = listEntry.address & 0x7FFFFFFF;
           let asmOffset, codeView;
           if (asmAddr > (this.EVENT_RAM_LOC & 0x7FFFFFFF)) {
             asmOffset = this._addrToOffsetBase(asmAddr, this.EVENT_RAM_LOC);
-            codeView = bufferView;
+            codeView = bufferView!;
           }
           else {
             // This event actually points back to the original ROM.
@@ -432,7 +450,7 @@ PP64.adapters = (function() {
             curSpace: curSpaceIndex, // TODO: Pass space or get rid of this
             curSpaceIndex,
             chains,
-            game: PP64.romhandler.getROMGame(),
+            game: PP64.romhandler.getROMGame()!,
             gameVersion: this.gameVersion,
           });
 
@@ -449,7 +467,7 @@ PP64.adapters = (function() {
           }
 
           if ($$debug) {
-            if (Object.values && Object.values($activationType).indexOf(listEntry.activationType) === -1)
+            if ((Object as any).values && (Object as any).values($activationType).indexOf(listEntry.activationType) === -1)
               $$log(`Unknown event activation type ${$$hex(listEntry.activationType)}, boardIndex: ${boardIndex}, spaceIndex: ${$$hex(curSpaceIndex)}`);
           }
         });
@@ -457,18 +475,18 @@ PP64.adapters = (function() {
     }
 
     // Creates the chain-based event objects that we abstract out in the UI.
-    onCreateChainEvents(board, chains) {
+    onCreateChainEvents(board: PP64.boards.IBoard, chains: number[][]) {
       // There is either a merge or a split at the end of each chain.
       for (let i = 0; i < chains.length; i++) {
         let chain = chains[i];
         let lastSpace = chain[chain.length - 1];
-        let links = PP64.boards.getConnections(lastSpace, board);
+        let links = PP64.boards.getConnections(lastSpace, board)!;
         let event;
         if (links.length > 1) {
           // A split, figure out the end points.
-          let endpoints = [];
+          let endpoints: number[] = [];
           links.forEach(link => {
-            endpoints.push(_getChainWithSpace(link));
+            endpoints.push(_getChainWithSpace(link)!);
           });
           event = PP64.adapters.events.create("CHAINSPLIT", {
             inlineArgs: links.concat(0xFFFF),
@@ -484,7 +502,7 @@ PP64.adapters = (function() {
         PP64.boards.addEventByIndex(board, lastSpace, event, true);
       }
 
-      function _getChainWithSpace(space) {
+      function _getChainWithSpace(space: number) {
         for (let c = 0; c < chains.length; c++) {
           if (chains[c].indexOf(space) >= 0) // Should really be 0 always - game does support supplied index other than 0 though.
             return c;
@@ -493,20 +511,20 @@ PP64.adapters = (function() {
     }
 
     // Adds the star events we abstract in the UI.
-    _createStarEvents(board) {
+    _createStarEvents(board: PP64.boards.IBoard) {
       for (let i = 0; i < board.spaces.length; i++) {
         let space = board.spaces[i];
         if (!space || !space.star)
           continue;
         let events = space.events || [];
-        let hasStarEvent = events.some(e => { e.id === "STAR" }); // Pretty unlikely
+        let hasStarEvent = events.some(e => { return e.id === "STAR" }); // Pretty unlikely
         if (!hasStarEvent)
           PP64.boards.addEventToSpace(space, PP64.adapters.events.create("STAR"));
       }
     }
 
     // Adds the gate events we abstract in the UI.
-    _createGateEvents(board, boardInfo, chains) {
+    _createGateEvents(board: PP64.boards.IBoard, boardInfo: IBoardInfo, chains: number[][]) {
       let gateIndex = 0;
       for (let i = 0; i < board.spaces.length; i++) {
         let space = board.spaces[i];
@@ -524,7 +542,7 @@ PP64.adapters = (function() {
         if (!prevSpace)
           throw `Gate did not have previous space`;
 
-        let prevChainIndex = _getChainWithSpace(prevSpaceIndex);
+        let prevChainIndex = _getChainWithSpace(prevSpaceIndex)!;
         let prevChainSpaceIndex = chains[prevChainIndex].indexOf(prevSpaceIndex);
 
         let exitSpaceIndex = _getNextSpaceIndex(i);
@@ -537,7 +555,7 @@ PP64.adapters = (function() {
         if (!nextSpace)
           throw `Gate did not have next space`;
 
-        let nextChainIndex = _getChainWithSpace(nextSpaceIndex);
+        let nextChainIndex = _getChainWithSpace(nextSpaceIndex)!;
         let nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
 
         // Redundant to write event twice, except we need it attached to both spaces.
@@ -569,9 +587,9 @@ PP64.adapters = (function() {
         gateIndex++;
       }
 
-      function _getPointingSpaceIndex(pointedAtIndex) {
+      function _getPointingSpaceIndex(pointedAtIndex: number) {
         for (let startIdx in board.links) {
-          let ends = PP64.boards.getConnections(startIdx, board);
+          let ends = PP64.boards.getConnections(parseInt(startIdx), board)!;
           for (let i = 0; i < ends.length; i++) {
             if (ends[i] === pointedAtIndex)
               return Number(startIdx);
@@ -580,12 +598,12 @@ PP64.adapters = (function() {
         return -1;
       }
 
-      function _getNextSpaceIndex(spaceIndex) {
-        let ends = PP64.boards.getConnections(spaceIndex, board);
+      function _getNextSpaceIndex(spaceIndex: number) {
+        let ends = PP64.boards.getConnections(spaceIndex, board)!;
         return ends[0];
       }
 
-      function _getChainWithSpace(spaceIndex) {
+      function _getChainWithSpace(spaceIndex: number) {
         for (let c = 0; c < chains.length; c++) {
           if (chains[c].indexOf(spaceIndex) >= 0)
             return c;
@@ -593,19 +611,19 @@ PP64.adapters = (function() {
       }
     }
 
-    _getArgsSize(count) {
+    _getArgsSize(count: number) {
       return (count * 2) + (4 - ((count * 2) % 4));
     }
 
     // Write out all of the events ASM.
-    _writeEvents(board, boardInfo, boardIndex, chains) {
+    _writeEvents(board: PP64.boards.IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
       if (boardInfo.mainfsEventFile) {
         this._writeEventsNew(board, boardInfo, boardIndex, chains);
         return;
       }
 
       let romView = PP64.romhandler.getDataView();
-      let romBytes = PP64.romhandler.getByteArray();
+      let romBytes = PP64.romhandler.getByteArray()!;
 
       let curEventListingOffset = boardInfo.spaceEventsStartOffset;
       let curEventRedirectOffset = curEventListingOffset - 8; // This moves backwards.
@@ -613,7 +631,7 @@ PP64.adapters = (function() {
 
       romBytes.fill(0, curEventRedirectOffset, curEventRedirectOffset + 8); // Pad zeros between the two sections.
 
-      let eventTemp = {};
+      let eventTemp: any = {};
 
       for (let i = 0; i < board.spaces.length; i++) {
         let space = board.spaces[i];
@@ -637,11 +655,11 @@ PP64.adapters = (function() {
 
         space.events.forEach(event => {
           let temp = eventTemp[event.id] || {};
-          let info = {
+          let info: Partial<PP64.adapters.events.IEventWriteInfo> = {
             boardIndex,
             offset: curASMOffset,
             addr: this._offsetToAddr(curASMOffset, boardInfo) | 0x80000000,
-            game: PP64.romhandler.getROMGame(),
+            game: PP64.romhandler.getROMGame()!,
             gameVersion: this.gameVersion,
             parameterValues: event.parameterValues,
           };
@@ -659,7 +677,8 @@ PP64.adapters = (function() {
             romView.setUint16(argOffset, event.inlineArgs[arg]);
           }
 
-          let [writtenASMOffset, len] = PP64.adapters.events.write(PP64.romhandler.getROMBuffer(), event, info, temp);
+          let [writtenASMOffset, len] = PP64.adapters.events.write(PP64.romhandler.getROMBuffer()!, event,
+            info as PP64.adapters.events.IEventWriteInfo, temp);
           eventTemp[event.id] = temp;
 
           romView.setUint16(argsSize + redirEntry, event.activationType);
@@ -692,7 +711,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _writeEventsNew(board, boardInfo, boardIndex, chains) {
+    _writeEventsNew(board: PP64.boards.IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
       if (!boardInfo.mainfsEventFile)
         throw `No MainFS file specified to place board ASM for board ${boardIndex}.`;
 
@@ -735,7 +754,7 @@ PP64.adapters = (function() {
 
       // Now we know where to start writing the ASM event code.
       // As we go along, we can go back and fill in the space and event lists.
-      let eventTemp = {};
+      let eventTemp: any = {};
       let eventListIndex = 0;
       let eventListCurrentOffset = this.EVENT_HEADER_SIZE + tableSize;
       for (let i = 0; i < board.spaces.length; i++) {
@@ -755,7 +774,7 @@ PP64.adapters = (function() {
             chains,
             offset: currentOffset,
             addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
-            game: PP64.romhandler.getROMGame(),
+            game: PP64.romhandler.getROMGame()!,
             gameVersion: this.gameVersion,
             parameterValues: event.parameterValues,
           };
@@ -808,7 +827,9 @@ PP64.adapters = (function() {
       this._writeEventAsmHook(boardInfo, boardIndex);
     }
 
-    _writeEventAsmHook(boardInfo, boardIndex) {
+    _writeEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
+      const MIPSInst = (window as any).MIPSInst;
+
       // The hook logic will be placed at the top of eventASMStart, since
       // we don't put anything there much anymore.
       const hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
@@ -881,7 +902,7 @@ PP64.adapters = (function() {
       romView.setUint32(offset += 4, MIPSInst.parse("ADDIU SP SP 0x18"));
     }
 
-    _clearSpaceEventTableCalls(romView, boardInfo) {
+    _clearSpaceEventTableCalls(romView: DataView, boardInfo: IBoardInfo) {
       // The BoardInfo might have special logic.
       if (boardInfo.clearSpaceEventTableCalls) {
         boardInfo.clearSpaceEventTableCalls(romView);
@@ -891,18 +912,18 @@ PP64.adapters = (function() {
       // Otherwise, we can probably just clear all memory between the upper and
       // lower for each table.
       let tables = boardInfo.spaceEventTables;
-      tables.forEach(tableInfo => {
+      tables.forEach((tableInfo: any) => {
         for (let offset = tableInfo.upper; offset <= tableInfo.lower; offset += 4)
           romView.setUint32(offset, 0);
       });
     }
 
-    onWriteEventAsmHook(boardInfo, boardIndex) {
+    onWriteEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
       throw "Adapter does not implement onWriteEventAsmHook";
     }
 
-    _extractStarGuardians(board, boardInfo) { // AKA Toads or Baby Bowsers lol
-      let boardView = new DataView(PP64.romhandler.getROMBuffer());
+    _extractStarGuardians(board: PP64.boards.IBoard, boardInfo: IBoardInfo) { // AKA Toads or Baby Bowsers lol
+      let boardView = new DataView(PP64.romhandler.getROMBuffer()!);
 
       // Training writes the toad directly.
       if (boardInfo.toadSpaceInst) {
@@ -935,7 +956,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _writeStarInfo(board, boardInfo) {
+    _writeStarInfo(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let starCount = boardInfo.starSpaceCount;
       if (starCount) {
         let romView = PP64.romhandler.getDataView();
@@ -986,7 +1007,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _extractBoos(board, boardInfo) {
+    _extractBoos(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let boardView = PP64.romhandler.getDataView();
       let booSpace;
       if (boardInfo.boosLoopFnOffset) {
@@ -1031,7 +1052,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _writeBoos(board, boardInfo) {
+    _writeBoos(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       // Find the boo spaces
       let booSpaces = PP64.boards.getSpacesOfSubType($spaceSubType.BOO, board);
 
@@ -1059,26 +1080,26 @@ PP64.adapters = (function() {
 
         for (let i = 0; i < booCount; i++) {
           let booSpace = (booSpaces[i] === undefined ? board._deadSpace : booSpaces[i]);
-          boardView.setUint16(booSpacesOffset + (2 * i), booSpace);
+          boardView.setUint16(booSpacesOffset + (2 * i), booSpace!);
         }
       }
       else if (boardInfo.booSpaceInst) { // Just one Boo
         let booSpace = (booSpaces[0] === undefined ? board._deadSpace : booSpaces[0]);
-        boardView.setUint16(boardInfo.booSpaceInst + 2, booSpace);
+        boardView.setUint16(boardInfo.booSpaceInst + 2, booSpace!);
       }
       else if (boardInfo.booCount) {
         for (let b = 0; b < boardInfo.booArrOffset.length; b++) {
           let curBooSpaceIndexOffset = boardInfo.booArrOffset[b];
           for (let i = 0; i < boardInfo.booCount; i++) {
             let booSpace = booSpaces[i] === undefined ? board._deadSpace : booSpaces[i];
-            boardView.setUint16(curBooSpaceIndexOffset, booSpace);
+            boardView.setUint16(curBooSpaceIndexOffset, booSpace!);
             curBooSpaceIndexOffset += 2;
           }
         }
       }
     }
 
-    _extractBanks(board, boardInfo) {
+    _extractBanks(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.bankCount)
         return;
 
@@ -1103,7 +1124,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _writeBanks(board, boardInfo) {
+    _writeBanks(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let boardView = PP64.romhandler.getDataView();
       if (!boardInfo.bankCount)
         return;
@@ -1113,7 +1134,7 @@ PP64.adapters = (function() {
         let curBankSpaceIndexOffset = boardInfo.bankArrOffset[b];
         for (let i = 0; i < boardInfo.bankCount; i++) {
           let bankSpace = bankSpaces[i] === undefined ? board._deadSpace : bankSpaces[i];
-          boardView.setUint16(curBankSpaceIndexOffset, bankSpace);
+          boardView.setUint16(curBankSpaceIndexOffset, bankSpace!);
           curBankSpaceIndexOffset += 2;
         }
       }
@@ -1123,13 +1144,13 @@ PP64.adapters = (function() {
         let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset[b];
         for (let i = 0; i < boardInfo.bankCount; i++) {
           let bankCoinSpace = bankCoinSpaces[i] === undefined ? board._deadSpace : bankCoinSpaces[i];
-          boardView.setUint16(curBankCoinSpaceIndexOffset, bankCoinSpace);
+          boardView.setUint16(curBankCoinSpaceIndexOffset, bankCoinSpace!);
           curBankCoinSpaceIndexOffset += 2;
         }
       }
     }
 
-    _extractItemShops(board, boardInfo) {
+    _extractItemShops(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.itemShopCount)
         return;
 
@@ -1145,7 +1166,7 @@ PP64.adapters = (function() {
       }
     }
 
-    _writeItemShops(board, boardInfo) {
+    _writeItemShops(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let boardView = PP64.romhandler.getDataView();
       if (!boardInfo.itemShopCount)
         return;
@@ -1155,13 +1176,13 @@ PP64.adapters = (function() {
         let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset[b];
         for (let i = 0; i < boardInfo.itemShopCount; i++) {
           let ItemShopSpace = itemShopSpaces[i] === undefined ? board._deadSpace : itemShopSpaces[i];
-          boardView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace);
+          boardView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace!);
           curItemShopSpaceIndexOffset += 2;
         }
       }
     }
 
-    _writeGates(board, boardInfo) {
+    _writeGates(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let boardView = PP64.romhandler.getDataView();
       if (!boardInfo.gateCount)
         return;
@@ -1176,13 +1197,13 @@ PP64.adapters = (function() {
         let curGateSpaceIndexOffset = boardInfo.gateArrOffset[b];
         for (let i = 0; i < boardInfo.gateCount; i++) {
           let gateSpace = gateSpaces[i] === undefined ? board._deadSpace : gateSpaces[i];
-          boardView.setUint16(curGateSpaceIndexOffset, gateSpace);
+          boardView.setUint16(curGateSpaceIndexOffset, gateSpace!);
           curGateSpaceIndexOffset += 2;
         }
       }
     }
 
-    _writeArrowRotations(board, boardInfo) {
+    _writeArrowRotations(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       const romView = PP64.romhandler.getDataView();
       const { arrowRotStartOffset, arrowRotEndOffset } = boardInfo;
       if (!arrowRotStartOffset)
@@ -1200,7 +1221,7 @@ PP64.adapters = (function() {
         }
       }
 
-      const game = PP64.romhandler.getROMGame();
+      const game = PP64.romhandler.getROMGame()!;
       const addArrowAngleAddr = PP64.symbols.getSymbol(game, "AddArrowAngle");
 
       const totalArrowsToWrite = PP64.adapters.boardinfo.getArrowRotationLimit(boardInfo);
@@ -1213,10 +1234,10 @@ PP64.adapters = (function() {
         insts.push("MTC1 A0 F12");
       }
 
-      MIPSAssem.assemble(insts, { buffer: romView.buffer });
+      (window as any).MIPSAssem.assemble(insts, { buffer: romView.buffer });
     }
 
-    _writeBackground(bgIndex, src, width, height) {
+    _writeBackground(bgIndex: number, src: string, width: number, height: number) {
       return new Promise((resolve, reject) => {
         // We need to write the image onto a canvas to get the RGBA32 values.
         let canvasCtx = PP64.utils.canvas.createContext(width, height);
@@ -1234,22 +1255,22 @@ PP64.adapters = (function() {
       });
     }
 
-    onParseBoardSelectImg(board, boardInfo) {
+    onParseBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onParseBoardSelectImg");
     }
 
-    onWriteBoardSelectImg(board, boardInfo) {
+    onWriteBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onWriteBoardSelectImg");
       return new Promise((resolve, reject) => {
         resolve();
       });
     }
 
-    onParseBoardLogoImg(board, boardInfo) {
+    onParseBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onParseBoardLogoImg");
     }
 
-    onWriteBoardLogoImg(board, boardInfo) {
+    onWriteBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       $$log("Adapter does not implement onWriteBoardLogoImgs");
       return new Promise((resolve, reject) => {
         resolve();
@@ -1288,7 +1309,7 @@ PP64.adapters = (function() {
           ];
           let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 8);
           //saveAs(new Blob([newPack]));
-          PP64.fs.mainfs.write(this.hudsonLogoFSEntry[0], this.hudsonLogoFSEntry[1], newPack);
+          PP64.fs.mainfs.write(this.hudsonLogoFSEntry![0], this.hudsonLogoFSEntry![1], newPack);
 
           clearTimeout(failTimer);
           resolve();
@@ -1298,17 +1319,17 @@ PP64.adapters = (function() {
     }
 
     _combineSplashcreenLogos() {
-      let nintendoPack = PP64.fs.mainfs.get(this.nintendoLogoFSEntry[0], this.nintendoLogoFSEntry[1]); // (NINTENDO) logo
+      let nintendoPack = PP64.fs.mainfs.get(this.nintendoLogoFSEntry![0], this.nintendoLogoFSEntry![1]); // (NINTENDO) logo
       if ((new Uint8Array(nintendoPack))[0x1A] !== 0x20)
         return; // We already replaced the splashscreen.
 
-      let hudsonPack = PP64.fs.mainfs.get(this.hudsonLogoFSEntry[0], this.hudsonLogoFSEntry[1]); // Hudson logo
+      let hudsonPack = PP64.fs.mainfs.get(this.hudsonLogoFSEntry![0], this.hudsonLogoFSEntry![1]); // Hudson logo
 
       let nintendoImgInfo = PP64.utils.img.ImgPack.fromPack(nintendoPack)[0];
       let hudsonImgInfo = PP64.utils.img.ImgPack.fromPack(hudsonPack)[0];
 
-      let nintendoArr = new Uint8Array(nintendoImgInfo.src);
-      let hudsonArr = new Uint8Array(hudsonImgInfo.src);
+      let nintendoArr = new Uint8Array(nintendoImgInfo.src!);
+      let hudsonArr = new Uint8Array(hudsonImgInfo.src!);
 
       let comboCanvasCtx = PP64.utils.canvas.createContext(320, 240);
       comboCanvasCtx.fillStyle = "black";
@@ -1336,27 +1357,27 @@ PP64.adapters = (function() {
       ];
       let newPack = PP64.utils.img.ImgPack.toPack(imgInfoArr, 16, 8);
       //saveAs(new Blob([newPack]));
-      PP64.fs.mainfs.write(this.nintendoLogoFSEntry[0], this.nintendoLogoFSEntry[1], newPack);
+      PP64.fs.mainfs.write(this.nintendoLogoFSEntry![0], this.nintendoLogoFSEntry![1], newPack);
     }
 
-    _clearOtherBoardNames(boardIndex) {
+    _clearOtherBoardNames(boardIndex: number) {
       $$log("Adapter does not implement _clearOtherBoardNames");
     }
 
-    _readPackedFromMainFS(dir, file) {
+    _readPackedFromMainFS(dir: number, file: number) {
       let imgPackBuffer = PP64.fs.mainfs.get(dir, file);
       let imgArr = PP64.utils.img.ImgPack.fromPack(imgPackBuffer);
       if (!imgArr || !imgArr.length)
         return;
 
       let dataViews = imgArr.map(imgInfo => {
-        return new DataView(imgInfo.src);
+        return new DataView(imgInfo.src!);
       });
 
       return dataViews;
     }
 
-    _readImgsFromMainFS(dir, file) {
+    _readImgsFromMainFS(dir: number, file: number) {
       let imgPackBuffer = PP64.fs.mainfs.get(dir, file);
       let imgArr = PP64.utils.img.ImgPack.fromPack(imgPackBuffer);
       if (!imgArr || !imgArr.length)
@@ -1365,17 +1386,17 @@ PP64.adapters = (function() {
       return imgArr;
     }
 
-    _readImgInfoFromMainFS(dir, file, imgArrIndex) {
-      let imgArr = this._readImgsFromMainFS(dir, file);
+    _readImgInfoFromMainFS(dir: number, file: number, imgArrIndex: number) {
+      let imgArr = this._readImgsFromMainFS(dir, file)!;
       return imgArr[imgArrIndex || 0];
     }
 
-    _readImgFromMainFS(dir, file, imgArrIndex) {
+    _readImgFromMainFS(dir: number, file: number, imgArrIndex: number) {
       let imgInfo = this._readImgInfoFromMainFS(dir, file, imgArrIndex);
-      return PP64.utils.arrays.arrayBufferToDataURL(imgInfo.src, imgInfo.width, imgInfo.height);
+      return PP64.utils.arrays.arrayBufferToDataURL(imgInfo.src!, imgInfo.width, imgInfo.height);
     }
 
-    _parseAudio(board, boardInfo) {
+    _parseAudio(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.audioIndexOffset)
         return;
 
@@ -1383,7 +1404,7 @@ PP64.adapters = (function() {
       board.audioIndex = boardView.getUint16(boardInfo.audioIndexOffset);
     }
 
-    onWriteAudio(board, boardInfo, boardIndex) {
+    onWriteAudio(board: PP64.boards.IBoard, boardInfo: IBoardInfo, boardIndex: number) {
       if (!boardInfo.audioIndexOffset)
         return;
 
@@ -1403,7 +1424,7 @@ PP64.adapters = (function() {
     }
 
     // For debug
-    _debugBoardGameCoordsCycle(boardIndex) {
+    _debugBoardGameCoordsCycle(boardIndex: number) {
       let board = PP64.boards.getCurrentBoard();
       this._applyPerspective(board, boardIndex);
       this._reversePerspective(board, boardIndex);
@@ -1411,28 +1432,24 @@ PP64.adapters = (function() {
     }
   };
 
-  return {
-    AdapterBase,
-
-    getROMAdapter: function() {
-        let game = PP64.romhandler.getGameVersion();
-        if (!game)
-          return null;
-
-        return PP64.adapters.getAdapter(game);
-    },
-
-    getAdapter: function(game) {
-      switch(game) {
-        case 1:
-          return PP64.adapters.MP1;
-        case 2:
-          return PP64.adapters.MP2;
-        case 3:
-          return PP64.adapters.MP3;
-      }
-
+  export function getROMAdapter() {
+    let game = PP64.romhandler.getGameVersion();
+    if (!game)
       return null;
+
+    return PP64.adapters.getAdapter(game);
+  }
+
+  export function getAdapter(game: number) {
+    switch(game) {
+      case 1:
+        return (PP64 as any).adapters.MP1;
+      case 2:
+        return (PP64 as any).adapters.MP2;
+      case 3:
+        return (PP64 as any).adapters.MP3;
     }
-  };
-})();
+
+    return null;
+  }
+}

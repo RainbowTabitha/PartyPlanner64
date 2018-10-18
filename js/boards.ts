@@ -12,6 +12,7 @@ namespace PP64.boards {
     animbg?: any;
     audioIndex: number;
     _rom?: boolean;
+    _deadSpace?: number;
   }
 
   export interface ISpace {
@@ -680,7 +681,7 @@ namespace PP64.boards {
     space.rotation = Math.round(angleYAxisDeg);
   }
 
-  export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart: boolean) {
+  export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart?: boolean) {
     const space = board.spaces[spaceIdx];
     addEventToSpace(space, event, toStart);
   }

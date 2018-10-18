@@ -106,7 +106,7 @@ namespace PP64.adapters.events {
     return false;
   }
 
-  export function create(id: string, args: any) {
+  export function create(id: string, args?: any) {
     let e = _events[id];
     if (!e)
       throw `Requesting to create invalid event ${id}.`;
@@ -176,7 +176,7 @@ namespace PP64.adapters.events {
     boardIndex: number;
     board: PP64.boards.IBoard;
     curSpaceIndex: number;
-    curSpace: number;
+    curSpace: PP64.boards.ISpace;
     chains: number[][];
     offset: number;
     addr: number;

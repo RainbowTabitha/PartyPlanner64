@@ -109,7 +109,7 @@ namespace PP64.utils.img {
 
     // Creates a new ImgPack from an array of image buffers, and optionally:
     //   oldPack: The old pack being replaced, used for grabbing mystery values
-    toPack(imgInfoArr: IImgInfo[], outBpp: number, bmpBpp: number, oldPack: ArrayBuffer) {
+    toPack(imgInfoArr: IImgInfo[], outBpp: number, bmpBpp: number, oldPack?: ArrayBuffer) {
       let newPackSize = PP64.utils.img.ImgPack.getByteLength(imgInfoArr, outBpp);
 
       let bmpData, palette;
