@@ -231,7 +231,10 @@ namespace PP64.app {
     }
 
     _onUpdateNotificationInstallClicked = () => {
-      this.setState({ updateHideNotification: true });
+      this.setState({
+        updateHideNotification: true,
+        blocked: true,
+      });
 
       if (isElectron) {
         const { ipcRenderer } = require("electron");
