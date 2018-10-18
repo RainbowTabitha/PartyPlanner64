@@ -1445,9 +1445,9 @@ namespace PP64.adapters {
       case 1:
         return PP64.adapters.MP1;
       case 2:
-        return (PP64 as any).adapters.MP2;
+        return PP64.adapters.MP2;
       case 3:
-        return (PP64 as any).adapters.MP3;
+        return PP64.adapters.MP3;
     }
 
     return null;

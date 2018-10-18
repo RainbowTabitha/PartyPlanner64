@@ -1,23 +1,22 @@
-PP64.ns("adapters");
+namespace PP64.adapters {
+  export const MP2 = new class MP2Adapter extends PP64.adapters.AdapterBase {
+    public gameVersion: 1 | 2 | 3 = 2;
 
-PP64.adapters.MP2 = (function() {
-  const MP2Adapter = class extends PP64.adapters.AdapterBase {
+    public nintendoLogoFSEntry: number[] = [9, 1];
+    public hudsonLogoFSEntry: number[] = [9, 2];
+    public boardDefDirectory: number = 10;
+
+    public MAINFS_READ_ADDR: number = 0x00017680;
+    public HEAP_FREE_ADDR: number = 0x00017800;
+    public TABLE_HYDRATE_ADDR: number = 0x0005568C;
+
+    public SCENE_TABLE_ROM: number = 0x000C9474;
+
     constructor() {
       super();
-      this.gameVersion = 2;
-
-      this.nintendoLogoFSEntry = [9, 1];
-      this.hudsonLogoFSEntry = [9, 2];
-      this.boardDefDirectory = 10;
-
-      this.MAINFS_READ_ADDR = 0x00017680;
-      this.HEAP_FREE_ADDR = 0x00017800;
-      this.TABLE_HYDRATE_ADDR = 0x0005568C;
-
-      this.SCENE_TABLE_ROM = 0x000C9474;
     }
 
-    onLoad(board, boardInfo) {
+    onLoad(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       this._extractBanks(board, boardInfo);
       this._extractItemShops(board, boardInfo);
 
@@ -26,7 +25,7 @@ PP64.adapters.MP2 = (function() {
       this._readAnimationBackgrounds(board, boardInfo);
     }
 
-    onAfterOverwrite(romView, board, boardInfo) {
+    onAfterOverwrite(romView: DataView, board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       this._writeBanks(board, boardInfo);
       this._writeItemShops(board, boardInfo);
       this._writeGates(board, boardInfo);
@@ -42,7 +41,7 @@ PP64.adapters.MP2 = (function() {
         PP64.fs.animationfs.setSetEntryCount(boardInfo.animBgSet, 0);
     }
 
-    onOverwritePromises(board, boardInfo) {
+    onOverwritePromises(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let bgIndex = boardInfo.bgDir;
       let bgPromises = [
         this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
@@ -58,13 +57,13 @@ PP64.adapters.MP2 = (function() {
       return Promise.all(bgPromises)
     }
 
-    hydrateSpace(space) {
+    hydrateSpace(space: PP64.boards.ISpace) {
       if (space.type === $spaceType.BANK) {
         PP64.boards.addEventToSpace(space, PP64.adapters.events.create("BANK"));
       }
     }
 
-    onParseStrings(board, boardInfo) {
+    onParseStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let strs = boardInfo.str || {};
       if (strs.boardSelect) {
         let idx = strs.boardSelect;
@@ -91,7 +90,7 @@ PP64.adapters.MP2 = (function() {
       }
     }
 
-    onWriteStrings(board, boardInfo) {
+    onWriteStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let strs = boardInfo.str || {};
 
       // Various details about the board when selecting it
@@ -218,9 +217,9 @@ PP64.adapters.MP2 = (function() {
       }
     }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board: PP64.boards.IBoard, chains: number[][]) {
       let _spaceTypes = PP64.types.Space;
-      let typeMap = {
+      let typeMap: { [index: number]: PP64.types.Space } = {
         0: _spaceTypes.OTHER, // Sometimes START
         3: _spaceTypes.OTHER,
         5: _spaceTypes.CHANCE,
@@ -248,25 +247,31 @@ PP64.adapters.MP2 = (function() {
       }
     }
 
-    onChangeGameSpaceTypesFromBoardSpaceTypes(board) {
+    onChangeGameSpaceTypesFromBoardSpaceTypes(board: PP64.boards.IBoard) {
       let _spaceTypes = PP64.types.Space;
-      let typeMap = {};
-      typeMap[_spaceTypes.OTHER] = 0;
-      typeMap[_spaceTypes.BLUE] = 1;
-      typeMap[_spaceTypes.RED] = 2;
-      typeMap[_spaceTypes.MINIGAME] = 0; // N/A
-      typeMap[_spaceTypes.HAPPENING] = 4;
-      typeMap[_spaceTypes.STAR] = 14;
-      typeMap[_spaceTypes.CHANCE] = 5;
-      typeMap[_spaceTypes.START] = 0; // N/A
-      typeMap[_spaceTypes.SHROOM] = 0; // N/A
-      typeMap[_spaceTypes.BOWSER] = 12;
-      typeMap[_spaceTypes.ITEM] = 6;
-      typeMap[_spaceTypes.BATTLE] = 9;
-      typeMap[_spaceTypes.BANK] = 7;
-      typeMap[_spaceTypes.ARROW] = 13;
-      typeMap[_spaceTypes.BLACKSTAR] = 15;
-      typeMap[_spaceTypes.GAMEGUY] = 0; // N/A
+      let typeMap: { [space in PP64.types.Space]: number } = {
+        [_spaceTypes.OTHER]: 0,
+        [_spaceTypes.BLUE]: 1,
+        [_spaceTypes.RED]: 2,
+        [_spaceTypes.MINIGAME]: 0, // N/A
+        [_spaceTypes.HAPPENING]: 4,
+        [_spaceTypes.STAR]: 14,
+        [_spaceTypes.CHANCE]: 5,
+        [_spaceTypes.START]: 0, // N/A
+        [_spaceTypes.SHROOM]: 0, // N/A
+        [_spaceTypes.BOWSER]: 12,
+        [_spaceTypes.ITEM]: 6,
+        [_spaceTypes.BATTLE]: 9,
+        [_spaceTypes.BANK]: 7,
+        [_spaceTypes.ARROW]: 13,
+        [_spaceTypes.BLACKSTAR]: 15,
+        [_spaceTypes.GAMEGUY]: 0, // N/A
+        [_spaceTypes.DUEL_BASIC]: 0, // N/A
+        [_spaceTypes.DUEL_START_BLUE]: 0, // N/A
+        [_spaceTypes.DUEL_START_RED]: 0, // N/A
+        [_spaceTypes.DUEL_POWERUP]: 0,// N/A
+        [_spaceTypes.DUEL_REVERSE]: 0, // N/A
+      };
       board.spaces.forEach((space) => {
         let newType = typeMap[space.type];
         if (newType !== undefined)
@@ -274,7 +279,7 @@ PP64.adapters.MP2 = (function() {
       });
     }
 
-    onGetBoardCoordsFromGameCoords(x, y, z, width, height, boardIndex) {
+    onGetBoardCoordsFromGameCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       // The following is a bunch of crappy approximations.
       let newX, newY, newZ;
       switch (boardIndex) {
@@ -315,7 +320,7 @@ PP64.adapters.MP2 = (function() {
       return [Math.round(newX), Math.round(newY), Math.round(newZ)];
     }
 
-    onGetGameCoordsFromBoardCoords(x, y, z, width, height, boardIndex) {
+    onGetGameCoordsFromBoardCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       // The following is the inverse of a bunch of crappy approximations.
       let gameX, gameY, gameZ;
       switch (boardIndex) {
@@ -348,7 +353,7 @@ PP64.adapters.MP2 = (function() {
       return [gameX, gameY, gameZ];
     }
 
-    _readAnimationBackgrounds(board, boardInfo) {
+    _readAnimationBackgrounds(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (isNaN(boardInfo.animBgSet) || !boardInfo.bgDir)
         return;
 
@@ -360,7 +365,7 @@ PP64.adapters.MP2 = (function() {
         board.animbg = animBgs;
     }
 
-    _writeAnimationBackgrounds(setIndex, mainBgSrc, animSources, width, height) {
+    _writeAnimationBackgrounds(setIndex: number, mainBgSrc: string, animSources: string[], width: number, height: number) {
       return new Promise(function(resolve, reject) {
         if (isNaN(setIndex) || !animSources || !animSources.length) {
           resolve();
@@ -369,7 +374,7 @@ PP64.adapters.MP2 = (function() {
 
         let failTimer = setTimeout(() => reject(`Failed to write animations`), 45000);
 
-        let mainBgImgData;
+        let mainBgImgData: ImageData;
         let animImgData = new Array(animSources.length);
 
         let mainBgPromise = new Promise(function(resolve, reject) {
@@ -386,16 +391,16 @@ PP64.adapters.MP2 = (function() {
         let animPromises = [mainBgPromise];
 
         for (let i = 0; i < animSources.length; i++) {
-          let animPromise = new Promise(function(resolve, reject) {
+          let animPromise = new Promise((resolve) => {
             let canvasCtx = PP64.utils.canvas.createContext(width, height);
             let srcImage = new Image();
-            srcImage.onload = function() {
+            srcImage.onload = function(this: { index: number }) {
               canvasCtx.drawImage(srcImage, 0, 0, width, height);
               animImgData[this.index] = canvasCtx.getImageData(0, 0, width, height);
               resolve();
             }.bind({ index: i });
-            srcImage.src = animSources[this.index];
-          }.bind({ index: i }));
+            srcImage.src = animSources[i];
+          });
           animPromises.push(animPromise);
         }
 
@@ -413,14 +418,14 @@ PP64.adapters.MP2 = (function() {
       });
     }
 
-    onParseBoardSelectImg(board, boardInfo) {
+    onParseBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img.boardSelectImg)
         return;
 
       board.otherbg.boardselect = this._readImgFromMainFS(9, boardInfo.img.boardSelectImg, 0);
     }
 
-    onWriteBoardSelectImg(board, boardInfo) {
+    onWriteBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         let boardSelectImg = boardInfo.img.boardSelectImg;
         if (!boardSelectImg) {
@@ -455,18 +460,18 @@ PP64.adapters.MP2 = (function() {
       });
     }
 
-    _parseBoardSelectIcon(board, boardInfo) {
+    _parseBoardSelectIcon(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img.boardSelectIconCoords)
         return;
 
       let bgInfo = this._readImgInfoFromMainFS(9, 15, 0);
       let [x, y] = boardInfo.img.boardSelectIconCoords;
-      let icon = PP64.utils.img.cutFromWhole(bgInfo.src, bgInfo.width, bgInfo.height, 32, x, y, 32, 32);
+      let icon = PP64.utils.img.cutFromWhole(bgInfo.src!, bgInfo.width, bgInfo.height, 32, x, y, 32, 32);
       let dataUrl = PP64.utils.arrays.arrayBufferToDataURL(icon, 32, 32);
       board.otherbg.boardselecticon = dataUrl;
     }
 
-    _writeBoardSelectIcon(board, boardInfo) {
+    _writeBoardSelectIcon(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         if (!boardInfo.img.boardSelectIconCoords) {
           resolve();
@@ -480,7 +485,7 @@ PP64.adapters.MP2 = (function() {
 
         let failTimer = setTimeout(() => reject(`Failed to write board select icon for ${boardInfo.name}`), 45000);
 
-        let blankBackImage, newBoardSelectIconImage;
+        let blankBackImage: HTMLImageElement, newBoardSelectIconImage: HTMLImageElement;
 
         let blankBackPromise = new Promise(function(resolve, reject) {
           blankBackImage = new Image();
@@ -504,7 +509,7 @@ PP64.adapters.MP2 = (function() {
 
           // Draw the original onto a canvas
           let canvasCtx = PP64.utils.canvas.createContext(bgInfo.width, bgInfo.height);
-          let origImageData = PP64.utils.arrays.arrayBufferToImageData(bgInfo.src, bgInfo.width, bgInfo.height);
+          let origImageData = PP64.utils.arrays.arrayBufferToImageData(bgInfo.src!, bgInfo.width, bgInfo.height);
           canvasCtx.putImageData(origImageData, 0, 0);
 
           // Then draw the "clean slate" for the icon, and the given icon.
@@ -563,7 +568,7 @@ PP64.adapters.MP2 = (function() {
     // over the board select icon. The effect is a bit crude now; the original
     // mask can have some semi-transparent edges, but this just either adds
     // a #00000000 or #BBBBBBFF pixel based on the given icon.
-    _createBoardSelectIconHoverMask(newIconImage) {
+    _createBoardSelectIconHoverMask(newIconImage: HTMLImageElement) {
       let newIconBuffer = PP64.utils.img.toArrayBuffer(newIconImage, 32, 32);
       let maskBuffer = new ArrayBuffer(newIconBuffer.byteLength);
 
@@ -590,14 +595,14 @@ PP64.adapters.MP2 = (function() {
       return maskBuffer;
     }
 
-    onParseBoardLogoImg(board, boardInfo) {
+    onParseBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img.introLogoImg)
         return;
 
       board.otherbg.boardlogo = this._readImgFromMainFS(10, boardInfo.img.introLogoImg, 0);
     }
 
-    onWriteBoardLogoImg(board, boardInfo) {
+    onWriteBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         let introLogoImg = boardInfo.img.introLogoImg;
         if (!introLogoImg) {
@@ -650,7 +655,7 @@ PP64.adapters.MP2 = (function() {
     // Same as _writeBackground essentially, but for some reason MP2 overview background
     // doesn't line up when just shrinking the background naively.
     // If we shift it up by 1 tile's worth of height, it lines up better.
-    _writeOverviewBackground(bgIndex, src) {
+    _writeOverviewBackground(bgIndex: number, src: string) {
       return new Promise((resolve, reject) => {
         let canvasCtx = PP64.utils.canvas.createContext(320, 240);
         let srcImage = new Image();
@@ -844,5 +849,4 @@ PP64.adapters.MP2 = (function() {
       };
     }
   }
-  return new MP2Adapter();
-})();
+}

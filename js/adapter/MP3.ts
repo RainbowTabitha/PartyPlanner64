@@ -1,28 +1,27 @@
-PP64.ns("adapters");
+namespace PP64.adapters {
+  export const MP3 = new class MP3Adapter extends PP64.adapters.AdapterBase {
+    public gameVersion: 1 | 2 | 3 = 3;
 
-PP64.adapters.MP3 = (function() {
-  const MP3Adapter = class extends PP64.adapters.AdapterBase {
+    public nintendoLogoFSEntry: number[] = [17, 1];
+    public hudsonLogoFSEntry: number[] = [17, 2];
+    public boardDefDirectory: number = 19;
+
+    public MAINFS_READ_ADDR: number = 0x00009C10;
+    public HEAP_FREE_ADDR: number = 0x00009E6C;
+    public TABLE_HYDRATE_ADDR: number = 0x000EBA60;
+
+    public SCENE_TABLE_ROM: number = 0x00096EF4;
+
     constructor() {
       super();
-      this.gameVersion = 3;
-
-      this.nintendoLogoFSEntry = [17, 1];
-      this.hudsonLogoFSEntry = [17, 2];
-      this.boardDefDirectory = 19;
-
-      this.MAINFS_READ_ADDR = 0x00009C10;
-      this.HEAP_FREE_ADDR = 0x00009E6C;
-      this.TABLE_HYDRATE_ADDR = 0x000EBA60;
-
-      this.SCENE_TABLE_ROM = 0x00096EF4;
     }
 
-    onLoad(board, boardInfo) {
+    onLoad(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       this._extractBanks(board, boardInfo);
       this._extractItemShops(board, boardInfo);
     }
 
-    onAfterOverwrite(romView, board, boardInfo) {
+    onAfterOverwrite(romView: DataView, board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       this._writeBanks(board, boardInfo);
       this._writeItemShops(board, boardInfo);
       this._writeGates(board, boardInfo);
@@ -61,7 +60,7 @@ PP64.adapters.MP3 = (function() {
       }
     }
 
-    onOverwritePromises(board, boardInfo) {
+    onOverwritePromises(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let bgIndex = boardInfo.bgDir;
       let bgPromises = [
         this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
@@ -77,7 +76,7 @@ PP64.adapters.MP3 = (function() {
       return Promise.all(bgPromises)
     }
 
-    onAfterSave(romView) {
+    onAfterSave(romView: DataView) {
       // This patch makes it so the game will boot if the emulator is misconfigured
       // with something other than 16K EEPROM save type. Obviously users should
       // set the correct save type, but this will let them play at least (with broken saving)
@@ -96,14 +95,14 @@ PP64.adapters.MP3 = (function() {
       romView.setUint32(0x00111F04, 0x10800009); // 800FE2E4
     }
 
-    hydrateSpace(space) {
+    hydrateSpace(space: PP64.boards.ISpace) {
       if (space.type === $spaceType.BANK) {
         PP64.boards.addEventToSpace(space, PP64.adapters.events.create("BANK"));
       }
     }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
-      let typeMap;
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board: PP64.boards.IBoard, chains: number[][]) {
+      let typeMap: { [index: number]: PP64.types.Space };
       const isNormalBoard = !board.type || board.type === PP64.types.BoardType.NORMAL;
       if (isNormalBoard) {
         typeMap = {
@@ -154,24 +153,32 @@ PP64.adapters.MP3 = (function() {
       }
     }
 
-    onChangeGameSpaceTypesFromBoardSpaceTypes(board) {
+    onChangeGameSpaceTypesFromBoardSpaceTypes(board: PP64.boards.IBoard) {
       let _spaceTypes = PP64.types.Space;
-      let typeMap = {};
-      typeMap[_spaceTypes.OTHER] = 0;
-      typeMap[_spaceTypes.BLUE] = 1;
-      typeMap[_spaceTypes.RED] = 2;
-      typeMap[_spaceTypes.MINIGAME] = 0; // N/A
-      typeMap[_spaceTypes.HAPPENING] = 4;
-      typeMap[_spaceTypes.STAR] = 14;
-      typeMap[_spaceTypes.CHANCE] = 5;
-      typeMap[_spaceTypes.START] = 0; // N/A
-      typeMap[_spaceTypes.SHROOM] = 0; // N/A
-      typeMap[_spaceTypes.BOWSER] = 12;
-      typeMap[_spaceTypes.ITEM] = 6;
-      typeMap[_spaceTypes.BATTLE] = 9;
-      typeMap[_spaceTypes.BANK] = 7;
-      typeMap[_spaceTypes.ARROW] = 13;
-      typeMap[_spaceTypes.GAMEGUY] = 15; // ?
+      let typeMap: { [space in PP64.types.Space]: number } = {
+        [_spaceTypes.OTHER]: 0,
+        [_spaceTypes.BLUE]: 1,
+        [_spaceTypes.RED]: 2,
+        [_spaceTypes.MINIGAME]: 0, // N/A
+        [_spaceTypes.HAPPENING]: 4,
+        [_spaceTypes.STAR]: 14,
+        [_spaceTypes.CHANCE]: 5,
+        [_spaceTypes.START]: 0, // N/A
+        [_spaceTypes.SHROOM]: 0, // N/A
+        [_spaceTypes.BOWSER]: 12,
+        [_spaceTypes.ITEM]: 6,
+        [_spaceTypes.BATTLE]: 9,
+        [_spaceTypes.BANK]: 7,
+        [_spaceTypes.ARROW]: 13,
+        [_spaceTypes.GAMEGUY]: 15, // ?
+        [_spaceTypes.BLACKSTAR]: 0, // N/A
+        [_spaceTypes.DUEL_BASIC]: 0, // N/A
+        [_spaceTypes.DUEL_START_BLUE]: 0, // N/A
+        [_spaceTypes.DUEL_START_RED]: 0, // N/A
+        [_spaceTypes.DUEL_POWERUP]: 0,// N/A
+        [_spaceTypes.DUEL_REVERSE]: 0, // N/A
+      };
+
       board.spaces.forEach((space) => {
         let newType = typeMap[space.type];
         if (newType !== undefined)
@@ -179,7 +186,7 @@ PP64.adapters.MP3 = (function() {
       });
     }
 
-    onGetBoardCoordsFromGameCoords(x, y, z, width, height, boardIndex) {
+    onGetBoardCoordsFromGameCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       // The following is a bunch of crappy approximations.
       let newX, newY, newZ;
       switch (boardIndex) {
@@ -225,7 +232,7 @@ PP64.adapters.MP3 = (function() {
       return [Math.round(newX), Math.round(newY), Math.round(newZ)];
     }
 
-    onGetGameCoordsFromBoardCoords(x, y, z, width, height, boardIndex) {
+    onGetGameCoordsFromBoardCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       // The following is the inverse of a bunch of crappy approximations.
       let gameX, gameY, gameZ;
       switch (boardIndex) {
@@ -264,7 +271,7 @@ PP64.adapters.MP3 = (function() {
 
     // Creates the chain-based event objects that we abstract out in the UI.
     // Override from base to also add reverse shroom events and special chain split.
-    onCreateChainEvents(board, chains) {
+    onCreateChainEvents(board: PP64.boards.IBoard, chains: number[][]) {
       // There is either a merge or a split at the end of each chain.
       for (let i = 0; i < chains.length; i++) {
         let chain = chains[i];
@@ -272,7 +279,7 @@ PP64.adapters.MP3 = (function() {
         let secondSpace = chain[1];
         let lastSpace = chain[chain.length - 1];
         let prevSpace = chain[chain.length - 2]; // For MP3
-        let endLinks = PP64.boards.getConnections(lastSpace, board);
+        let endLinks = PP64.boards.getConnections(lastSpace, board)!;
         let event;
         if (endLinks.length > 1) {
           // A split, figure out the end points.
@@ -280,9 +287,9 @@ PP64.adapters.MP3 = (function() {
           if (endLinks.length > 2)
             throw "MP3 cannot support more than 2 split directions";
 
-          let chainIndices = [];
+          let chainIndices: number[] = [];
           endLinks.forEach(link => {
-            chainIndices.push(_getChainWithSpace(link));
+            chainIndices.push(_getChainWithSpace(link)!);
           });
 
           // Create the args, which are more sophisticated / declarative in MP3 (yay)
@@ -323,7 +330,7 @@ PP64.adapters.MP3 = (function() {
           inlineArgs.push(0x0000);
           inlineArgs.push(0x0000);
 
-          let args = {
+          let args: any = {
             inlineArgs,
             chains: chainIndices,
           }
@@ -353,11 +360,11 @@ PP64.adapters.MP3 = (function() {
         // See if we need a reverse split event, reverse chain merge, or safety chain merge.
         let pointingSpaces = _getSpacesPointingToSpace(firstSpace);
         if (pointingSpaces.length) {
-          let chainIndices = [];
+          let chainIndices: number[] = [];
           pointingSpaces.forEach(link => {
-            chainIndices.push(_getChainWithSpace(link));
+            chainIndices.push(_getChainWithSpace(link)!);
           });
-          let pointingChains = [];
+          let pointingChains: number[][] = [];
           chainIndices.forEach(index => {
             pointingChains.push(chains[index]);
           });
@@ -424,7 +431,7 @@ PP64.adapters.MP3 = (function() {
           // way towards the beginning of the chain (start space for example).
           // At the start of these chains, we put a type 8 event to spin them around.
           // It is redundant when going forward on the chain but doesn't hurt.
-          let firstLinks = PP64.boards.getConnections(firstSpace, board);
+          let firstLinks = PP64.boards.getConnections(firstSpace, board)!;
           if (firstLinks.length > 1) {
             $$log("FIXME: branching isolated chain?");
           }
@@ -442,17 +449,17 @@ PP64.adapters.MP3 = (function() {
         }
       }
 
-      function _getChainWithSpace(space) {
+      function _getChainWithSpace(space: number) {
         for (let c = 0; c < chains.length; c++) {
           if (chains[c].indexOf(space) >= 0) // Should really be 0 always - game does support supplied index other than 0 though.
             return c;
         }
       }
 
-      function _getSpacesPointingToSpace(space) {
+      function _getSpacesPointingToSpace(space: number) {
         let pointingSpaces = [];
         for (let s = 0; s < board.spaces.length; s++) {
-          let spaceLinks = PP64.boards.getConnections(s, board);
+          let spaceLinks = PP64.boards.getConnections(s, board)!;
           if (spaceLinks.indexOf(space) >= 0)
             pointingSpaces.push(s);
         }
@@ -460,14 +467,14 @@ PP64.adapters.MP3 = (function() {
       }
 
       // Returns space index with gate, or undefined
-      function _chainHasGate(chain) {
+      function _chainHasGate(chain: number[]) {
         return chain.find(i => {
           return board.spaces[i].subtype === $spaceSubType.GATE;
         });
       }
 
       // Returns index of chain with gate.
-      function _needsGateChainSplit(chainIndices) {
+      function _needsGateChainSplit(chainIndices: number[]) {
         let chainIndex = null;
         chainIndices.forEach(index => {
           let spaceIndexWithGate = _chainHasGate(chains[index]);
@@ -479,7 +486,7 @@ PP64.adapters.MP3 = (function() {
       }
     }
 
-    onParseStrings(board, boardInfo) {
+    onParseStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let strs = boardInfo.str || {};
       if (strs.boardSelect) {
         let idx = strs.boardSelect[0];
@@ -503,7 +510,7 @@ PP64.adapters.MP3 = (function() {
       }
     }
 
-    onWriteStrings(board, boardInfo) {
+    onWriteStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let strs = boardInfo.str || {};
       if (strs.boardSelect && strs.boardSelect.length) {
         let bytes = [];
@@ -601,7 +608,7 @@ PP64.adapters.MP3 = (function() {
       }
     }
 
-    _createBoardGreetingBase(boardName) {
+    _createBoardGreetingBase(boardName: string) {
       let bytes = PP64.fs.strings._strToBytes("Welcome to the legendary ");
       bytes.push(0x05); // Start GREEN
       bytes.push(0x0F); // ?
@@ -618,14 +625,14 @@ PP64.adapters.MP3 = (function() {
       return bytes;
     }
 
-    onParseBoardSelectImg(board, boardInfo) {
+    onParseBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img || !boardInfo.img.boardSelectImg)
         return;
 
       board.otherbg.boardselect = this._readImgFromMainFS(20, boardInfo.img.boardSelectImg, 0);
     }
 
-    onWriteBoardSelectImg(board, boardInfo) {
+    onWriteBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         let boardSelectImg = boardInfo.img && boardInfo.img.boardSelectImg;
         if (!boardSelectImg) {
@@ -661,7 +668,7 @@ PP64.adapters.MP3 = (function() {
       });
     }
 
-    onParseBoardLogoImg(board, boardInfo) {
+    onParseBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img || !boardInfo.img.splashLogoImg)
         return;
 
@@ -669,7 +676,7 @@ PP64.adapters.MP3 = (function() {
       board.otherbg.boardlogotext = this._readImgFromMainFS(19, boardInfo.img.splashLogoTextImg, 0);
     }
 
-    onWriteBoardLogoImg(board, boardInfo) {
+    onWriteBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         let splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
         if (!splashLogoImg) {
@@ -720,7 +727,7 @@ PP64.adapters.MP3 = (function() {
       });
     }
 
-    onWriteBoardLogoTextImg(board, boardInfo) {
+    onWriteBoardLogoTextImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         let splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
         if (!splashLogoTextImg) {
@@ -758,7 +765,7 @@ PP64.adapters.MP3 = (function() {
     }
 
     // Create generic skeleton key gate.
-    _onWriteGateImg(board, boardInfo) {
+    _onWriteGateImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise(function(resolve, reject) {
         let gateIndex = boardInfo.img && boardInfo.img.gateImg;
         if (!gateIndex) {
@@ -780,7 +787,7 @@ PP64.adapters.MP3 = (function() {
 
           // Now write the BMP back into the FORM.
           let gateFORM = PP64.fs.mainfs.get(19, 366); // Always use gate 3 as a base.
-          let gateUnpacked = PP64.utils.FORM.unpack(gateFORM);
+          let gateUnpacked = PP64.utils.FORM.unpack(gateFORM)!;
           PP64.utils.FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
 
           // Now write the FORM.
@@ -795,7 +802,7 @@ PP64.adapters.MP3 = (function() {
       });
     }
 
-    onWriteAudio(board, boardInfo, boardIndex) {
+    onWriteAudio(board: PP64.boards.IBoard, boardInfo: IBoardInfo, boardIndex: number) {
       super.onWriteAudio(board, boardInfo, boardIndex);
       if (!boardInfo.audioIndexOffset)
         return;
@@ -974,5 +981,4 @@ PP64.adapters.MP3 = (function() {
       };
     }
   }
-  return new MP3Adapter();
-})();
+}
