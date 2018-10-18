@@ -32,7 +32,7 @@ namespace PP64.patches.gameshark.hook {
 
 namespace PP64.patches.gameshark {
   export function romSupportsCheats() {
-    let gameID = (PP64 as any).romhandler.getROMGame();
+    let gameID = PP64.romhandler.getROMGame();
     switch(gameID) {
       case $gameType.MP1_USA:
       case $gameType.MP2_USA:
@@ -57,7 +57,7 @@ namespace PP64.patches.gameshark {
     }
 
     writeHookCode(romView: DataView) {
-      const adapter = (PP64 as any).adapters.getROMAdapter();
+      const adapter = PP64.adapters.getROMAdapter();
       const MAINFS_READ_ADDR = adapter && adapter.MAINFS_READ_ADDR;
       if (!MAINFS_READ_ADDR) {
         throw new Error("Cheats were being applied, but the ROM adapter had no MAINFS_READ_ADDR");

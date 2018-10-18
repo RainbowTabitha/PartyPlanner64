@@ -33,7 +33,7 @@ namespace PP64.utils {
     let failed = false;
     if (window.localStorage) {
       // Save off the current events (first, since they're very small)
-      const events = (PP64 as any).adapters.events.getCustomEvents();
+      const events = PP64.adapters.events.getCustomEvents();
       try {
         localStorage.setItem("events", JSON.stringify(events));
       }

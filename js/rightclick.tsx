@@ -35,7 +35,7 @@ namespace PP64.rightclick {
       // But also let the canvas handlers decide what happens if they are clicked.
       if (this.elementIsWithin(event.target) || event.target.tagName.toUpperCase() === "CANVAS")
         return;
-      (PP64 as any).renderer.updateRightClickMenu(null);
+      PP64.renderer.updateRightClickMenu(null);
     }
 
     handleClick = (event: any) => {
@@ -54,7 +54,7 @@ namespace PP64.rightclick {
         this.props.space!.subtype = subtype;
       else
         delete this.props.space!.subtype;
-      (PP64 as any).renderer.render();
+      PP64.renderer.render();
       this.forceUpdate();
     }
 
@@ -97,7 +97,7 @@ namespace PP64.rightclick {
     onCoordSet = (event?: any) => {
       this.props.space!.x = this.props.space!.x || 0;
       this.props.space!.y = this.props.space!.y || 0;
-      (PP64 as any).renderer.render();
+      PP64.renderer.render();
       this.setState({ oldX: undefined, oldY: undefined });
       this.forceUpdate();
     }

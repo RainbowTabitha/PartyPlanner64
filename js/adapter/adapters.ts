@@ -150,8 +150,12 @@ namespace PP64.adapters {
       return this.onOverwritePromises(board, boardInfo);
     }
 
-    onOverwritePromises(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
-      $$log("Adapter does not implement onOverwritePromises");
+    onAfterSave(romView: DataView): void
+    {
+    }
+
+    onOverwritePromises(board: PP64.boards.IBoard, boardInfo: IBoardInfo): Promise<any> {
+      throw "Adapter does not implement onOverwritePromises";
     }
 
     // Gives a new space the default things it would need.
@@ -1418,7 +1422,7 @@ namespace PP64.adapters {
       return [];
     }
 
-    getCharacterMap() {
+    getCharacterMap(): { [num: number]: string } {
       $$log("Adapter does not implement getCharacterMap");
       return {};
     }

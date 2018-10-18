@@ -452,7 +452,7 @@ namespace PP64.details {
 
     render() {
       let index = 0;
-      let audioNames = (PP64 as any).adapters.getAdapter(PP64.boards.getCurrentBoard().game).getAudioMap();
+      let audioNames = PP64.adapters.getAdapter(PP64.boards.getCurrentBoard().game)!.getAudioMap();
       let audioOptions = audioNames.map((song: string) => {
         let curIndex = index++;
         if (!song)

@@ -4,7 +4,6 @@ namespace PP64.newboard {
   ];
 
   interface INewBoardProps {
-    theme: any;
     onAccept(version: number, type: PP64.types.BoardType, theme: any): any;
   }
 
@@ -37,7 +36,7 @@ namespace PP64.newboard {
       }
       let fn = this.props.onAccept;
       if (fn)
-        fn(this.state.version, this.state.type, Themes[this.props.theme]);
+        fn(this.state.version, this.state.type, Themes[this.state.theme]);
     }
 
     render() {

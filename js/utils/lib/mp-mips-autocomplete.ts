@@ -30,7 +30,7 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm: any) {
     };
   }
 
-  const supportedGames = (PP64 as any).events.getActiveEditorSupportedGames();
+  const supportedGames = PP64.events.getActiveEditorSupportedGames();
 
   function getSymbols(games: PP64.types.Game[], type?: any) {
     if (!games.length)

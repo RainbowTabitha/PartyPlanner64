@@ -56,7 +56,7 @@ namespace PP64.images {
     _imagesToLoad = _imagesToLoad - 1;
     if (!_imagesToLoad) {
       //$$log("All images loaded, rendering again.");
-      (PP64 as any).renderer.render();
+      PP64.renderer.render();
     }
   }
 

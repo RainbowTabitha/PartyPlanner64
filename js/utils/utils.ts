@@ -156,7 +156,7 @@ namespace PP64.utils {
 
   export class browser {
     public static updateWindowTitle(boardName: string) {
-      boardName = boardName || (PP64 as any).boards.getCurrentBoard().name;
+      boardName = boardName || PP64.boards.getCurrentBoard().name;
       boardName = PP64.utils.string.mpFormatToPlainText(boardName);
       document.title = boardName ?  `PartyPlanner64 - ${boardName}` : "PartyPlanner64";
     }

@@ -155,7 +155,7 @@ namespace PP64.boards {
     _findAllCustomEvents(board);
 
     if ((window as any).PP64.app)
-      (window as any).PP64.app.boardsChanged();
+      PP64.app.boardsChanged();
 
     return collection.length - 1;
   }
@@ -180,7 +180,7 @@ namespace PP64.boards {
   export function setCurrentBoard(index: number, isRom?: boolean) {
     currentBoardIsRom = !!isRom;
     currentBoard = index;
-    (window as any).PP64.app.currentBoardChanged();
+    PP64.app.currentBoardChanged();
   }
 
   export function boardIsROM(board: IBoard) {
@@ -369,7 +369,7 @@ namespace PP64.boards {
         pointingMap[s] = [];
     }
     for (let startIdx in board.links) {
-      let ends = PP64.boards.getConnections(startIdx as any, board)!;
+      let ends = PP64.boards.getConnections(parseInt(startIdx), board)!;
       ends.forEach(end => {
         pointingMap[end].push(Number(startIdx));
       });
@@ -427,11 +427,11 @@ namespace PP64.boards {
         if (!event.asm)
           continue;
 
-        if ((window as any).PP64.adapters.events.getEvent(event.id))
+        if (PP64.adapters.events.getEvent(event.id))
           continue; // Already exists
 
         try {
-          (window as any).PP64.adapters.events.createCustomEvent(event.asm);
+          PP64.adapters.events.createCustomEvent(event.asm);
         }
         catch (e) {
           console.error("Error reading custom event from loaded board: " + e.toString());
@@ -494,8 +494,8 @@ namespace PP64.boards {
     else if (currentBoard === boardIdx && currentBoard === boards.length)
       setCurrentBoard(currentBoard - 1); // We deleted the end and current entry.
 
-    (window as any).PP64.app.boardsChanged();
-    (window as any).PP64.app.currentBoardChanged();
+    PP64.app.boardsChanged();
+    PP64.app.currentBoardChanged();
   }
 
   export function copyCurrentBoard(): number {
@@ -520,7 +520,7 @@ namespace PP64.boards {
       boards.splice(insertionIndex, 0, copy);
     }
 
-    (window as any).PP64.app.boardsChanged();
+    PP64.app.boardsChanged();
 
     return insertionIndex;
   }
@@ -537,7 +537,7 @@ namespace PP64.boards {
     if (subtype !== undefined)
       newSpace.subtype = subtype;
 
-    let adapter = (window as any).PP64.adapters.getAdapter(board.game || 1);
+    let adapter = PP64.adapters.getAdapter(board.game || 1);
     if (adapter)
       adapter.hydrateSpace(newSpace);
 
@@ -687,7 +687,7 @@ namespace PP64.boards {
   }
 
   export function loadBoardsFromROM() {
-    let adapter = (window as any).PP64.adapters.getROMAdapter();
+    let adapter = PP64.adapters.getROMAdapter();
     if (!adapter)
       return;
 
@@ -697,7 +697,7 @@ namespace PP64.boards {
       romBoards.push(gameBoards[i]);
     }
 
-    (window as any).PP64.app.boardsChanged();
+    PP64.app.boardsChanged();
   }
 
   export function clearBoardsFromROM() {

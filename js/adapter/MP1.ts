@@ -574,7 +574,7 @@ namespace PP64.adapters {
       ];
     }
 
-    getCharacterMap() {
+    getCharacterMap(): { [num: number]: string } {
       return {
         0x00: "", // NULL terminator
         0x01: "<BLACK>", // Start black font

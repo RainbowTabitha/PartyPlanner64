@@ -155,7 +155,7 @@ namespace PP64.header {
         PP64.app.changeView($viewType.EVENTS);
         break;
       case $actType.BACK_TO_EVENTS:
-        if ((PP64 as any).events.createEventPromptExit()) {
+        if (PP64.events.createEventPromptExit()) {
           PP64.app.changeCurrentEvent(null);
           PP64.app.changeView($viewType.EVENTS);
         }
@@ -164,7 +164,7 @@ namespace PP64.header {
         PP64.utils.input.openFile(".s", eventFileSelected);
         break;
       case $actType.SAVE_EVENT:
-        (PP64 as any).events.saveEvent();
+        PP64.events.saveEvent();
         break;
       case $actType.CREATEEVENT:
         PP64.app.changeView($viewType.CREATEEVENT);
@@ -176,10 +176,10 @@ namespace PP64.header {
         PP64.app.changeView($viewType.PATCHES);
         break;
       case $actType.SET_BG:
-        (PP64 as any).utils.input.openFile("image/*", bgSelected);
+        PP64.utils.input.openFile("image/*", bgSelected);
         break;
       case $actType.DUMP_LOAD:
-        (PP64 as any).utils.input.openFile(".zip", dumpSelected);
+        PP64.utils.input.openFile(".zip", dumpSelected);
         break;
       case $actType.DUMP_SAVE:
         PP64.app.blockUI(true);
@@ -264,7 +264,7 @@ namespace PP64.header {
         try {
           let asm = e.target.result;
           PP64.adapters.events.createCustomEvent(asm);
-          (PP64 as any).events.refreshEventsView();
+          PP64.events.refreshEventsView();
         } catch (e) {
           PP64.app.showMessage("Event file load failed. " + e.toString());
           return;
@@ -557,7 +557,7 @@ namespace PP64.header {
   };
 
   function overwriteDropdown(closeFn: any) {
-    let validationResults = (PP64 as any).validation.validateCurrentBoardForOverwrite();
+    let validationResults = PP64.validation.validateCurrentBoardForOverwrite();
     if (!validationResults)
       return null;
 
@@ -595,7 +595,7 @@ namespace PP64.header {
       if (!this.hasErrors() && !this.props.unavailable) {
         this.props.closeCallback();
 
-        let adapter = (PP64 as any).adapters.getROMAdapter();
+        let adapter = PP64.adapters.getROMAdapter();
         if (!adapter)
           return;
         PP64.app.blockUI(true);
@@ -713,7 +713,7 @@ namespace PP64.header {
       });
       PP64.boards.setCurrentBoard(newBoardIdx);
     }
-    const NewBoard = (PP64 as any).newboard.NewBoard;
+    const NewBoard = PP64.newboard.NewBoard;
     return (
       <NewBoard onAccept={onAccept} />
     );
@@ -738,7 +738,7 @@ namespace PP64.header {
 
       closeFn();
     }
-    const Screenshot = (PP64 as any).screenshot.Screenshot;
+    const Screenshot = PP64.screenshot.Screenshot;
     return (
       <Screenshot onAccept={onAccept} />
     );

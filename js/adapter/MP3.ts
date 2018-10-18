@@ -907,7 +907,7 @@ namespace PP64.adapters {
     }
 
     // Mostly a MP1 copy for now.
-    getCharacterMap() {
+    getCharacterMap(): { [num: number]: string } {
       return {
         0x00: "", // NULL terminator
         0x01: "<BLACK>",

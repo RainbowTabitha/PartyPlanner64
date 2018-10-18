@@ -111,7 +111,7 @@ namespace PP64.fs.strings {
     }
 
     _byteToStr(val: number) {
-      let map = (PP64 as any).adapters.getROMAdapter().getCharacterMap();
+      let map = PP64.adapters.getROMAdapter()!.getCharacterMap();
       if (map.hasOwnProperty(val))
         return map[val];
       return String.fromCharCode(val);
@@ -172,7 +172,7 @@ namespace PP64.fs.strings {
   }
 
   export function _strToBytes(str: string): number[] {
-    let map = (PP64 as any).adapters.getROMAdapter().getCharacterMap();
+    let map = PP64.adapters.getROMAdapter()!.getCharacterMap();
     let result = [];
     let [curIdx, len] = [0, str.length];
     while (curIdx < len) {

@@ -41,7 +41,7 @@ namespace PP64.patches.gameshark.hook {
       romView.setUint32(this.HOOK_JUMP_ROM_OFFSET + 12, 0);
 
       const cheatRoutine = PP64.patches.gameshark.getCheatRoutineBuffer({ endInsts });
-      (PP64 as any).fs.mainfs.write(this.MAINFS_CHEAT_FILE[0], this.MAINFS_CHEAT_FILE[1], cheatRoutine);
+      PP64.fs.mainfs.write(this.MAINFS_CHEAT_FILE[0], this.MAINFS_CHEAT_FILE[1], cheatRoutine);
     }
   }
 }

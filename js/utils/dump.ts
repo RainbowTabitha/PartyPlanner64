@@ -262,7 +262,7 @@ namespace PP64.utils {
     }
 
     static printSceneTable() {
-      const adapter = (PP64 as any).adapters.getROMAdapter();
+      const adapter = PP64.adapters.getROMAdapter();
       if (!(adapter && adapter.SCENE_TABLE_ROM)) {
         console.log("ROM is not loaded, or scene table location is unknown");
         return;
@@ -291,7 +291,7 @@ namespace PP64.utils {
 
     /** Prints the overlay table in n64split format. */
     static printSceneN64Split() {
-      const adapter = (PP64 as any).adapters.getROMAdapter();
+      const adapter = PP64.adapters.getROMAdapter();
       if (!(adapter && adapter.SCENE_TABLE_ROM)) {
         console.log("ROM is not loaded, or scene table location is unknown");
         return;

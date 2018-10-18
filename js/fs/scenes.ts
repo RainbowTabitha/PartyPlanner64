@@ -49,7 +49,7 @@ namespace PP64.fs {
     }
 
     extract() {
-      const adapter = (PP64 as any).adapters.getROMAdapter();
+      const adapter = PP64.adapters.getROMAdapter();
       const sceneTableOffset = adapter && adapter.SCENE_TABLE_ROM;
       if (!sceneTableOffset) {
         throw new Error("SCENE_TABLE_ROM undefined in current ROM adapter");

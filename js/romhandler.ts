@@ -36,13 +36,13 @@ namespace PP64 {
       this._gameId = null;
       this._gameVersion = null;
 
-      (PP64 as any).fs.scenes.clearCache();
-      (PP64 as any).fs.mainfs.clearCache();
-      (PP64 as any).fs.strings.clear();
-      (PP64 as any).fs.strings3.clear();
-      (PP64 as any).fs.hvqfs.clearCache();
-      (PP64 as any).fs.audio.clearCache();
-      (PP64 as any).fs.animationfs.clearCache();
+      PP64.fs.scenes.clearCache();
+      PP64.fs.mainfs.clearCache();
+      PP64.fs.strings.clear();
+      PP64.fs.strings3.clear();
+      PP64.fs.hvqfs.clearCache();
+      PP64.fs.audio.clearCache();
+      PP64.fs.animationfs.clearCache();
     }
 
     setROMBuffer(buffer: ArrayBuffer | null) {
@@ -74,16 +74,16 @@ namespace PP64 {
 
       // A crude async attempt to hopefully free the UI thread a bit.
       let promises = [];
-      promises.push((PP64 as any).fs.scenes.extractAsync());
-      promises.push((PP64 as any).fs.mainfs.extractAsync());
+      promises.push(PP64.fs.scenes.extractAsync());
+      promises.push(PP64.fs.mainfs.extractAsync());
       if (gameVersion === 3)
-        promises.push((PP64 as any).fs.strings3.extractAsync());
+        promises.push(PP64.fs.strings3.extractAsync());
       else
-        promises.push((PP64 as any).fs.strings.extractAsync());
-      promises.push((PP64 as any).fs.hvqfs.extractAsync());
-      promises.push((PP64 as any).fs.audio.extractAsync());
+        promises.push(PP64.fs.strings.extractAsync());
+      promises.push(PP64.fs.hvqfs.extractAsync());
+      promises.push(PP64.fs.audio.extractAsync());
       if (gameVersion === 2)
-        promises.push((PP64 as any).fs.animationfs.extractAsync());
+        promises.push(PP64.fs.animationfs.extractAsync());
 
       return Promise.all(promises);
     }
@@ -95,20 +95,20 @@ namespace PP64 {
       let gameVersion = this.getGameVersion();
 
       // We never move main FS, so this represents the first part of the ROM.
-      let initialLen = (PP64 as any).fs.mainfs.getROMOffset();
+      let initialLen = PP64.fs.mainfs.getROMOffset()!;
 
       // Grab all the sizes of the different sections.
-      let mainLen = $$number.makeDivisibleBy((PP64 as any).fs.mainfs.getByteLength(), 16);
+      let mainLen = $$number.makeDivisibleBy(PP64.fs.mainfs.getByteLength(), 16);
       let strsLen;
       if (gameVersion === 3)
-        strsLen = $$number.makeDivisibleBy((PP64 as any).fs.strings3.getByteLength(), 16);
+        strsLen = $$number.makeDivisibleBy(PP64.fs.strings3.getByteLength(), 16);
       else
-        strsLen = $$number.makeDivisibleBy((PP64 as any).fs.strings.getByteLength(), 16);
-      let hvqLen = $$number.makeDivisibleBy((PP64 as any).fs.hvqfs.getByteLength(), 16);
-      let audioLen = $$number.makeDivisibleBy((PP64 as any).fs.audio.getByteLength(), 16);
+        strsLen = $$number.makeDivisibleBy(PP64.fs.strings.getByteLength(), 16);
+      let hvqLen = $$number.makeDivisibleBy(PP64.fs.hvqfs.getByteLength(), 16);
+      let audioLen = $$number.makeDivisibleBy(PP64.fs.audio.getByteLength(), 16);
       let animationLen = 0;
       if (gameVersion === 2)
-        animationLen = $$number.makeDivisibleBy((PP64 as any).fs.animationfs.getByteLength(), 16);
+        animationLen = $$number.makeDivisibleBy(PP64.fs.animationfs.getByteLength(), 16);
 
       // Seems to crash unless HVQ is aligned so that the +1 ADDIU trick is not needed. Just fudge strsLen to push it up.
       while ((initialLen + mainLen + strsLen) & 0x8000) {
@@ -121,30 +121,30 @@ namespace PP64 {
 
       PP64.patches.gameshark.hook.apply(newROMBuffer); // Before main fs is packed
 
-      (PP64 as any).fs.mainfs.pack(newROMBuffer, initialLen);
-      (PP64 as any).fs.mainfs.setROMOffset(initialLen, newROMBuffer);
+      PP64.fs.mainfs.pack(newROMBuffer, initialLen);
+      PP64.fs.mainfs.setROMOffset(initialLen, newROMBuffer);
 
       if (gameVersion === 3) {
-        (PP64 as any).fs.strings3.pack(newROMBuffer, initialLen + mainLen);
-        (PP64 as any).fs.strings3.setROMOffset(initialLen + mainLen, newROMBuffer);
+        PP64.fs.strings3.pack(newROMBuffer, initialLen + mainLen);
+        PP64.fs.strings3.setROMOffset(initialLen + mainLen, newROMBuffer);
       }
       else {
-        (PP64 as any).fs.strings.pack(newROMBuffer, initialLen + mainLen);
-        (PP64 as any).fs.strings.setROMOffset(initialLen + mainLen, newROMBuffer);
+        PP64.fs.strings.pack(newROMBuffer, initialLen + mainLen);
+        PP64.fs.strings.setROMOffset(initialLen + mainLen, newROMBuffer);
       }
 
-      (PP64 as any).fs.hvqfs.pack(newROMBuffer, initialLen + mainLen + strsLen);
-      (PP64 as any).fs.hvqfs.setROMOffset(initialLen + mainLen + strsLen, newROMBuffer);
+      PP64.fs.hvqfs.pack(newROMBuffer, initialLen + mainLen + strsLen);
+      PP64.fs.hvqfs.setROMOffset(initialLen + mainLen + strsLen, newROMBuffer);
 
       if (gameVersion === 2) {
-        (PP64 as any).fs.animationfs.pack(newROMBuffer, initialLen + mainLen + strsLen + hvqLen);
-        (PP64 as any).fs.animationfs.setROMOffset(initialLen + mainLen + strsLen + hvqLen, newROMBuffer);
+        PP64.fs.animationfs.pack(newROMBuffer, initialLen + mainLen + strsLen + hvqLen);
+        PP64.fs.animationfs.setROMOffset(initialLen + mainLen + strsLen + hvqLen, newROMBuffer);
       }
 
-      (PP64 as any).fs.audio.pack(newROMBuffer, initialLen + mainLen + strsLen + hvqLen + animationLen);
-      (PP64 as any).fs.audio.setROMOffset(initialLen + mainLen + strsLen + hvqLen + animationLen, newROMBuffer);
+      PP64.fs.audio.pack(newROMBuffer, initialLen + mainLen + strsLen + hvqLen + animationLen);
+      PP64.fs.audio.setROMOffset(initialLen + mainLen + strsLen + hvqLen + animationLen, newROMBuffer);
 
-      let adapter = (PP64 as any).adapters.getROMAdapter();
+      let adapter = PP64.adapters.getROMAdapter()!;
       if (adapter.onAfterSave)
         adapter.onAfterSave(new DataView(newROMBuffer));
 

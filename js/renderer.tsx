@@ -744,8 +744,8 @@ namespace PP64.renderer {
       overlay.style.transform = transformStyle;
     }
 
-    setRightClickMenu(space: PP64.boards.ISpace) {
-      this.setState({rightClickSpace: space});
+    setRightClickMenu(space: PP64.boards.ISpace | null) {
+      this.setState({ rightClickSpace: space });
     }
 
     rightClickOpen() {
@@ -822,7 +822,7 @@ namespace PP64.renderer {
     if (_boardSpaces)
       _boardSpaces.renderContent();
   }
-  export function updateRightClickMenu(space: PP64.boards.ISpace) {
+  export function updateRightClickMenu(space: PP64.boards.ISpace | null) {
     if (_boardOverlay)
       _boardOverlay.setRightClickMenu(space);
   }
