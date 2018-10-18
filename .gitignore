@@ -18,6 +18,7 @@ js/adapter/boarddef.js
 js/adapter/boardinfo.js
 js/adapter/eventlist.js
 js/adapter/eventtable.js
+js/adapter/MP1.js
 js/components/codemirrorwrapper.js
 js/events/customevents.js
 js/events/events.js

@@ -1,24 +1,23 @@
-PP64.ns("adapters");
+namespace PP64.adapters {
+  export const MP1 = new class MP1Adapter extends PP64.adapters.AdapterBase {
+    public gameVersion: 1 | 2 | 3 = 1;
 
-PP64.adapters.MP1 = (function() {
-  const MP1Adapter = class extends PP64.adapters.AdapterBase {
+    public nintendoLogoFSEntry: number[] = [9, 110];
+    public hudsonLogoFSEntry: number[] = [9, 111];
+    public boardDefDirectory: number = 10;
+
+    public MAINFS_READ_ADDR: number = 0x000145B0;
+    public HEAP_FREE_ADDR: number = 0x00014730;
+    public TABLE_HYDRATE_ADDR: number = 0x0004C900;
+
+    public SCENE_TABLE_ROM: number = 0x000C2874;
+
     constructor() {
       super();
-      this.gameVersion = 1;
-
-      this.nintendoLogoFSEntry = [9, 110];
-      this.hudsonLogoFSEntry = [9, 111];
-      this.boardDefDirectory = 10;
-
-      this.MAINFS_READ_ADDR = 0x000145B0;
-      this.HEAP_FREE_ADDR = 0x00014730;
-      this.TABLE_HYDRATE_ADDR = 0x0004C900;
-
-      this.SCENE_TABLE_ROM = 0x000C2874;
     }
 
     // Gives a new space the default things it would need.
-    hydrateSpace(space) {
+    hydrateSpace(space: PP64.boards.ISpace) {
       if (space.type === $spaceType.STAR) {
         space.star = true;
       }
@@ -27,13 +26,15 @@ PP64.adapters.MP1 = (function() {
       }
     }
 
-    onLoad(board, boardInfo) {
+    onLoad(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       this._extractKoopa(board, boardInfo);
       this._extractBowser(board, boardInfo);
       this._extractGoomba(board, boardInfo);
     }
 
-    onAfterOverwrite(romView, board, boardInfo) {
+    onAfterOverwrite(romView: DataView, board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
+      const MIPSInst = (window as any).MIPSInst;
+
       this._writeKoopa(board, boardInfo);
       this._writeBowser(board, boardInfo);
 
@@ -79,7 +80,7 @@ PP64.adapters.MP1 = (function() {
       romView.setUint32(romStartOffset += 4, 0); // NOP
     }
 
-    onOverwritePromises(board, boardInfo) {
+    onOverwritePromises(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let bgIndex = boardInfo.bgDir;
       let bgPromises = [
         this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
@@ -97,11 +98,11 @@ PP64.adapters.MP1 = (function() {
       return Promise.all(bgPromises)
     }
 
-    onWriteEventAsmHook(romView, boardInfo, boardIndex) {
+    onWriteEventAsmHook(romView: DataView, boardInfo: IBoardInfo, boardIndex: number) {
       
     }
 
-    onParseStrings(board, boardInfo) {
+    onParseStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let strs = boardInfo.str || {};
       if (strs.boardSelect) {
         let idx = strs.boardSelect;
@@ -128,7 +129,7 @@ PP64.adapters.MP1 = (function() {
       }
     }
 
-    onWriteStrings(board, boardInfo) {
+    onWriteStrings(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       let strs = boardInfo.str || {};
       if (strs.boardSelect) {
         let bytes = [];
@@ -171,7 +172,7 @@ PP64.adapters.MP1 = (function() {
 
       // For now, just make Koopa's intro neutral.
       if (strs.koopaIntro) {
-        let bytes = [];
+        let bytes: number[] = [];
         bytes = bytes.concat(PP64.fs.strings._strToBytes("Welcome, everybody!\nI am your guide,\nKoopa Troopa."));
         bytes.push(0xFF); // PAUSE
         bytes.push(0x0B); // Clear?
@@ -185,7 +186,7 @@ PP64.adapters.MP1 = (function() {
 
       // For now, just make a generic comment.
       if (strs.starComments) {
-        let bytes = [];
+        let bytes: number[] = [];
         bytes = bytes.concat(PP64.fs.strings._strToBytes("Good luck!\nWith enough stars, you\ncould be the superstar!"));
         bytes.push(0xFF); // PAUSE
         bytes.push(0x00); // Null byte
@@ -196,7 +197,7 @@ PP64.adapters.MP1 = (function() {
       }
     }
 
-    onGetBoardCoordsFromGameCoords(x, y, z, width, height, boardIndex) {
+    onGetBoardCoordsFromGameCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       // The following is a bunch of crappy approximations.
       let newX, newY, newZ;
       switch (boardIndex) {
@@ -231,7 +232,7 @@ PP64.adapters.MP1 = (function() {
       return [Math.round(newX), Math.round(newY), Math.round(newZ)];
     }
 
-    onGetGameCoordsFromBoardCoords(x, y, z, width, height, boardIndex) {
+    onGetGameCoordsFromBoardCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
       // The following is the inverse of a bunch of crappy approximations.
       let gameX, gameY, gameZ;
       switch (boardIndex) {
@@ -265,14 +266,14 @@ PP64.adapters.MP1 = (function() {
       return [gameX, gameY, gameZ];
     }
 
-    onChangeBoardSpaceTypesFromGameSpaceTypes(board, chains) {
+    onChangeBoardSpaceTypesFromGameSpaceTypes(board: PP64.boards.IBoard, chains: number[][]) {
       // Space types match MP1 exactly.
     }
 
-    onChangeGameSpaceTypesFromBoardSpaceTypes(board) {
+    onChangeGameSpaceTypesFromBoardSpaceTypes(board: PP64.boards.IBoard) {
     }
 
-    _extractKoopa(board, boardInfo) {
+    _extractKoopa(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.koopaSpaceInst)
         return;
 
@@ -282,7 +283,7 @@ PP64.adapters.MP1 = (function() {
         board.spaces[koopaSpace].subtype = $spaceSubType.KOOPA;
     }
 
-    _writeKoopa(board, boardInfo) {
+    _writeKoopa(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.koopaSpaceInst)
         return;
 
@@ -294,12 +295,12 @@ PP64.adapters.MP1 = (function() {
         }
       }
 
-      koopaSpace = (koopaSpace === undefined ? board._deadSpace : koopaSpace);
+      koopaSpace = (koopaSpace === undefined ? board._deadSpace! : koopaSpace);
       let boardView = PP64.romhandler.getDataView();
       boardView.setUint16(boardInfo.koopaSpaceInst + 2, koopaSpace);
     }
 
-    _extractBowser(board, boardInfo) {
+    _extractBowser(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.bowserSpaceInst)
         return;
 
@@ -309,7 +310,7 @@ PP64.adapters.MP1 = (function() {
         board.spaces[bowserSpace].subtype = $spaceSubType.BOWSER;
     }
 
-    _writeBowser(board, boardInfo) {
+    _writeBowser(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.bowserSpaceInst)
         return;
 
@@ -321,12 +322,12 @@ PP64.adapters.MP1 = (function() {
         }
       }
 
-      bowserSpace = (bowserSpace === undefined ? board._deadSpace : bowserSpace);
+      bowserSpace = (bowserSpace === undefined ? board._deadSpace! : bowserSpace);
       let boardView = PP64.romhandler.getDataView();
       boardView.setUint16(boardInfo.bowserSpaceInst + 2, bowserSpace);
     }
 
-    _extractGoomba(board, boardInfo) {
+    _extractGoomba(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.goombaSpaceInst)
         return;
 
@@ -336,12 +337,12 @@ PP64.adapters.MP1 = (function() {
         board.spaces[goombaSpace].subtype = $spaceSubType.GOOMBA;
     }
 
-    onParseBoardSelectImg(board, boardInfo) {
+    onParseBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img.boardSelectImg)
         return;
 
       let boardSelectFORM = PP64.fs.mainfs.get(9, boardInfo.img.boardSelectImg);
-      let boardSelectUnpacked = PP64.utils.FORM.unpack(boardSelectFORM);
+      let boardSelectUnpacked = PP64.utils.FORM.unpack(boardSelectFORM)!;
       let boardSelectImgTiles = [
         new DataView(boardSelectUnpacked.BMP1[0].parsed.src),
         new DataView(boardSelectUnpacked.BMP1[1].parsed.src),
@@ -353,7 +354,7 @@ PP64.adapters.MP1 = (function() {
       // $$log(board.otherbg.boardselect);
     }
 
-    onWriteBoardSelectImg(board, boardInfo) {
+    onWriteBoardSelectImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise(function(resolve, reject) {
         let boardSelectIndex = boardInfo.img.boardSelectImg;
         if (!boardSelectIndex) {
@@ -378,7 +379,7 @@ PP64.adapters.MP1 = (function() {
 
           // Now write the BMPs back into the FORM.
           let boardSelectFORM = PP64.fs.mainfs.get(9, boardSelectIndex);
-          let boardSelectUnpacked = PP64.utils.FORM.unpack(boardSelectFORM);
+          let boardSelectUnpacked = PP64.utils.FORM.unpack(boardSelectFORM)!;
           for (let i = 0; i < 4; i++) {
             let palette = boardSelectBmps[i][1];
 
@@ -402,14 +403,14 @@ PP64.adapters.MP1 = (function() {
       });
     }
 
-    onParseBoardLogoImg(board, boardInfo) {
+    onParseBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       if (!boardInfo.img.pauseLogoImg)
         return;
 
       board.otherbg.boardlogo = this._readImgFromMainFS(10, boardInfo.img.pauseLogoImg, 0);
     }
 
-    onWriteBoardLogoImg(board, boardInfo) {
+    onWriteBoardLogoImg(board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
       return new Promise((resolve, reject) => {
         let introLogoImgs = boardInfo.img.introLogoImg;
         let pauseLogoImg = boardInfo.img.pauseLogoImg;
@@ -478,7 +479,7 @@ PP64.adapters.MP1 = (function() {
       });
     }
 
-    _clearOtherBoardNames(boardIndex) {
+    _clearOtherBoardNames(boardIndex: number) {
       // There is an ugly comic-sansy board name graphic in the after-game results.
       // We will just make it totally transparent because it is not important.
       let resultsBoardNameImgPack = PP64.fs.mainfs.get(10, 406 + boardIndex);
@@ -646,5 +647,4 @@ PP64.adapters.MP1 = (function() {
       };
     }
   }
-  return new MP1Adapter();
-})();
+}

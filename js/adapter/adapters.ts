@@ -1,5 +1,5 @@
 namespace PP64.adapters {
-  type IBoardInfo = any;
+  export type IBoardInfo = any;
 
   export abstract class AdapterBase {
     /** The arbitrary upper bound size of the events ASM blob. */
@@ -918,7 +918,7 @@ namespace PP64.adapters {
       });
     }
 
-    onWriteEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
+    onWriteEventAsmHook(romView: DataView, boardInfo: IBoardInfo, boardIndex: number) {
       throw "Adapter does not implement onWriteEventAsmHook";
     }
 
@@ -1413,7 +1413,7 @@ namespace PP64.adapters {
       boardView.setUint16(boardInfo.audioIndexOffset, index);
     }
 
-    getAudioMap() {
+    getAudioMap(): string[] {
       $$log("Adapter does not implement getAudioMap");
       return [];
     }
@@ -1443,7 +1443,7 @@ namespace PP64.adapters {
   export function getAdapter(game: number) {
     switch(game) {
       case 1:
-        return (PP64 as any).adapters.MP1;
+        return PP64.adapters.MP1;
       case 2:
         return (PP64 as any).adapters.MP2;
       case 3:
