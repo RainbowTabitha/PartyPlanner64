@@ -68,7 +68,6 @@ const JS = [
   "js/components/codemirrorwrapper.js",
   "js/components/notifications.js",
 
-  "js/patches.js",
   "js/gameshark.js",
   "js/patches/gameshark/parser.js",
   "js/patches/gameshark/compiler.js",
