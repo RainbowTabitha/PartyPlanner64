@@ -11,8 +11,12 @@ namespace PP64.properties {
     onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
       const selectedSpaces = this.props.selectedSpaces!;
       for (const space of selectedSpaces) {
-        if (type !== undefined)
+        if (type !== undefined) {
           space.type = type;
+          if (space.rotation) {
+            delete space.rotation;
+          }
+        }
         if (subtype !== undefined)
           space.subtype = subtype;
         else

@@ -59,12 +59,12 @@ namespace PP64.patches.gameshark {
         <div id="gamesharkView">
           <h3>Gameshark Cheats</h3>
           {!supported && <p>Embeddable Gameshark cheats are not supported with this ROM.</p>}
-          {supported && [
-            <p>Paste cheats in the box below to embed them in the ROM.</p>,
-            <textarea ref={(el) => { this.inputEl = el; }} rows={10}></textarea>,
-            <button className="patchBtn" onClick={this.applyCheat}>Apply</button>,
-            appliedText
-          ]}
+          {supported && <>
+            <p>Paste cheats in the box below to embed them in the ROM.</p>
+            <textarea ref={(el) => { this.inputEl = el; }} rows={10}></textarea>
+            <button className="patchBtn" onClick={this.applyCheat}>Apply</button>
+            {appliedText}
+          </>}
         </div>
       );
     }

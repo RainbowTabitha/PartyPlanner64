@@ -48,8 +48,12 @@ namespace PP64.rightclick {
     }
 
     onTypeChanged = (type: PP64.types.Space, subtype?: PP64.types.SpaceSubtype) => {
-      if (type !== undefined)
+      if (type !== undefined) {
         this.props.space!.type = type;
+        if (this.props.space!.rotation) {
+          delete this.props.space!.rotation;
+        }
+      }
       if (subtype !== undefined)
         this.props.space!.subtype = subtype;
       else

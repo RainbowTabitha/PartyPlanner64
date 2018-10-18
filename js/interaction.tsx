@@ -1,30 +1,30 @@
-PP64.interaction = (function() {
-  let selectedSpaceIndices = {};
+namespace PP64.interaction {
+  let selectedSpaceIndices: { [index: number]: boolean } = {};
   let spaceWasMouseDownedOn = false;
   let startX = -1;
   let startY = -1;
   let lastX = -1;
   let lastY = -1;
 
-  let canvasRect = null;
+  let canvasRect: (ClientRect | DOMRect) | null = null;
 
-  function onEditorMouseDown(event) {
-    const canvas = event.currentTarget;
+  function onEditorMouseDown(event: MouseEvent) {
+    const canvas = event.currentTarget as HTMLCanvasElement;
     _onEditorDown(canvas, event.clientX, event.clientY, event.ctrlKey);
   }
 
-  function onEditorTouchStart(event) {
+  function onEditorTouchStart(event: TouchEvent) {
     if (event.touches.length !== 1)
       return;
 
     const touch = event.touches[0];
 
-    const canvas = event.currentTarget;
+    const canvas = event.currentTarget as HTMLCanvasElement;
     _onEditorDown(canvas, touch.clientX, touch.clientY, event.ctrlKey);
   }
 
   /** mousedown or touchstart */
-  function _onEditorDown(canvas, clientX, clientY, ctrlKey) {
+  function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: number, ctrlKey: boolean) {
     canvasRect = canvas.getBoundingClientRect();
 
     const clickX = clientX - canvasRect.left;
@@ -216,7 +216,7 @@ PP64.interaction = (function() {
     }
   }
 
-  function onEditorTouchMove(event) {
+  function onEditorTouchMove(event: TouchEvent) {
     let clickX, clickY;
 
     if (event.touches.length !== 1)
@@ -229,13 +229,13 @@ PP64.interaction = (function() {
 
     let touch = event.touches[0];
 
-    clickX = touch.clientX - canvasRect.left;
-    clickY = touch.clientY - canvasRect.top;
+    clickX = touch.clientX - canvasRect!.left;
+    clickY = touch.clientY - canvasRect!.top;
 
     _onEditorMove(clickX, clickY);
   }
 
-  function onEditorMouseMove(event) {
+  function onEditorMouseMove(event: MouseEvent) {
     let clickX, clickY;
 
     if (!canvasRect || event.buttons !== 1)
@@ -247,7 +247,7 @@ PP64.interaction = (function() {
     _onEditorMove(clickX, clickY);
   }
 
-  function _onEditorMove(clickX, clickY) {
+  function _onEditorMove(clickX: number, clickY: number) {
     if (PP64.boards.currentBoardIsROM())
       return;
 
@@ -384,14 +384,14 @@ PP64.interaction = (function() {
     lastY = clickY;
   }
 
-  function onEditorMouseUp(event) {
+  function onEditorMouseUp(event: MouseEvent) {
     if (event.button !== 0)
       return;
 
     _onEditorUp();
   }
 
-  function onEditorTouchEnd(event) {
+  function onEditorTouchEnd(event: TouchEvent) {
     if (event.touches.length !== 1)
       return;
 
@@ -416,7 +416,8 @@ PP64.interaction = (function() {
     const selectedSpaces = _getSelectedSpaces();
     if (curAction === $actType.LINE) {
       let endSpaceIdx = _getClickedSpace(lastX, lastY);
-      if (endSpaceIdx !== -1 && selectedSpaces.indexOf(endSpaceIdx) === -1) {
+      // FIXME: indexOf cannot succeed
+      if (endSpaceIdx !== -1 && selectedSpaces.indexOf(endSpaceIdx as any) === -1) {
         for (let index in selectedSpaceIndices) {
           PP64.boards.addConnection(parseInt(index), endSpaceIdx);
         }
@@ -426,7 +427,7 @@ PP64.interaction = (function() {
     }
   }
 
-  function onEditorClick(event) {
+  function onEditorClick(event: MouseEvent) {
     //console.log("onEditorClick", event);
     if (PP64.boards.currentBoardIsROM())
       return;
@@ -440,8 +441,8 @@ PP64.interaction = (function() {
     startY = lastY = -1;
 
     const ctrlKey = event.ctrlKey;
-    const clickX = event.clientX - canvasRect.left;
-    const clickY = event.clientY - canvasRect.top;
+    const clickX = event.clientX - canvasRect!.left;
+    const clickY = event.clientY - canvasRect!.top;
     let clickedSpaceIdx = _getClickedSpace(clickX, clickY);
 
     const curBoard = PP64.boards.getCurrentBoard();
@@ -509,7 +510,7 @@ PP64.interaction = (function() {
     }
   }
 
-  function onEditorRightClick(event) {
+  function onEditorRightClick(event: MouseEvent) {
     //console.log("onEditorRightClick", event);
 
     event.preventDefault();
@@ -520,7 +521,7 @@ PP64.interaction = (function() {
     PP64.renderer.updateRightClickMenu(space);
   };
 
-  function onEditorDrop(event) {
+  function onEditorDrop(event: DragEvent) {
     event.preventDefault();
 
     if (PP64.boards.currentBoardIsROM())
@@ -528,6 +529,9 @@ PP64.interaction = (function() {
 
     if (PP64.renderer.rightClickOpen())
       PP64.renderer.updateRightClickMenu(null);
+
+    if (!event.dataTransfer)
+      return;
 
     let data;
     try {
@@ -540,7 +544,7 @@ PP64.interaction = (function() {
       if (data.action) {
         _clearSelectedSpaces();
 
-        const canvas = event.currentTarget;
+        const canvas = event.currentTarget as HTMLCanvasElement;
         canvasRect = canvas.getBoundingClientRect();
         const clickX = event.clientX - canvasRect.left;
         const clickY = event.clientY - canvasRect.top;
@@ -552,7 +556,7 @@ PP64.interaction = (function() {
       else if (data.isEventParamDrop) {
         const handler = PP64.utils.drag.getEventParamDropHandler();
         if (handler) {
-          const canvas = event.currentTarget;
+          const canvas = event.currentTarget as HTMLCanvasElement;
           canvasRect = canvas.getBoundingClientRect();
           const clickX = event.clientX - canvasRect.left;
           const clickY = event.clientY - canvasRect.top;
@@ -563,7 +567,7 @@ PP64.interaction = (function() {
     }
   }
 
-  function onEditorKeyDown(event) {
+  function onEditorKeyDown(event: KeyboardEvent) {
     const selectedSpaces = PP64.app.getSelectedSpaces();
     if (!selectedSpaces || !selectedSpaces.length)
       return;
@@ -626,7 +630,7 @@ PP64.interaction = (function() {
     }
   }
 
-  function onEditorMouseOut(event) {
+  function onEditorMouseOut(event: MouseEvent) {
     spaceWasMouseDownedOn = false;
 
     if (event.button !== 0)
@@ -644,7 +648,7 @@ PP64.interaction = (function() {
     }
   }
 
-  let _renderConnectionsTimer;
+  let _renderConnectionsTimer: any;
   function renderConnectionsOnTimeout() {
     if (!_renderConnectionsTimer) {
       _renderConnectionsTimer = setTimeout(_renderConnectionsTimeoutFn, 10);
@@ -655,7 +659,7 @@ PP64.interaction = (function() {
     _renderConnectionsTimer = null;
   }
 
-  let _renderSpacesTimer;
+  let _renderSpacesTimer: any;
   function renderSpacesOnTimeout() {
     if (!_renderSpacesTimer) {
       _renderSpacesTimer = setTimeout(_renderSpacesTimeoutFn, 10);
@@ -693,11 +697,11 @@ PP64.interaction = (function() {
     return false;
   }
 
-  function _spaceIsSelected(spaceIndex) {
+  function _spaceIsSelected(spaceIndex: number) {
     return !!selectedSpaceIndices[spaceIndex];
   }
 
-  function _addSelectedSpace(spaceIndex, skipUpdate) {
+  function _addSelectedSpace(spaceIndex: number, skipUpdate?: boolean) {
     if (!selectedSpaceIndices) {
       selectedSpaceIndices = {};
     }
@@ -706,7 +710,7 @@ PP64.interaction = (function() {
       _changeSelectedSpaces();
   }
 
-  function _setSelectedSpace(spaceIndex) {
+  function _setSelectedSpace(spaceIndex: number) {
     selectedSpaceIndices = {
       [spaceIndex]: true,
     };
@@ -718,7 +722,7 @@ PP64.interaction = (function() {
     return curBoard.game === 3 ? 14 : 8;
   }
 
-  function _getClickedSpace(x, y) {
+  function _getClickedSpace(x: number, y: number) {
     const curBoard = PP64.boards.getCurrentBoard();
     const spaceRadius = _getSpaceRadius();
 
@@ -736,7 +740,7 @@ PP64.interaction = (function() {
     return spaceIdx;
   }
 
-  function _canRemoveSpaceAtIndex(board, spaceIndex) {
+  function _canRemoveSpaceAtIndex(board: PP64.boards.IBoard, spaceIndex: number) {
     const space = board.spaces[spaceIndex];
     if (!space)
       return false;
@@ -751,7 +755,7 @@ PP64.interaction = (function() {
     return true;
   }
 
-  function _addSpace(action, x, y, clickedSpace, moved, ctrlKey) {
+  function _addSpace(action: PP64.types.Action, x: number, y: number, clickedSpace?: PP64.boards.ISpace | null, moved?: boolean, ctrlKey?: boolean) {
     let spaceType = _getSpaceTypeFromAction(action);
     let spaceSubType = _getSpaceSubTypeFromAction(action);
     let shouldChangeSelection = false;
@@ -790,7 +794,7 @@ PP64.interaction = (function() {
     return shouldChangeSelection;
   }
 
-  function _toggleHostsStar(selectedSpaces) {
+  function _toggleHostsStar(selectedSpaces?: PP64.boards.ISpace[]) {
     if (!selectedSpaces || !selectedSpaces.length)
       return;
 
@@ -802,7 +806,7 @@ PP64.interaction = (function() {
     PP64.app.changeSelectedSpaces(selectedSpaces); // Refresh because .star changed
   }
 
-  function _eraseLines(x, y) {
+  function _eraseLines(x: number, y: number) {
     let board = PP64.boards.getCurrentBoard();
     let spaces = board.spaces;
     let links = board.links;
@@ -838,7 +842,7 @@ PP64.interaction = (function() {
       PP64.renderer.renderConnections();
   }
 
-  function _shouldEraseLine(startSpace, endSpace, targetX, targetY) {
+  function _shouldEraseLine(startSpace: PP64.boards.ISpace, endSpace: PP64.boards.ISpace, targetX: number, targetY: number) {
     if (targetX > startSpace.x && targetX > endSpace.x)
       return false;
     if (targetX < startSpace.x && targetX < endSpace.x)
@@ -850,7 +854,7 @@ PP64.interaction = (function() {
     return $$number.lineDistance(targetX, targetY, startSpace.x, startSpace.y, endSpace.x, endSpace.y) <= 4;
   }
 
-  function _getSpaceTypeFromAction(action) {
+  function _getSpaceTypeFromAction(action: PP64.types.Action) {
     let spaceType = $spaceType.OTHER;
     if (action === $actType.ADD_BLUE) spaceType = $spaceType.BLUE;
     else if (action === $actType.ADD_RED) spaceType = $spaceType.RED;
@@ -875,7 +879,7 @@ PP64.interaction = (function() {
     return spaceType;
   }
 
-  function _getSpaceSubTypeFromAction(action) {
+  function _getSpaceSubTypeFromAction(action: PP64.types.Action) {
     let spaceSubType;
     if (action === $actType.ADD_TOAD_CHARACTER) spaceSubType = $spaceSubType.TOAD;
     else if (action === $actType.ADD_BOWSER_CHARACTER) spaceSubType = $spaceSubType.BOWSER;
@@ -888,20 +892,7 @@ PP64.interaction = (function() {
     return spaceSubType;
   }
 
-  function _getSpaceSubTypeFromAction(action) {
-    let spaceSubType;
-    if (action === $actType.ADD_TOAD_CHARACTER) spaceSubType = $spaceSubType.TOAD;
-    else if (action === $actType.ADD_BOWSER_CHARACTER) spaceSubType = $spaceSubType.BOWSER;
-    else if (action === $actType.ADD_KOOPA_CHARACTER) spaceSubType = $spaceSubType.KOOPA;
-    else if (action === $actType.ADD_BOO_CHARACTER) spaceSubType = $spaceSubType.BOO;
-    else if (action === $actType.ADD_BANK_SUBTYPE) spaceSubType = $spaceSubType.BANK;
-    else if (action === $actType.ADD_BANKCOIN_SUBTYPE) spaceSubType = $spaceSubType.BANKCOIN;
-    else if (action === $actType.ADD_ITEMSHOP_SUBTYPE) spaceSubType = $spaceSubType.ITEMSHOP;
-    else if (action === $actType.MARK_GATE) spaceSubType = $spaceSubType.GATE;
-    return spaceSubType;
-  }
-
-  function _updateSelectionAndBox(curX, curY) {
+  function _updateSelectionAndBox(curX: number, curY: number) {
     if (startX === -1 || startY === -1)
       return;
 
@@ -923,35 +914,35 @@ PP64.interaction = (function() {
     PP64.renderer.renderSpaces(); // It's on the space canvas, so just re-render.
   }
 
-  function preventDefault(event) { event.preventDefault(); }
-  return {
-    attachToCanvas: function(canvas) {
-      canvas.addEventListener("contextmenu", onEditorRightClick, false);
-      canvas.addEventListener("click", onEditorClick, false);
-      canvas.addEventListener("mousedown", onEditorMouseDown, false);
-      canvas.addEventListener("mousemove", onEditorMouseMove, false);
-      canvas.addEventListener("mouseup", onEditorMouseUp, false);
-      canvas.addEventListener("mouseout", onEditorMouseOut, false);
-      canvas.addEventListener("touchstart", onEditorTouchStart, false);
-      canvas.addEventListener("touchmove", onEditorTouchMove, false);
-      canvas.addEventListener("touchend", onEditorTouchEnd, false);
-      canvas.addEventListener("drop", onEditorDrop, false);
-      canvas.addEventListener("dragover", preventDefault, false);
-      canvas.addEventListener("keydown", onEditorKeyDown, false);
-    },
-    detachFromCanvas: function(canvas) {
-      canvas.removeEventListener("contextmenu", onEditorRightClick);
-      canvas.removeEventListener("click", onEditorClick);
-      canvas.removeEventListener("mousedown", onEditorMouseDown);
-      canvas.removeEventListener("mousemove", onEditorMouseMove);
-      canvas.removeEventListener("mouseup", onEditorMouseUp);
-      canvas.removeEventListener("mouseout", onEditorMouseOut);
-      canvas.removeEventListener("touchstart", onEditorTouchStart);
-      canvas.removeEventListener("touchmove", onEditorTouchMove);
-      canvas.removeEventListener("touchend", onEditorTouchEnd);
-      canvas.removeEventListener("drop", onEditorDrop);
-      canvas.removeEventListener("dragover", preventDefault);
-      canvas.removeEventListener("keydown", onEditorKeyDown);
-    }
-  };
-})();
+  function preventDefault(event: Event) { event.preventDefault(); }
+
+  export function attachToCanvas(canvas: HTMLCanvasElement) {
+    canvas.addEventListener("contextmenu", onEditorRightClick, false);
+    canvas.addEventListener("click", onEditorClick, false);
+    canvas.addEventListener("mousedown", onEditorMouseDown, false);
+    canvas.addEventListener("mousemove", onEditorMouseMove, false);
+    canvas.addEventListener("mouseup", onEditorMouseUp, false);
+    canvas.addEventListener("mouseout", onEditorMouseOut, false);
+    canvas.addEventListener("touchstart", onEditorTouchStart, false);
+    canvas.addEventListener("touchmove", onEditorTouchMove, false);
+    canvas.addEventListener("touchend", onEditorTouchEnd, false);
+    canvas.addEventListener("drop", onEditorDrop, false);
+    canvas.addEventListener("dragover", preventDefault, false);
+    canvas.addEventListener("keydown", onEditorKeyDown, false);
+  }
+
+  export function detachFromCanvas(canvas: HTMLCanvasElement) {
+    canvas.removeEventListener("contextmenu", onEditorRightClick);
+    canvas.removeEventListener("click", onEditorClick);
+    canvas.removeEventListener("mousedown", onEditorMouseDown);
+    canvas.removeEventListener("mousemove", onEditorMouseMove);
+    canvas.removeEventListener("mouseup", onEditorMouseUp);
+    canvas.removeEventListener("mouseout", onEditorMouseOut);
+    canvas.removeEventListener("touchstart", onEditorTouchStart);
+    canvas.removeEventListener("touchmove", onEditorTouchMove);
+    canvas.removeEventListener("touchend", onEditorTouchEnd);
+    canvas.removeEventListener("drop", onEditorDrop);
+    canvas.removeEventListener("dragover", preventDefault);
+    canvas.removeEventListener("keydown", onEditorKeyDown);
+  }
+}

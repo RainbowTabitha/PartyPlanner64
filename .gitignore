@@ -75,6 +75,7 @@ js/eventsview.js
 js/gameshark.js
 js/header.js
 js/images.js
+js/interaction.js
 js/models.js
 js/newboard.js
 js/patches.js
