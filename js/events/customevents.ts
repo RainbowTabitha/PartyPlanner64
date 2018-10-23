@@ -1,3 +1,5 @@
+/// <reference types="mips-assembler" />
+
 namespace PP64.adapters.events {
   export interface ICustomEventParameter {
     name: string;
@@ -106,7 +108,7 @@ namespace PP64.adapters.events {
         addr: 0,
         parameterValues,
       }, info) as IEventWriteInfo);
-      const bytes = (window as any).MIPSAssem.assemble(preppedAsm);
+      const bytes = MIPSAssem.assemble(preppedAsm) as ArrayBuffer;
       return bytes;
     }
   };
@@ -162,7 +164,7 @@ namespace PP64.adapters.events {
 
       // Assemble and write
       const asm = prepAsm(event.asm, event.parameters, info);
-      const bytes = (window as any).MIPSAssem.assemble(asm);
+      const bytes = MIPSAssem.assemble(asm) as ArrayBuffer;
 
       PP64.utils.arrays.copyRange(dataView, bytes, 0, 0, bytes.byteLength);
 

@@ -4732,17 +4732,12 @@ minizlib@^1.1.0:
   dependencies:
     minipass "^2.2.1"
 
-mips-assembler@^1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/mips-assembler/-/mips-assembler-1.2.1.tgz#a53c1aef6ba9fc6c9be8f30d9ab90f1319d55277"
-  integrity sha512-i0UW4dkb9hjRAD6opJ+ytsfDGvgCEWeTO+3BTr0BiZiNlkUNxidwpiNCs01v+KBGRkIvbT+RzAaT9AfwGV/rBQ==
+mips-assembler@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/mips-assembler/-/mips-assembler-1.2.2.tgz#7a26d58efcc3dfe45727d4a3780fb61d65fcc4b1"
+  integrity sha512-KNq4ZNl8C3vWbK4/qu8jVEDur03WTDW4AOv8ENH7iBwDSqaum8jDeIwRv7JcNgbcY7WA3Ei0gi93iX6TOq3pxA==
   dependencies:
-    mips-inst "^2.2.0"
-
-mips-inst@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/mips-inst/-/mips-inst-2.2.0.tgz#fd798a0f987eaaf5da61880dbbe9c34f22dc40f6"
-  integrity sha512-Bh+lZnRzeoaCQMLammAhoYH1edyvb1SC++4RG7Zb3zmNr57sHLhCd5EFKN0cEEpPIcFD+V+2G13D44nwdt5ydQ==
+    mips-inst "^2.2.1"
 
 mips-inst@^2.2.1:
   version "2.2.1"

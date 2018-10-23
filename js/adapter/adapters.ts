@@ -1,3 +1,4 @@
+/// <reference types="mips-assembler" />
 /// <reference types="mips-inst" />
 
 namespace PP64.adapters {
@@ -1238,7 +1239,7 @@ namespace PP64.adapters {
         insts.push("MTC1 A0 F12");
       }
 
-      (window as any).MIPSAssem.assemble(insts, { buffer: romView.buffer });
+      MIPSAssem.assemble(insts, { buffer: romView.buffer });
     }
 
     _writeBackground(bgIndex: number, src: string, width: number, height: number) {
