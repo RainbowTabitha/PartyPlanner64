@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.patches.gameshark {
   // Compiler is a gross exaggeration.
   // This produces the MIPS ASM equivalent of parsed gameshark codes.
@@ -44,7 +46,7 @@ namespace PP64.patches.gameshark {
     // http://gamehacking.org/wiki/Hacking_N64#Code_Handler_Hacks
 
     compileWRITE8(code: ICode) {
-      return (window as any).MIPSInst.parse(`
+      return MIPSInst.parse(`
         LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
         ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
         ADDIU ${this.REG2} R0 ${code.value}
@@ -53,7 +55,7 @@ namespace PP64.patches.gameshark {
     }
 
     compileWRITE16(code: ICode) {
-      return (window as any).MIPSInst.parse(`
+      return MIPSInst.parse(`
         LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
         ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
         ADDIU ${this.REG2} R0 ${code.value}
@@ -62,7 +64,7 @@ namespace PP64.patches.gameshark {
     }
 
     compileIF8(code: ICode) {
-      return (window as any).MIPSInst.parse(`
+      return MIPSInst.parse(`
         LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
         ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
         LB ${this.REG1} 0(${this.REG1})
@@ -72,7 +74,7 @@ namespace PP64.patches.gameshark {
     }
 
     compileIF16(code: ICode) {
-      return (window as any).MIPSInst.parse(`
+      return MIPSInst.parse(`
         LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
         ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
         LH ${this.REG1} 0(${this.REG1})
@@ -82,7 +84,7 @@ namespace PP64.patches.gameshark {
     }
 
     compileIFNOT8(code: ICode) {
-      return (window as any).MIPSInst.parse(`
+      return MIPSInst.parse(`
         LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
         ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
         LB ${this.REG1} 0(${this.REG1})
@@ -92,7 +94,7 @@ namespace PP64.patches.gameshark {
     }
 
     compileIFNOT16(code: ICode) {
-      return (window as any).MIPSInst.parse(`
+      return MIPSInst.parse(`
         LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
         ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
         LH ${this.REG1} 0(${this.REG1})

@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.patches.gameshark.hook {
 
   // Installs a Gameshark hook for MP1 (U)
@@ -26,7 +28,7 @@ namespace PP64.patches.gameshark.hook {
       // Jump out from the controller routine to a small fixed position hook.
       // This hook will read the cheat buffer (if not already read) and jump to it.
 
-      const hookJ = (window as any).MIPSInst.parse(`J ${this.HOOK_RAM_START_OFFSET + 4}`);
+      const hookJ = MIPSInst.parse(`J ${this.HOOK_RAM_START_OFFSET + 4}`);
 
       // Remember the stack adjustment, and NOP it out here.
       const endInsts = [

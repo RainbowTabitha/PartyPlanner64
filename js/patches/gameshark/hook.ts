@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.patches.gameshark.hook {
   export function apply(romBuffer: ArrayBuffer) {
     const cheatCount = PP64.patches.gameshark.currentCheats.length;
@@ -74,38 +76,38 @@ namespace PP64.patches.gameshark {
       // A2 = "ver!" constant that is initially in RAM
 
       // Read the cached cheat routine address
-      const cachedReadLocs = (window as any).$MIPS.getRegSetUpperAndLower(this.HOOK_RAM_START_OFFSET);
-      romView.setUint32(offset, (window as any).MIPSInst.parse(`LUI A1 ${0x8000 | cachedReadLocs[0]}`)); // A1 = 0x800C
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`ADDIU A1 A1 ${cachedReadLocs[1]}`)); // A1 = 0x800CA900
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("LW A1 0(A1)"));
+      const cachedReadLocs = $MIPS.getRegSetUpperAndLower(this.HOOK_RAM_START_OFFSET);
+      romView.setUint32(offset, MIPSInst.parse(`LUI A1 ${0x8000 | cachedReadLocs[0]}`)); // A1 = 0x800C
+      romView.setUint32(offset += 4, MIPSInst.parse(`ADDIU A1 A1 ${cachedReadLocs[1]}`)); // A1 = 0x800CA900
+      romView.setUint32(offset += 4, MIPSInst.parse("LW A1 0(A1)"));
 
       // Check if the cached cheat routine address is legit. If not, this is the first execution and we need to get it
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`LUI A2 ${this.HOOK_CACHE_DEFAULT_VALUE >>> 16}`)); // A2 = 0x76650000 "ve"
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`ADDIU A2 A2 ${this.HOOK_CACHE_DEFAULT_VALUE & 0xFFFF}`)); // A2 = 0x76657221 "ver!"
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`BNE A1 A2 11`)); // Jump to the JR A1
+      romView.setUint32(offset += 4, MIPSInst.parse(`LUI A2 ${this.HOOK_CACHE_DEFAULT_VALUE >>> 16}`)); // A2 = 0x76650000 "ve"
+      romView.setUint32(offset += 4, MIPSInst.parse(`ADDIU A2 A2 ${this.HOOK_CACHE_DEFAULT_VALUE & 0xFFFF}`)); // A2 = 0x76657221 "ver!"
+      romView.setUint32(offset += 4, MIPSInst.parse(`BNE A1 A2 11`)); // Jump to the JR A1
 
       // Prep to call mainfs read
       // Should save off V0 and RA, because they are needed to leave the controller routine properly.
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("ADDU T9 V0 R0")); // T9 <= V0
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("ADDU S7 RA R0")); // S7 <= RA
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU T9 V0 R0")); // T9 <= V0
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU S7 RA R0")); // S7 <= RA
 
       // Read from MainFS if we don't have cheat buffer (only happens once)
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`LUI A0 ${this.MAINFS_CHEAT_FILE[0]}`)); // A0 <= [The dir index]xxxx
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`JAL ${MAINFS_READ_ADDR}`));
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`ADDIU A0 A0 ${this.MAINFS_CHEAT_FILE[1]}`)); // A0 = [dir index][file index]
+      romView.setUint32(offset += 4, MIPSInst.parse(`LUI A0 ${this.MAINFS_CHEAT_FILE[0]}`)); // A0 <= [The dir index]xxxx
+      romView.setUint32(offset += 4, MIPSInst.parse(`JAL ${MAINFS_READ_ADDR}`));
+      romView.setUint32(offset += 4, MIPSInst.parse(`ADDIU A0 A0 ${this.MAINFS_CHEAT_FILE[1]}`)); // A0 = [dir index][file index]
 
       // Cache off the cheat location
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`LUI A1 ${0x8000 | cachedReadLocs[0]}`)); // A1 = 0x800C
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse(`ADDIU A1 A1 ${cachedReadLocs[1]}`)); // A1 = 0x800CA900
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("SW V0 0(A1)"));
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("ADDU A1 V0 R0")); // A1 <= V0
+      romView.setUint32(offset += 4, MIPSInst.parse(`LUI A1 ${0x8000 | cachedReadLocs[0]}`)); // A1 = 0x800C
+      romView.setUint32(offset += 4, MIPSInst.parse(`ADDIU A1 A1 ${cachedReadLocs[1]}`)); // A1 = 0x800CA900
+      romView.setUint32(offset += 4, MIPSInst.parse("SW V0 0(A1)"));
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU A1 V0 R0")); // A1 <= V0
 
       // Post-JAL cleanup, restore cached regs
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("ADDU V0 T9 R0")); // V0 <= T9
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("ADDU RA S7 R0")); // RA <= S7
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU V0 T9 R0")); // V0 <= T9
+      romView.setUint32(offset += 4, MIPSInst.parse("ADDU RA S7 R0")); // RA <= S7
 
       // A1 has the location of the cheat routine... jump to it!
-      romView.setUint32(offset += 4, (window as any).MIPSInst.parse("JR A1"));
+      romView.setUint32(offset += 4, MIPSInst.parse("JR A1"));
       romView.setUint32(offset += 4, 0); // NOP
     }
   }

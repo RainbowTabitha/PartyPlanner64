@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.adapters {
   export const MP1 = new class MP1Adapter extends PP64.adapters.AdapterBase {
     public gameVersion: 1 | 2 | 3 = 1;
@@ -33,8 +35,6 @@ namespace PP64.adapters {
     }
 
     onAfterOverwrite(romView: DataView, board: PP64.boards.IBoard, boardInfo: IBoardInfo) {
-      const MIPSInst = (window as any).MIPSInst;
-
       this._writeKoopa(board, boardInfo);
       this._writeBowser(board, boardInfo);
 

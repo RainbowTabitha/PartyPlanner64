@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.utils {
 
   // The advanced "dump" feature packs all of the individual filesystem
@@ -319,7 +321,7 @@ namespace PP64.utils {
         let value = romView.getUint32(curOffset);
         let asm = "? " + $$hex(value);
         try {
-          asm = (window as any).MIPSInst.print(value);
+          asm = MIPSInst.print(value);
         }
         catch(e) {
           console.log("UNRECOGNIZED: " + $$hex(value));
@@ -344,7 +346,7 @@ namespace PP64.utils {
         const value = codeDataView.getUint32(i);
         let asm = "? " + $$hex(value);
         try {
-          asm = (window as any).MIPSInst.print(value);
+          asm = MIPSInst.print(value);
         }
         catch(e) {
           console.log("UNRECOGNIZED: " + $$hex(value));

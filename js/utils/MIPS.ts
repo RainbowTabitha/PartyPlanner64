@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.utils {
   // MIPS ASM helper library
   export class MIPS {
@@ -95,7 +97,7 @@ namespace PP64.utils {
      * @returns Array of offsets of the JALs.
      */
     static findCalls(dataView: DataView, jalAddr: number) {
-      const jalInst = (window as any).MIPSInst.parse(`JAL ${jalAddr}`);
+      const jalInst = MIPSInst.parse(`JAL ${jalAddr}`);
       const calls = [];
       for (let i = 0; i < dataView.byteLength; i += 4) {
         const inst = dataView.getUint32(i);

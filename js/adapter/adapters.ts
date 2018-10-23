@@ -1,3 +1,5 @@
+/// <reference types="mips-inst" />
+
 namespace PP64.adapters {
   export type IBoardInfo = any;
 
@@ -832,8 +834,6 @@ namespace PP64.adapters {
     }
 
     _writeEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
-      const MIPSInst = (window as any).MIPSInst;
-
       // The hook logic will be placed at the top of eventASMStart, since
       // we don't put anything there much anymore.
       const hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
