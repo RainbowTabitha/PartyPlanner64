@@ -7,9 +7,18 @@ namespace PP64.utils {
     public showVertexNormals: boolean = false;
     public useFormCamera: boolean = false;
 
-    createModel(form: IFormObj) {
+    private __threeResult: THREE.Object3D | undefined;
+    private __promises: Promise<any>[] = [];
+
+    createModel(form: IFormObj): Promise<THREE.Object3D> {
       const materials = this._parseMaterials(form);
-      return this._parseForm(form, materials);
+      this.__threeResult = this._parseForm(form, materials);
+      return new Promise((resolve) => {
+        Promise.all(this.__promises).then(() => {
+          this.__promises = [];
+          resolve(this.__threeResult);
+        });
+      });
     }
 
     _parseForm(form: IFormObj, materials: THREE.MeshBasicMaterial[]) {
@@ -264,10 +273,14 @@ namespace PP64.utils {
       $$log("Texture", dataUri);
       const loader = new THREE.TextureLoader();
       loader.crossOrigin = "";
-      const texture = loader.load(dataUri);
-      texture.flipY = false;
-      texture.wrapS = this._getWrappingBehavior(atr.xBehavior);
-      texture.wrapT = this._getWrappingBehavior(atr.yBehavior);
+      let texture: any;
+      const texturePromise = new Promise((resolve) => {
+        texture = loader.load(dataUri, resolve);
+        texture.flipY = false;
+        texture.wrapS = this._getWrappingBehavior(atr.xBehavior);
+        texture.wrapT = this._getWrappingBehavior(atr.yBehavior);
+      });
+      this.__promises.push(texturePromise);
 
       return new THREE.MeshBasicMaterial({
         alphaTest: 0.5,
@@ -308,12 +321,14 @@ namespace PP64.utils {
     }
 
     _makeVertexNormal(form: IFormObj, vtxIndex: number) {
-      let vtx = form.VTX1[0].parsed.vertices[vtxIndex];
-      return new THREE.Vector3(
+      const vtx = form.VTX1[0].parsed.vertices[vtxIndex];
+      const normalVector = new THREE.Vector3(
         (vtx.normalX) / (127 + (vtx.normalX < 0 ? 1 : 0)),
         (vtx.normalY) / (127 + (vtx.normalY < 0 ? 1 : 0)),
         (vtx.normalZ) / (127 + (vtx.normalZ < 0 ? 1 : 0)),
       );
+      normalVector.normalize();
+      return normalVector;
     }
 
     _makeVertexUVs(vtxEntry1: IFAC1VertexEntry, vtxEntry2: IFAC1VertexEntry, vtxEntry3: IFAC1VertexEntry) {

@@ -1,3 +1,5 @@
+/// <reference types="gltf-js-utils" />
+
 namespace PP64.models {
   interface IModelViewerProps {
     // bgColor: number;
@@ -185,6 +187,8 @@ namespace PP64.models {
   }
 
   class ModelRenderer extends React.Component<IModelRendererProps> {
+    private __container: HTMLDivElement | null = null;
+
     state = {
       hasError: false
     }
@@ -197,7 +201,10 @@ namespace PP64.models {
       }
 
       return (
-        <div className="modelRenderContainer"></div>
+        <div className="modelRenderContainer"
+          style={{ backgroundColor: "#" + PP64.utils.string.pad($$hex(this.props.bgColor, ""), 6, "0") }}
+          ref={el => this.__container = el}
+        />
       );
     }
 
@@ -240,7 +247,7 @@ namespace PP64.models {
 
     onWindowResize = () => {
       if (renderer && camera) {
-        const container = ReactDOM.findDOMNode(this) as HTMLElement;
+        const container = this.__container!;
         const height = container.offsetHeight;
         const width = container.offsetWidth;
 
@@ -276,7 +283,7 @@ namespace PP64.models {
       renderer.dispose();
       renderer.forceContextLoss();
 
-      let container = ReactDOM.findDOMNode(this) as HTMLElement;
+      let container = this.__container!;
       if (renderer.domElement.offsetParent)
         container.removeChild(renderer.domElement);
 
@@ -336,12 +343,9 @@ namespace PP64.models {
 
       const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
 
-      const container = ReactDOM.findDOMNode(this) as HTMLElement;
+      const container = this.__container!;
       const height = container.offsetHeight;
       const width = container.offsetWidth;
-
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(this.props.bgColor);
 
       $$log(`Rendering model ${dir}/${file}`);
 
@@ -356,43 +360,46 @@ namespace PP64.models {
       converter.showVertexNormals = this.props.showVertexNormals;
       converter.useFormCamera = this.props.useCamera;
 
-      const modelObj = converter.createModel(form);
-      scene.add(modelObj);
+      converter.createModel(form).then((modelObj) => {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(this.props.bgColor);
+        scene.add(modelObj);
 
-      if (this.props.showVertexNormals) {
-        const normalsHelper = new THREE.VertexNormalsHelper(modelObj, 8, 0x00FF00, 1);
-        scene.add(normalsHelper);
-      }
+        if (this.props.showVertexNormals) {
+          const normalsHelper = new THREE.VertexNormalsHelper(modelObj, 8, 0x00FF00, 1);
+          scene.add(normalsHelper);
+        }
 
-      $$log("Scene", scene);
+        $$log("Scene", scene);
 
-      if (this.props.selectedAnimDir !== null) {
-        const [dir, file] = [this.props.selectedAnimDir, this.props.selectedAnimFile];
-        const mtnx = PP64.utils.MTNX.unpack(PP64.fs.mainfs.get(dir, file!))!;
-        $$log("mtnx", mtnx);
+        if (this.props.selectedAnimDir !== null) {
+          const [dir, file] = [this.props.selectedAnimDir, this.props.selectedAnimFile];
+          const mtnx = PP64.utils.MTNX.unpack(PP64.fs.mainfs.get(dir, file!))!;
+          $$log("mtnx", mtnx);
 
-        const animConverter = new PP64.utils.MtnxToThreeJs();
-        animConverter.form = form;
-        const clip = animConverter.createClip(mtnx);
-        $$log("mtnxClip", clip);
+          const animConverter = new PP64.utils.MtnxToThreeJs();
+          animConverter.form = form;
+          const clip = animConverter.createClip(mtnx);
+          $$log("mtnxClip", clip);
 
-        mixer = new THREE.AnimationMixer(scene);
-        const mtnxClipAction = mixer.clipAction(clip);
-        mtnxClipAction.play();
+          mixer = new THREE.AnimationMixer(scene);
+          const mtnxClipAction = mixer.clipAction(clip);
+          mtnxClipAction.play();
 
-        clock = new THREE.Clock();
-      }
+          clock = new THREE.Clock();
+        }
 
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(width, height);
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
 
-      container.appendChild(renderer.domElement);
+        container.appendChild(renderer.domElement);
 
-      camera = converter.createCamera(form, width, height);
+        camera = converter.createCamera(form, width, height);
 
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-      this.animate();
+        this.animate();
+      });
     }
 
     renderModel() {
@@ -800,18 +807,23 @@ namespace PP64.models {
 
       const converter = new PP64.utils.FormToThreeJs();
 
-      const modelObj = converter.createModel(form);
+      converter.createModel(form).then((modelObj) => {
+        $$log("Exporting Three model object", modelObj);
 
-      (window as any).GLTFUtils.exportGLTF((window as any).GLTFUtils.glTFAssetFromTHREE(modelObj), {
-        jsZip: (window as any).JSZip,
-      }).then((blob: Blob) => {
-        saveAs(blob, `model-${dir}-${file}.zip`);
+        const asset = GLTFUtils.glTFAssetFromTHREE(modelObj);
+        $$log("Converted glTF asset", asset);
+
+        if (PP64.settings.get($setting.modelUseGLB)) {
+          GLTFUtils.exportGLB(asset).then((buffer: ArrayBuffer) => {
+            saveAs(new Blob([buffer]), `model-${dir}-${file}.glb`);
+          });
+        }
+        else {
+          GLTFUtils.exportGLTFZip(asset, (window as any).JSZip).then((blob: Blob) => {
+            saveAs(blob, `model-${dir}-${file}.zip`);
+          });
+        }
       });
-
-      // const meshes = converter.createMeshes(form);
-      // THREEToOBJ.fromMesh(meshes[0]).then(blob => {
-      //   saveAs(blob, `model-${dir}-${file}.obj`);
-      // });
     }
   };
 }

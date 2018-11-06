@@ -9,6 +9,7 @@ enum $setting {
   "writeDecompressed" = "write.decompressed",
   "limitModelFPS" = "models.limitfps",
   "limitModelAnimations" = "models.limitAnimations",
+  "modelUseGLB" = "models.useGLB",
 };
 
 namespace PP64.settings {
@@ -51,6 +52,8 @@ namespace PP64.settings {
       desc: "Reduce the refresh rate for better performance." },
     { id: "models.limitAnimations", type: "checkbox", "default": true, name: "Limit animations",
       desc: "Limit animations to those in the same directory as the model." },
+    { id: "models.useGLB", type: "checkbox", "default": false, name: "Use GLB container for glTF",
+      desc: "Create a GLB container when exporting models to glTF." },
   ];
   function _getSetting(id: string) {
     return _settings.find((setting) => {

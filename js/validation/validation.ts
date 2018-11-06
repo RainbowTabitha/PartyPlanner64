@@ -5,7 +5,7 @@ namespace PP64.validation {
     id: string;
     name: string;
     level: PP64.types.ValidationLevel;
-    fails(board: PP64.boards.IBoard, args: any): void;
+    fails(board: PP64.boards.IBoard, args: any): false | string;
   }
 
   const ValidationRuleBase: IValidationRule = {
