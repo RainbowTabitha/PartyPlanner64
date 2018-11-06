@@ -44,6 +44,7 @@
     "@types/codemirror": "^0.0.61",
     "@types/draft-js": "^0.10.25",
     "@types/filesaver": "^0.0.30",
+    "@types/jszip": "^3.1.4",
     "@types/react": "^16.4.14",
     "@types/react-dom": "^16.0.7",
     "@types/three": "^0.92.24",
