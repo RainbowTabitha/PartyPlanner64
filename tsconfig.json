@@ -1,11 +1,11 @@
 {
 	"compilerOptions": {
-		"target": "esnext",
+		"target": "es5",
 		"moduleResolution": "node",
 		"lib": ["dom", "es6", "es2015.promise"],
-		//"allowJs": true,
 		"strict": true,
-		"jsx": "react"
+		"jsx": "react",
+		"sourceMap": true
 	},
 	"include": [
 		"js"

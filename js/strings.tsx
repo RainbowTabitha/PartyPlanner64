@@ -1,121 +1,126 @@
-namespace PP64.strings {
-  interface IStringsViewerState {
-    hasError: boolean;
+import * as React from "react";
+import { romhandler } from "./romhandler";
+import { strings } from "./fs/strings";
+import { strings3 } from "./fs/strings3";
+import { arrayToArrayBuffer } from "./utils/arrays";
+import { MPEditor, MPEditorDisplayMode, MPEditorToolbarPlacement } from "./texteditor";
+
+interface IStringsViewerState {
+  hasError: boolean;
+}
+
+export class StringsViewer extends React.Component<{}, IStringsViewerState> {
+  constructor(props: {}) {
+    super(props);
+
+    this.state = {
+      hasError: false
+    };
   }
 
-  export class StringsViewer extends React.Component<{}, IStringsViewerState> {
-    constructor(props: {}) {
-      super(props);
-
-      this.state = {
-        hasError: false
-      };
-    }
-
-    render() {
-      if (this.state.hasError) {
-        return (
-          <p>An error was encountered.</p>
-        );
-      }
-
-      let strings = [];
-      let strCount;
-      let game = PP64.romhandler.getGameVersion();
-      if (game === 3)
-        strCount = PP64.fs.strings3.getStringCount("en", 0); // TODO
-      else
-        strCount = PP64.fs.strings.getStringCount();
-      for (let s = 0; s < strCount; s++) {
-        strings.push(
-          <StringEditWrapper strIndex={s} />
-        );
-      }
-
+  render() {
+    if (this.state.hasError) {
       return (
-        <div className="stringViewerContainer">
-          <p>This is an experimental strings editor, probably doesn't work yet.</p>
-          {strings}
-        </div>
+        <p>An error was encountered.</p>
       );
     }
 
-    componentDidCatch(error: Error, info: React.ErrorInfo) {
-      this.setState({ hasError: true });
-      console.error(error);
-    }
-  }
-
-  interface IStringEditWrapperProps {
-    strIndex: number;
-  }
-
-  class StringEditWrapper extends React.Component<IStringEditWrapperProps> {
-    private editor: PP64.texteditor.MPEditor | null = null;
-
-    state = {
-      hasFocus: false,
-    }
-
-    render() {
-      let str;
-      let game = PP64.romhandler.getGameVersion();
-      if (game === 3)
-        str = PP64.fs.strings3.read("en", 0, this.props.strIndex); // TODO
-      else
-        str = PP64.fs.strings.read(this.props.strIndex);
-
-      return (
-        <PP64.texteditor.MPEditor
-          ref={(editor) => { this.editor = editor; }}
-          value={str}
-          displayMode={PP64.texteditor.MPEditorDisplayMode.Edit}
-          showToolbar={true}
-          toolbarPlacement={PP64.texteditor.MPEditorToolbarPlacement.Top}
-          onValueChange={this.onValueChanged}
-          onFocus={this.onFocus}
-          onBlur={this.onBlur} />
+    let strs = [];
+    let strCount;
+    let game = romhandler.getGameVersion();
+    if (game === 3)
+      strCount = strings3.getStringCount("en", 0); // TODO
+    else
+      strCount = strings.getStringCount();
+    for (let s = 0; s < strCount; s++) {
+      strs.push(
+        <StringEditWrapper strIndex={s} />
       );
     }
 
-    componentDidMount() {
-      if (this.state.hasFocus)
-        this.editor!.focus();
-    }
+    return (
+      <div className="stringViewerContainer">
+        <p>This is an experimental strings editor, probably doesn't work yet.</p>
+        {strs}
+      </div>
+    );
+  }
 
-    componentDidUpdate() {
-      if (this.state.hasFocus)
-        this.editor!.focus();
-    }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    this.setState({ hasError: true });
+    console.error(error);
+  }
+}
 
-    onValueChanged = (id: any, val: string) => {
-      let game = PP64.romhandler.getGameVersion()!;
-      if (game === 3)
-        return;
-      else {
-        let strBuffer = PP64.utils.arrays.arrayToArrayBuffer(PP64.fs.strings._strToBytes(val));
-        PP64.fs.strings.write(this.props.strIndex, strBuffer);
-      }
-    }
+interface IStringEditWrapperProps {
+  strIndex: number;
+}
 
-    onFocus = () => {
-      this.setState({ hasFocus: true });
-    }
+class StringEditWrapper extends React.Component<IStringEditWrapperProps> {
+  private editor: MPEditor | null = null;
 
-    onBlur = () => {
-      this.setState({ hasFocus: false });
+  state = {
+    hasFocus: false,
+  }
+
+  render() {
+    let str;
+    let game = romhandler.getGameVersion();
+    if (game === 3)
+      str = strings3.read("en", 0, this.props.strIndex); // TODO
+    else
+      str = strings.read(this.props.strIndex);
+
+    return (
+      <MPEditor
+        ref={(editor) => { this.editor = editor; }}
+        value={str}
+        displayMode={MPEditorDisplayMode.Edit}
+        showToolbar={true}
+        toolbarPlacement={MPEditorToolbarPlacement.Top}
+        onValueChange={this.onValueChanged}
+        onFocus={this.onFocus}
+        onBlur={this.onBlur} />
+    );
+  }
+
+  componentDidMount() {
+    if (this.state.hasFocus)
+      this.editor!.focus();
+  }
+
+  componentDidUpdate() {
+    if (this.state.hasFocus)
+      this.editor!.focus();
+  }
+
+  onValueChanged = (id: any, val: string) => {
+    let game = romhandler.getGameVersion()!;
+    if (game === 3)
+      return;
+    else {
+      let strBuffer = arrayToArrayBuffer(strings._strToBytes(val));
+      strings.write(this.props.strIndex, strBuffer);
     }
   }
 
-  class StringEditorToolbar extends React.Component {
-    state = {}
+  onFocus = () => {
+    this.setState({ hasFocus: true });
+  }
 
-    render() {
-      return (
-        <div className="stringEditorToolbar">
+  onBlur = () => {
+    this.setState({ hasFocus: false });
+  }
+}
 
-        </div>
-      );
-    }
+class StringEditorToolbar extends React.Component {
+  state = {}
+
+  render() {
+    return (
+      <div className="stringEditorToolbar">
+
+      </div>
+    );
   }
 }

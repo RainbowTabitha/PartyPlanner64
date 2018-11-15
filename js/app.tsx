@@ -1,308 +1,277 @@
 // This is the top level of the application, and includes the root React view.
-namespace PP64.app {
-  interface IPP64AppState {
-    currentView: PP64.types.View,
-    boards: PP64.boards.IBoard[],
-    currentBoard: PP64.boards.IBoard,
-    currentEvent: PP64.adapters.events.IEvent | null,
-    romLoaded: boolean,
-    currentAction: PP64.types.Action,
-    selectedSpaces: PP64.boards.ISpace[] | null,
-    blocked: boolean,
-    message: string,
-    messageHTML: string,
-    updateExists: boolean,
-    updateHideNotification: boolean,
-    error: Error | null,
-    errorInfo: React.ErrorInfo | null,
+
+import { View, Action } from "./types";
+import { IBoard, ISpace, getBoards, getCurrentBoard } from "./boards";
+import * as React from "react";
+import { IEvent } from "./events/events";
+import { updateWindowTitle } from "./utils/browser";
+import { Editor } from "./renderer";
+import { Details } from "./details";
+import { Settings } from "./settings";
+import { About } from "./about";
+import { ModelViewer } from "./models";
+import { EventsView } from "./eventsview";
+import { CreateEventView } from "./createevent";
+import { StringsViewer } from "./strings";
+import { GamesharkView } from "./gameshark";
+import { BoardMenu } from "./boardmenu";
+import { Notification, NotificationBar, NotificationButton, NotificationColor } from "./components/notifications";
+import { Header } from "./header";
+import { ToolWindow } from "./toolwindow";
+import { Toolbar } from "./toolbar";
+import { SpaceProperties } from "./spaceproperties";
+import { BoardProperties } from "./boardproperties";
+import * as ReactDOM from "react-dom";
+import "./utils/onbeforeunload";
+import "./events/events.common";
+import "./events/events.MP1";
+import "./events/events.MP2";
+import "./events/events.MP3";
+import { showMessage } from "./appControl";
+import "file-saver";
+
+interface IPP64AppState {
+  currentView: View,
+  boards: IBoard[],
+  currentBoard: IBoard,
+  currentEvent: IEvent | null,
+  romLoaded: boolean,
+  currentAction: Action,
+  selectedSpaces: ISpace[] | null,
+  blocked: boolean,
+  message: string,
+  messageHTML: string,
+  updateExists: boolean,
+  updateHideNotification: boolean,
+  error: Error | null,
+  errorInfo: React.ErrorInfo | null,
+}
+
+export class PP64App extends React.Component<{}, IPP64AppState> {
+  state: IPP64AppState = {
+    currentView: View.EDITOR,
+    boards: getBoards(),
+    currentBoard: getCurrentBoard(),
+    currentEvent: null,
+    romLoaded: false,
+    currentAction: Action.MOVE,
+    selectedSpaces: null,
+    blocked: false,
+    message: "",
+    messageHTML: "",
+    updateExists: false,
+    updateHideNotification: false,
+    error: null,
+    errorInfo: null,
   }
 
-  class PP64App extends React.Component<{}, IPP64AppState> {
-    state: IPP64AppState = {
-      currentView: PP64.types.View.EDITOR,
-      boards: PP64.boards.getBoards(),
-      currentBoard: PP64.boards.getCurrentBoard(),
-      currentEvent: null,
-      romLoaded: false,
-      currentAction: PP64.types.Action.MOVE,
-      selectedSpaces: null,
-      blocked: false,
-      message: "",
-      messageHTML: "",
-      updateExists: false,
-      updateHideNotification: false,
-      error: null,
-      errorInfo: null,
-    }
-
-    render() {
-      if (this.state.error) {
-        return (
-          <div className="errorDiv selectable">
-            <h2>Hey, it seeems like something's wrong in&nbsp;
-              <span className="errorStrikeoutText">Mushroom Village</span>&nbsp;
-              PartyPlanner64.</h2>
-            <p>Please &nbsp;
-              <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">
-                file an issue
-              </a>
-              &nbsp; with the following details, and refresh the page.
-            </p>
-            <pre>{this.state.error.toString()}</pre>
-            {this.state.error.stack ? <React.Fragment>
-                <div>Stack Error Details:</div>
-                <pre>{this.state.error.stack}</pre>
-              </React.Fragment>
-              : null
-            }
-            <div>Component Stack Error Details:</div>
-            <pre>{this.state.errorInfo!.componentStack}></pre>
-          </div>
-        );
-      }
-
-      PP64.utils.browser.updateWindowTitle(this.state.currentBoard.name);
-      let mainView;
-      switch (this.state.currentView) {
-        case PP64.types.View.EDITOR:
-          mainView = <PP64.renderer.Editor board={this.state.currentBoard} selectedSpaces={this.state.selectedSpaces} />;
-          break;
-        case PP64.types.View.DETAILS:
-          mainView = <PP64.details.Details board={this.state.currentBoard} />;
-          break;
-        case PP64.types.View.SETTINGS:
-          mainView = <PP64.settings.Settings />;
-          break;
-        case PP64.types.View.ABOUT:
-          mainView = <PP64.about.About />;
-          break;
-        case PP64.types.View.MODELS:
-          mainView = <PP64.models.ModelViewer />;
-          break;
-        case PP64.types.View.EVENTS:
-          mainView = <PP64.events.EventsView />;
-          break;
-        case PP64.types.View.CREATEEVENT:
-          mainView = <PP64.events.CreateEventView />;
-          break;
-        case PP64.types.View.STRINGS:
-          mainView = <PP64.strings.StringsViewer />;
-          break;
-        case PP64.types.View.PATCHES:
-          mainView = <PP64.patches.gameshark.GamesharkView />;
-          break;
-      }
-
-      let sidebar;
-      switch (this.state.currentView) {
-      case PP64.types.View.EDITOR:
-      case PP64.types.View.DETAILS:
-        sidebar = (
-          <div className="sidebar">
-            <PP64.boardmenu.BoardMenu
-              boards={this.state.boards} />
-          </div>
-        );
-        break;
-      }
-
-      let blocked;
-      if (this.state.blocked) {
-        let content;
-        if (this.state.message || this.state.messageHTML) {
-          let messageSpan;
-          if (this.state.message) {
-            messageSpan = <span className="loadingMsgTxt selectable">{this.state.message}</span>
-          }
-          else { // messageHTML
-            messageSpan = <span className="loadingMsgTxt selectable" dangerouslySetInnerHTML={{ __html: this.state.messageHTML }}></span>
-          }
-
-          content = (
-            <div className="loadingMsg">
-              {messageSpan}
-              <br /><br />
-              <button onClick={() => { PP64.app.showMessage(); }}>OK</button>
-            </div>
-          );
-        }
-        else {
-          content = (
-            <img className="loadingGif swing" src="img/pencil.png" alt="Loading" />
-          );
-        }
-        blocked = (
-          <div className="loading">
-            <img className="loadingLogo" src="img/logoloading.png" alt="Loading" />
-            <br />
-            {content}
-          </div>
-        );
-      }
-
-      let bodyClass = "body";
-      if (this.state.currentAction === $actType.ERASE)
-        bodyClass += " eraser";
-
+  render() {
+    if (this.state.error) {
       return (
-        <div className={bodyClass}>
-          <PP64.components.NotificationBar>
-            {this.getNotifications()}
-          </PP64.components.NotificationBar>
-          <PP64.header.Header view={this.state.currentView} romLoaded={this.state.romLoaded} board={this.state.currentBoard} />
-          <div className="content">
-            {sidebar}
-            <div className="main">
-              {mainView}
-              <div className="mainOverlay">
-                <PP64.toolwindow.ToolWindow name="Toolbox" position="TopRight"
-                  visible={this.state.currentView === $viewType.EDITOR}>
-                  <PP64.toolbar.Toolbar currentAction={this.state.currentAction}
-                    gameVersion={this.state.currentBoard.game}
-                    boardType={this.state.currentBoard.type} />
-                </PP64.toolwindow.ToolWindow>
-                <PP64.toolwindow.ToolWindow name="Space Properties" position="BottomRight"
-                  visible={this.state.currentView === $viewType.EDITOR}>
-                  <PP64.properties.SpaceProperties selectedSpaces={this.state.selectedSpaces}
-                    gameVersion={this.state.currentBoard.game}
-                    boardType={this.state.currentBoard.type} />
-                </PP64.toolwindow.ToolWindow>
-                <PP64.toolwindow.ToolWindow name="Board Properties" position="BottomLeft"
-                  visible={this.state.currentView === $viewType.EDITOR}>
-                  <PP64.properties.BoardProperties currentBoard={this.state.currentBoard} />
-                </PP64.toolwindow.ToolWindow>
-              </div>
-              <div id="dragZone"></div>
-            </div>
-          </div>
-          {blocked}
+        <div className="errorDiv selectable">
+          <h2>Hey, it seeems like something's wrong in&nbsp;
+            <span className="errorStrikeoutText">Mushroom Village</span>&nbsp;
+            PartyPlanner64.</h2>
+          <p>Please &nbsp;
+            <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">
+              file an issue
+            </a>
+            &nbsp; with the following details, and refresh the page.
+          </p>
+          <pre>{this.state.error.toString()}</pre>
+          {this.state.error.stack ? <React.Fragment>
+              <div>Stack Error Details:</div>
+              <pre>{this.state.error.stack}</pre>
+            </React.Fragment>
+            : null
+          }
+          <div>Component Stack Error Details:</div>
+          <pre>{this.state.errorInfo!.componentStack}></pre>
         </div>
       );
     }
 
-    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-      this.setState({
-        error,
-        errorInfo,
-      });
-      console.error(error, errorInfo);
+    updateWindowTitle(this.state.currentBoard.name);
+    let mainView;
+    switch (this.state.currentView) {
+      case View.EDITOR:
+        mainView = <Editor board={this.state.currentBoard} selectedSpaces={this.state.selectedSpaces} />;
+        break;
+      case View.DETAILS:
+        mainView = <Details board={this.state.currentBoard} />;
+        break;
+      case View.SETTINGS:
+        mainView = <Settings />;
+        break;
+      case View.ABOUT:
+        mainView = <About />;
+        break;
+      case View.MODELS:
+        mainView = <ModelViewer />;
+        break;
+      case View.EVENTS:
+        mainView = <EventsView />;
+        break;
+      case View.CREATEEVENT:
+        mainView = <CreateEventView />;
+        break;
+      case View.STRINGS:
+        mainView = <StringsViewer />;
+        break;
+      case View.PATCHES:
+        mainView = <GamesharkView />;
+        break;
     }
 
-    componentDidMount() {
-      if (isElectron) {
-        const { ipcRenderer } = require("electron");
-        ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
-        ipcRenderer.send("update-check-start");
-      }
+    let sidebar;
+    switch (this.state.currentView) {
+    case View.EDITOR:
+    case View.DETAILS:
+      sidebar = (
+        <div className="sidebar">
+          <BoardMenu
+            boards={this.state.boards} />
+        </div>
+      );
+      break;
     }
 
-    componentWillUnmount() {
-      if (isElectron) {
-        const { ipcRenderer } = require("electron");
-        ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
-      }
-    }
+    let blocked;
+    if (this.state.blocked) {
+      let content;
+      if (this.state.message || this.state.messageHTML) {
+        let messageSpan;
+        if (this.state.message) {
+          messageSpan = <span className="loadingMsgTxt selectable">{this.state.message}</span>
+        }
+        else { // messageHTML
+          messageSpan = <span className="loadingMsgTxt selectable" dangerouslySetInnerHTML={{ __html: this.state.messageHTML }}></span>
+        }
 
-    _onUpdateCheckHasUpdate = () => {
-      this.setState({ updateExists: true });
-    }
-
-    getNotifications(): React.ReactElement<any>[] {
-      const notifications = [];
-
-      if (this.state.updateExists && !this.state.updateHideNotification) {
-        notifications.push(
-          <PP64.components.Notification key="update"
-            color={PP64.components.NotificationColor.Blue}
-            onClose={this._onUpdateNotificationClosed}>
-            An update is available.
-            <PP64.components.NotificationButton onClick={this._onUpdateNotificationInstallClicked}>
-              Install
-            </PP64.components.NotificationButton>
-          </PP64.components.Notification>
+        content = (
+          <div className="loadingMsg">
+            {messageSpan}
+            <br /><br />
+            <button onClick={() => { showMessage(); }}>OK</button>
+          </div>
         );
       }
-
-      return notifications;
-    }
-
-    _onUpdateNotificationClosed = () => {
-      this.setState({ updateHideNotification: true });
-    }
-
-    _onUpdateNotificationInstallClicked = () => {
-      this.setState({
-        updateHideNotification: true,
-        blocked: true,
-      });
-
-      if (isElectron) {
-        const { ipcRenderer } = require("electron");
-        ipcRenderer.send("update-check-doupdate");
+      else {
+        content = (
+          <img className="loadingGif swing" src="img/pencil.png" alt="Loading" />
+        );
       }
+      blocked = (
+        <div className="loading">
+          <img className="loadingLogo" src="img/logoloading.png" alt="Loading" />
+          <br />
+          {content}
+        </div>
+      );
     }
-  };
 
-  const body = document.getElementById("body");
-  let _instance = ReactDOM.render(<PP64App />, body) as PP64App;
+    let bodyClass = "body";
+    if (this.state.currentAction === Action.ERASE)
+      bodyClass += " eraser";
 
-  export function changeView(view: PP64.types.View) {
-    _instance.setState({ currentView: view });
+    return (
+      <div className={bodyClass}>
+        <NotificationBar>
+          {this.getNotifications()}
+        </NotificationBar>
+        <Header view={this.state.currentView} romLoaded={this.state.romLoaded} board={this.state.currentBoard} />
+        <div className="content">
+          {sidebar}
+          <div className="main">
+            {mainView}
+            <div className="mainOverlay">
+              <ToolWindow name="Toolbox" position="TopRight"
+                visible={this.state.currentView === View.EDITOR}>
+                <Toolbar currentAction={this.state.currentAction}
+                  gameVersion={this.state.currentBoard.game}
+                  boardType={this.state.currentBoard.type} />
+              </ToolWindow>
+              <ToolWindow name="Space Properties" position="BottomRight"
+                visible={this.state.currentView === View.EDITOR}>
+                <SpaceProperties selectedSpaces={this.state.selectedSpaces}
+                  gameVersion={this.state.currentBoard.game}
+                  boardType={this.state.currentBoard.type} />
+              </ToolWindow>
+              <ToolWindow name="Board Properties" position="BottomLeft"
+                visible={this.state.currentView === View.EDITOR}>
+                <BoardProperties currentBoard={this.state.currentBoard} />
+              </ToolWindow>
+            </div>
+            <div id="dragZone"></div>
+          </div>
+        </div>
+        {blocked}
+      </div>
+    );
   }
 
-  export function currentBoardChanged() {
-    _instance.setState({
-      currentBoard: PP64.boards.getCurrentBoard(),
-      selectedSpaces: null,
-      currentAction: PP64.types.Action.MOVE
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.setState({
+      error,
+      errorInfo,
     });
+    console.error(error, errorInfo);
   }
 
-  export function boardsChanged() {
-    _instance.setState({ boards: PP64.boards.getBoards() });
+  componentDidMount() {
+    if (isElectron) {
+      const ipcRenderer = (window as any).require("electron").ipcRenderer;
+      ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+      ipcRenderer.send("update-check-start");
+    }
   }
 
-  export function romLoadedChanged() {
-    _instance.setState({ romLoaded: PP64.romhandler.romIsLoaded() });
+  componentWillUnmount() {
+    if (isElectron) {
+      const ipcRenderer = (window as any).require("electron").ipcRenderer;
+      ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+    }
   }
 
-  export function changeCurrentAction(action: PP64.types.Action) {
-    _instance.setState({ currentAction: action });
+  _onUpdateCheckHasUpdate = () => {
+    this.setState({ updateExists: true });
   }
 
-  export function getCurrentAction() {
-    return _instance.state.currentAction;
+  getNotifications(): React.ReactElement<any>[] {
+    const notifications = [];
+
+    if (this.state.updateExists && !this.state.updateHideNotification) {
+      notifications.push(
+        <Notification key="update"
+          color={NotificationColor.Blue}
+          onClose={this._onUpdateNotificationClosed}>
+          An update is available.
+          <NotificationButton onClick={this._onUpdateNotificationInstallClicked}>
+            Install
+          </NotificationButton>
+        </Notification>
+      );
+    }
+
+    return notifications;
   }
 
-  export function changeSelectedSpaces(selectedSpaces: PP64.boards.ISpace[]) {
-    _instance.setState({ selectedSpaces });
+  _onUpdateNotificationClosed = () => {
+    this.setState({ updateHideNotification: true });
   }
 
-  export function getSelectedSpaces() {
-    return _instance.state.selectedSpaces;
-  }
+  _onUpdateNotificationInstallClicked = () => {
+    this.setState({
+      updateHideNotification: true,
+      blocked: true,
+    });
 
-  export function changeCurrentEvent(event: PP64.adapters.events.IEvent | null) {
-    _instance.setState({ currentEvent: event });
+    if (isElectron) {
+      const ipcRenderer = (window as any).require("electron").ipcRenderer;
+      ipcRenderer.send("update-check-doupdate");
+    }
   }
+};
 
-  export function getCurrentEvent() {
-    return _instance.state.currentEvent;
-  }
-
-  export function blockUI(blocked: boolean) {
-    _instance.setState({ blocked: !!blocked });
-  }
-
-  export function showMessage(message?: string) {
-    _instance.setState({ blocked: !!message, message: message || "", messageHTML: "" });
-  }
-
-  export function showMessageHTML(html: string) {
-    _instance.setState({ blocked: !!html, message: "", messageHTML: html || "" });
-  }
-
-  export function refresh() {
-    _instance.forceUpdate();
-  }
-}
+const body = document.getElementById("body");
+(window as any)._PP64instance = ReactDOM.render(<PP64App />, body) as PP64App;

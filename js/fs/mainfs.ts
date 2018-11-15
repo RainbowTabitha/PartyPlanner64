@@ -1,29 +1,60 @@
-namespace PP64.fs.mainfs {
-  interface IOffsetInfo {
-    upper: number;
-    lower: number;
+import { $$log, $$hex } from "../utils/debug";
+import { decompress } from "../utils/compression";
+import { arrayBuffersEqual, copyRange } from "../utils/arrays";
+import { makeDivisibleBy } from "../utils/number";
+import { Game } from "../types";
+import { romhandler } from "../romhandler";
+import { $setting, get } from "../settings";
+
+interface IOffsetInfo {
+  upper: number;
+  lower: number;
+}
+
+let _mainFSOffsets: { [game: string]: IOffsetInfo[] } = {};
+
+_mainFSOffsets[Game.MP1_USA] = [ // Default 0x0031C7E0
+  { upper: 0x157A6, lower: 0x157AA },
+  { upper: 0x3C016, lower: 0x3C01E }
+];
+_mainFSOffsets[Game.MP1_JPN] = [
+  { upper: 0x156D6, lower: 0x156DA },
+  { upper: 0x3BF32, lower: 0x3BF3A }
+];
+_mainFSOffsets[Game.MP2_USA] = [ // Default 0x0041DD30
+  { upper: 0x416E6, lower: 0x416EE },
+];
+_mainFSOffsets[Game.MP3_USA] = [
+  { upper: 0x3619E, lower: 0x361A6 },
+];
+
+let _mainfsCache: IMainFsReadInfo[][] | null;
+
+export interface IMainFsReadInfo {
+  compressionType: number;
+  decompressedSize: number;
+  decompressed: ArrayBuffer;
+  compressed?: ArrayBuffer;
+}
+
+function _getFileHeaderSize(compressionType: number) {
+  switch (compressionType) {
+    case 0:
+    case 1:
+    case 5:
+      return 8; // Don't duplicate decompressed size.
+    case 2:
+    case 3: // Never occurs
+    case 4:
+      return 12;
   }
+  throw `_getFileHeaderSize(${compressionType}) not handled`;
+}
 
-  let _mainFSOffsets: { [game: string]: IOffsetInfo[] } = {};
-
-  _mainFSOffsets[$gameType.MP1_USA] = [ // Default 0x0031C7E0
-    { upper: 0x157A6, lower: 0x157AA },
-    { upper: 0x3C016, lower: 0x3C01E }
-  ];
-  _mainFSOffsets[$gameType.MP1_JPN] = [
-    { upper: 0x156D6, lower: 0x156DA },
-    { upper: 0x3BF32, lower: 0x3BF3A }
-  ];
-  _mainFSOffsets[$gameType.MP2_USA] = [ // Default 0x0041DD30
-    { upper: 0x416E6, lower: 0x416EE },
-  ];
-  _mainFSOffsets[$gameType.MP3_USA] = [
-    { upper: 0x3619E, lower: 0x361A6 },
-  ];
-
-  export function getROMOffset(): number | null {
-    let romView = PP64.romhandler.getDataView();
-    let patchOffsets = getPatchOffsets();
+export class mainfs {
+  public static getROMOffset(): number | null {
+    let romView = romhandler.getDataView();
+    let patchOffsets = mainfs.getPatchOffsets();
     if (!patchOffsets)
       return null;
     let romOffset = patchOffsets[0];
@@ -46,9 +77,9 @@ namespace PP64.fs.mainfs {
     return offset;
   }
 
-  export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
+  public static setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
-    let patchOffsets = getPatchOffsets();
+    let patchOffsets = mainfs.getPatchOffsets();
     let upper = (newOffset & 0xFFFF0000) >>> 16;
     let lower = newOffset & 0x0000FFFF;
     if (lower & 0x8000)
@@ -60,29 +91,22 @@ namespace PP64.fs.mainfs {
     $$log(`MainFS.setROMOffset -> ${$$hex((upper << 16) | lower)}`);
   }
 
-  export function getPatchOffsets() {
-    return _mainFSOffsets[PP64.romhandler.getROMGame()!];
+  public static getPatchOffsets() {
+    return _mainFSOffsets[romhandler.getROMGame()!];
   }
 
-  export function get(dir: number, file: number) {
+  public static get(dir: number, file: number) {
     return _mainfsCache![dir][file].decompressed;
   }
 
-  export function has(dir: number, file: number) {
+  public static has(dir: number, file: number) {
     return !!_mainfsCache![dir][file];
   }
 
-  export interface IMainFsReadInfo {
-    compressionType: number;
-    decompressedSize: number;
-    decompressed: ArrayBuffer;
-    compressed?: ArrayBuffer;
-  }
+  public static read(dir: number, file: number, all: boolean): IMainFsReadInfo {
+    let buffer = romhandler.getROMBuffer()!;
 
-  export function read(dir: number, file: number, all: boolean): IMainFsReadInfo {
-    let buffer = PP64.romhandler.getROMBuffer()!;
-
-    let fs_offset = getROMOffset()!;
+    let fs_offset = mainfs.getROMOffset()!;
     let fsView = new DataView(buffer, fs_offset);
 
     let dir_offset = fs_offset + fsView.getUint32(4 * (1 + dir));
@@ -98,35 +122,21 @@ namespace PP64.fs.mainfs {
     let result: IMainFsReadInfo = {
       compressionType: compression_type,
       decompressedSize: decompressed_size,
-      decompressed: PP64.utils.compression.decompress(compression_type, fileStartView, decompressed_size)
+      decompressed: decompress(compression_type, fileStartView, decompressed_size)
     };
     if ($$debug) { // Assert decompressedSize matches
       if (decompressed_size !== result.decompressed.byteLength)
         throw `MainFS Dir: ${dir}, File: ${file} decompressed size mismatch`;
     }
     if (all) {
-      //let compressedSize = PP64.utils.compression.getCompressedSize(compression_type, fileStartView, decompressed_size);
+      //let compressedSize = getCompressedSize(compression_type, fileStartView, decompressed_size);
       let compressedSize = (result.decompressed as any).compressedSize;
       result.compressed = buffer.slice(fileStartOffset, fileStartOffset + compressedSize);
     }
     return result;
   }
 
-  function _getFileHeaderSize(compressionType: number) {
-    switch (compressionType) {
-      case 0:
-      case 1:
-      case 5:
-        return 8; // Don't duplicate decompressed size.
-      case 2:
-      case 3: // Never occurs
-      case 4:
-        return 12;
-    }
-    throw `_getFileHeaderSize(${compressionType}) not handled`;
-  }
-
-  export function write(dir: number, file: number, content: ArrayBuffer) {
+  public static write(dir: number, file: number, content: ArrayBuffer) {
     let fileData = _mainfsCache![dir][file];
     if (!fileData) {
       $$log(`Adding new file to MainFS: ${dir}/${file}`);
@@ -135,7 +145,7 @@ namespace PP64.fs.mainfs {
       } as any;
     }
     else if (content !== fileData.decompressed &&
-      PP64.utils.arrays.arrayBuffersEqual(content, fileData.decompressed))
+      arrayBuffersEqual(content, fileData.decompressed))
       return; // Don't bother, because we would just end up losing the compressed data.
 
     if (fileData.compressed) {
@@ -147,24 +157,22 @@ namespace PP64.fs.mainfs {
     fileData.decompressed = content.slice(0);
   }
 
-  let _mainfsCache: IMainFsReadInfo[][] | null;
-
-  export function clearCache() {
+  public static clearCache() {
     _mainfsCache = null;
   }
 
-  export function extract() {
+  public static extract() {
     let t0, t1;
     if ($$debug && window.performance)
       t0 = performance.now();
 
-    let dirCount = getDirectoryCount();
+    let dirCount = mainfs.getDirectoryCount();
     _mainfsCache = new Array(dirCount);
     for (let d = 0; d < dirCount; d++) {
-      let fileCount = getFileCount(d);
+      let fileCount = mainfs.getFileCount(d);
       _mainfsCache[d] = new Array(fileCount);
       for (let f = 0; f < fileCount; f++) {
-        _mainfsCache[d][f] = read(d, f, true);
+        _mainfsCache[d][f] = mainfs.read(d, f, true);
       }
     }
 
@@ -176,17 +184,17 @@ namespace PP64.fs.mainfs {
     return _mainfsCache;
   }
 
-  export function extractAsync() {
-    return new Promise((resolve, reject) => {
-      extract();
+  public static extractAsync() {
+    return new Promise((resolve) => {
+      mainfs.extract();
       resolve();
     });
   }
 
-  export function pack(buffer: ArrayBuffer, offset: number = 0) {
+  public static pack(buffer: ArrayBuffer, offset: number = 0) {
     let view = new DataView(buffer, offset);
 
-    let dirCount = getDirectoryCount();
+    let dirCount = mainfs.getDirectoryCount();
     view.setUint32(0, dirCount);
 
     let curDirIndexOffset = 4;
@@ -194,15 +202,15 @@ namespace PP64.fs.mainfs {
     for (let d = 0; d < dirCount; d++) {
       view.setUint32(curDirIndexOffset, curDirWriteOffset);
       curDirIndexOffset += 4;
-      curDirWriteOffset = _writeDir(d, view, curDirWriteOffset);
-      curDirWriteOffset = $$number.makeDivisibleBy(curDirWriteOffset, 2);
+      curDirWriteOffset = mainfs._writeDir(d, view, curDirWriteOffset);
+      curDirWriteOffset = makeDivisibleBy(curDirWriteOffset, 2);
     }
 
     return curDirWriteOffset;
   }
 
-  function _writeDir(d: number, view: DataView, offset: number) {
-    let fileCount = getFileCount(d);
+  private static _writeDir(d: number, view: DataView, offset: number) {
+    let fileCount = mainfs.getFileCount(d);
     view.setUint32(offset, fileCount);
 
     let curFileIndexOffset = offset + 4;
@@ -210,16 +218,16 @@ namespace PP64.fs.mainfs {
     for (let f = 0; f < fileCount; f++) {
       view.setUint32(curFileIndexOffset, curFileWriteOffset - offset);
       curFileIndexOffset += 4;
-      curFileWriteOffset = _writeFile(d, f, view, curFileWriteOffset);
-      curFileWriteOffset = $$number.makeDivisibleBy(curFileWriteOffset, 2);
+      curFileWriteOffset = mainfs._writeFile(d, f, view, curFileWriteOffset);
+      curFileWriteOffset = makeDivisibleBy(curFileWriteOffset, 2);
     }
 
     return curFileWriteOffset;
   }
 
-  function _writeFile(d: number, f: number, view: DataView, offset: number) {
+  private static _writeFile(d: number, f: number, view: DataView, offset: number) {
     let fileData = _mainfsCache![d][f];
-    let writeDecompressed = PP64.settings.get($setting.writeDecompressed);
+    let writeDecompressed = get($setting.writeDecompressed);
 
     view.setUint32(offset, fileData.decompressedSize || fileData.decompressed.byteLength);
 
@@ -237,35 +245,35 @@ namespace PP64.fs.mainfs {
       bytesToWrite = fileData.decompressed;
     else
       bytesToWrite = fileData.compressed || fileData.decompressed;
-    PP64.utils.arrays.copyRange(view, bytesToWrite, fileStartOffset, 0, bytesToWrite.byteLength);
+    copyRange(view, bytesToWrite, fileStartOffset, 0, bytesToWrite.byteLength);
 
     return fileStartOffset + bytesToWrite.byteLength;
   }
 
-  export function getDirectoryCount() {
+  public static getDirectoryCount() {
     if (_mainfsCache)
       return _mainfsCache.length;
 
-    const buffer = PP64.romhandler.getROMBuffer()!;
-    const fsView = new DataView(buffer, getROMOffset()!);
+    const buffer = romhandler.getROMBuffer()!;
+    const fsView = new DataView(buffer, mainfs.getROMOffset()!);
     return fsView.getUint32(0);
   }
 
-  export function getFileCount(dir: number) {
+  public static getFileCount(dir: number) {
     if (_mainfsCache && _mainfsCache[dir])
       return _mainfsCache[dir].length;
 
-    const buffer = PP64.romhandler.getROMBuffer()!;
-    const fs_offset = getROMOffset()!;
+    const buffer = romhandler.getROMBuffer()!;
+    const fs_offset = mainfs.getROMOffset()!;
     const fsView = new DataView(buffer, fs_offset);
     const dir_offset = fs_offset + fsView.getUint32(4 * (1 + dir));
     const dirView = new DataView(buffer, dir_offset);
     return dirView.getUint32(0);
   }
 
-  export function getByteLength() {
+  public static getByteLength() {
     const dirCount = _mainfsCache!.length;
-    const writeDecompressed = PP64.settings.get($setting.writeDecompressed);
+    const writeDecompressed = get($setting.writeDecompressed);
 
     let byteLen = 0;
     byteLen += 4; // Count of directories
@@ -285,7 +293,7 @@ namespace PP64.fs.mainfs {
           byteLen += _mainfsCache![d][f].compressed!.byteLength;
         else
           byteLen += _mainfsCache![d][f].decompressed.byteLength;
-        byteLen = $$number.makeDivisibleBy(byteLen, 2);
+        byteLen = makeDivisibleBy(byteLen, 2);
       }
     }
 

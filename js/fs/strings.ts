@@ -1,24 +1,31 @@
-namespace PP64.fs.strings {
-  interface IOffsetInfo {
-    upper: number;
-    lower: number;
-  }
+import { $$log, $$hex } from "../utils/debug";
+import { makeDivisibleBy } from "../utils/number";
+import { copyRange } from "../utils/arrays";
+import { Game } from "../types";
+import { romhandler } from "../romhandler";
+import { getROMAdapter } from "../adapter/adapters";
 
-  let _stringOffsets: { [game: string]: IOffsetInfo[] } = {};
-  _stringOffsets[$gameType.MP1_USA] = [
-    { upper: 0x0001AE6E, lower: 0x0001AE76 },
-  ];
-  _stringOffsets[$gameType.MP1_JPN] = [
-    { upper: 0x0001AD9E, lower: 0x0001ADA6 },
-  ];
-  _stringOffsets[$gameType.MP2_USA] = [ // Default at 0x1142DD0
-    { upper: 0x0001D22A, lower: 0x0001D232 },
-    { upper: 0x00089356, lower: 0x0008935E },
-    { upper: 0x0008936A, lower: 0x00089372 },
-  ];
+interface IOffsetInfo {
+  upper: number;
+  lower: number;
+}
 
+let _stringOffsets: { [game: string]: IOffsetInfo[] } = {};
+_stringOffsets[Game.MP1_USA] = [
+  { upper: 0x0001AE6E, lower: 0x0001AE76 },
+];
+_stringOffsets[Game.MP1_JPN] = [
+  { upper: 0x0001AD9E, lower: 0x0001ADA6 },
+];
+_stringOffsets[Game.MP2_USA] = [ // Default at 0x1142DD0
+  { upper: 0x0001D22A, lower: 0x0001D232 },
+  { upper: 0x00089356, lower: 0x0008935E },
+  { upper: 0x0008936A, lower: 0x00089372 },
+];
+
+export namespace strings {
   export function getROMOffset() {
-    let romView = PP64.romhandler.getDataView();
+    let romView = romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
       return null;
@@ -59,7 +66,7 @@ namespace PP64.fs.strings {
   }
 
   export function getPatchOffsets() {
-    return _stringOffsets[PP64.romhandler.getROMGame()!];
+    return _stringOffsets[romhandler.getROMGame()!];
   }
 
   export class StringTable {
@@ -111,7 +118,7 @@ namespace PP64.fs.strings {
     }
 
     _byteToStr(val: number) {
-      let map = PP64.adapters.getROMAdapter()!.getCharacterMap();
+      let map = getROMAdapter()!.getCharacterMap();
       if (map.hasOwnProperty(val))
         return map[val];
       return String.fromCharCode(val);
@@ -135,7 +142,7 @@ namespace PP64.fs.strings {
       for (let s = 0; s < strCount; s++) {
         byteLen += 2; // String length
         byteLen += this.strs[s].byteLength;
-        byteLen = $$number.makeDivisibleBy(byteLen, 2);
+        byteLen = makeDivisibleBy(byteLen, 2);
       }
 
       if (applyCompression) { // Assuming dumb compress01
@@ -157,7 +164,7 @@ namespace PP64.fs.strings {
         view.setUint32(curStrIndexOffset, curStrWriteOffset);
         curStrIndexOffset += 4;
         curStrWriteOffset = this._packStr(s, view, curStrWriteOffset);
-        curStrWriteOffset = $$number.makeDivisibleBy(curStrWriteOffset, 2);
+        curStrWriteOffset = makeDivisibleBy(curStrWriteOffset, 2);
       }
 
       return curStrWriteOffset;
@@ -166,13 +173,13 @@ namespace PP64.fs.strings {
     _packStr(s: number, view: DataView, offset: number) {
       let strBytes = this.strs[s];
       view.setUint16(offset, strBytes.byteLength);
-      PP64.utils.arrays.copyRange(view, strBytes, offset + 2, 0, strBytes.byteLength);
+      copyRange(view, strBytes, offset + 2, 0, strBytes.byteLength);
       return offset + 2 + strBytes.byteLength;
     }
   }
 
   export function _strToBytes(str: string): number[] {
-    let map = PP64.adapters.getROMAdapter()!.getCharacterMap();
+    let map = getROMAdapter()!.getCharacterMap();
     let result = [];
     let [curIdx, len] = [0, str.length];
     while (curIdx < len) {
@@ -209,7 +216,7 @@ namespace PP64.fs.strings {
   let _strFsInstance: StringTable | null;
 
   export function extract() {
-    let view = PP64.romhandler.getDataView(getROMOffset()!);
+    let view = romhandler.getDataView(getROMOffset()!);
     return _strFsInstance = new StringTable(view);
   }
 

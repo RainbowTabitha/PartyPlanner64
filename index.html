@@ -56,19 +56,18 @@
   <body>
     <div id="body" class="body"></div>
 
-    <!-- @foreach $VAR in JSLIB -->
-    <script type="text/javascript" src="$VAR"></script>
-    <!-- @endfor -->
+    <script type="text/javascript">
+      // I AM THE SUPERSTAR
 
-    <!-- @if NODE_ENV='development' -->
-    <!-- @foreach $VAR in JS -->
-    <script type="text/javascript" src="$VAR"></script>
-    <!-- @endfor -->
-    <!-- @endif -->
+      var $$debug = false; // see settings.jsx for real value
 
-    <!-- @if NODE_ENV='production' -->
+      var isElectron = (function() {
+        var userAgent = navigator.userAgent.toLowerCase();
+        return userAgent.indexOf(' electron/') > -1;
+      })();
+    </script>
+
     <script type="text/javascript" src="js/app.min.js"></script>
-    <!-- @endif -->
 
     <!-- @if NODE_ENV='production' -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111788770-1"></script>

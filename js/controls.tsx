@@ -1,94 +1,95 @@
-namespace PP64.controls {
-  export interface IButtonProps {
-    onClick: (id?: string) => any;
-    id?: string;
-    css?: string;
-    title?: string;
+import * as React from "react";
+import { makeKeyClick } from "./utils/react";
+
+export interface IButtonProps {
+  onClick: (id?: string) => any;
+  id?: string;
+  css?: string;
+  title?: string;
+}
+
+export const Button = class Button extends React.Component<IButtonProps> {
+  state = {}
+
+  onClick = () => {
+    this.props.onClick(this.props.id);
   }
 
-  export const Button = class Button extends React.Component<IButtonProps> {
-    state = {}
+  render() {
+    let css = "nbButton";
+    if (this.props.css)
+      css += " " + this.props.css;
+    return (
+      <div className={css} title={this.props.title} tabIndex={0}
+        onClick={this.onClick}
+        onKeyDown={makeKeyClick(this.onClick, this)}>
+        {this.props.children}
+      </div>
+    );
+  }
+};
 
-    onClick = () => {
-      this.props.onClick(this.props.id);
-    }
+export interface IToggleButtonProps {
+  onToggled: (id: any, pressed: boolean) => any;
+  allowDeselect?: boolean;
+  id: string | number;
+  pressed?: boolean;
+  css?: string;
+  title?: string;
+}
 
-    render() {
-      let css = "nbButton";
-      if (this.props.css)
-        css += " " + this.props.css;
-      return (
-        <div className={css} title={this.props.title} tabIndex={0}
-          onClick={this.onClick}
-          onKeyDown={PP64.utils.react.makeKeyClick(this.onClick, this)}>
-          {this.props.children}
-        </div>
-      );
-    }
-  };
+export const ToggleButton = class ToggleButton extends React.Component<IToggleButtonProps> {
+  state = {}
 
-  export interface IToggleButtonProps {
-    onToggled: (id: any, pressed: boolean) => any;
-    allowDeselect?: boolean;
-    id: string | number;
-    pressed?: boolean;
-    css?: string;
-    title?: string;
+  onClick = () => {
+    if (this.props.allowDeselect === false && this.props.pressed)
+      return;
+    this.props.onToggled(this.props.id, !this.props.pressed);
   }
 
-  export const ToggleButton = class ToggleButton extends React.Component<IToggleButtonProps> {
-    state = {}
-
-    onClick = () => {
-      if (this.props.allowDeselect === false && this.props.pressed)
-        return;
-      this.props.onToggled(this.props.id, !this.props.pressed);
-    }
-
-    render() {
-      let css = "toggleButton" + (this.props.pressed ? " pressed" : "");
-      if (this.props.css)
-        css += " " + this.props.css;
-      return (
-        <div className={css} title={this.props.title} tabIndex={0}
-          onClick={this.onClick}
-          onKeyDown={PP64.utils.react.makeKeyClick(this.onClick, this)}>
-          {this.props.children}
-        </div>
-      );
-    }
-  };
-
-  export interface IToggleGroupProps {
-    onToggleClick: (id: string | number, pressed: boolean) => any;
-    groupCssClass?: string;
-    items: { id: string | number, selected: boolean, title?: string, text: string }[];
-    allowDeselect?: boolean;
+  render() {
+    let css = "toggleButton" + (this.props.pressed ? " pressed" : "");
+    if (this.props.css)
+      css += " " + this.props.css;
+    return (
+      <div className={css} title={this.props.title} tabIndex={0}
+        onClick={this.onClick}
+        onKeyDown={makeKeyClick(this.onClick, this)}>
+        {this.props.children}
+      </div>
+    );
   }
+};
 
-  export const ToggleGroup = class ToggleGroup extends React.Component<IToggleGroupProps> {
-    state = {}
+export interface IToggleGroupProps {
+  onToggleClick: (id: string | number, pressed: boolean) => any;
+  groupCssClass?: string;
+  items: { id: string | number, selected: boolean, title?: string, text: string }[];
+  allowDeselect?: boolean;
+}
 
-    render() {
-      const items = this.props.items;
-      let toggles = items.map(item => {
-        return (
-          <ToggleButton id={item.id}
-            key={item.id}
-            pressed={item.selected}
-            allowDeselect={this.props.allowDeselect}
-            title={item.title}
-            onToggled={this.props.onToggleClick}>
-            {item.text}
-          </ToggleButton>
-        );
-      });
+export const ToggleGroup = class ToggleGroup extends React.Component<IToggleGroupProps> {
+  state = {}
 
+  render() {
+    const items = this.props.items;
+    let toggles = items.map(item => {
       return (
-        <div className={this.props.groupCssClass}>
-          {toggles}
-        </div>
+        <ToggleButton id={item.id}
+          key={item.id}
+          pressed={item.selected}
+          allowDeselect={this.props.allowDeselect}
+          title={item.title}
+          onToggled={this.props.onToggleClick}>
+          {item.text}
+        </ToggleButton>
       );
-    }
+    });
+
+    return (
+      <div className={this.props.groupCssClass}>
+        {toggles}
+      </div>
+    );
   }
 }

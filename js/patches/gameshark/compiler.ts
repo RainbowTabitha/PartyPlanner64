@@ -1,114 +1,116 @@
 /// <reference types="mips-inst" />
 
-namespace PP64.patches.gameshark {
-  // Compiler is a gross exaggeration.
-  // This produces the MIPS ASM equivalent of parsed gameshark codes.
-  export class Compiler {
-    private REG1: string;
-    private REG2: string;
+import { $$log } from "../../utils/debug";
+import { parse } from "mips-inst";
+import { ICode } from "./parser";
 
-    constructor() {
-      // Use the stack and saved registers instead of K0/K1?
-      this.REG1 = "A3";
-      this.REG2 = "AT";
-    }
+// Compiler is a gross exaggeration.
+// This produces the MIPS ASM equivalent of parsed gameshark codes.
+export class Compiler {
+  private REG1: string;
+  private REG2: string;
 
-    // Returns an ArrayBuffer of MIPS instructions for a Gameshark hook
-    compile(codes: ICode[]) {
-      let insts: number[] = [];
-      for (let i = 0; i < codes.length; i++) {
-        const code = codes[i];
+  constructor() {
+    // Use the stack and saved registers instead of K0/K1?
+    this.REG1 = "A3";
+    this.REG2 = "AT";
+  }
 
-        let result;
-        const method = "compile" + code.opcode;
-        if (typeof (this as any)[method] === "function") {
-          result = (this as any)[method](code);
-        }
+  // Returns an ArrayBuffer of MIPS instructions for a Gameshark hook
+  compile(codes: ICode[]) {
+    let insts: number[] = [];
+    for (let i = 0; i < codes.length; i++) {
+      const code = codes[i];
 
-        if (!result) {
-          $$log("Error compiling code", code);
-          return null;
-        }
-
-        insts = insts.concat(result);
+      let result;
+      const method = "compile" + code.opcode;
+      if (typeof (this as any)[method] === "function") {
+        result = (this as any)[method](code);
       }
 
-      // Somewhat awkward to ensure big endianness in output.
-      const outBuffer = new ArrayBuffer(insts.length * 4);
-      const outView = new DataView(outBuffer);
-      for (let i = 0; i < insts.length; i++) {
-        outView.setUint32(i * 4, insts[i]);
+      if (!result) {
+        $$log("Error compiling code", code);
+        return null;
       }
 
-      return outBuffer;
+      insts = insts.concat(result);
     }
 
-    // http://gamehacking.org/wiki/Hacking_N64#Code_Handler_Hacks
-
-    compileWRITE8(code: ICode) {
-      return MIPSInst.parse(`
-        LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
-        ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
-        ADDIU ${this.REG2} R0 ${code.value}
-        SB ${this.REG2} 0(${this.REG1})
-      `);
+    // Somewhat awkward to ensure big endianness in output.
+    const outBuffer = new ArrayBuffer(insts.length * 4);
+    const outView = new DataView(outBuffer);
+    for (let i = 0; i < insts.length; i++) {
+      outView.setUint32(i * 4, insts[i]);
     }
 
-    compileWRITE16(code: ICode) {
-      return MIPSInst.parse(`
-        LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
-        ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
-        ADDIU ${this.REG2} R0 ${code.value}
-        SH ${this.REG2} 0(${this.REG1})
-      `);
-    }
+    return outBuffer;
+  }
 
-    compileIF8(code: ICode) {
-      return MIPSInst.parse(`
-        LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
-        ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
-        LB ${this.REG1} 0(${this.REG1})
-        ADDIU ${this.REG2} R0 ${code.value}
-        BNE ${this.REG1} ${this.REG2} 4
-      `);
-    }
+  // http://gamehacking.org/wiki/Hacking_N64#Code_Handler_Hacks
 
-    compileIF16(code: ICode) {
-      return MIPSInst.parse(`
-        LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
-        ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
-        LH ${this.REG1} 0(${this.REG1})
-        ADDIU ${this.REG2} R0 ${code.value}
-        BNE ${this.REG1} ${this.REG2} 4
-      `);
-    }
+  compileWRITE8(code: ICode) {
+    return parse(`
+      LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
+      ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
+      ADDIU ${this.REG2} R0 ${code.value}
+      SB ${this.REG2} 0(${this.REG1})
+    `);
+  }
 
-    compileIFNOT8(code: ICode) {
-      return MIPSInst.parse(`
-        LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
-        ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
-        LB ${this.REG1} 0(${this.REG1})
-        ADDIU ${this.REG2} R0 ${code.value}
-        BEQ ${this.REG1} ${this.REG2} 4
-      `);
-    }
+  compileWRITE16(code: ICode) {
+    return parse(`
+      LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
+      ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
+      ADDIU ${this.REG2} R0 ${code.value}
+      SH ${this.REG2} 0(${this.REG1})
+    `);
+  }
 
-    compileIFNOT16(code: ICode) {
-      return MIPSInst.parse(`
-        LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
-        ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
-        LH ${this.REG1} 0(${this.REG1})
-        ADDIU ${this.REG2} R0 ${code.value}
-        BEQ ${this.REG1} ${this.REG2} 4
-      `);
-    }
+  compileIF8(code: ICode) {
+    return parse(`
+      LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
+      ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
+      LB ${this.REG1} 0(${this.REG1})
+      ADDIU ${this.REG2} R0 ${code.value}
+      BNE ${this.REG1} ${this.REG2} 4
+    `);
+  }
 
-    getAddrUpper(addr: number) {
-      return (addr & 0xFFFF0000) >>> 16;
-    }
+  compileIF16(code: ICode) {
+    return parse(`
+      LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
+      ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
+      LH ${this.REG1} 0(${this.REG1})
+      ADDIU ${this.REG2} R0 ${code.value}
+      BNE ${this.REG1} ${this.REG2} 4
+    `);
+  }
 
-    getAddrLower(addr: number) {
-      return addr & 0x0000FFFF;
-    }
+  compileIFNOT8(code: ICode) {
+    return parse(`
+      LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
+      ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
+      LB ${this.REG1} 0(${this.REG1})
+      ADDIU ${this.REG2} R0 ${code.value}
+      BEQ ${this.REG1} ${this.REG2} 4
+    `);
+  }
+
+  compileIFNOT16(code: ICode) {
+    return parse(`
+      LUI ${this.REG1} ${this.getAddrUpper(code.addr)}
+      ORI ${this.REG1} ${this.REG1} ${this.getAddrLower(code.addr)}
+      LH ${this.REG1} 0(${this.REG1})
+      ADDIU ${this.REG2} R0 ${code.value}
+      BEQ ${this.REG1} ${this.REG2} 4
+    `);
+  }
+
+  getAddrUpper(addr: number) {
+    return (addr & 0xFFFF0000) >>> 16;
+  }
+
+  getAddrLower(addr: number) {
+    return addr & 0x0000FFFF;
   }
 }

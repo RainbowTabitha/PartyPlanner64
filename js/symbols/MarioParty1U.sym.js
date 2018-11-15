@@ -1,6 +1,5 @@
-PP64.ns("symbols");
-
-PP64.symbols["MarioParty1U"] = [
+define(["require", "exports"], function (require, exports) {
+exports["default"] = [
 {
       addr: 2147484416, // 0x80000300
       type: "u32",
@@ -1829,6 +1828,10 @@ PP64.symbols["MarioParty1U"] = [
       name: "jt_spacetype_to_turneffect",
       desc: "Jump table for space type to turn effect" },
 {
+      addr: 2148330124, // 0x800CEA8C
+      type: "data",
+      name: "__ALSndPlayer*sndp" },
+{
       addr: 2148340464, // 0x800D12F0
       type: "data",
       name: "main_fs_rom_location" },
@@ -2327,3 +2330,4 @@ PP64.symbols["MarioParty1U"] = [
       name: "p4_total_bowser_spaces",
       desc: "Player 4 total number of Bowser spaces landed on" }
 ];
+});

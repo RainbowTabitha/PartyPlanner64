@@ -1,392 +1,396 @@
-namespace PP64.adapters.boarddef {
+import { IBoard, addSpace, hasConnection, getStartSpaceIndex, getConnections, ISpace } from "../boards";
+import { Space } from "../types";
+import { midpoint, distance } from "../utils/number";
+import { $$log, $$hex } from "../utils/debug";
+import { copyObject } from "../utils/obj";
+import { romhandler } from "../romhandler";
 
-  export function parse(buffer: ArrayBuffer, board: Partial<PP64.boards.IBoard>): PP64.boards.IBoard {
-    let header = _parseHeader(buffer);
-    board.spaces = _parseSpaces(buffer, header);
-    let linkResult = _parseLinks(buffer, header);
-    board.links = linkResult.links;
-    (board as any)._chains = linkResult.chains; // We need this for event parsing.
-    $$log(`Parsing board def, ${$$hex(header.spaceCount)} (${header.spaceCount}) spaces`);
-    return board as PP64.boards.IBoard;
+export function parse(buffer: ArrayBuffer, board: Partial<IBoard>): IBoard {
+  let header = _parseHeader(buffer);
+  board.spaces = _parseSpaces(buffer, header);
+  let linkResult = _parseLinks(buffer, header);
+  board.links = linkResult.links;
+  (board as any)._chains = linkResult.chains; // We need this for event parsing.
+  $$log(`Parsing board def, ${$$hex(header.spaceCount)} (${header.spaceCount}) spaces`);
+  return board as IBoard;
+}
+
+interface IHeader {
+  spaceCount: number;
+  chainCount: number;
+  spaceStartOffset: number;
+  linkStartOffset: number;
+}
+
+function _parseHeader(buffer: ArrayBuffer): IHeader {
+  let board16View = new DataView(buffer);
+  let game = romhandler.getGameVersion();
+  switch (game) {
+    case 1:
+      return {
+        spaceCount: board16View.getUint16(0),
+        chainCount: board16View.getUint16(4),
+        spaceStartOffset: board16View.getUint16(6),
+        linkStartOffset: board16View.getUint16(10),
+      };
+    case 2:
+    case 3:
+      return {
+        spaceCount: board16View.getUint16(0),
+        chainCount: board16View.getUint16(2),
+        spaceStartOffset: board16View.getUint16(4),
+        linkStartOffset: board16View.getUint16(6),
+      };
   }
 
-  interface IHeader {
-    spaceCount: number;
-    chainCount: number;
-    spaceStartOffset: number;
-    linkStartOffset: number;
+  throw new Error("Unrecongized game " + game);
+}
+
+function _parseSpaces(buffer: ArrayBuffer, header: IHeader) {
+  let spaceView = new DataView(buffer, header.spaceStartOffset);
+  let spaces = [];
+  let bufferIdx = 0;
+  for (let i = 0; i < header.spaceCount; i++) {
+    spaces.push({
+      "type": spaceView.getUint8(bufferIdx + 3),
+      "x": spaceView.getFloat32(bufferIdx + 4),
+      "y": spaceView.getFloat32(bufferIdx + 12),
+      "z": spaceView.getFloat32(bufferIdx + 8)
+    });
+    bufferIdx += 16;
   }
 
-  function _parseHeader(buffer: ArrayBuffer): IHeader {
-    let board16View = new DataView(buffer);
-    let game = PP64.romhandler.getGameVersion();
-    switch (game) {
-      case 1:
-        return {
-          spaceCount: board16View.getUint16(0),
-          chainCount: board16View.getUint16(4),
-          spaceStartOffset: board16View.getUint16(6),
-          linkStartOffset: board16View.getUint16(10),
-        };
-      case 2:
-      case 3:
-        return {
-          spaceCount: board16View.getUint16(0),
-          chainCount: board16View.getUint16(2),
-          spaceStartOffset: board16View.getUint16(4),
-          linkStartOffset: board16View.getUint16(6),
-        };
+  return spaces;
+}
+
+function _parseLinks(buffer: ArrayBuffer, header: IHeader) {
+  let chains = new Array(header.chainCount);
+  let links: any = {};
+  let linksView = new DataView(buffer, header.linkStartOffset);
+  for (let i = 0; i < header.chainCount; i++) {
+    let chainOffset = linksView.getUint16(i * 2);
+    let chainView = new DataView(buffer, header.linkStartOffset + chainOffset);
+    let chainLen = chainView.getUint16(0);
+    chains[i] = [];
+    if (chainLen === 1) { // The loop won't work.
+      chains[i].push(chainView.getUint16(2));
     }
-
-    throw new Error("Unrecongized game " + game);
-  }
-
-  function _parseSpaces(buffer: ArrayBuffer, header: IHeader) {
-    let spaceView = new DataView(buffer, header.spaceStartOffset);
-    let spaces = [];
-    let bufferIdx = 0;
-    for (let i = 0; i < header.spaceCount; i++) {
-      spaces.push({
-        "type": spaceView.getUint8(bufferIdx + 3),
-        "x": spaceView.getFloat32(bufferIdx + 4),
-        "y": spaceView.getFloat32(bufferIdx + 12),
-        "z": spaceView.getFloat32(bufferIdx + 8)
-      });
-      bufferIdx += 16;
-    }
-
-    return spaces;
-  }
-
-  function _parseLinks(buffer: ArrayBuffer, header: IHeader) {
-    let chains = new Array(header.chainCount);
-    let links: any = {};
-    let linksView = new DataView(buffer, header.linkStartOffset);
-    for (let i = 0; i < header.chainCount; i++) {
-      let chainOffset = linksView.getUint16(i * 2);
-      let chainView = new DataView(buffer, header.linkStartOffset + chainOffset);
-      let chainLen = chainView.getUint16(0);
-      chains[i] = [];
-      if (chainLen === 1) { // The loop won't work.
-        chains[i].push(chainView.getUint16(2));
-      }
-      else {
-        for (let j = 1; j < chainLen; j++) {
-          let start = chainView.getUint16(j * 2);
-          let end = chainView.getUint16((j + 1) * 2);
-          if (links.hasOwnProperty(start)) {
-            if (!Array.isArray(links[start]))
-              links[start] = [links[start]];
-            if (links[start].indexOf(end) === -1)
-              links[start].push(end);
-          }
-          else
-            links[start] = end;
-          chains[i].push(start);
-          if (j + 1 === chainLen)
-            chains[i].push(end);
+    else {
+      for (let j = 1; j < chainLen; j++) {
+        let start = chainView.getUint16(j * 2);
+        let end = chainView.getUint16((j + 1) * 2);
+        if (links.hasOwnProperty(start)) {
+          if (!Array.isArray(links[start]))
+            links[start] = [links[start]];
+          if (links[start].indexOf(end) === -1)
+            links[start].push(end);
         }
+        else
+          links[start] = end;
+        chains[i].push(start);
+        if (j + 1 === chainLen)
+          chains[i].push(end);
       }
     }
-
-    return {
-      links: links,
-      chains: chains
-    };
   }
 
-  export function create(board: PP64.boards.IBoard, chains = determineChains(board)) {
-    let boardDefBuffer = new ArrayBuffer(_boardDefSize(board, chains));
-    _writeHeader(boardDefBuffer, board, chains);
-    _writeSpaces(boardDefBuffer, board.spaces);
-    _writeChains(boardDefBuffer, chains);
-    return boardDefBuffer;
+  return {
+    links: links,
+    chains: chains
+  };
+}
+
+export function create(board: IBoard, chains = determineChains(board)) {
+  let boardDefBuffer = new ArrayBuffer(_boardDefSize(board, chains));
+  _writeHeader(boardDefBuffer, board, chains);
+  _writeSpaces(boardDefBuffer, board.spaces);
+  _writeChains(boardDefBuffer, chains);
+  return boardDefBuffer;
+}
+
+// Calculates the byte length needed to create a board def.
+function _boardDefSize(board: IBoard, chains: number[][]) {
+  let headerSize, spacesSize, chainsSize: number;
+
+  headerSize = _boardDefHeaderSize();
+
+  spacesSize = board.spaces.length * 16;
+
+  chainsSize = chains.length * 2; // The 16-bit offsets for each chain.
+  chains.forEach(chain => {
+    chainsSize += (chain.length + 1) * 2; // +1 for chain length short
+  });
+
+  return headerSize + spacesSize + chainsSize;
+}
+
+function _boardDefHeaderSize() {
+  let headerSize;
+  let game = romhandler.getGameVersion();
+  switch (game) {
+    case 1:
+      headerSize = 12;
+      break;
+    case 2:
+    case 3:
+      headerSize = 8;
+      break;
+    default:
+      throw `_boardDefHeaderSize: unknown game version ${game}`;
   }
 
-  // Calculates the byte length needed to create a board def.
-  function _boardDefSize(board: PP64.boards.IBoard, chains: number[][]) {
-    let headerSize, spacesSize, chainsSize: number;
+  return headerSize;
+}
 
-    headerSize = _boardDefHeaderSize();
-
-    spacesSize = board.spaces.length * 16;
-
-    chainsSize = chains.length * 2; // The 16-bit offsets for each chain.
-    chains.forEach(chain => {
-      chainsSize += (chain.length + 1) * 2; // +1 for chain length short
-    });
-
-    return headerSize + spacesSize + chainsSize;
+function _writeHeader(boardDefBuffer: ArrayBuffer, board: IBoard, chains: number[][]) {
+  let boardDefView = new DataView(boardDefBuffer);
+  let game = romhandler.getGameVersion();
+  let chainOffset = _boardDefHeaderSize() + (board.spaces.length * 16);
+  switch (game) {
+    case 1:
+      boardDefView.setUint16(0, board.spaces.length);
+      boardDefView.setUint16(4, chains.length);
+      boardDefView.setUint16(6, 0xC);
+      boardDefView.setUint16(8, chainOffset);
+      boardDefView.setUint16(10, chainOffset);
+      break;
+    case 2:
+    case 3:
+      boardDefView.setUint16(0, board.spaces.length);
+      boardDefView.setUint16(2, chains.length);
+      boardDefView.setUint16(4, 0x8);
+      boardDefView.setUint16(6, chainOffset);
+      break;
   }
+}
 
-  function _boardDefHeaderSize() {
-    let headerSize;
-    let game = PP64.romhandler.getGameVersion();
-    switch (game) {
-      case 1:
-        headerSize = 12;
-        break;
-      case 2:
-      case 3:
-        headerSize = 8;
-        break;
-      default:
-        throw `_boardDefHeaderSize: unknown game version ${game}`;
-    }
+function _writeSpaces(boardDefBuffer: ArrayBuffer, spaces: ISpace[]) {
+  let boardDefView = new DataView(boardDefBuffer);
+  let curOffset = _boardDefHeaderSize();
+  spaces.forEach((space) => {
+    boardDefView.setUint32(curOffset, space.type);
+    boardDefView.setFloat32(curOffset + 4, space.x);
+    boardDefView.setFloat32(curOffset + 8, space.z);
+    boardDefView.setFloat32(curOffset + 12, space.y);
+    curOffset += 16;
+  });
+}
 
-    return headerSize;
-  }
+function _writeChains(boardDefBuffer: ArrayBuffer, chains: number[][]) {
+  let boardDefView = new DataView(boardDefBuffer);
 
-  function _writeHeader(boardDefBuffer: ArrayBuffer, board: PP64.boards.IBoard, chains: number[][]) {
-    let boardDefView = new DataView(boardDefBuffer);
-    let game = PP64.romhandler.getGameVersion();
-    let chainOffset = _boardDefHeaderSize() + (board.spaces.length * 16);
-    switch (game) {
-      case 1:
-        boardDefView.setUint16(0, board.spaces.length);
-        boardDefView.setUint16(4, chains.length);
-        boardDefView.setUint16(6, 0xC);
-        boardDefView.setUint16(8, chainOffset);
-        boardDefView.setUint16(10, chainOffset);
-        break;
-      case 2:
-      case 3:
-        boardDefView.setUint16(0, board.spaces.length);
-        boardDefView.setUint16(2, chains.length);
-        boardDefView.setUint16(4, 0x8);
-        boardDefView.setUint16(6, chainOffset);
-        break;
-    }
-  }
+  let chainRegionOffset, offsetsOffset;
+  chainRegionOffset = offsetsOffset = _parseHeader(boardDefBuffer).linkStartOffset; // Yuck!
 
-  function _writeSpaces(boardDefBuffer: ArrayBuffer, spaces: PP64.boards.ISpace[]) {
-    let boardDefView = new DataView(boardDefBuffer);
-    let curOffset = _boardDefHeaderSize();
-    spaces.forEach((space) => {
-      boardDefView.setUint32(curOffset, space.type);
-      boardDefView.setFloat32(curOffset + 4, space.x);
-      boardDefView.setFloat32(curOffset + 8, space.z);
-      boardDefView.setFloat32(curOffset + 12, space.y);
-      curOffset += 16;
-    });
-  }
+  let chainOffset = chains.length * 2;
+  for (var i = 0; i < chains.length; i++) {
+    // Write the entry into the chain offsets.
+    boardDefView.setUint16(offsetsOffset, chainOffset);
 
-  function _writeChains(boardDefBuffer: ArrayBuffer, chains: number[][]) {
-    let boardDefView = new DataView(boardDefBuffer);
+    // Write the chain size.
+    boardDefView.setUint16(chainRegionOffset + chainOffset, chains[i].length);
+    chainOffset += 2;
 
-    let chainRegionOffset, offsetsOffset;
-    chainRegionOffset = offsetsOffset = _parseHeader(boardDefBuffer).linkStartOffset; // Yuck!
-
-    let chainOffset = chains.length * 2;
-    for (var i = 0; i < chains.length; i++) {
-      // Write the entry into the chain offsets.
-      boardDefView.setUint16(offsetsOffset, chainOffset);
-
-      // Write the chain size.
-      boardDefView.setUint16(chainRegionOffset + chainOffset, chains[i].length);
+    // Write the chain indices.
+    for (var j = 0; j < chains[i].length; j++) {
+      boardDefView.setUint16(chainRegionOffset + chainOffset, chains[i][j]);
       chainOffset += 2;
-
-      // Write the chain indices.
-      for (var j = 0; j < chains[i].length; j++) {
-        boardDefView.setUint16(chainRegionOffset + chainOffset, chains[i][j]);
-        chainOffset += 2;
-      }
-
-      offsetsOffset += 2;
     }
+
+    offsetsOffset += 2;
   }
+}
 
-  type ISpaceInternal = PP64.boards.ISpace & { "_seen"?: boolean };
+type ISpaceInternal = ISpace & { "_seen"?: boolean };
 
-  // Builds an array of arrays of space indices representing the board chains.
-  export function determineChains(board: PP64.boards.IBoard) {
-    board = PP64.utils.obj.copy(board);
-    let spaces = board.spaces as ISpaceInternal[];
-    let links = board.links;
-    let chains: number[][] = [];
+// Builds an array of arrays of space indices representing the board chains.
+export function determineChains(board: IBoard) {
+  board = copyObject(board);
+  let spaces = board.spaces as ISpaceInternal[];
+  let links = board.links;
+  let chains: number[][] = [];
 
-    // Recursive chain parsing function.
-    function parseChain(startingSpaceIdx: number) {
-      let chain: number[] = []; // Given first space always goes in.
-      let curSpaceIdx = startingSpaceIdx;
-      let nextSpaceIdx;
-      while (!spaces[curSpaceIdx]._seen) {
-        spaces[curSpaceIdx]._seen = true;
-        chain.push(curSpaceIdx);
-        nextSpaceIdx = links[curSpaceIdx];
+  // Recursive chain parsing function.
+  function parseChain(startingSpaceIdx: number) {
+    let chain: number[] = []; // Given first space always goes in.
+    let curSpaceIdx = startingSpaceIdx;
+    let nextSpaceIdx;
+    while (!spaces[curSpaceIdx]._seen) {
+      spaces[curSpaceIdx]._seen = true;
+      chain.push(curSpaceIdx);
+      nextSpaceIdx = links[curSpaceIdx];
 
-        // Must break the chain if path divides.
-        if (Array.isArray(nextSpaceIdx)) {
-          chains.push(chain);
-          nextSpaceIdx.forEach(idx => {
-            parseChain(idx);
-          });
-          return;
-        }
-
-        // Hit a dead end. The validation should catch this, so if it didn't,
-        // presumably it was disabled. Just warn but keep going.
-        if (typeof nextSpaceIdx !== "number") {
-          console.warn(`determineChains.parseChain hit a dead end at ${$$hex(curSpaceIdx)} (${curSpaceIdx})`);
-          chains.push(chain);
-          return;
-        }
-
-        // Must break the chain if a chain intersects the next space.
-        if (spaceIsLinkedFromByAnother(nextSpaceIdx, curSpaceIdx)) {
-          chains.push(chain);
-          parseChain(nextSpaceIdx);
-          return;
-        }
-
-        curSpaceIdx = nextSpaceIdx;
-      }
-
-      // There will be no chain len if this parseChain call was previously made.
-      if (chain.length)
+      // Must break the chain if path divides.
+      if (Array.isArray(nextSpaceIdx)) {
         chains.push(chain);
+        nextSpaceIdx.forEach(idx => {
+          parseChain(idx);
+        });
+        return;
+      }
+
+      // Hit a dead end. The validation should catch this, so if it didn't,
+      // presumably it was disabled. Just warn but keep going.
+      if (typeof nextSpaceIdx !== "number") {
+        console.warn(`determineChains.parseChain hit a dead end at ${$$hex(curSpaceIdx)} (${curSpaceIdx})`);
+        chains.push(chain);
+        return;
+      }
+
+      // Must break the chain if a chain intersects the next space.
+      if (spaceIsLinkedFromByAnother(nextSpaceIdx, curSpaceIdx)) {
+        chains.push(chain);
+        parseChain(nextSpaceIdx);
+        return;
+      }
+
+      curSpaceIdx = nextSpaceIdx;
     }
 
-    // Build a reverse lookup of space to _pointing_ spaces.
-    var pointingMap: { [end: number]: number[] } = {};
-    for (let s = 0; s < spaces.length; s++) {
-      if (spaces[s])
-        pointingMap[s] = [];
-    }
-    for (let startIdx in links) {
-      let ends = PP64.boards.getConnections(parseInt(startIdx, 10), board)!;
-      ends.forEach(end => {
-        pointingMap[end].push(Number(startIdx));
-      });
-    }
-
-    // Returns true if the given space is linked to from another space besides
-    // the previous space.
-    function spaceIsLinkedFromByAnother(spaceIdx: number, prevIdx?: number) {
-      // If no previous index passed, just see if anything points.
-      if (prevIdx === undefined)
-        return !!pointingMap[spaceIdx].length;
-
-      if (!pointingMap[spaceIdx].length)
-        return false;
-      if (pointingMap[spaceIdx].indexOf(Number(prevIdx)) === -1)
-        return true;
-      if (pointingMap[spaceIdx].length > 1)
-        return true; // Assumes prevIdx is not duplicated
-      return false; // length === 1 && only entry is prevIdx
-    }
-
-    // We want to generate chains starting at the start space, and starting
-    // from any space that doesn't have anything pointing at it.
-    // The latter is for dead ends that you can only reach via going in reverse
-    // in MP3, or perhaps in the future if we have warps or something.
-    // Doing start space first is important because MP2/3 assume start space
-    // is first space of first chain.
-
-    // 1. Parse from start space.
-    parseChain(PP64.boards.getStartSpaceIndex(board));
-
-    // 2. Parse from other "starting spaces" of paths.
-    for (let s = 0; s < spaces.length; s++) {
-      if (!spaces[s])
-        continue;
-      if (spaces[s]._seen)
-        continue; // Don't even need to check, we already visited it.
-
-      // The latter condition is not totally necessary, but I don't know that
-      // we want to or can handle single-space chains.
-      if (!spaceIsLinkedFromByAnother(s) && PP64.boards.hasConnection(s, "*", board))
-        parseChain(s);
-    }
-
-    // 3. Catch any "cycles" that might be left, if they reached this point.
-    for (let s = 0; s < spaces.length; s++) {
-      if (!spaces[s] || spaces[s]._seen)
-        continue;
-
-      // Needs to have a connection; otherwise it is some decorative single space.
-      if (PP64.boards.hasConnection(s, "*", board))
-        parseChain(s);
-    }
-
-    $$log("chains: ", chains);
-    return chains;
+    // There will be no chain len if this parseChain call was previously made.
+    if (chain.length)
+      chains.push(chain);
   }
 
-  // WTF is this?
-  // There are bytes that can live right where DK's chains get written.
-  // If we don't overwrite these and have a 1-length chain, it becomes part of the chain and CRASH.
-  // If we pad to at least 2-length chains, we guarantee to overwrite it, and
-  // who knows if 1-length chains actually work anyways.
-  export function padChains(board: PP64.boards.IBoard, chains: number[][]) {
-    let spaces = board.spaces;
-    let links = board.links;
-    for (let i = 0; i < chains.length; i++) {
-      let chain = chains[i];
-      if (chain.length === 1) {
-        // Padding is done by adding an extra transparent space in such a way that the player won't notice.
-        let lastSpaceIdx = chain[0];
-        let lastSpace = spaces[lastSpaceIdx];
-        let oldLinks = links[lastSpaceIdx];
-        let padX, padY;
-        if (Array.isArray(oldLinks) && oldLinks.length > 1) {
-          // CHAINSPLIT
-          if (oldLinks.length === 2) {
-            // TODO: Very precisely push it towards the split spaces, otherwise the player faces down always.
-            let nextLeft = spaces[oldLinks[0]];
-            let nextRight = spaces[oldLinks[1]];
-            let destMidpoint = $$number.midpoint(nextLeft.x, nextLeft.y, nextRight.x, nextRight.y);
-            // padX = lastSpace.x + 0.01;
-            // padY = ((destMidpoint.y - lastSpace.y) / (destMidpoint.x - lastSpace.x)) * (padX - lastSpace.x) + lastSpace.y;
-            let dist = $$number.distance(lastSpace.x, lastSpace.y, destMidpoint.x, destMidpoint.y);
-            let ratio = 0.01 / dist;
-            padX = ((1 - ratio) * lastSpace.x) + (ratio * destMidpoint.x);
-            padY = ((1 - ratio) * lastSpace.y) + (ratio * destMidpoint.y);
-            $$log(`Padding branch x: ${lastSpace.x}, y: ${lastSpace.y}, padX: ${padX}, padY: ${padY}`);
-          }
-          else {
-            // FIXME when multi-split works.
-            padX = lastSpace.x;
-            padY = lastSpace.y;
-          }
-        }
-        else if (typeof oldLinks === "number") {
-          // CHAINMERGE
-          // Just put it half way in between, who cares.
-          let nextSpace = spaces[oldLinks];
-          let midpoint = $$number.midpoint(lastSpace.x, lastSpace.y, nextSpace.x, nextSpace.y);
-          padX = midpoint.x;
-          padY = midpoint.y;
-        }
+  // Build a reverse lookup of space to _pointing_ spaces.
+  var pointingMap: { [end: number]: number[] } = {};
+  for (let s = 0; s < spaces.length; s++) {
+    if (spaces[s])
+      pointingMap[s] = [];
+  }
+  for (let startIdx in links) {
+    let ends = getConnections(parseInt(startIdx, 10), board)!;
+    ends.forEach(end => {
+      pointingMap[end].push(Number(startIdx));
+    });
+  }
 
-        if (typeof padX === "number" && typeof padY === "number") {
-          let newLink = PP64.boards.addSpace(padX, padY, $spaceType.OTHER, undefined, board);
-          chain.push(newLink);
+  // Returns true if the given space is linked to from another space besides
+  // the previous space.
+  function spaceIsLinkedFromByAnother(spaceIdx: number, prevIdx?: number) {
+    // If no previous index passed, just see if anything points.
+    if (prevIdx === undefined)
+      return !!pointingMap[spaceIdx].length;
 
-          // CS classic, insert into linkedish list.
-          links[lastSpaceIdx] = newLink;
-          links[newLink] = oldLinks;
+    if (!pointingMap[spaceIdx].length)
+      return false;
+    if (pointingMap[spaceIdx].indexOf(Number(prevIdx)) === -1)
+      return true;
+    if (pointingMap[spaceIdx].length > 1)
+      return true; // Assumes prevIdx is not duplicated
+    return false; // length === 1 && only entry is prevIdx
+  }
+
+  // We want to generate chains starting at the start space, and starting
+  // from any space that doesn't have anything pointing at it.
+  // The latter is for dead ends that you can only reach via going in reverse
+  // in MP3, or perhaps in the future if we have warps or something.
+  // Doing start space first is important because MP2/3 assume start space
+  // is first space of first chain.
+
+  // 1. Parse from start space.
+  parseChain(getStartSpaceIndex(board));
+
+  // 2. Parse from other "starting spaces" of paths.
+  for (let s = 0; s < spaces.length; s++) {
+    if (!spaces[s])
+      continue;
+    if (spaces[s]._seen)
+      continue; // Don't even need to check, we already visited it.
+
+    // The latter condition is not totally necessary, but I don't know that
+    // we want to or can handle single-space chains.
+    if (!spaceIsLinkedFromByAnother(s) && hasConnection(s, "*", board))
+      parseChain(s);
+  }
+
+  // 3. Catch any "cycles" that might be left, if they reached this point.
+  for (let s = 0; s < spaces.length; s++) {
+    if (!spaces[s] || spaces[s]._seen)
+      continue;
+
+    // Needs to have a connection; otherwise it is some decorative single space.
+    if (hasConnection(s, "*", board))
+      parseChain(s);
+  }
+
+  $$log("chains: ", chains);
+  return chains;
+}
+
+// WTF is this?
+// There are bytes that can live right where DK's chains get written.
+// If we don't overwrite these and have a 1-length chain, it becomes part of the chain and CRASH.
+// If we pad to at least 2-length chains, we guarantee to overwrite it, and
+// who knows if 1-length chains actually work anyways.
+export function padChains(board: IBoard, chains: number[][]) {
+  let spaces = board.spaces;
+  let links = board.links;
+  for (let i = 0; i < chains.length; i++) {
+    let chain = chains[i];
+    if (chain.length === 1) {
+      // Padding is done by adding an extra transparent space in such a way that the player won't notice.
+      let lastSpaceIdx = chain[0];
+      let lastSpace = spaces[lastSpaceIdx];
+      let oldLinks = links[lastSpaceIdx];
+      let padX, padY;
+      if (Array.isArray(oldLinks) && oldLinks.length > 1) {
+        // CHAINSPLIT
+        if (oldLinks.length === 2) {
+          // TODO: Very precisely push it towards the split spaces, otherwise the player faces down always.
+          let nextLeft = spaces[oldLinks[0]];
+          let nextRight = spaces[oldLinks[1]];
+          let destMidpoint = midpoint(nextLeft.x, nextLeft.y, nextRight.x, nextRight.y);
+          // padX = lastSpace.x + 0.01;
+          // padY = ((destMidpoint.y - lastSpace.y) / (destMidpoint.x - lastSpace.x)) * (padX - lastSpace.x) + lastSpace.y;
+          let dist = distance(lastSpace.x, lastSpace.y, destMidpoint.x, destMidpoint.y);
+          let ratio = 0.01 / dist;
+          padX = ((1 - ratio) * lastSpace.x) + (ratio * destMidpoint.x);
+          padY = ((1 - ratio) * lastSpace.y) + (ratio * destMidpoint.y);
+          $$log(`Padding branch x: ${lastSpace.x}, y: ${lastSpace.y}, padX: ${padX}, padY: ${padY}`);
         }
+        else {
+          // FIXME when multi-split works.
+          padX = lastSpace.x;
+          padY = lastSpace.y;
+        }
+      }
+      else if (typeof oldLinks === "number") {
+        // CHAINMERGE
+        // Just put it half way in between, who cares.
+        let nextSpace = spaces[oldLinks];
+        let mid = midpoint(lastSpace.x, lastSpace.y, nextSpace.x, nextSpace.y);
+        padX = mid.x;
+        padY = mid.y;
+      }
+
+      if (typeof padX === "number" && typeof padY === "number") {
+        let newLink = addSpace(padX, padY, Space.OTHER, undefined, board);
+        chain.push(newLink);
+
+        // CS classic, insert into linkedish list.
+        links[lastSpaceIdx] = newLink;
+        links[newLink] = oldLinks;
       }
     }
   }
+}
 
-  export function trimChains(board: PP64.boards.IBoard, chains: number[][]) {
-    // TODO: This would make board parsing not have weird extra spaces.
-  }
+export function trimChains(board: IBoard, chains: number[][]) {
+  // TODO: This would make board parsing not have weird extra spaces.
+}
 
-  /**
-   * Gets the "chain index" and "chain space index" for an absolute
-   * space index found somewhere within the chains.
-   */
-  export function getChainIndexValuesFromAbsoluteIndex(chains: number[][], absSpaceIndex: number) {
-    for (let c = 0; c < chains.length; c++) {
-      const chain = chains[c];
-      const chainSpaceIndex = chain.indexOf(absSpaceIndex);
-      if (chainSpaceIndex >= 0) {
-        return [c, chainSpaceIndex];
-      }
+/**
+ * Gets the "chain index" and "chain space index" for an absolute
+ * space index found somewhere within the chains.
+ */
+export function getChainIndexValuesFromAbsoluteIndex(chains: number[][], absSpaceIndex: number) {
+  for (let c = 0; c < chains.length; c++) {
+    const chain = chains[c];
+    const chainSpaceIndex = chain.indexOf(absSpaceIndex);
+    if (chainSpaceIndex >= 0) {
+      return [c, chainSpaceIndex];
     }
-    return [-1, -1];
   }
+  return [-1, -1];
 }

@@ -1,6 +1,5 @@
-PP64.ns("symbols");
-
-PP64.symbols["MarioParty3U"] = [
+define(["require", "exports"], function (require, exports) {
+exports["default"] = [
 {
       addr: 2147484416, // 0x80000300
       type: "u32",
@@ -1847,3 +1846,4 @@ PP64.symbols["MarioParty3U"] = [
       type: "u32",
       name: "num_arrow_angles" }
 ];
+});

@@ -1,5 +1,13 @@
+import { intersection } from "../arrays";
+import { getSymbols as getSymbolsForGame, ISymbol } from "../../symbols/symbols";
+import { registerHelper, Pos } from "codemirror";
+import { Game } from "../../types";
+import { getActiveEditorSupportedGames } from "../../createevent";
+import "../../../node_modules/codemirror/addon/hint/show-hint";
+import "./mp-mips-codemirror";
+
 // CodeMirror autocompletion for MIPS / Mario Party assembly.
-CodeMirror.registerHelper("hint", "mips-pp64", function(cm: any) {
+registerHelper("hint", "mips-pp64", function(cm: any) {
   const cur = cm.getCursor();
   const token = cm.getTokenAt(cur);
   const tokenString = token.string;
@@ -25,24 +33,24 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm: any) {
     ];
     return {
       list: directives,
-      from: CodeMirror.Pos(cur.line, 1),
-      to: CodeMirror.Pos(cur.line, end)
+      from: Pos(cur.line, 1),
+      to: Pos(cur.line, end)
     };
   }
 
-  const supportedGames = PP64.events.getActiveEditorSupportedGames();
+  const supportedGames = getActiveEditorSupportedGames();
 
-  function getSymbols(games: PP64.types.Game[], type?: any) {
+  function getSymbols(games: Game[], type?: any) {
     if (!games.length)
       return [];
     if (games.length === 1)
-      return PP64.symbols.getSymbols(games[0], type);
+      return getSymbolsForGame(games[0], type);
 
     // Take the intersection of the supported games' symbols.
-    let result = PP64.symbols.getSymbols(games[0], type);
+    let result = getSymbolsForGame(games[0], type);
     for (let i = 0; i < games.length - 1; i++) {
-      const nextSymbols = PP64.symbols.getSymbols(games[i + 1], type);
-      result = PP64.utils.arrays.intersection(result, nextSymbols, (a, b) => {
+      const nextSymbols = getSymbolsForGame(games[i + 1], type);
+      result = intersection(result, nextSymbols, (a, b) => {
         return a.name === b.name;
       });
     }
@@ -61,7 +69,7 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm: any) {
     return _showSyms(syms);
   }
 
-  function _showSyms(symbols: PP64.symbols.ISymbol[]) {
+  function _showSyms(symbols: ISymbol[]) {
     let syms = symbols.map(sym => {
       return sym.name;
     });
@@ -76,8 +84,8 @@ CodeMirror.registerHelper("hint", "mips-pp64", function(cm: any) {
     }
     return {
       list: syms.sort(),
-      from: CodeMirror.Pos(cur.line, start + startOffset),
-      to: CodeMirror.Pos(cur.line, end)
+      from: Pos(cur.line, start + startOffset),
+      to: Pos(cur.line, end)
     };
   }
 

@@ -1,23 +1,33 @@
-namespace PP64.fs.animationfs {
-  interface IOffsetInfo {
-    upper: number;
-    lower: number;
-  }
+import { $$log, $$hex } from "../utils/debug";
+import { compress, getCompressedSize, decompress } from "../utils/compression";
+import { toTiles, fromTiles } from "../utils/img/tiler";
+import { RGBA5551fromRGBA32, RGBA5551toRGBA32 } from "../utils/img/RGBA5551";
+import { arrayBuffersEqual, copyRange } from "../utils/arrays";
+import { createContext } from "../utils/canvas";
+import { makeDivisibleBy } from "../utils/number";
+import { Game } from "../types";
+import { romhandler } from "../romhandler";
 
-  interface IAnimationFsReadInfo {
-    compressionType: number;
-    decompressed: ArrayBuffer;
-    compressed?: ArrayBuffer;
-  }
+interface IOffsetInfo {
+  upper: number;
+  lower: number;
+}
 
-  let _animFSOffsets: { [game: string]: IOffsetInfo[] } = {};
-  _animFSOffsets[$gameType.MP2_USA] = [
-    // 0x16EC470
-    { upper: 0x000546C6, lower: 0x000546CA },
-  ];
+interface IAnimationFsReadInfo {
+  compressionType: number;
+  decompressed: ArrayBuffer;
+  compressed?: ArrayBuffer;
+}
 
+let _animFSOffsets: { [game: string]: IOffsetInfo[] } = {};
+_animFSOffsets[Game.MP2_USA] = [
+  // 0x16EC470
+  { upper: 0x000546C6, lower: 0x000546CA },
+];
+
+export namespace animationfs {
   export function getROMOffset() {
-    let romView = PP64.romhandler.getDataView();
+    let romView = romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
       return null;
@@ -48,7 +58,7 @@ namespace PP64.fs.animationfs {
   }
 
   export function getPatchOffsets() {
-    return _animFSOffsets[PP64.romhandler.getROMGame()!];
+    return _animFSOffsets[romhandler.getROMGame()!];
   }
 
   export function get(set: number, entry: number, index: number) {
@@ -56,7 +66,7 @@ namespace PP64.fs.animationfs {
   }
 
   export function write(set: number, entry: number, tileBuffer: ArrayBuffer, index: number) {
-    let compressed = PP64.utils.compression.compress(3, new DataView(tileBuffer));
+    let compressed = compress(3, new DataView(tileBuffer));
 
     if (!_animfsCache![set])
       _animfsCache![set] = [];
@@ -73,9 +83,9 @@ namespace PP64.fs.animationfs {
     let tileXCount = width / 64;
     let tileYCount = height / 48;
 
-    let tiles32 = PP64.utils.img.tiler.toTiles(imgData.data, tileXCount, tileYCount, 64 * 4, 48);
+    let tiles32 = toTiles(imgData.data, tileXCount, tileYCount, 64 * 4, 48);
     let tiles16 = tiles32.map(tile32 => {
-      return PP64.utils.img.RGBA5551.fromRGBA32(tile32, 64, 48);
+      return RGBA5551fromRGBA32(tile32, 64, 48);
     });
     let orderedTiles = [];
     for (let y = tileYCount - 1; y >= 0; y--) {
@@ -96,7 +106,7 @@ namespace PP64.fs.animationfs {
 
     // Write the tiles that are different to the sparse tree.
     for (let i = 0; i < orderedAnimTiles.length; i++) {
-      if (!PP64.utils.arrays.arrayBuffersEqual(orderedMainTiles[i], orderedAnimTiles[i]))
+      if (!arrayBuffersEqual(orderedMainTiles[i], orderedAnimTiles[i]))
         write(set, entry, orderedAnimTiles[i], i + 1);
     }
   }
@@ -127,11 +137,11 @@ namespace PP64.fs.animationfs {
 
     orderedAnimBgTiles = _unorderTiles(orderedAnimBgTiles, tileXCount, tileYCount);
 
-    let bgBufferRGBA16 = PP64.utils.img.tiler.fromTiles(orderedAnimBgTiles, tileXCount, tileYCount, tileWidth * 2, tileHeight);
-    let bgBufferRGBA32 = PP64.utils.img.RGBA5551.toRGBA32(bgBufferRGBA16, width, height);
+    let bgBufferRGBA16 = fromTiles(orderedAnimBgTiles, tileXCount, tileYCount, tileWidth * 2, tileHeight);
+    let bgBufferRGBA32 = RGBA5551toRGBA32(bgBufferRGBA16, width, height);
     let bgArr = new Uint8Array(bgBufferRGBA32);
 
-    let canvasCtx = PP64.utils.canvas.createContext(width, height);
+    let canvasCtx = createContext(width, height);
     let bgImageData = canvasCtx.createImageData(width, height);
 
     for (let i = 0; i < bgArr.byteLength; i++) {
@@ -163,7 +173,7 @@ namespace PP64.fs.animationfs {
 
   export function extract() {
     let startingOffset = getROMOffset()!;
-    let view = PP64.romhandler.getDataView();
+    let view = romhandler.getDataView();
     _animfsCache = _extractSets(view, startingOffset);
     return _animfsCache;
   }
@@ -217,12 +227,12 @@ namespace PP64.fs.animationfs {
     let buffer = view.buffer;
     let fileStartOffset = offset + 12;
     let fileStartView = new DataView(buffer, fileStartOffset);
-    let compressedSize = PP64.utils.compression.getCompressedSize(compressionType, fileStartView, decompressedSize)!; // TODO perf
+    let compressedSize = getCompressedSize(compressionType, fileStartView, decompressedSize)!; // TODO perf
     return {
       index,
       compressionType,
       compressed: buffer.slice(fileStartOffset, fileStartOffset + compressedSize),
-      decompressed: PP64.utils.compression.decompress(compressionType, fileStartView, decompressedSize)
+      decompressed: decompress(compressionType, fileStartView, decompressedSize)
     };
   }
 
@@ -238,7 +248,7 @@ namespace PP64.fs.animationfs {
       view.setUint32(curSetIndexOffset, curSetWriteOffset);
       curSetIndexOffset += 4;
       curSetWriteOffset = _writeSet(s, view, curSetWriteOffset);
-      curSetWriteOffset = $$number.makeDivisibleBy(curSetWriteOffset, 4);
+      curSetWriteOffset = makeDivisibleBy(curSetWriteOffset, 4);
     }
 
     view.setUint32(curSetIndexOffset, curSetWriteOffset); // Extra offset
@@ -256,7 +266,7 @@ namespace PP64.fs.animationfs {
       view.setUint32(curSetEntryIndexOffset, curSetEntryWriteOffset - offset);
       curSetEntryIndexOffset += 4;
       curSetEntryWriteOffset = _writeTiles(s, e, view, curSetEntryWriteOffset);
-      curSetEntryWriteOffset = $$number.makeDivisibleBy(curSetEntryWriteOffset, 4);
+      curSetEntryWriteOffset = makeDivisibleBy(curSetEntryWriteOffset, 4);
     }
 
     return curSetEntryWriteOffset;
@@ -275,7 +285,7 @@ namespace PP64.fs.animationfs {
       view.setUint32(curTileIndexOffset, curTileWriteOffset - offset);
       curTileIndexOffset += 4;
       curTileWriteOffset = _writeTile(s, e, t, view, curTileWriteOffset);
-      curTileWriteOffset = $$number.makeDivisibleBy(curTileWriteOffset, 4);
+      curTileWriteOffset = makeDivisibleBy(curTileWriteOffset, 4);
     }
 
     view.setUint32(curTileIndexOffset, curTileWriteOffset - offset);
@@ -288,7 +298,7 @@ namespace PP64.fs.animationfs {
     view.setUint32(offset, parseInt(t));
     view.setUint32(offset + 4, 3); // Compression type
     view.setUint32(offset + 8, tile.decompressed.byteLength); // Decompressed size
-    PP64.utils.arrays.copyRange(view, tile.compressed!, offset + 12, 0, tile.compressed!.byteLength);
+    copyRange(view, tile.compressed!, offset + 12, 0, tile.compressed!.byteLength);
     return offset + 12 + tile.compressed!.byteLength;
   }
 
@@ -339,7 +349,7 @@ namespace PP64.fs.animationfs {
           byteLen += 4; // Compression type
           byteLen += 4; // Decompressed size
           byteLen += tile.compressed!.byteLength;
-          byteLen = $$number.makeDivisibleBy(byteLen, 4);
+          byteLen = makeDivisibleBy(byteLen, 4);
         }
       }
     }

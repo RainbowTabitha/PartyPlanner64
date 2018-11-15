@@ -1,6 +1,5 @@
-PP64.ns("symbols");
-
-PP64.symbols["MarioParty2U"] = [
+define(["require", "exports"], function (require, exports) {
+exports["default"] = [
 {
       addr: 2147484416, // 0x80000300
       type: "u32",
@@ -40,6 +39,36 @@ PP64.symbols["MarioParty2U"] = [
       addr: 2147584764, // 0x80018AFC
       type: "code",
       name: "GetRandomByte" },
+{
+      addr: 2147749248, // 0x80040D80
+      type: "code",
+      name: "MakePermHeap",
+      desc: "A0=heap_addr" },
+{
+      addr: 2147749284, // 0x80040DA4
+      type: "code",
+      name: "MallocPerm",
+      desc: "A0=size" },
+{
+      addr: 2147749320, // 0x80040DC8
+      type: "code",
+      name: "FreePerm",
+      desc: "A0=addr" },
+{
+      addr: 2147749456, // 0x80040E50
+      type: "code",
+      name: "MakeTempHeap",
+      desc: "A0=heap_addr" },
+{
+      addr: 2147749492, // 0x80040E74
+      type: "code",
+      name: "MallocTemp",
+      desc: "A0=size" },
+{
+      addr: 2147749528, // 0x80040E98
+      type: "code",
+      name: "FreeTemp",
+      desc: "A0=addr" },
 {
       addr: 2147797556, // 0x8004CA34
       type: "code",
@@ -94,6 +123,21 @@ PP64.symbols["MarioParty2U"] = [
       type: "code",
       name: "AdjustPlayerCoinsGradual",
       desc: "A0=player_index" },
+{
+      addr: 2147910752, // 0x80068460
+      type: "code",
+      name: "MakeHeap",
+      desc: "A0=addr" },
+{
+      addr: 2147910784, // 0x80068480
+      type: "code",
+      name: "Malloc",
+      desc: "A0=heap pointer (main or temp)" },
+{
+      addr: 2147910924, // 0x8006850C
+      type: "code",
+      name: "Free",
+      desc: "A0=allocated heap pointer" },
 {
       addr: 2147998176, // 0x8007D9E0
       type: "code",
@@ -1665,6 +1709,41 @@ PP64.symbols["MarioParty2U"] = [
       type: "code",
       name: "__umoddi3" },
 {
+      addr: 2148397008, // 0x800DEFD0
+      type: "data",
+      name: "perm_heap_addr",
+      desc: "Address of permanent heap" },
+{
+      addr: 2148397024, // 0x800DEFE0
+      type: "data",
+      name: "temp_heap_addr",
+      desc: "Address of temporary heap" },
+{
+      addr: 2148407504, // 0x800E18D0
+      type: "u16",
+      name: "num_board_spaces" },
+{
+      addr: 2148407506, // 0x800E18D2
+      type: "u16",
+      name: "num_chains" },
+{
+      addr: 2148407508, // 0x800E18D4
+      type: "u32",
+      name: "hydrated_space_data" },
+{
+      addr: 2148407512, // 0x800E18D8
+      type: "u32",
+      name: "hydrated_chains" },
+{
+      addr: 2148407616, // 0x800E1940
+      type: "data",
+      name: "arrow_angles",
+      desc: "f32[8]" },
+{
+      addr: 2148407648, // 0x800E1960
+      type: "u32",
+      name: "num_arrow_angles" },
+{
       addr: 2148509246, // 0x800FA63E
       type: "u16",
       name: "scene",
@@ -1790,28 +1869,9 @@ PP64.symbols["MarioParty2U"] = [
       name: "p4_turn_status",
       desc: "Player 4 turn status" },
 {
-      addr: 2148407504, // 0x800E18D0
+      addr: 2148520984, // 0x800FD418
       type: "u16",
-      name: "num_board_spaces" },
-{
-      addr: 2148407506, // 0x800E18D2
-      type: "u16",
-      name: "num_chains" },
-{
-      addr: 2148407508, // 0x800E18D4
-      type: "u32",
-      name: "hydrated_space_data" },
-{
-      addr: 2148407512, // 0x800E18D8
-      type: "u32",
-      name: "hydrated_chains" },
-{
-      addr: 2148407616, // 0x800E1940
-      type: "data",
-      name: "arrow_angles",
-      desc: "f32[8]" },
-{
-      addr: 2148407648, // 0x800E1960
-      type: "u32",
-      name: "num_arrow_angles" }
+      name: "hidden_space_primary",
+      desc: "space index of primary hidden space" }
 ];
+});

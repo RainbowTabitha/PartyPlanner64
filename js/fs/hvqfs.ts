@@ -1,162 +1,172 @@
-namespace PP64.fs.hvqfs {
-  interface IOffsetInfo {
-    upper: number;
-    lower: number;
-  }
+import { $$log, $$hex } from "../utils/debug";
+import { makeDivisibleBy } from "../utils/number";
+import { decode, encode } from "../utils/img/HVQ";
+import { fromTiles, toTiles } from "../utils/img/tiler";
+import { RGBA5551toRGBA32, RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
+import { createContext } from "../utils/canvas";
+import { copyRange } from "../utils/arrays";
+import { Game } from "../types";
+import { romhandler } from "../romhandler";
 
-  let _HVQFSOffsets: { [game: string]: IOffsetInfo[] } = {};
+interface IOffsetInfo {
+  upper: number;
+  lower: number;
+}
 
-  _HVQFSOffsets[$gameType.MP1_USA] = [ // Default at 0x00FE2310
-    { upper: 0x00057626, lower: 2 }, // Too lazy, lower is space inbetween.
-    { upper: 0x0005D012, lower: 2 },
-    { upper: 0x000D5416, lower: 6 },
-    { upper: 0x00259D76, lower: 6 },
-    { upper: 0x0025F8AE, lower: 6 },
-    { upper: 0x00260392, lower: 6 },
-    { upper: 0x0027C76A, lower: 6 },
-    { upper: 0x00280992, lower: 6 },
-    { upper: 0x00281A96, lower: 6 },
-    { upper: 0x002825CA, lower: 6 },
-    { upper: 0x002850B6, lower: 6 },
-    { upper: 0x00285AE6, lower: 6 },
-    { upper: 0x0028660A, lower: 6 },
-    { upper: 0x002871AA, lower: 6 },
-    { upper: 0x00288742, lower: 6 },
-    { upper: 0x00289A2E, lower: 6 },
-    { upper: 0x0028AA5E, lower: 6 },
-    { upper: 0x0028BB92, lower: 6 },
-    { upper: 0x0028CE76, lower: 6 },
-    { upper: 0x0028DEDE, lower: 6 },
-    { upper: 0x0028E526, lower: 6 },
-    { upper: 0x0028EC02, lower: 6 },
-    { upper: 0x002906E6, lower: 6 },
-    { upper: 0x00291232, lower: 6 },
-    { upper: 0x00291EC2, lower: 6 },
-    { upper: 0x0029311E, lower: 6 },
-    { upper: 0x002939EA, lower: 6 },
-    { upper: 0x00295306, lower: 6 },
-    { upper: 0x00295CFA, lower: 6 },
-    { upper: 0x002969FE, lower: 6 },
-    { upper: 0x00297AD2, lower: 6 },
-    { upper: 0x00297F42, lower: 6 },
-    { upper: 0x002989E2, lower: 6 },
-    { upper: 0x0029A27A, lower: 6 },
-    { upper: 0x0029AA22, lower: 6 },
-    { upper: 0x0029B15E, lower: 6 },
-    { upper: 0x002A090A, lower: 6 },
-    { upper: 0x002A51A2, lower: 6 },
-    { upper: 0x002B70D6, lower: 6 },
-    { upper: 0x002BA16E, lower: 6 },
-    { upper: 0x002FD79A, lower: 6 },
-    { upper: 0x003002B6, lower: 6 },
-    { upper: 0x003013AE, lower: 6 },
-    { upper: 0x00306322, lower: 2 },
-    { upper: 0x00309F8E, lower: 6 },
-    { upper: 0x0030D82A, lower: 6 },
-    { upper: 0x003146EA, lower: 6 },
-    { upper: 0x00317762, lower: 6 }
-  ];
-  _HVQFSOffsets[$gameType.MP1_JPN] = [
-    { upper: 0x00057496, lower: 2 }, // Too lazy, lower is space inbetween.
-    { upper: 0x0005CBD2, lower: 2 },
-    { upper: 0x000D48C6, lower: 6 },
-    { upper: 0x002592A6, lower: 6 },
-    { upper: 0x0025EDE6, lower: 6 },
-    { upper: 0x0025F8D2, lower: 6 },
-    { upper: 0x0027BCAA, lower: 6 },
-    { upper: 0x0027FEC2, lower: 6 },
-    { upper: 0x00280FC6, lower: 6 },
-    { upper: 0x00281AFA, lower: 6 },
-    { upper: 0x002845E6, lower: 6 },
-    { upper: 0x00285016, lower: 6 },
-    { upper: 0x00285B3A, lower: 6 },
-    { upper: 0x002866DA, lower: 6 },
-    { upper: 0x00287C72, lower: 6 },
-    { upper: 0x00288F5E, lower: 6 },
-    { upper: 0x00289F8E, lower: 6 },
-    { upper: 0x0028B0C2, lower: 6 },
-    { upper: 0x0028C3A6, lower: 6 },
-    { upper: 0x0028D40E, lower: 6 },
-    { upper: 0x0028DA56, lower: 6 },
-    { upper: 0x0028E132, lower: 6 },
-    { upper: 0x0028FC16, lower: 6 },
-    { upper: 0x00290762, lower: 6 },
-    { upper: 0x002913F2, lower: 6 },
-    { upper: 0x0029264E, lower: 6 },
-    { upper: 0x00292F1A, lower: 6 },
-    { upper: 0x00294836, lower: 6 },
-    { upper: 0x0029522A, lower: 6 },
-    { upper: 0x00295F2A, lower: 6 },
-    { upper: 0x00296FFE, lower: 6 },
-    { upper: 0x00297462, lower: 6 },
-    { upper: 0x00297F02, lower: 6 },
-    { upper: 0x0029979E, lower: 6 },
-    { upper: 0x00299F42, lower: 6 },
-    { upper: 0x0029A67E, lower: 6 },
-    { upper: 0x0029FE06, lower: 6 },
-    { upper: 0x002A46D6, lower: 6 },
-    { upper: 0x002B6656, lower: 6 },
-    { upper: 0x002B96EE, lower: 6 },
-    { upper: 0x002FCAD2, lower: 6 },
-    { upper: 0x002FF5F6, lower: 6 },
-    { upper: 0x003006EE, lower: 6 },
-    { upper: 0x00305662, lower: 2 },
-    { upper: 0x003092CE, lower: 6 },
-    { upper: 0x0030CB6A, lower: 6 },
-    { upper: 0x00313A1A, lower: 6 },
-    { upper: 0x00316A02, lower: 6 },
-  ];
-  _HVQFSOffsets[$gameType.MP2_USA] = [ // Default at 0x01164160
-    { upper: 0x00054BD2, lower: 6 }, // Too lazy, lower is space inbetween.
-    { upper: 0x00063A36, lower: 6 },
-    { upper: 0x00074D6A, lower: 2 },
-    { upper: 0x002A8A3A, lower: 6 },
-    { upper: 0x002AEE46, lower: 6 },
-    { upper: 0x002C081A, lower: 6 },
-    { upper: 0x002DA94A, lower: 6 },
-    { upper: 0x002F17CE, lower: 6 },
-    { upper: 0x00306C42, lower: 6 },
-    { upper: 0x0031EEDA, lower: 6 },
-    { upper: 0x00329842, lower: 6 },
-    { upper: 0x0032A26E, lower: 6 },
-    { upper: 0x003354E6, lower: 6 },
-    { upper: 0x00343106, lower: 6 },
-    { upper: 0x0035860A, lower: 6 },
-    { upper: 0x0035C1EE, lower: 6 },
-    { upper: 0x0035D1AA, lower: 6 },
-    { upper: 0x003615DE, lower: 6 },
-    { upper: 0x0036178E, lower: 6 },
-    { upper: 0x003D4DEE, lower: 6 },
-    { upper: 0x0040A022, lower: 6 },
-    { upper: 0x0040B8E6, lower: 6 },
-    { upper: 0x004107BA, lower: 6 },
-    { upper: 0x004157AE, lower: 6 },
-  ];
-  _HVQFSOffsets[$gameType.MP3_USA] = [ // Default at 0x128CC60
-    { upper: 0x000D07A6, lower: 6 },
-    { upper: 0x000E4056, lower: 6 },
-    { upper: 0x000FD7DA, lower: 6 },
-    { upper: 0x0010C616, lower: 6 },
-    { upper: 0x003BF99A, lower: 6 },
-    { upper: 0x003C6106, lower: 6 },
-    { upper: 0x003C7D72, lower: 6 },
-    { upper: 0x003CDB72, lower: 6 },
-    { upper: 0x003CFA96, lower: 6 },
-    { upper: 0x0045A696, lower: 6 },
-    { upper: 0x00463F9A, lower: 6 },
-    { upper: 0x004672AA, lower: 6 },
-    { upper: 0x004CCF8A, lower: 2 },
-    { upper: 0x004E83F2, lower: 6 },
-    { upper: 0x004F031A, lower: 6 },
-    { upper: 0x004F3CDE, lower: 6 },
-    { upper: 0x0052671A, lower: 6 },
-    { upper: 0x00549A9A, lower: 2 },
-    { upper: 0x0054F5FE, lower: 6 },
-    { upper: 0x005505C6, lower: 6 },
-  ];
+let _HVQFSOffsets: { [game: string]: IOffsetInfo[] } = {};
 
+_HVQFSOffsets[Game.MP1_USA] = [ // Default at 0x00FE2310
+  { upper: 0x00057626, lower: 2 }, // Too lazy, lower is space inbetween.
+  { upper: 0x0005D012, lower: 2 },
+  { upper: 0x000D5416, lower: 6 },
+  { upper: 0x00259D76, lower: 6 },
+  { upper: 0x0025F8AE, lower: 6 },
+  { upper: 0x00260392, lower: 6 },
+  { upper: 0x0027C76A, lower: 6 },
+  { upper: 0x00280992, lower: 6 },
+  { upper: 0x00281A96, lower: 6 },
+  { upper: 0x002825CA, lower: 6 },
+  { upper: 0x002850B6, lower: 6 },
+  { upper: 0x00285AE6, lower: 6 },
+  { upper: 0x0028660A, lower: 6 },
+  { upper: 0x002871AA, lower: 6 },
+  { upper: 0x00288742, lower: 6 },
+  { upper: 0x00289A2E, lower: 6 },
+  { upper: 0x0028AA5E, lower: 6 },
+  { upper: 0x0028BB92, lower: 6 },
+  { upper: 0x0028CE76, lower: 6 },
+  { upper: 0x0028DEDE, lower: 6 },
+  { upper: 0x0028E526, lower: 6 },
+  { upper: 0x0028EC02, lower: 6 },
+  { upper: 0x002906E6, lower: 6 },
+  { upper: 0x00291232, lower: 6 },
+  { upper: 0x00291EC2, lower: 6 },
+  { upper: 0x0029311E, lower: 6 },
+  { upper: 0x002939EA, lower: 6 },
+  { upper: 0x00295306, lower: 6 },
+  { upper: 0x00295CFA, lower: 6 },
+  { upper: 0x002969FE, lower: 6 },
+  { upper: 0x00297AD2, lower: 6 },
+  { upper: 0x00297F42, lower: 6 },
+  { upper: 0x002989E2, lower: 6 },
+  { upper: 0x0029A27A, lower: 6 },
+  { upper: 0x0029AA22, lower: 6 },
+  { upper: 0x0029B15E, lower: 6 },
+  { upper: 0x002A090A, lower: 6 },
+  { upper: 0x002A51A2, lower: 6 },
+  { upper: 0x002B70D6, lower: 6 },
+  { upper: 0x002BA16E, lower: 6 },
+  { upper: 0x002FD79A, lower: 6 },
+  { upper: 0x003002B6, lower: 6 },
+  { upper: 0x003013AE, lower: 6 },
+  { upper: 0x00306322, lower: 2 },
+  { upper: 0x00309F8E, lower: 6 },
+  { upper: 0x0030D82A, lower: 6 },
+  { upper: 0x003146EA, lower: 6 },
+  { upper: 0x00317762, lower: 6 }
+];
+_HVQFSOffsets[Game.MP1_JPN] = [
+  { upper: 0x00057496, lower: 2 }, // Too lazy, lower is space inbetween.
+  { upper: 0x0005CBD2, lower: 2 },
+  { upper: 0x000D48C6, lower: 6 },
+  { upper: 0x002592A6, lower: 6 },
+  { upper: 0x0025EDE6, lower: 6 },
+  { upper: 0x0025F8D2, lower: 6 },
+  { upper: 0x0027BCAA, lower: 6 },
+  { upper: 0x0027FEC2, lower: 6 },
+  { upper: 0x00280FC6, lower: 6 },
+  { upper: 0x00281AFA, lower: 6 },
+  { upper: 0x002845E6, lower: 6 },
+  { upper: 0x00285016, lower: 6 },
+  { upper: 0x00285B3A, lower: 6 },
+  { upper: 0x002866DA, lower: 6 },
+  { upper: 0x00287C72, lower: 6 },
+  { upper: 0x00288F5E, lower: 6 },
+  { upper: 0x00289F8E, lower: 6 },
+  { upper: 0x0028B0C2, lower: 6 },
+  { upper: 0x0028C3A6, lower: 6 },
+  { upper: 0x0028D40E, lower: 6 },
+  { upper: 0x0028DA56, lower: 6 },
+  { upper: 0x0028E132, lower: 6 },
+  { upper: 0x0028FC16, lower: 6 },
+  { upper: 0x00290762, lower: 6 },
+  { upper: 0x002913F2, lower: 6 },
+  { upper: 0x0029264E, lower: 6 },
+  { upper: 0x00292F1A, lower: 6 },
+  { upper: 0x00294836, lower: 6 },
+  { upper: 0x0029522A, lower: 6 },
+  { upper: 0x00295F2A, lower: 6 },
+  { upper: 0x00296FFE, lower: 6 },
+  { upper: 0x00297462, lower: 6 },
+  { upper: 0x00297F02, lower: 6 },
+  { upper: 0x0029979E, lower: 6 },
+  { upper: 0x00299F42, lower: 6 },
+  { upper: 0x0029A67E, lower: 6 },
+  { upper: 0x0029FE06, lower: 6 },
+  { upper: 0x002A46D6, lower: 6 },
+  { upper: 0x002B6656, lower: 6 },
+  { upper: 0x002B96EE, lower: 6 },
+  { upper: 0x002FCAD2, lower: 6 },
+  { upper: 0x002FF5F6, lower: 6 },
+  { upper: 0x003006EE, lower: 6 },
+  { upper: 0x00305662, lower: 2 },
+  { upper: 0x003092CE, lower: 6 },
+  { upper: 0x0030CB6A, lower: 6 },
+  { upper: 0x00313A1A, lower: 6 },
+  { upper: 0x00316A02, lower: 6 },
+];
+_HVQFSOffsets[Game.MP2_USA] = [ // Default at 0x01164160
+  { upper: 0x00054BD2, lower: 6 }, // Too lazy, lower is space inbetween.
+  { upper: 0x00063A36, lower: 6 },
+  { upper: 0x00074D6A, lower: 2 },
+  { upper: 0x002A8A3A, lower: 6 },
+  { upper: 0x002AEE46, lower: 6 },
+  { upper: 0x002C081A, lower: 6 },
+  { upper: 0x002DA94A, lower: 6 },
+  { upper: 0x002F17CE, lower: 6 },
+  { upper: 0x00306C42, lower: 6 },
+  { upper: 0x0031EEDA, lower: 6 },
+  { upper: 0x00329842, lower: 6 },
+  { upper: 0x0032A26E, lower: 6 },
+  { upper: 0x003354E6, lower: 6 },
+  { upper: 0x00343106, lower: 6 },
+  { upper: 0x0035860A, lower: 6 },
+  { upper: 0x0035C1EE, lower: 6 },
+  { upper: 0x0035D1AA, lower: 6 },
+  { upper: 0x003615DE, lower: 6 },
+  { upper: 0x0036178E, lower: 6 },
+  { upper: 0x003D4DEE, lower: 6 },
+  { upper: 0x0040A022, lower: 6 },
+  { upper: 0x0040B8E6, lower: 6 },
+  { upper: 0x004107BA, lower: 6 },
+  { upper: 0x004157AE, lower: 6 },
+];
+_HVQFSOffsets[Game.MP3_USA] = [ // Default at 0x128CC60
+  { upper: 0x000D07A6, lower: 6 },
+  { upper: 0x000E4056, lower: 6 },
+  { upper: 0x000FD7DA, lower: 6 },
+  { upper: 0x0010C616, lower: 6 },
+  { upper: 0x003BF99A, lower: 6 },
+  { upper: 0x003C6106, lower: 6 },
+  { upper: 0x003C7D72, lower: 6 },
+  { upper: 0x003CDB72, lower: 6 },
+  { upper: 0x003CFA96, lower: 6 },
+  { upper: 0x0045A696, lower: 6 },
+  { upper: 0x00463F9A, lower: 6 },
+  { upper: 0x004672AA, lower: 6 },
+  { upper: 0x004CCF8A, lower: 2 },
+  { upper: 0x004E83F2, lower: 6 },
+  { upper: 0x004F031A, lower: 6 },
+  { upper: 0x004F3CDE, lower: 6 },
+  { upper: 0x0052671A, lower: 6 },
+  { upper: 0x00549A9A, lower: 2 },
+  { upper: 0x0054F5FE, lower: 6 },
+  { upper: 0x005505C6, lower: 6 },
+];
+
+export namespace hvqfs {
   export function getROMOffset() {
-    let romView = PP64.romhandler.getDataView();
+    let romView = romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
       return null;
@@ -198,7 +208,7 @@ namespace PP64.fs.hvqfs {
   }
 
   export function getPatchOffsets() {
-    return _HVQFSOffsets[PP64.romhandler.getROMGame()!].map(offset => {
+    return _HVQFSOffsets[romhandler.getROMGame()!].map(offset => {
       return {
         upper: offset.upper,
         lower: offset.upper + 2 + offset.lower
@@ -211,7 +221,7 @@ namespace PP64.fs.hvqfs {
   }
 
   export function read(dir: number, file: number) {
-    let buffer = PP64.romhandler.getROMBuffer()!;
+    let buffer = romhandler.getROMBuffer()!;
 
     let fsOffset = getROMOffset()!;
     let fsView = new DataView(buffer, fsOffset);
@@ -277,7 +287,7 @@ namespace PP64.fs.hvqfs {
       view.setUint32(curBgIndexOffset, curBgWriteOffset);
       curBgIndexOffset += 4;
       curBgWriteOffset = _writeBg(b, view, curBgWriteOffset);
-      curBgWriteOffset = $$number.makeDivisibleBy(curBgWriteOffset, 4);
+      curBgWriteOffset = makeDivisibleBy(curBgWriteOffset, 4);
     }
 
     view.setUint32(curBgIndexOffset, curBgWriteOffset);
@@ -295,7 +305,7 @@ namespace PP64.fs.hvqfs {
       view.setUint32(curFileIndexOffset, curFileWriteOffset - offset);
       curFileIndexOffset += 4;
       curFileWriteOffset = _writeFile(b, f, view, curFileWriteOffset);
-      curFileWriteOffset = $$number.makeDivisibleBy(curFileWriteOffset, 4);
+      curFileWriteOffset = makeDivisibleBy(curFileWriteOffset, 4);
     }
 
     view.setUint32(curFileIndexOffset, curFileWriteOffset - offset);
@@ -305,7 +315,7 @@ namespace PP64.fs.hvqfs {
 
   function _writeFile(b: number, f: number, view: DataView, offset: number) {
     let fileBytes = _hvqCache![b][f];
-    PP64.utils.arrays.copyRange(view, fileBytes, offset, 0, fileBytes.byteLength);
+    copyRange(view, fileBytes, offset, 0, fileBytes.byteLength);
     return offset + fileBytes.byteLength;
   }
 
@@ -338,17 +348,17 @@ namespace PP64.fs.hvqfs {
     // if (dir === 39) { // _boardLocData[4].bgNum) { // FIXME: Save away the black tile until HVQ is ready.
     //   //var black_tile_offset = dir_offset + dirView.getUint32(4 + (211 * 4));
     //   let blackTileView = new DataView(_hvqCache![39][211]);
-    //   PP64.utils.img.HVQ._black = blackTileView;
+    //   _black = blackTileView;
     // }
 
     // Grab DataViews of all of the tiles.
     let hvqTiles = [];
-    let game = PP64.romhandler.getGameVersion();
+    let game = romhandler.getGameVersion();
     let adjust = game === 1 ? 1 : 2; // Skip HVQ-MPS in newer games
     for (let i = adjust; i < _hvqCache![dir].length; i++) {
       hvqTiles.push(new DataView(_hvqCache![dir][i]));
     }
-    let rgba16Tiles = hvqTiles.map(PP64.utils.img.HVQ.decode);
+    let rgba16Tiles = hvqTiles.map(decode);
     let rgba16Views = rgba16Tiles.map(tile => {
       return new DataView(tile);
     });
@@ -358,11 +368,11 @@ namespace PP64.fs.hvqfs {
         orderedRGB16Tiles.push(rgba16Views[(y * tile_x_count) + x]);
       }
     }
-    let bgBufferRGBA16 = PP64.utils.img.tiler.fromTiles(orderedRGB16Tiles, tile_x_count, tile_y_count, tile_width * 2, tile_height);
-    let bgBufferRGBA32 = PP64.utils.img.RGBA5551.toRGBA32(bgBufferRGBA16, width, height);
+    let bgBufferRGBA16 = fromTiles(orderedRGB16Tiles, tile_x_count, tile_y_count, tile_width * 2, tile_height);
+    let bgBufferRGBA32 = RGBA5551toRGBA32(bgBufferRGBA16, width, height);
     let bgArr = new Uint8Array(bgBufferRGBA32);
 
-    let canvasCtx = PP64.utils.canvas.createContext(width, height);
+    let canvasCtx = createContext(width, height);
     let bgImageData = canvasCtx.createImageData(width, height);
 
     for (let i = 0; i < bgArr.byteLength; i++) {
@@ -374,7 +384,7 @@ namespace PP64.fs.hvqfs {
 
   export function readBackground(dir: number) {
     let [width, height] = _getBgDimensions(dir);
-    let canvasCtx = PP64.utils.canvas.createContext(width, height);
+    let canvasCtx = createContext(width, height);
     let bgImageData = readBackgroundImgData(dir);
     canvasCtx.putImageData(bgImageData, 0, 0);
     return {
@@ -391,12 +401,12 @@ namespace PP64.fs.hvqfs {
 
     $$log(`HVQFS.writeBackground, dir: ${dir}, img is ${width}x${height}`);
 
-    let rgba32tiles = PP64.utils.img.tiler.toTiles(imgData.data, tileXCount, tileYCount, 64 * 4, 48);
+    let rgba32tiles = toTiles(imgData.data, tileXCount, tileYCount, 64 * 4, 48);
     let rgba16tiles = rgba32tiles.map(tile32 => {
-      return PP64.utils.img.RGBA5551.fromRGBA32(tile32, 64, 48);
+      return RGBA5551fromRGBA32(tile32, 64, 48);
     });
     let hvqTiles = rgba16tiles.map(tile16 => {
-      return PP64.utils.img.HVQ.encode(tile16, 64, 48);
+      return encode(tile16, 64, 48);
     });
 
     let orderedHVQTiles = [];
@@ -406,7 +416,7 @@ namespace PP64.fs.hvqfs {
       }
     }
 
-    let game = PP64.romhandler.getGameVersion();
+    let game = romhandler.getGameVersion();
     if (game === 1) {
       for (let i = 1; i <= tileCount; i++) {
         _hvqCache![dir][i] = orderedHVQTiles[i - 1];
@@ -423,7 +433,7 @@ namespace PP64.fs.hvqfs {
     if (_hvqCache)
       return _hvqCache.length;
 
-    let buffer = PP64.romhandler.getROMBuffer()!;
+    let buffer = romhandler.getROMBuffer()!;
     let hvqFsOffset = getROMOffset();
     if (hvqFsOffset === null)
       return 0;
@@ -435,7 +445,7 @@ namespace PP64.fs.hvqfs {
     if (_hvqCache && _hvqCache[dir])
       return _hvqCache[dir].length;
 
-    let buffer = PP64.romhandler.getROMBuffer()!;
+    let buffer = romhandler.getROMBuffer()!;
     let hvqFsOffset = getROMOffset();
     if (hvqFsOffset === null)
       return 0;
@@ -462,7 +472,7 @@ namespace PP64.fs.hvqfs {
 
       for (let f = 0; f < fileCount; f++) {
         byteLen += _hvqCache![b][f].byteLength;
-        byteLen = $$number.makeDivisibleBy(byteLen, 4);
+        byteLen = makeDivisibleBy(byteLen, 4);
       }
     }
 

@@ -1,36 +1,44 @@
-namespace PP64.fs.strings3 {
-  interface IOffsetInfo {
-    upper: number;
-    lower: number;
-  }
+import { $$log, $$hex } from "../utils/debug";
+import { makeDivisibleBy } from "../utils/number";
+import { strings } from "./strings";
+import { decompress, compress } from "../utils/compression";
+import { copyRange } from "../utils/arrays";
+import { Game } from "../types";
+import { romhandler } from "../romhandler";
 
-  type ILocale = "jp" | "en" | "de" | "es" | "it" | "fr";
+interface IOffsetInfo {
+  upper: number;
+  lower: number;
+}
 
-  let _stringOffsets: { [game in PP64.types.Game]?: { [locale in ILocale]: IOffsetInfo[] } } = {};
-  _stringOffsets[$gameType.MP3_USA] = {
-    "jp": [
-      { upper: 0x0000F142, lower: 0x0000F14A }, // 0x1209850, len 0x13250
-      { upper: 0x0005B3CA, lower: 0x0005B3D2 },
-    ],
-    "en": [
-      { upper: 0x0005B412, lower: 0x0005B41A }, // 0x121CAA0
-    ],
-    "de": [
-      { upper: 0x0005B42A, lower: 0x0005B432 }, // 0x12355C0
-    ],
-    "es": [
-      { upper: 0x0005B436, lower: 0x0005B43E }, // 0x12765F0
-    ],
-    "it": [
-      { upper: 0x0005B442, lower: 0x0005B446 }, // 0x1261F90
-    ],
-    "fr": [
-      { upper: 0x0005B41E, lower: 0x0005B426 }, // 0x124D440
-    ],
-  };
+type ILocale = "jp" | "en" | "de" | "es" | "it" | "fr";
 
+let _stringOffsets: { [game in Game]?: { [locale in ILocale]: IOffsetInfo[] } } = {};
+_stringOffsets[Game.MP3_USA] = {
+  "jp": [
+    { upper: 0x0000F142, lower: 0x0000F14A }, // 0x1209850, len 0x13250
+    { upper: 0x0005B3CA, lower: 0x0005B3D2 },
+  ],
+  "en": [
+    { upper: 0x0005B412, lower: 0x0005B41A }, // 0x121CAA0
+  ],
+  "de": [
+    { upper: 0x0005B42A, lower: 0x0005B432 }, // 0x12355C0
+  ],
+  "es": [
+    { upper: 0x0005B436, lower: 0x0005B43E }, // 0x12765F0
+  ],
+  "it": [
+    { upper: 0x0005B442, lower: 0x0005B446 }, // 0x1261F90
+  ],
+  "fr": [
+    { upper: 0x0005B41E, lower: 0x0005B426 }, // 0x124D440
+  ],
+};
+
+export namespace strings3 {
   export function getROMOffset(locale: ILocale = "en") {
-    let romView = PP64.romhandler.getDataView();
+    let romView = romhandler.getDataView();
     let romOffset = getPatchOffsets(locale)[0];
     if (!romOffset)
       return null;
@@ -46,7 +54,7 @@ namespace PP64.fs.strings3 {
   export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
     let curOffset = newOffset;
-    let locales = getLocales(PP64.romhandler.getROMGame()!);
+    let locales = getLocales(romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
       let patchOffsets = getPatchOffsets(locale);
@@ -59,16 +67,16 @@ namespace PP64.fs.strings3 {
         romView.setUint16(patchOffsets[i].lower, lower);
       }
       $$log(`Strings3.setROMOffset[${locale}] -> ${$$hex((upper << 16) | lower)}`);
-      curOffset += $$number.makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
+      curOffset += makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
     }
   }
 
   export function getPatchOffsets(locale: ILocale = "en") {
-    return _stringOffsets[PP64.romhandler.getROMGame()!]![locale];
+    return _stringOffsets[romhandler.getROMGame()!]![locale];
   }
 
   class StringTableSet {
-    private dirs: PP64.fs.strings.StringTable[];
+    private dirs: strings.StringTable[];
 
     constructor(dataView: DataView) {
       this.dirs = this._extract(dataView)
@@ -91,14 +99,14 @@ namespace PP64.fs.strings3 {
       let entryOffset = this._getDirOffsetFromView(view, dir);
       let entryView = new DataView(view.buffer, view.byteOffset + entryOffset);
       let decompressedDir = this._decompressDir(entryView);
-      return new PP64.fs.strings.StringTable(new DataView(decompressedDir));
+      return new strings.StringTable(new DataView(decompressedDir));
     }
 
     _decompressDir(view: DataView) {
       let decompressedSize = view.getUint32(0);
       let compressionType = view.getUint32(4);
       let dirStartView = new DataView(view.buffer, view.byteOffset + 8);
-      return PP64.utils.compression.decompress(compressionType, dirStartView, decompressedSize)
+      return decompress(compressionType, dirStartView, decompressedSize)
     }
 
     _getDirOffsetFromView(view: DataView, dir: number) {
@@ -137,7 +145,7 @@ namespace PP64.fs.strings3 {
         byteLen += 4; // Decompressed size
         byteLen += 4; // Compression type
         byteLen += this.dirs[d].getByteLength(true);
-        byteLen = $$number.makeDivisibleBy(byteLen, 2);
+        byteLen = makeDivisibleBy(byteLen, 2);
       }
 
       return byteLen;
@@ -159,7 +167,7 @@ namespace PP64.fs.strings3 {
         view.setUint32(curDirWriteOffset, 1); // Compression type
         curDirWriteOffset += 4;
         curDirWriteOffset = this._packDir(d, view, curDirWriteOffset);
-        curDirWriteOffset = $$number.makeDivisibleBy(curDirWriteOffset, 2);
+        curDirWriteOffset = makeDivisibleBy(curDirWriteOffset, 2);
       }
 
       return curDirWriteOffset;
@@ -168,8 +176,8 @@ namespace PP64.fs.strings3 {
     _packDir(d: number, view: DataView, offset: number) {
       let decompressedBuffer = new ArrayBuffer(this.dirs[d].getByteLength());
       this.dirs[d].pack(decompressedBuffer, 0);
-      let compressedBuffer = PP64.utils.compression.compress(1, new DataView(decompressedBuffer));
-      PP64.utils.arrays.copyRange(view, compressedBuffer, offset, 0, compressedBuffer.byteLength);
+      let compressedBuffer = compress(1, new DataView(decompressedBuffer));
+      copyRange(view, compressedBuffer, offset, 0, compressedBuffer.byteLength);
       let compressedSize = this.dirs[d].getByteLength(true);
       if ($$debug) {
         if (compressedBuffer.byteLength > compressedSize)
@@ -187,10 +195,10 @@ namespace PP64.fs.strings3 {
 
   export function extract() {
     _strFsInstances = {};
-    let locales = getLocales(PP64.romhandler.getROMGame()!);
+    let locales = getLocales(romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
-      let localeView = PP64.romhandler.getDataView(getROMOffset(locale)!);
+      let localeView = romhandler.getDataView(getROMOffset(locale)!);
       _strFsInstances[locale] = new StringTableSet(localeView);
     }
     return _strFsInstances;
@@ -205,12 +213,12 @@ namespace PP64.fs.strings3 {
 
   export function pack(buffer: ArrayBuffer, offset: number = 0) {
     let nextOffset = offset;
-    let locales = getLocales(PP64.romhandler.getROMGame()!);
+    let locales = getLocales(romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
       let instance = _strFsInstances![locale];
       nextOffset = nextOffset + instance.pack(buffer, nextOffset);
-      nextOffset = $$number.makeDivisibleBy(nextOffset, 16);
+      nextOffset = makeDivisibleBy(nextOffset, 16);
     }
     return nextOffset;
   }
@@ -227,7 +235,7 @@ namespace PP64.fs.strings3 {
     _strFsInstances![locale].write(dir, index, content);
   }
 
-  export function getLocales(game: PP64.types.Game): ILocale[] {
+  export function getLocales(game: Game): ILocale[] {
     return Object.keys(_stringOffsets[game]!) as ILocale[];
   }
 
@@ -242,10 +250,10 @@ namespace PP64.fs.strings3 {
   // Gets the required byte length of the string section of the ROM.
   export function getByteLength() {
     let byteLen = 0;
-    let locales = getLocales(PP64.romhandler.getROMGame()!);
+    let locales = getLocales(romhandler.getROMGame()!);
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
-      byteLen += $$number.makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
+      byteLen += makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
     }
     return byteLen;
   }
