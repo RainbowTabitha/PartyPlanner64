@@ -740,19 +740,24 @@ function newboardDropdown(closeFn: Function) {
 }
 
 function screenshotDropdown(closeFn: Function) {
-  function onAccept(dataUri: string) {
-    let win = window.open();
-    if (win) {
-      let doc = win.document;
+  function onAccept(dataUri: string, blobPromise: Promise<Blob>) {
+    if (isElectron) {
+      // Opening the window is sketchy in electron, just use saveAs instead.
+      blobPromise.then((blob: Blob) => {
+        saveAs(blob, "BoardScreenshot.png");
+      });
+    }
+    else {
+      let win = window.open();
+      if (win) {
+        let doc = win.document;
 
-      // Normally we can get a document.
-      if (doc) {
-        doc.write('');
-        doc.close();
-        doc.body.appendChild(doc.createElement('img')).src = dataUri;
-      }
-      else if ((win as any).eval) { // But in Electron, we have some stupid proxy object instead.
-        (win as any).eval("document.write(''); document.close(); document.body.appendChild(document.createElement('img')).src = \"" + dataUri + "\";");
+        // Normally we can get a document.
+        if (doc) {
+          doc.write('');
+          doc.close();
+          doc.body.appendChild(doc.createElement('img')).src = dataUri;
+        }
       }
     }
 

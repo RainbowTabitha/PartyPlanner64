@@ -4,7 +4,6 @@ const cache = require("gulp-cached");
 const cleanCSS = require('gulp-clean-css');
 const concat = require("gulp-concat");
 const del = require("del");
-//const imagemin = require('gulp-imagemin');
 const order = require('gulp-order');
 const preprocess = require('gulp-preprocess');
 const rename = require("gulp-rename");

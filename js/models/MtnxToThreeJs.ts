@@ -48,7 +48,7 @@ export class MtnxToThreeJs {
     const name = this._createTransformTrackName(track);
     const keyframes = this._createKeyframeSecsArr(track.keyframes);
     const data = this._createTransformTrackData(track);
-    return new (THREE as any).VectorKeyframeTrack(name, keyframes, data);
+    return new THREE.VectorKeyframeTrack(name, keyframes, data);
   }
 
   _createTransformTrackName(track: MTNX.ITrack) {
@@ -70,7 +70,7 @@ export class MtnxToThreeJs {
     const name = this._createRotationTrackName(track);
     const keyframes = this._createKeyframeSecsArr(track.keyframes);
     const data = this._createRotationTrackData(track);
-    return new (THREE as any).VectorKeyframeTrack(name, keyframes, data);
+    return new THREE.VectorKeyframeTrack(name, keyframes, data);
   }
 
   _createRotationTrackName(track: MTNX.ITrack) {
@@ -116,7 +116,7 @@ export class MtnxToThreeJs {
     const name = this._createScaleTrackName(track);
     const keyframes = this._createKeyframeSecsArr(track.keyframes);
     const data = this._createScaleTrackData(track);
-    return new (THREE as any).VectorKeyframeTrack(name, keyframes, data);
+    return new THREE.VectorKeyframeTrack(name, keyframes, data);
   }
 
   _createScaleTrackName(track: MTNX.ITrack) {

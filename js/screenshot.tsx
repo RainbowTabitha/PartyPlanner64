@@ -12,10 +12,14 @@ interface ITakeScreenyOpts {
 }
 
 function takeScreeny(opts: ITakeScreenyOpts = {}) {
-  let curBoard = getCurrentBoard();
-  let screenCtx = createContext(curBoard.bg.width, curBoard.bg.height);
+  const curBoard = getCurrentBoard();
+  const screenCtx = createContext(curBoard.bg.width, curBoard.bg.height);
 
-  let bgImage = external.getBGImage();
+  // First fill black, to mimic the game and the .editor_bg CSS bg.
+  screenCtx.fillStyle = "black";
+  screenCtx.fillRect(0, 0, curBoard.bg.width, curBoard.bg.height);
+
+  const bgImage = external.getBGImage();
   screenCtx.drawImage(bgImage, 0, 0, curBoard.bg.width, curBoard.bg.height);
 
   // Disable debug temporarily for the render
@@ -33,11 +37,16 @@ function takeScreeny(opts: ITakeScreenyOpts = {}) {
 
   $$debug = origDebug;
 
-  return screenCtx.canvas.toDataURL();
+  return {
+    dataUri: screenCtx.canvas.toDataURL(),
+    blobPromise: new Promise<Blob>((resolve) => {
+      screenCtx.canvas.toBlob(resolve as any);
+    }),
+  };
 }
 
 interface IScreenshotProps {
-  onAccept: (dataUri: string) => any;
+  onAccept: (dataUri: string, blobPromise: Promise<Blob>) => any;
 }
 
 interface IScreenshotState {
@@ -56,14 +65,14 @@ export const Screenshot = class Screenshot extends React.Component<IScreenshotPr
   }
 
   takeScreenshot = () => {
-    let dataUri = takeScreeny({
+    let { dataUri, blobPromise } = takeScreeny({
       renderConnections: this.state.renderConnections,
       renderCharacters: this.state.renderCharacters,
       renderHiddenSpaces: this.state.renderHiddenSpaces,
       renderBadges: this.state.renderBadges,
     });
     if (this.props.onAccept)
-      this.props.onAccept(dataUri);
+      this.props.onAccept(dataUri, blobPromise);
   }
 
   onCheckChanged = (id: any) => {
