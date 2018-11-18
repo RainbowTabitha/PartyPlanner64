@@ -11,8 +11,6 @@ const replace = require('gulp-replace');
 const sass = require("gulp-sass");
 const textTransformation = require("gulp-text-simple");
 const typescript = require("gulp-typescript");
-const uglify = require("gulp-uglify");
-const zip = require('gulp-zip');
 
 const exec = require('child_process').exec;
 const fs = require("fs");
