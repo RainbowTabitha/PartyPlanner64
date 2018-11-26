@@ -90,6 +90,10 @@ exports["default"] = [
       name: "EventTableHydrate",
       desc: "Moves event table data into the space data" },
 {
+      addr: 2147840844, // 0x8005734C
+      type: "code",
+      name: "SetNextChainAndSpace" },
+{
       addr: 2147867696, // 0x8005DC30
       type: "code",
       name: "GetCurrentPlayerIndex" },

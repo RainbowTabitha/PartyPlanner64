@@ -364,7 +364,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         addEventByIndex(board, lastSpace, event, true);
       }
       else {
-        event = createEvent("CHAINMERGE", {
+        event = createEvent("CHAINMERGE3", {
           chain: _getChainWithSpace(endLinks[0]),
           prevSpace, // For MP3
         });
@@ -432,7 +432,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
           addEventByIndex(board, firstSpace, event, true);
         }
         else if (pointingSpaces.length === 1) { // Build a reverse merge
-          event = createEvent("CHAINMERGE", {
+          event = createEvent("CHAINMERGE3", {
             chain: chainIndices[0], // Go to pointing chain
             spaceIndex: pointingChains[0].length - 1, // Go to last space of pointing chain
             prevSpace: secondSpace, // The 2nd space of this chain, which would have been previous when going reverse.
@@ -452,10 +452,9 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         else {
           // This doesn't crash, but it creates a back forth loop at a dead end.
           // This probably will yield issues if the loop is over invisible spaces.
-          event = createEvent("CHAINMERGE", {
+          event = createEvent("CHAINMERGE", { // Not CHAINMERGE3
             chain: i,
             spaceIndex: 1, // Because of chain padding, this should be safe
-            prevSpace: 0xFFFF,
           });
           event.activationType = EventActivationType.BEGINORWALKOVER;
           addEventByIndex(board, firstSpace, event, true);

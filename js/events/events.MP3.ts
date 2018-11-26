@@ -6,64 +6,7 @@ import { Game, EventActivationType, EventExecutionType, SpaceSubtype } from "../
 import { romhandler } from "../romhandler";
 import { distance } from "../utils/number";
 import { $$log } from "../utils/debug";
-import { ChainMerge, ChainSplit, StarEvent, BooEvent, BankEvent, ItemShop, Gate, GateClose } from "./events.common";
-
-// ChainMerge in 3 actually uses A0. It is always the space index of the
-// _previous_ space the player was before reaching the event space.
-// Except something like a dead end space, like the start space, which passes -1 for A0
-(ChainMerge as any)._parse3 = function(dataView: DataView, info: IEventParseInfo) {
-  const hashes = {
-    START: "16092DD153432852C141C78807ECCBF0", // +0x08
-    //MID: "123FF0D66026C628870C3DAEE5C63134", // [0x10]+0x04 // Use mergeJALs instead
-    END: "0855E7309F121915D7A762AB85A7FDB6", // [0x18]+0x08
-  };
-  const mergeJALs = [
-    0x0C03B666, // JAL 0x800ED998
-    0x0C042307, // JAL 0x80108C1C
-  ];
-
-  let nextChain, nextSpace;
-
-  if (hashEqual([dataView.buffer, info.offset, 0x08], hashes.START) &&
-    mergeJALs.indexOf(dataView.getUint32(info.offset + 0x10)) >= 0 &&
-    hashEqual([dataView.buffer, info.offset + 0x18, 0x08], hashes.END)) {
-    // Read the chain we are going to.
-    nextChain = dataView.getUint16(info.offset + 0x0E);
-    nextChain = nextChain > 1000 ? 0 : nextChain; // R0 will be 0x2821 - just check for "way to big".
-
-    // Read the offset into the chain.
-    if (dataView.getUint16(info.offset + 0x14) === 0) // Usually this is an add with R0.
-      nextSpace = info.chains[nextChain][0];
-    else
-      nextSpace = info.chains[nextChain][dataView.getUint16(info.offset + 0x16)];
-
-    // This isn't an event really - write directly to the board links.
-    if (!isNaN(nextSpace)) {
-      // I think this tries to prevent reading the "reverse" event...
-      if (info.board.links.hasOwnProperty(info.curSpace)) {
-        return false;
-      }
-
-      addConnection(info.curSpace, nextSpace, info.board);
-    }
-
-    // Cache the ASM so we can write this event later.
-    let cacheEntry = EventCache.get(ChainMerge.id) || {};
-    if (!cacheEntry[info.game]) {
-      // Save the whole little function, but clear the argument values.
-      cacheEntry[info.game] = {
-        asm: dataView.buffer.slice(info.offset, info.offset + 0x24)
-      };
-      let cacheView = new DataView(cacheEntry[info.game].asm);
-      cacheView.setUint32(0x08, 0); // Blank the A0, A1, and A2 ADDIUs
-      cacheView.setUint32(0x0C, 0);
-      cacheView.setUint32(0x14, 0);
-      EventCache.set(ChainMerge.id, cacheEntry);
-    }
-    return true;
-  }
-  return false;
-};
+import { ChainSplit, StarEvent, BooEvent, BankEvent, ItemShop, Gate, GateClose } from "./events.common";
 
 (ChainSplit as any)._parse3 = function(dataView: DataView, info: IEventParseInfo) {
   let hashes = {

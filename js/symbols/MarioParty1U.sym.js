@@ -55,6 +55,36 @@ exports["default"] = [
       name: "LoadOverlay",
       desc: "A0=overlay_index" },
 {
+      addr: 2147584272, // 0x80018910
+      type: "code",
+      name: "InitSprite",
+      desc: "A0=u32 file_id DDDDFFFF" },
+{
+      addr: 2147585104, // 0x80018C50
+      type: "code",
+      name: "ShowBasicSprite",
+      desc: "A0=u16 basic_sprite_index" },
+{
+      addr: 2147585148, // 0x80018C7C
+      type: "code",
+      name: "HideBasicSprite",
+      desc: "A0=u16 basic_sprite_index" },
+{
+      addr: 2147585232, // 0x80018CD0
+      type: "code",
+      name: "SetBasicSpritePos",
+      desc: "A0=u16 basic_sprite_index" },
+{
+      addr: 2147585816, // 0x80018F18
+      type: "code",
+      name: "SetBasicSpriteSize",
+      desc: "A0=u16 basic_sprite_index" },
+{
+      addr: 2147586144, // 0x80019060
+      type: "code",
+      name: "InitBasicSprite",
+      desc: "A0=short sprite_index" },
+{
       addr: 2147594896, // 0x8001B290
       type: "code",
       name: "ParseObjType10",
@@ -64,6 +94,11 @@ exports["default"] = [
       type: "code",
       name: "FindFormEntry",
       desc: "Finds a FORM entry. A0=entry type (like \"OBJ1\")" },
+{
+      addr: 2147603008, // 0x8001D240
+      type: "code",
+      name: "InitCameras",
+      desc: "A0=int cameras count" },
 {
       addr: 2147604788, // 0x8001D934
       type: "code",
@@ -149,6 +184,15 @@ exports["default"] = [
       type: "code",
       name: "EventTableHydrate",
       desc: "Moves event table data into the space data" },
+{
+      addr: 2147797804, // 0x8004CB2C
+      type: "code",
+      name: "SetCurrentSpaceIndex",
+      desc: "A0=space_index" },
+{
+      addr: 2147797816, // 0x8004CB38
+      type: "code",
+      name: "GetCurrentSpaceIndex" },
 {
       addr: 2147798640, // 0x8004CE70
       type: "code",
@@ -291,9 +335,15 @@ exports["default"] = [
       name: "FreeString",
       desc: "A0=*str" },
 {
+      addr: 2147864368, // 0x8005CF30
+      type: "code",
+      name: "InitObjectSystem",
+      desc: "A0=int max_objects" },
+{
       addr: 2147867688, // 0x8005DC28
       type: "code",
-      name: "InitProcess" },
+      name: "InitProcess",
+      desc: "A0=fn" },
 {
       addr: 2147868048, // 0x8005DD90
       type: "code",

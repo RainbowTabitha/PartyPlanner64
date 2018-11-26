@@ -1584,6 +1584,11 @@ exports["default"] = [
       name: "p1_next_space_index",
       desc: "Player 1 next space index" },
 {
+      addr: 2148339999, // 0x800D111F
+      type: "u8",
+      name: "p1_status_flags",
+      desc: "0x80 (reset effect you land)" },
+{
       addr: 2148340000, // 0x800D1120
       type: "u8",
       name: "p1_item1",
@@ -1628,6 +1633,11 @@ exports["default"] = [
       type: "u8",
       name: "p2_next_space_index",
       desc: "Player 2 next space index" },
+{
+      addr: 2148340055, // 0x800D1157
+      type: "u8",
+      name: "p2_status_flags",
+      desc: "see p1 notes" },
 {
       addr: 2148340056, // 0x800D1158
       type: "u8",
@@ -1674,6 +1684,11 @@ exports["default"] = [
       name: "p3_next_space_index",
       desc: "Player 3 next space index" },
 {
+      addr: 2148340111, // 0x800D118F
+      type: "u8",
+      name: "p3_status_flags",
+      desc: "see p1 notes" },
+{
       addr: 2148340112, // 0x800D1190
       type: "u8",
       name: "p3_item1",
@@ -1718,6 +1733,11 @@ exports["default"] = [
       type: "u8",
       name: "p4_next_space_index",
       desc: "Player 4 next space index" },
+{
+      addr: 2148340167, // 0x800D11C7
+      type: "u8",
+      name: "p4_status_flags",
+      desc: "see p1 notes" },
 {
       addr: 2148340168, // 0x800D11C8
       type: "u8",
