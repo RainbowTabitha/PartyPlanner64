@@ -26,7 +26,6 @@ export interface IEvent {
   name: string;
   parse: (dataView: DataView, info: any) => boolean;
   write: (dataView: DataView, event: any, info: any, temp: any) => number[] | false;
-  sizeOf: (n: number) => number;
   activationType: EventActivationType;
   executionType: EventExecutionType;
   fakeEvent: boolean;
@@ -49,10 +48,6 @@ const EventBase: IEvent = {
   write: function(dataView, event: IEvent, info, temp) {
     throw `${event.id || "event"}.write not implemented`;
   },
-
-  // Returns the total ASM space required by n of these events.
-  // Some events have a cost like n + O(1), where 1 .. n are cheaper than the first.
-  sizeOf: function(n) { throw "sizeOf not implemented"; },
 
   // Default activation type for the event.
   activationType: EventActivationType.WALKOVER,

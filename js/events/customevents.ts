@@ -178,12 +178,6 @@ export function createCustomEvent(asm: string) {
 
     return [info.offset, bytes.byteLength];
   }
-  custEvent.sizeOf = function(n: number) {
-    // Fake-assemble to determine size.
-    // TODO: This is never called?
-    const bytes = CustomAsmHelper.testAssemble(asm);
-    return bytes.byteLength;
-  }
 
   //$$log("New custom event", custEvent);
   return custEvent;

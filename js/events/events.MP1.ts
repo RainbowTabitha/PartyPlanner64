@@ -260,7 +260,6 @@ PassStart.write = function(dataView: DataView, event: IEvent, info: IEventWriteI
 
   return [info.offset, lenWritten];
 };
-PassStart.sizeOf = (n = 1) => 0xD0 + 0x134 + n * 0x34; // Two helpers + main fn.
 
 // This pseudo-event handles when the player lands on a previously visited star space.
 // The space had turned into a Chance Time space.
@@ -307,7 +306,6 @@ StarChanceEvent.write = function(dataView: DataView, event: IEvent, info: IEvent
   temp.writtenOffset = info.offset;
   return [info.offset, 0x8C];
 };
-StarChanceEvent.sizeOf = (n = 1) => 0x8C;
 
 const Boulder = createEvent("BOULDER", "Boulder chase");
 Boulder.activationType = EventActivationType.LANDON;

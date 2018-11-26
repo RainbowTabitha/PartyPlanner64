@@ -119,7 +119,6 @@ ChainMerge.write = function(dataView: DataView, event: IChainMergeEvent, info: I
   dataView.setUint32(0x14, makeInst("ADDIU", REG.A2, REG.R0, event.spaceIndex || 0)); // Space index within chain.
   return [info.offset, 0x24];
 };
-ChainMerge.sizeOf = (n = 1) => n * 0x24;
 
 interface IChainSplitEvent extends IEvent {
   chains: number[];
@@ -216,7 +215,6 @@ ChainSplit.write = function(dataView: DataView, event: IChainSplitEvent, info: I
 
   return [info.offset, lenWritten];
 };
-ChainSplit.sizeOf = (n = 1) => 0xB0 + 0x4C + n * 0x108; // Two helpers + main fn. // FIXME MP2
 
 export const BooEvent = createEvent("BOO", "Visit Boo");
 BooEvent.activationType = EventActivationType.WALKOVER;
@@ -296,7 +294,6 @@ BooEvent.write = function(dataView: DataView, event: IEvent, info: IEventWriteIn
 
   return [info.offset, 0x34];
 };
-BooEvent.sizeOf = (n = 1) => n * 0x34;
 
 const Bowser = createEvent("BOWSER", "Visit Bowser");
 Bowser.activationType = EventActivationType.WALKOVER;
@@ -354,7 +351,6 @@ Bowser.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo
 
   return [info.offset, 0x38];
 };
-Bowser.sizeOf = (n = 1) => n * 0x38;
 
 export const StarEvent = createEvent("STAR", "Buy star");
 StarEvent.activationType = EventActivationType.WALKOVER;
@@ -387,7 +383,6 @@ StarEvent.write = function(dataView: DataView, event: IEvent, info: IEventWriteI
   }
   return false;
 };
-StarEvent.sizeOf = (n = 1) => 0x64;
 
 const ChanceTime = createEvent("CHANCETIME", "Chance Time");
 ChanceTime.activationType = EventActivationType.LANDON;
@@ -431,7 +426,6 @@ ChanceTime.write = function(dataView: DataView, event: IEvent, info: IEventWrite
   temp.writtenOffset = info.offset;
   return [info.offset, 0x6C];
 };
-ChanceTime.sizeOf = (n = 1) => 0x6C;
 
 export const BankEvent = createEvent("BANK", "Visit Bank");
 BankEvent.activationType = EventActivationType.WALKOVER;
@@ -464,7 +458,6 @@ BankEvent.write = function(dataView: DataView, event: IEvent, info: IEventWriteI
   }
   return false;
 };
-BankEvent.sizeOf = (n = 1) => 0; // TODO or not TODO
 
 export const ItemShop = createEvent("ITEMSHOP", "Visit Item Shop");
 ItemShop.activationType = EventActivationType.WALKOVER;
@@ -497,7 +490,6 @@ ItemShop.write = function(dataView: DataView, event: IEvent, info: IEventWriteIn
   }
   return false;
 };
-ItemShop.sizeOf = (n = 1) => 0; // TODO or not TODO
 
 export const Gate = createEvent("GATE", "Skeleton Key Gate");
 Gate.activationType = EventActivationType.WALKOVER;
@@ -531,7 +523,6 @@ Gate.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo, 
   }
   return false;
 };
-Gate.sizeOf = (n = 1) => 0; // TODO or not TODO
 
 // Event that actually occurs on the gate space itself to cause it to close.
 export const GateClose = createEvent("GATECLOSE", "Skeleton Key Gate Close");
@@ -566,4 +557,3 @@ GateClose.write = function(dataView: DataView, event: IEvent, info: IEventWriteI
   }
   return false;
 };
-GateClose.sizeOf = (n = 1) => 28 * n;
