@@ -16,7 +16,7 @@ export function prepAsm(asm: string, parameters: ICustomEventParameter[] | undef
   });
 
   let parameterSymbols: string[] = [];
-  if (parameters && parameters.length && info.parameterValues) {
+  if (parameters && parameters.length && info && info.parameterValues) {
     parameters.forEach(parameter => {
       const parameterValue = info.parameterValues[parameter.name];
       switch (parameter.type) {

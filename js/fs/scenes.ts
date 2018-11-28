@@ -3,8 +3,20 @@ import { copyRange } from "../utils/arrays";
 import { romhandler } from "../romhandler";
 import { getROMAdapter } from "../adapter/adapters";
 
+interface ISceneInfo {
+  rom_start: number;
+  rom_end: number;
+  ram_start: number;
+  code_start: number;
+  code_end: number;
+  rodata_start: number;
+  rodata_end: number;
+  bss_start: number;
+  bss_end: number;
+}
+
 export const scenes = new class Scenes {
-  private _sceneInfo: any[] | null;
+  private _sceneInfo: ISceneInfo[] | null;
 
   constructor() {
     this._sceneInfo = [];

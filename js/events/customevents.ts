@@ -150,7 +150,8 @@ export function createCustomEvent(asm: string) {
     }
     catch (e) {
       throw new Error("Failed a test assembly for " + getGameName(game)
-        + ". The event may need adjustments before it can be used.\n\n" + e.toString());
+        + ". The event may need adjustments before it can be used.\n\n" + e.toString()
+        + "\n\n" + asm);
     }
   }
 

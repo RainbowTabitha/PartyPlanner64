@@ -2,10 +2,13 @@ import { $$log, $$hex } from "../utils/debug";
 import { copyRange } from "../utils/arrays";
 import { Game } from "../types";
 import { romhandler } from "../romhandler";
+import { scenes } from "./scenes";
+import { getRegSetAddress, getRegSetUpperAndLower } from "../utils/MIPS";
 
 interface IOffsetInfo {
   upper: number;
   lower: number;
+  ovl?: number;
 }
 
 interface IOffsetObj {
@@ -21,7 +24,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
     relative: 0,
     offsets: [
       { upper: 0x00061746, lower: 0x0006174A },
-      { upper: 0x002DA3D2, lower: 0x002DA3D6 },
+      { ovl: 0x6E, upper: 0xE62, lower: 0xE66 }, // ROM: 0x2DA3D2
     ]
   },
 
@@ -32,8 +35,8 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
       { upper: 0x0001AF2A, lower: 0x0001AF2E },
       { upper: 0x0006174E, lower: 0x00061752 },
       { upper: 0x0006177E, lower: 0x00061782 },
-      { upper: 0x002DA3DA, lower: 0x002DA3DE },
-      { upper: 0x002DA402, lower: 0x002DA406 },
+      { ovl: 0x6E, upper: 0xE6A, lower: 0xE6E }, // ROM: 0x2DA3DA
+      { ovl: 0x6E, upper: 0xE92, lower: 0xE96 }, // ROM: 0x2DA402
     ]
   },
 
@@ -44,8 +47,8 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
       { upper: 0x0001AF32, lower: 0x0001AF36 },
       { upper: 0x0006172E, lower: 0x00061732 },
       { upper: 0x00061786, lower: 0x0006178A },
-      { upper: 0x002DA3BE, lower: 0x002DA3C2 },
-      { upper: 0x002DA40A, lower: 0x002DA40E },
+      { ovl: 0x6E, upper: 0xE4E, lower: 0xE52 }, // ROM: 0x2DA3BE
+      { ovl: 0x6E, upper: 0xE9A, lower: 0xE9E }, // ROM: 0x2DA40A
     ]
   },
 
@@ -55,7 +58,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
     offsets: [
       { upper: 0x0001AF0E, lower: 0x0001AF12 },
       { upper: 0x00061762, lower: 0x00061766 },
-      { upper: 0x002DA3EA, lower: 0x002DA3EE },
+      { ovl: 0x6E, upper: 0xE7A, lower: 0xE7E }, // ROM: 0x2DA3EA
     ]
   },
 
@@ -145,13 +148,39 @@ export namespace audio {
     let patchInfo = getPatchInfo()[subsection];
     if (!patchInfo)
       return null;
-    let romOffset = patchInfo.offsets[0];
-    let upper = romView.getUint16(romOffset.upper) << 16;
-    let lower = romView.getUint16(romOffset.lower);
-    let offset = upper | lower;
-    if (offset & 0x00008000)
-      offset = offset - 0x00010000; // Need adjustment because of the signed addition workaround.
+    let romPatchInfo = patchInfo.offsets[0];
+    let upperReadOffset = romPatchInfo.upper;
+    let lowerReadOffset = romPatchInfo.lower;
+    if (typeof romPatchInfo.ovl === "number") {
+      const sceneInfo = scenes.getInfo(romPatchInfo.ovl);
+      upperReadOffset += sceneInfo.rom_start;
+      lowerReadOffset += sceneInfo.rom_start;
+    }
+    let upper = romView.getUint16(upperReadOffset);
+    let lower = romView.getUint16(lowerReadOffset);
+    const offset = getRegSetAddress(upper, lower);
     $$log(`Audio.getROMOffset -> ${$$hex(offset)}`);
+
+    if ($$debug) { // Assert that the rest of the patch offsets are valid.
+      patchInfo.offsets.forEach((offsetInfo, oIndex) => {
+        let anotherUpperReadOffset = offsetInfo.upper;
+        let anotherLowerReadOffset = offsetInfo.lower;
+        if (typeof offsetInfo.ovl === "number") {
+          const sceneInfo = scenes.getInfo(offsetInfo.ovl);
+          anotherUpperReadOffset += sceneInfo.rom_start;
+          anotherLowerReadOffset += sceneInfo.rom_start;
+        }
+        let anotherUpper = romView.getUint16(anotherUpperReadOffset);
+        let anotherLower = romView.getUint16(anotherLowerReadOffset);
+        const anotherOffset = getRegSetAddress(anotherUpper, anotherLower);
+        if (anotherOffset !== offset)
+          throw `AudioFS.getROMOffset patch offset ${subsection}/${oIndex} seems wrong:
+          offset: ${$$hex(offset)} vs ${$$hex(anotherOffset)}
+          reading upper: ${$$hex(anotherUpperReadOffset)}, lower: ${$$hex(anotherLowerReadOffset)}
+          `;
+      });
+    }
+
     return offset;
   }
 
@@ -162,13 +191,18 @@ export namespace audio {
     for (let i = 0; i < patchSubsections.length; i++) {
       let subsection = patchSubsections[i];
       let subsectionaddr = newOffset + subsection.relative;
-      let upper = (subsectionaddr & 0xFFFF0000) >>> 16;
-      let lower = subsectionaddr & 0x0000FFFF;
-      if (lower & 0x8000)
-        upper += 1; // Need adjustment because of the signed addition workaround.
+      const [upper, lower] = getRegSetUpperAndLower(subsectionaddr);
       for (let j = 0; j < subsection.offsets.length; j++) {
-        romView.setUint16(subsection.offsets[j].upper, upper);
-        romView.setUint16(subsection.offsets[j].lower, lower);
+        const patchOffset = subsection.offsets[j];
+        let patchROMUpper = patchOffset.upper;
+        let patchROMLower = patchOffset.lower;
+        if (typeof patchOffset.ovl === "number") {
+          const sceneInfo = scenes.getInfo(patchOffset.ovl);
+          patchROMUpper += sceneInfo.rom_start;
+          patchROMLower += sceneInfo.rom_start;
+        }
+        romView.setUint16(patchROMUpper, upper);
+        romView.setUint16(patchROMLower, lower);
       }
     }
   }
@@ -198,6 +232,27 @@ export namespace audio {
       return;
     let len = getByteLength();
     _audioCache = buffer.slice(offset, offset + len);
+
+    // Finds audio offsets relative to overlay binaries
+  //   const infos = getPatchInfo();
+  //   const sceneCount = scenes.count();
+  //   for (let i = 0; i < infos.length; i++) {
+  //     const info = infos[i];
+  //     info.offsets.forEach((oft) => {
+  //       let found = false;
+  //       for (let j = 0; j < sceneCount; j++) {
+  //         const info = scenes.getInfo(j);
+  //         if (oft.upper > info.rom_start && oft.upper < info.rom_end) {
+  // console.log(`Found: { ovl: ${$$hex(j)}, upper: ${$$hex(oft.upper - info.rom_start)}, lower: ${$$hex(oft.lower - info.rom_start)} }, // ROM: ${$$hex(oft.upper)}`)
+  //           found = true;
+  //         }
+  //       }
+
+  //       if (!found) {
+  //         console.log(`Didn't find: { upper: ${$$hex(oft.upper)}, lower: ${$$hex(oft.lower)} }`);
+  //       }
+  //     });
+  //   }
   }
 
   export function extractAsync() {
