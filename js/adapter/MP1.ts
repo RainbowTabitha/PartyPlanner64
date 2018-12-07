@@ -1,6 +1,6 @@
 import { AdapterBase, IBoardInfo } from "./AdapterBase";
 import { ISpace, addEventToSpace, IBoard } from "../boards";
-import { Space, SpaceSubtype } from "../types";
+import { Space, SpaceSubtype, Game } from "../types";
 import { create as createEvent } from "../events/events";
 import { parse as parseInst } from "mips-inst";
 import { strings } from "../fs/strings";
@@ -13,6 +13,8 @@ import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { toArrayBuffer } from "../utils/image";
 import { toPack } from "../utils/img/ImgPack";
+import { prepAsm } from "../events/prepAsm";
+import { assemble } from "mips-assembler";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -91,6 +93,27 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     romView.setUint32(romStartOffset += 4, parseInst("ADDU GP, R0, R0"));
     romView.setUint32(romStartOffset += 4, parseInst("J 0x4A3DC")); // J back into original function, skipping HVQDecode
     romView.setUint32(romStartOffset += 4, 0); // NOP
+
+
+
+
+    // const asm = prepAsm(`
+
+    // `, undefined, {
+    //   boardIndex: 0,
+    //   board: board,
+    //   curSpaceIndex: 0,
+    //   curSpace: null as any,
+    //   chains: new Array(),
+    //   offset: 0x2418A0,
+    //   addr: 0x800F65E0,
+    //   game: Game.MP1_USA,
+    //   gameVersion: 1,
+    //   parameterValues: {},
+    // });
+    // const buff = assemble(asm) as ArrayBuffer;
+    // console.log(buff);
+    // saveAs(new Blob([buff]), "reassembly.bin");
   }
 
   onOverwritePromises(board: IBoard, boardInfo: IBoardInfo) {

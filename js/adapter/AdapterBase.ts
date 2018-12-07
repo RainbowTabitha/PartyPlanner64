@@ -344,8 +344,7 @@ export abstract class AdapterBase {
     if (!boardInfo.spaceEventsStartAddr)
       return;
 
-    let buffer = romhandler.getROMBuffer()!;
-    let boardView = new DataView(buffer);
+    let boardView = romhandler.getDataView();
     let curOffset = boardInfo.spaceEventsStartOffset;
 
     // Generic events

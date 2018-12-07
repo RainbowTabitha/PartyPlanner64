@@ -15,6 +15,12 @@ export function prepAsm(asm: string, parameters: ICustomEventParameter[] | undef
     return `.definelabel ${symbol.name},0x${symbol.addr.toString(16)}`;
   });
 
+  // TODO: Remove this hack
+  if (info.gameVersion === 1) {
+    syms.push(".definelabel __PP64_INTERNAL_GET_NEXT_TOAD_INDEX,0x800F6610");
+    syms.push(".definelabel __PP64_STAR_SPACE_INTERNAL,0x800F6958"); // TODO: Probably wrong now
+  }
+
   let parameterSymbols: string[] = [];
   if (parameters && parameters.length && info && info.parameterValues) {
     parameters.forEach(parameter => {

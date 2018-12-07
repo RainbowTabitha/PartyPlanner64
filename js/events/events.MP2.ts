@@ -1,78 +1,11 @@
-import { EventCache, IEventParseInfo, IEventWriteInfo, IEvent, getEvents } from "./events";
+import { IEventParseInfo, IEventWriteInfo, IEvent, getEvents } from "./events";
 import { hashEqual } from "../utils/arrays";
-import { addConnection, getSpacesOfSubType } from "../boards";
-import { getJALAddr } from "../utils/MIPS";
+import { getSpacesOfSubType } from "../boards";
 import { SpaceSubtype } from "../types";
 import { distance } from "../utils/number";
 import { romhandler } from "../romhandler";
 import { copyObject } from "../utils/obj";
-import { ChainSplit, StarEvent, BooEvent, BankEvent, ItemShop } from "./events.common";
-
-(ChainSplit as any)._parse2 = function(dataView: DataView, info: IEventParseInfo) {
-  let hashes = {
-    // From Western Land 0x80107C54 / 0x29CF24:
-    METHOD_START: "0C01A009C54E209652DA667F464FB7C0", // +0x2C
-    //METHOD_MID1: "", // [0x30]+0x18 // Not sure why this was hashed in MP1
-    METHOD_MID2: "FC606B8F8BD2C8D39BB9581B0E4D8398", // [0x4C]+0x1C
-    METHOD_END: "2F3A0045D0AC927FF23ACD73B5B62E1C" // [0xF0]+0x28
-  };
-
-  // Match a few sections to see if we match.
-  if (hashEqual([dataView.buffer, info.offset, 0x2C], hashes.METHOD_START) &&
-      //hashEqual([dataView.buffer, info.offset + 0x30, 0x18], hashes.METHOD_MID1) &&
-      hashEqual([dataView.buffer, info.offset + 0x4C, 0x1C], hashes.METHOD_MID2) &&
-      hashEqual([dataView.buffer, info.offset + 0xF0, 0x28], hashes.METHOD_END)) {
-    // Read the chain indices.
-    let leftChain = dataView.getUint16(info.offset + 0xEA);
-    let rightChain = dataView.getUint16(info.offset + 0xEE);
-
-    let leftSpace = info.chains[leftChain][0]; // Technically, we should check if A2 is really R0.
-    let rightSpace = info.chains[rightChain][0];
-
-    addConnection(info.curSpace, leftSpace, info.board);
-    addConnection(info.curSpace, rightSpace, info.board);
-
-    let cacheEntry = EventCache.get(ChainSplit.id);
-    if (!cacheEntry)
-      cacheEntry = {};
-    if (!cacheEntry[info.game])
-      cacheEntry[info.game] = {};
-    if (!cacheEntry[info.game].asm) {
-      cacheEntry[info.game].asm = dataView.buffer.slice(info.offset, info.offset + 0x118);
-      let cacheView = new DataView(cacheEntry[info.game].asm);
-      cacheView.setUint32(0x2C, 0); // Blank the helper1 call.
-      cacheView.setUint32(0xD4, 0); // Blank the helper2 call.
-      cacheView.setUint32(0x40, 0); // Blank the space args LUI.
-      cacheView.setUint32(0x48, 0); // Blank the space args ADDIU.
-      cacheView.setUint16(0xE4, 0); // Blank the +3 jump.
-      cacheView.setUint16(0xEA, 0); // Blank the left chain index.
-      cacheView.setUint16(0xEE, 0); // Blank the right chain index.
-    }
-    if (!cacheEntry[info.game].helper1) {
-      cacheEntry[info.game].helper1 = [];
-      let helper1JAL = dataView.getUint32(info.offset + 0x2C);
-      let helper1Addr = getJALAddr(helper1JAL);
-      //console.log(helper1Addr.toString(16));
-      let helper1Offset = info.offset - (info.addr - helper1Addr); // Assumes helper comes before.
-      //console.log(helper1Offset.toString(16));
-      cacheEntry[info.game].helper1[info.boardIndex] = dataView.buffer.slice(helper1Offset, helper1Offset + 0xD0);
-
-      cacheEntry[info.game].helper2 = [];
-      let helper2JAL = dataView.getUint32(info.offset + 0xD4);
-      let helper2Addr = getJALAddr(helper2JAL);
-      //console.log(helper1Addr.toString(16));
-      let helper2Offset = info.offset - (info.addr - helper2Addr); // Assumes helper comes before.
-      //console.log(helper1Offset.toString(16));
-      cacheEntry[info.game].helper2[info.boardIndex] = dataView.buffer.slice(helper2Offset, helper2Offset + 0x60);
-    }
-
-    EventCache.set(ChainSplit.id, cacheEntry);
-
-    return true;
-  }
-
-  return false;
-};
+import { StarEvent, BooEvent, BankEvent, ItemShop } from "./events.common";
 
 (StarEvent as any)._parse2 = function(dataView: DataView, info: IEventParseInfo) {
   let hashes = {

@@ -23,9 +23,13 @@ registerHelper("hint", "mips-pp64", function(cm: any) {
       "align",
       "byte",
       "definelabel",
+      "else",
+      "elseif",
+      "endif",
       "fill",
       "float",
       "halfword",
+      "if",
       // "org", would break events
       // "orga", would break events
       "skip",
