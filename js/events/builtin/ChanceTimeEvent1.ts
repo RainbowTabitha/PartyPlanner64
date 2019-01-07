@@ -1,8 +1,6 @@
 import { createEvent, IEventParseInfo, IEvent, IEventWriteInfo } from "../events";
 import { EventActivationType, EventExecutionType, Game } from "../../types";
-import { hashEqual, copyRange } from "../../utils/arrays";
-import { prepAsm } from "../prepAsm";
-import { assemble } from "mips-assembler";
+import { hashEqual } from "../../utils/arrays";
 
 export const ChanceTime = createEvent("CHANCETIME", "Chance Time");
 ChanceTime.activationType = EventActivationType.LANDON;
@@ -23,7 +21,7 @@ ChanceTime.parse = function(dataView: DataView, info: IEventParseInfo) {
   return false;
 };
 ChanceTime.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo, temp: any) {
-  const asm = prepAsm(`
+  return `
     ADDIU SP SP 0xFFE0
     SW RA 0x18(SP)
     SW S1 0x14(SP)
@@ -52,8 +50,5 @@ ChanceTime.write = function(dataView: DataView, event: IEvent, info: IEventWrite
     LW S0 0x10(SP)
     JR RA
     ADDIU SP SP 0x20
-`, undefined, info);
-  const bytes = assemble(asm) as ArrayBuffer;
-  copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+  `;
 };

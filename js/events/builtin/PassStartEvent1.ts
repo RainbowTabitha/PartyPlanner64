@@ -1,8 +1,6 @@
-import { copyRange, hashEqual } from "../../utils/arrays";
+import { hashEqual } from "../../utils/arrays";
 import { createEvent, IEventParseInfo, IEvent, IEventWriteInfo } from "../events";
 import { EventActivationType, EventExecutionType, Game } from "../../types";
-import { prepAsm } from "../prepAsm";
-import { assemble } from "mips-assembler";
 
 export const PassStart = createEvent("PASSSTART", "Pass start");
 PassStart.activationType = EventActivationType.WALKOVER;
@@ -25,7 +23,7 @@ PassStart.parse = function(dataView: DataView, info: IEventParseInfo) {
   return false;
 };
 PassStart.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo, temp: any) {
-  const asm = prepAsm(`
+  return `
     addiu SP, SP, -0x18
     sw    RA, 0x10(SP)
 
@@ -183,8 +181,5 @@ receive_koopa_bonus:
     lw    S0, 0x10(SP)
     jr    RA
     addiu SP, SP, 0x20
-  `, undefined, info);
-  const bytes = assemble(asm) as ArrayBuffer;
-  copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+  `;
 };

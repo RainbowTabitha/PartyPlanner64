@@ -1,9 +1,7 @@
 import { createEvent, IEvent, IEventParseInfo, IEventWriteInfo } from "../events";
 import { EventActivationType, EventExecutionType, Game } from "../../types";
-import { hashEqual, copyRange } from "../../utils/arrays";
+import { hashEqual } from "../../utils/arrays";
 import { addConnection } from "../../boards";
-import { prepAsm } from "../prepAsm";
-import { assemble } from "mips-assembler";
 
 interface IChainSplitEvent extends IEvent {
   chains: number[];
@@ -49,7 +47,7 @@ ChainSplit1.parse = function(dataView: DataView, info: IEventParseInfo) {
   return false;
 };
 ChainSplit1.write = function(dataView: DataView, event: IChainSplitEvent, info: IEventWriteInfo, temp: any) {
-  const asm = prepAsm(`
+  return `
       ADDIU SP SP 0xFFD8
       SW RA 0x24(SP)
       SW S2 0x20(SP)
@@ -69,9 +67,9 @@ ChainSplit1.write = function(dataView: DataView, event: IChainSplitEvent, info: 
       LUI S0 0x800F
       ADDIU S0 S0 0xD5DC ; 0x800ED5DC
       LH A0 0(S0)
-      LUI A1 hi(${info.argsAddr!})
+      LUI A1 hi(indices)
       JAL 0x8003C218
-      ADDIU A1 A1 lo(${info.argsAddr!})
+      ADDIU A1 A1 lo(indices)
       ADDU S2 V0 R0
       ADDU A0 S2 R0
       LH A1 0(S0)
@@ -131,44 +129,44 @@ ChainSplit1.write = function(dataView: DataView, event: IChainSplitEvent, info: 
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
     setup_arrows_loop1:
-      jal   0x8004B850 ; waiting for this to signal
+      jal 0x8004B850 ; waiting for this to signal
       NOP
-      beq  V0, R0, setup_arrows_loop1_exit
+      beq V0, R0, setup_arrows_loop1_exit
       NOP
-      jal   SleepVProcess
+      jal SleepVProcess
       NOP
-      j     setup_arrows_loop1
+      j setup_arrows_loop1
       NOP
     setup_arrows_loop1_exit:
-      jal   SleepVProcess
+      jal SleepVProcess
       NOP
       addu  A0, R0, R0
-      addiu    A1, R0, 146
+      addiu A1, R0, 146
       jal   0x80045D84
-      addiu    A2, R0, 1
+      addiu A2, R0, 1
       lui   AT, hi(memval1)
       sw    V0, lo(memval1)(AT)
-      addiu    A0, R0, 1
-      addiu    A1, R0, 160
+      addiu A0, R0, 1
+      addiu A1, R0, 160
       jal   0x80045D84
-      addiu    A2, R0, 1
+      addiu A2, R0, 1
       lui   AT, hi(memval2)
       sw    V0, lo(memval2)(AT)
-      addiu    A0, R0, 3
-      addiu    A1, R0, 174
+      addiu A0, R0, 3
+      addiu A1, R0, 174
       jal   0x80045D84
-      addiu    A2, R0, 1
+      addiu A2, R0, 1
       lui   AT, hi(memval3)
       sw    V0, lo(memval3)(AT)
-      addiu    A0, R0, 11
-      addiu    A1, R0, 188
+      addiu A0, R0, 11
+      addiu A1, R0, 188
       jal   0x80045D84
-      addiu    A2, R0, 1
+      addiu A2, R0, 1
       lui   AT, hi(memval4)
       sw    V0, lo(memval4)(AT)
       jal   SleepProcess
-      addiu    A0, R0, 3
-      addiu    V0, R0, 1
+      addiu A0, R0, 3
+      addiu V0, R0, 1
       lui   AT, hi(CORE_800EE320)
       sh    V0, lo(CORE_800EE320)(AT)
       lw    RA, 0x10(SP)
@@ -209,8 +207,11 @@ ChainSplit1.write = function(dataView: DataView, event: IChainSplitEvent, info: 
     ; Choose randomly
     ai_logic:
       .word 0x00000000, 0x00000000, 0x00003232
-  `, undefined, info);
-  const bytes = assemble(asm) as ArrayBuffer;
-  copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+
+    indices:
+      .halfword left_space
+      .halfword right_space
+      .halfword 0xFFFF
+      .align 4
+  `;
 };

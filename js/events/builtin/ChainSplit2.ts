@@ -88,7 +88,7 @@ ChainSplit2.write = function(dataView: DataView, event: IChainSplitEvent, info: 
     throw `Cannot write ${ChainSplit2.id}, missing cache entry values.`;
 
   let lenWritten = 0;
-  let curAddr = info.addr & 0x7FFFFFFF; // No 0x8... in JALs
+  let curAddr = info.addr! & 0x7FFFFFFF; // No 0x8... in JALs
 
   let asm = cacheEntry[info.game].asm;
   copyRange(dataView, asm, lenWritten, 0, asm.byteLength);
@@ -127,5 +127,5 @@ ChainSplit2.write = function(dataView: DataView, event: IChainSplitEvent, info: 
   dataView.setUint16(0xEA, event.chains[0]); // Set the left chain index.
   dataView.setUint16(0xEE, event.chains[1]); // Set the right chain index.
 
-  return [info.offset, lenWritten];
+  return [info.offset!, lenWritten];
 };

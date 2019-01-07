@@ -3,8 +3,8 @@ import { BoardType, SpaceSubtype, Space, EventActivationType } from "./types";
 import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard } from "./boards";
 import { $setting, get } from "./settings";
 import { makeKeyClick } from "./utils/react";
-import { IEvent, getName, getAvailableEvents } from "./events/events";
-import { ICustomEvent, ICustomEventParameter } from "./events/customevents";
+import { IEvent, getName, getAvailableEvents, IEventParameter } from "./events/events";
+import { ICustomEvent } from "./events/customevents";
 import { setEventParamDropHandler } from "./utils/drag";
 import { copyObject } from "./utils/obj";
 import { getImage } from "./images";
@@ -68,7 +68,7 @@ export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
       event.activationType = EventActivationType.WALKOVER;
   }
 
-  onEventParameterSet = (event: any, name: string, value: number) => {
+  onEventParameterSet = (event: IEvent, name: string, value: number) => {
     if (!event.parameterValues) {
       event.parameterValues = {};
     }
@@ -549,10 +549,10 @@ class SpaceEventEntry extends React.Component<ISpaceEventEntryProps> {
     let name = getName(event.id) || event.id;
 
     let parameterButtons;
-    if ((event as ICustomEvent).parameters) {
-      parameterButtons = (event as any).parameters.map((parameter: ICustomEventParameter) => {
-        const parameterValue = (event as any).parameterValues
-          && (event as any).parameterValues[parameter.name];
+    if (event.parameters) {
+      parameterButtons = event.parameters.map((parameter: IEventParameter) => {
+        const parameterValue = event.parameterValues
+          && event.parameterValues[parameter.name];
         switch (parameter.type) {
           case "Boolean":
             return (

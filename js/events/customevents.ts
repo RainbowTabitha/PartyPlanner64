@@ -1,6 +1,6 @@
 /// <reference types="mips-assembler" />
 
-import { IEvent, IEventWriteInfo, IEventParseInfo, createEvent } from "./events";
+import { IEvent, IEventWriteInfo, IEventParseInfo, createEvent, EventParameterType, IEventParameter } from "./events";
 import { getSavedEvents } from "../utils/localstorage";
 import { $$log } from "../utils/debug";
 import { copyRange } from "../utils/arrays";
@@ -8,14 +8,8 @@ import { EventActivationType, getGameName, Game, getExecutionTypeByName, EventPa
 import { assemble } from "mips-assembler";
 import { prepAsm } from "./prepAsm";
 
-export interface ICustomEventParameter {
-  name: string;
-  type: string;
-}
-
 export interface ICustomEvent extends IEvent {
   asm: string;
-  parameters: ICustomEventParameter[];
 }
 
 export const CustomAsmHelper = {
@@ -66,14 +60,14 @@ export const CustomAsmHelper = {
 
   readParameters: function(asm: string) {
     const entryStrings = CustomAsmHelper.readDiscretePropertySet(asm, "PARAM");
-    const parameters: ICustomEventParameter[] = [];
+    const parameters: IEventParameter[] = [];
     entryStrings.forEach(entryStr => {
       const pieces = entryStr.split("|");
       if (pieces.length !== 2)
         return;
-      const parameter = {
+      const parameter: IEventParameter = {
         name: pieces[1],
-        type: pieces[0]
+        type: pieces[0] as EventParameterType // hopefully
       };
       try {
         CustomAsmHelper.validateParameters([parameter]);
@@ -86,7 +80,7 @@ export const CustomAsmHelper = {
 
   validParameterNameRegex: /^[\w\?\!]*$/,
 
-  validateParameters: function(parameters: ICustomEventParameter[]) {
+  validateParameters: function(parameters: IEventParameter[]) {
     if (!parameters)
       return;
     parameters.forEach(parameter => {
@@ -102,7 +96,7 @@ export const CustomAsmHelper = {
   },
 
   /** Does a test assembly of a custom event. */
-  testAssemble: function(asm: string, parameters?: ICustomEventParameter[], info: Partial<IEventWriteInfo> = {}) {
+  testAssemble: function(asm: string, parameters?: IEventParameter[], info: Partial<IEventWriteInfo> = {}) {
     // Make fake parameterValues
     const parameterValues: any = {};
     if (parameters && parameters.length) {
@@ -111,9 +105,8 @@ export const CustomAsmHelper = {
       });
     }
 
-    const preppedAsm = prepAsm(asm, parameters, Object.assign({
+    const preppedAsm = prepAsm(asm, { parameters, parameterValues } as IEvent, Object.assign({
       addr: 0,
-      parameterValues,
     }, info) as IEventWriteInfo);
     const bytes = assemble(preppedAsm) as ArrayBuffer;
     return bytes;
@@ -171,12 +164,13 @@ export function createCustomEvent(asm: string) {
     $$log("Writing custom event", event, info);
 
     // Assemble and write
-    const asm = prepAsm(event.asm, event.parameters, info);
-    const bytes = assemble(asm) as ArrayBuffer;
+    if (info.gameVersion === 1) {
+      return event.asm;
+    }
 
+    const bytes = assemble(prepAsm(event.asm, event, info)) as ArrayBuffer;
     copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-
-    return [info.offset, bytes.byteLength];
+    return [info.offset!, bytes.byteLength];
   }
 
   //$$log("New custom event", custEvent);

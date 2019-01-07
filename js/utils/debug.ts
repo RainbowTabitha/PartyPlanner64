@@ -1,6 +1,6 @@
 export function $$log(...args: any[]) {
   if ($$debug)
-    console.log.apply(console, arguments);
+    console.log.apply(console, arguments as any);
 }
 
 export function $$hex(num: number, prefix: string = "0x") {

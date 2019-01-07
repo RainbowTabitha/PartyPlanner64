@@ -24,15 +24,31 @@ const _events: { [id: string]: IEvent } = Object.create(null);
 export interface IEvent {
   id: string;
   name: string;
-  parse: (dataView: DataView, info: any) => boolean;
-  write: (dataView: DataView, event: any, info: any, temp: any) => number[] | false;
+  parse: (dataView: DataView, info: IEventParseInfo) => boolean;
+  write: (dataView: DataView, event: any, info: IEventWriteInfo, temp: any) => number[] | string | false;
   activationType: EventActivationType;
   executionType: EventExecutionType;
   fakeEvent: boolean;
   supportedGames: Game[];
   sharedAsm: boolean;
+  parameters?: IEventParameter[];
+  parameterValues?: { [name: string]: number };
   inlineArgs?: number[];
   custom?: boolean;
+}
+
+/** Types of event parameters allowed. */
+export enum EventParameterType {
+  Boolean = "Boolean",
+  Space = "Space",
+  Number = "Number",
+  PositiveNumber = "+Number",
+}
+
+/** Parameter provided to an event. */
+export interface IEventParameter {
+  name: string;
+  type: EventParameterType;
 }
 
 const EventBase: IEvent = {
@@ -178,11 +194,10 @@ export interface IEventWriteInfo {
   curSpaceIndex: number;
   curSpace: ISpace;
   chains: number[][];
-  offset: number;
-  addr: number;
+  offset?: number;
+  addr?: number;
   game: Game;
   gameVersion: 1 | 2 | 3;
-  parameterValues: { [name: string]: number };
   argsAddr?: number;
 }
 
@@ -205,8 +220,8 @@ export function write(buffer: ArrayBuffer, event: IEvent, info: IEventWriteInfo,
     // We will tell the event code where the args are, and update where it
     // should actually start writing the ASM because we wrote those args.
     info.argsAddr = info.addr;
-    info.addr += argsSize;
-    info.offset += argsSize;
+    info.addr! += argsSize;
+    info.offset! += argsSize;
   }
 
   let asmView = new DataView(buffer, info.offset);
@@ -214,7 +229,9 @@ export function write(buffer: ArrayBuffer, event: IEvent, info: IEventWriteInfo,
   if (result === false)
     throw "Could not write ${event.id} for game ${info.gameVersion}";
 
-  result[1] += argsSize; // len needs to be more than what the event thought it should be
+  if (event.inlineArgs) {
+    (result as number[])[1] += argsSize; // len needs to be more than what the event thought it should be
+  }
 
   return result;
 }

@@ -1,8 +1,6 @@
 import { createEvent, IEventParseInfo, IEvent, IEventWriteInfo } from "../events";
 import { EventActivationType, EventExecutionType, Game } from "../../types";
-import { hashEqual, copyRange } from "../../utils/arrays";
-import { prepAsm } from "../prepAsm";
-import { assemble } from "mips-assembler";
+import { hashEqual } from "../../utils/arrays";
 
 const Bowser = createEvent("BOWSER", "Visit Bowser");
 Bowser.activationType = EventActivationType.WALKOVER;
@@ -30,7 +28,7 @@ Bowser.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo
   // Any of these "work" but only the corresponding one has the right background.
   let bowserSceneNum = [0x48, 0x49, 0x4F, 0x53, 0x54, 0x5B, 0x5D][info.boardIndex];
 
-  const asm = prepAsm(`
+  return `
     addiu SP, SP, -0x18
     sw    RA, 0x10(SP)
 
@@ -49,8 +47,5 @@ Bowser.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo
     lw    RA, 0x10(SP)
     jr    RA
     addiu SP, SP, 0x18
-`, undefined, info);
-  const bytes = assemble(asm) as ArrayBuffer;
-  copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+  `;
 };

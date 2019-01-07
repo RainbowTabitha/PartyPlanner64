@@ -2,9 +2,11 @@ import { EventActivationType, EventExecutionType } from "../types";
 
 /** Listing of events for a space. */
 export class SpaceEventList {
+  private _spaceIndex?: number;
   private _entries: SpaceEventListEntry[];
 
-  constructor() {
+  constructor(spaceIndex?: number) {
+    this._spaceIndex = spaceIndex;
     this._entries = [];
   }
 
@@ -40,6 +42,18 @@ export class SpaceEventList {
     return currentOffset;
   }
 
+  /** Creates the assembly representation of the event list. */
+  getAssembly(): string {
+    let asm = `__PP64_INTERNAL_SPACE_LIST_${this._spaceIndex}:` + "\n";
+    this.forEach((entry, index) => {
+      asm +=
+      `.halfword ${entry.activationType}, ${entry.executionType}
+       .word __PP64_INTERNAL_EVENT_${this._spaceIndex!}_${index}` + "\n";
+    });
+    asm += `.word 0, 0` + "\n";
+    return asm;
+  }
+
   _writeEntry(dataView: DataView, currentOffset: number,
     activationType: EventActivationType,
     executionType: EventExecutionType, address: number = 0)
@@ -61,7 +75,7 @@ export class SpaceEventList {
     this._entries[entryIndex].address = address >>> 0;
   }
 
-  forEach(fn: (entry: SpaceEventListEntry) => any) {
+  forEach(fn: (entry: SpaceEventListEntry, index?: number) => any) {
     this._entries.forEach(fn);
   }
 

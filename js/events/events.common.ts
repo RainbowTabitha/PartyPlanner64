@@ -1,4 +1,4 @@
-import { createEvent, getEvent, EventCache, IEvent, IEventWriteInfo, IEventParseInfo } from "./events";
+import { createEvent, getEvent, EventCache, IEvent, IEventWriteInfo, IEventParseInfo, EventParameterType } from "./events";
 import { EventActivationType, EventExecutionType, Game } from "../types";
 
 import "./builtin/ChainMergeEvent";

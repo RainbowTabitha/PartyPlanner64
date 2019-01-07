@@ -1,8 +1,6 @@
 import { createEvent, IEventParseInfo, IEvent, IEventWriteInfo } from "../events";
 import { EventActivationType, EventExecutionType, Game } from "../../types";
-import { hashEqual, copyRange } from "../../utils/arrays";
-import { prepAsm } from "../prepAsm";
-import { assemble } from "mips-assembler";
+import { hashEqual } from "../../utils/arrays";
 
 export const Boo1Event = createEvent("BOO1", "Visit Boo");
 Boo1Event.activationType = EventActivationType.WALKOVER;
@@ -35,7 +33,7 @@ Boo1Event.parse = function(dataView: DataView, info: IEventParseInfo) {
   return false;
 };
 Boo1Event.write = function(dataView: DataView, event: IEvent, info: IEventWriteInfo, temp: any) {
-  const asm = prepAsm(`
+  return `
     addiu SP, SP, -0x18
     sw    RA, 0x10(SP)
 
@@ -69,8 +67,5 @@ Boo1Event.write = function(dataView: DataView, event: IEvent, info: IEventWriteI
     lw    RA, 0x10(SP)
     jr    RA
     addiu SP, SP, 0x18
-`, undefined, info);
-  const bytes = assemble(asm) as ArrayBuffer;
-  copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+  `;
 };

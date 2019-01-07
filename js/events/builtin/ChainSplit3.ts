@@ -92,5 +92,5 @@ ChainSplit3.write = function(dataView: DataView, event: IChainSplitEvent, info: 
     dataView.setUint32(0x28, 0);
   }
 
-  return [info.offset, asm.byteLength];
+  return [info.offset!, asm.byteLength];
 };

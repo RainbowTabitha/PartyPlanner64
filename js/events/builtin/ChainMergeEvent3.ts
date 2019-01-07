@@ -81,8 +81,8 @@ ChainMerge3.write = function(dataView: DataView, event: IChainMergeEvent, info: 
     LW    RA, 0x10(SP)
     JR    RA
     ADDIU SP, SP, 0x18
-  `, undefined, info);
+  `, event, info);
   const bytes = assemble(asm) as ArrayBuffer;
   copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+  return [info.offset!, bytes.byteLength];
 };

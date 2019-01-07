@@ -1,8 +1,8 @@
 import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space } from "../types";
 import { romhandler } from "../romhandler";
-import { ICustomEventParameter, CustomAsmHelper } from "../events/customevents";
-import { getEvent, isUnsupported } from "../events/events";
+import { CustomAsmHelper } from "../events/customevents";
+import { getEvent, isUnsupported, IEventParameter } from "../events/events";
 import { createRule } from "./validationrules";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
@@ -243,7 +243,7 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
 
       const parameters = event.parameters;
       if (parameters && parameters.length) {
-        parameters.forEach((parameter: ICustomEventParameter) => {
+        parameters.forEach((parameter: IEventParameter) => {
           if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
             if (!missingParams[parameter.name])
               missingParams[parameter.name] = 0;

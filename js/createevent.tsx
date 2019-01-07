@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Game, EventExecutionType, getExecutionTypeName, getGameName } from "./types";
-import { ICustomEventParameter, ICustomEvent, CustomAsmHelper, createCustomEvent } from "./events/customevents";
+import { ICustomEvent, CustomAsmHelper, createCustomEvent } from "./events/customevents";
 import { CodeMirrorWrapper } from "./components/codemirrorwrapper";
-import { getEvent } from "./events/events";
+import { getEvent, IEventParameter, EventParameterType } from "./events/events";
 import { ToggleGroup, Button } from "./controls";
 import { getCurrentEvent, showMessage } from "./appControl";
 
@@ -26,7 +26,7 @@ interface ICreateEventViewState {
   supportedGames: Game[],
   executionType: EventExecutionType,
   asm: string,
-  parameters: ICustomEventParameter[];
+  parameters: IEventParameter[];
   hasError?: boolean;
 }
 
@@ -43,7 +43,7 @@ export class CreateEventView extends React.Component<{}, ICreateEventViewState> 
         supportedGames: currentEvent.supportedGames,
         executionType: currentEvent.executionType,
         asm: currentEvent.asm,
-        parameters: currentEvent.parameters,
+        parameters: currentEvent.parameters!,
       };
     }
     else {
@@ -135,14 +135,14 @@ export class CreateEventView extends React.Component<{}, ICreateEventViewState> 
     this.syncTextToStateVars(newState, this.state.asm);
   }
 
-  onAddEventParameter = (entry: ICustomEventParameter) => {
+  onAddEventParameter = (entry: IEventParameter) => {
     let newState = { ...this.state };
     newState.parameters = [...this.state.parameters, entry];
     this.setState(newState);
     this.syncTextToStateVars(newState, this.state.asm);
   }
 
-  onRemoveEventParameter = (removedEntry: ICustomEventParameter) => {
+  onRemoveEventParameter = (removedEntry: IEventParameter) => {
     let newState = { ...this.state };
     newState.parameters = this.state.parameters.filter(entry => {
       return entry.name !== removedEntry.name;
@@ -245,11 +245,11 @@ interface IEventDetailsFormProps {
   name: string;
   supportedGames: Game[];
   executionType: EventExecutionType;
-  parameters: ICustomEventParameter[];
+  parameters: IEventParameter[];
   onGameToggleClicked(id: any, pressed: boolean): any;
   onExecTypeToggleClicked(id: any, pressed: boolean): any;
-  onAddEventParameter(parameter: ICustomEventParameter): any;
-  onRemoveEventParameter(parameter: ICustomEventParameter): any;
+  onAddEventParameter(parameter: IEventParameter): any;
+  onRemoveEventParameter(parameter: IEventParameter): any;
   onEventNameChange(name: string): any;
 }
 
@@ -308,9 +308,9 @@ class EventDetailsForm extends React.Component<IEventDetailsFormProps> {
 }
 
 interface IEventParametersListProps {
-  parameters: ICustomEventParameter[];
-  onAddEventParameter(entry: ICustomEventParameter): any;
-  onRemoveEventParameter(entry: ICustomEventParameter): any;
+  parameters: IEventParameter[];
+  onAddEventParameter(entry: IEventParameter): any;
+  onRemoveEventParameter(entry: IEventParameter): any;
 }
 
 class EventParametersList extends React.Component<IEventParametersListProps> {
@@ -337,8 +337,8 @@ class EventParametersList extends React.Component<IEventParametersListProps> {
 }
 
 interface IEventParametersEntryProps {
-  entry: ICustomEventParameter;
-  onRemoveEntry(entry: ICustomEventParameter): any;
+  entry: IEventParameter;
+  onRemoveEntry(entry: IEventParameter): any;
 }
 
 class EventParametersEntry extends React.Component<IEventParametersEntryProps> {
@@ -363,7 +363,7 @@ class EventParametersEntry extends React.Component<IEventParametersEntryProps> {
 }
 
 interface IEventParametersAddNewEntryProps {
-  onAddEntry(entry: ICustomEventParameter): any;
+  onAddEntry(entry: IEventParameter): any;
 }
 
 class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewEntryProps> {
@@ -378,10 +378,10 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
         <select value={this.state.selectedType}
           onChange={this.onTypeChange}>
           <option></option>
-          <option value="Boolean">Boolean</option>
-          <option value="Number">Number</option>
-          <option value="+Number">Positive Number</option>
-          <option value="Space">Space</option>
+          <option value={EventParameterType.Boolean}>Boolean</option>
+          <option value={EventParameterType.Number}>Number</option>
+          <option value={EventParameterType.PositiveNumber}>Positive Number</option>
+          <option value={EventParameterType.Space}>Space</option>
         </select>
         <input type="text" placeholder="Name"
           value={this.state.name}
@@ -411,7 +411,7 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
 
     this.props.onAddEntry({
       name: this.state.name,
-      type: this.state.selectedType,
+      type: this.state.selectedType as EventParameterType,
     });
     this.setState({
       name: "",

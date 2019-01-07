@@ -1,5 +1,5 @@
 export class SpaceEventTable {
-  private _entries: any;
+  private _entries: { [spaceIndex: number]: number | string };
 
   constructor() {
     this._entries = {};
@@ -27,13 +27,25 @@ export class SpaceEventTable {
     let dataView = new DataView(buffer, offset);
     let currentOffset = 0;
     for (let spaceIndex in this._entries) {
-      this._writeEntry(dataView, currentOffset, parseInt(spaceIndex), this._entries[spaceIndex]);
+      this._writeEntry(dataView, currentOffset, parseInt(spaceIndex), this._entries[spaceIndex] as number);
       currentOffset += 8;
     }
     this._writeEntry(dataView, currentOffset, 0xFFFF, 0);
     currentOffset += 8;
 
     return currentOffset;
+  }
+
+  /** Creates the assembly representation of the event table. */
+  getAssembly(): string {
+    let asm = "__PP64_INTERNAL_SPACE_TABLE:\n";
+    for (let spaceIndex in this._entries) {
+      asm +=
+      `.halfword ${parseInt(spaceIndex)}, 0
+       .word __PP64_INTERNAL_SPACE_LIST_${spaceIndex}` + "\n";
+    }
+    asm += `.halfword 0xFFFF, 0, 0, 0` + "\n";
+    return asm;
   }
 
   _writeEntry(dataView: DataView, currentOffset: number, spaceIndex: number, address: number) {
@@ -44,7 +56,7 @@ export class SpaceEventTable {
     dataView.setUint32(currentOffset + 4, address);
   }
 
-  add(spaceIndex: number, address: number = 0) {
+  add(spaceIndex: number, address: number | string = 0) {
     this._entries[spaceIndex] = address;
   }
 

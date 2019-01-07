@@ -49,17 +49,17 @@ ReverseChainSplit.write = function(dataView: DataView, event: IEvent, info: IEve
   // Basically, we want to just write a normal ChainSplit, but then write
   // the wrapper and point to that as the actual event.
   (event as any)._reverse = true;
-  let [splitOffset, splitLen] = (ChainSplit as any)._write3(dataView, event, info, temp);
+  let [splitOffset, splitLen] = ChainSplit.write(dataView, event, info, temp) as number[];
 
   // Now write the wrapper.
   let asm = cacheEntry[info.game].asm;
   copyRange(dataView, asm, splitLen, 0, asm.byteLength);
 
   // Patch wrapper to JAL ChainSplit
-  let jalAddr = info.addr & 0x7FFFFFFF; // This is still pointing at the ChainSplit
+  let jalAddr = info.addr! & 0x7FFFFFFF; // This is still pointing at the ChainSplit
   dataView.setUint32(splitLen + 0x30, makeInst("JAL", jalAddr));
 
-  return [info.offset + splitLen, splitLen + asm.byteLength];
+  return [info.offset! + splitLen, splitLen + asm.byteLength];
 };
 
 interface IGateChainSplitEvent extends IEvent {

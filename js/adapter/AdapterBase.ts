@@ -13,7 +13,7 @@ import { scenes } from "../fs/scenes";
 import { findCalls, getRegSetAddress } from "../utils/MIPS";
 import { SpaceEventTable } from "./eventtable";
 import { SpaceEventList } from "./eventlist";
-import { create as createEvent, IEventWriteInfo, write as writeEvent, parse as parseEvent } from "../events/events";
+import { create as createEvent, IEventWriteInfo, write as writeEvent, parse as parseEvent, EventParameterType } from "../events/events";
 import { toU32 } from "../utils/string";
 import { makeDivisibleBy, distance, getRawFloat32Format } from "../utils/number";
 import { parse as parstInst } from "mips-inst";
@@ -26,6 +26,7 @@ import { arrayBufferToDataURL } from "../utils/arrays";
 import { get, $setting } from "../settings";
 import { render } from "../renderer";
 import { showMessage } from "../appControl";
+import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
 
 export type IBoardInfo = any;
 
@@ -519,10 +520,28 @@ export abstract class AdapterBase {
         links.forEach(link => {
           endpoints.push(_getChainWithSpace(link)!);
         });
-        event = createEvent("CHAINSPLIT", {
-          inlineArgs: links.concat(0xFFFF),
-          chains: endpoints,
-        });
+        if (this.gameVersion === 1) {
+          if (links.length > 2) {
+            throw new Error(`Encountered branch with ${links.length} directions, only 2 are supported currently`);
+          }
+          event = createEvent("CHAINSPLIT", {
+            parameters: [
+              { name: "left_space", type: EventParameterType.Space },
+              { name: "right_space", type: EventParameterType.Space }
+            ],
+            parameterValues: {
+              left_space: links[0],
+              right_space: links[1],
+            },
+            chains: endpoints,
+          });
+        }
+        else {
+          event = createEvent("CHAINSPLIT", {
+            inlineArgs: links.concat(0xFFFF),
+            chains: endpoints,
+          });
+        }
       }
       else {
         event = createEvent("CHAINMERGE", {
@@ -649,7 +668,12 @@ export abstract class AdapterBase {
   // Write out all of the events ASM.
   _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
     if (boardInfo.mainfsEventFile) {
-      this._writeEventsNew(board, boardInfo, boardIndex, chains);
+      if (this.gameVersion === 1) {
+        this._writeEventsNew2(board, boardInfo, boardIndex, chains);
+      }
+      else {
+        this._writeEventsNew(board, boardInfo, boardIndex, chains);
+      }
       return;
     }
 
@@ -692,7 +716,6 @@ export abstract class AdapterBase {
           addr: this._offsetToAddr(curASMOffset, boardInfo) | 0x80000000,
           game: romhandler.getROMGame()!,
           gameVersion: this.gameVersion,
-          parameterValues: event.parameterValues,
         };
 
         // Write any inline arguments
@@ -709,7 +732,7 @@ export abstract class AdapterBase {
         }
 
         let [writtenASMOffset, len] = writeEvent(romhandler.getROMBuffer()!, event,
-          info as IEventWriteInfo, temp);
+          info as IEventWriteInfo, temp) as number[];
         eventTemp[event.id] = temp;
 
         romView.setUint16(argsSize + redirEntry, event.activationType);
@@ -807,10 +830,9 @@ export abstract class AdapterBase {
           addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
           game: romhandler.getROMGame()!,
           gameVersion: this.gameVersion,
-          parameterValues: event.parameterValues,
         };
 
-        let [writtenOffset, len] = writeEvent(eventBuffer, event, info, temp);
+        let [writtenOffset, len] = writeEvent(eventBuffer, event, info, temp) as number[];
         eventTemp[event.id] = temp;
 
         // Apply address to event list.
@@ -853,6 +875,85 @@ export abstract class AdapterBase {
     mainfs.write(mainFsDir, mainFsFile, eventBuffer);
 
     //saveAs(new Blob([eventBuffer]), "eventBuffer");
+
+    // Write the hook
+    this._writeEventAsmHook(boardInfo, boardIndex);
+  }
+
+  _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
+    if (!boardInfo.mainfsEventFile)
+      throw `No MainFS file specified to place board ASM for board ${boardIndex}.`;
+
+    const eventTable = new SpaceEventTable();
+    const eventLists: SpaceEventList[] = [];
+    const eventAsms: string[] = [];
+    const eventTemp: any = {};
+    for (let i = 0; i < board.spaces.length; i++) {
+      let space = board.spaces[i];
+      if (!space.events || !space.events.length)
+        continue;
+      eventTable.add(i, 0);
+
+      let eventList = new SpaceEventList(i);
+      for (let e = 0; e < space.events.length; e++) {
+        let event = space.events[e];
+        eventList.add(event.activationType, event.executionType || event.mystery, 0);
+
+        let temp = eventTemp[event.id] || {};
+        let info = {
+          boardIndex,
+          board,
+          curSpaceIndex: i,
+          curSpace: space,
+          chains,
+          game: romhandler.getROMGame()!,
+          gameVersion: this.gameVersion,
+        };
+
+        let eventAsm = writeEvent(new ArrayBuffer(0), event, info, temp);
+        eventTemp[event.id] = temp;
+
+        eventAsms.push(prepSingleEventAsm(eventAsm as string, event, info, e));
+      }
+      eventLists.push(eventList);
+    }
+
+    const asm = `
+      .org ${$$hex(this.EVENT_RAM_LOC)}
+      .ascii "PP64"
+      .word ${$$hex(this.EVENT_RAM_LOC)}
+      .word 0 // Populated with buffer size later
+      .align 16
+
+      ${makeGameSymbolLabels(romhandler.getROMGame()!).join("\n")}
+
+      // TODO: Remove these hacks?
+      .definelabel __PP64_INTERNAL_GET_NEXT_TOAD_INDEX,0x800F6610
+      .definelabel __PP64_STAR_SPACE_INTERNAL,0x800F6958 // TODO: Probably wrong now
+
+      ${eventTable.getAssembly()}
+      ${eventLists.map(eventList => eventList.getAssembly()).join("\n")}
+      ${eventAsms.join("\n")}
+    `;
+
+    $$log(asm);
+
+    const buffer = assemble(asm) as ArrayBuffer;
+    const bufferView = new DataView(buffer);
+
+    if (buffer.byteLength > this.EVENT_MEM_SIZE) {
+      throw new Error(`Event code exceeded available memory space (${buffer.byteLength}/${this.EVENT_MEM_SIZE})`);
+    }
+
+    // We can write the size of the event buffer to the header now, for the hook to use.
+    bufferView.setUint32(8, buffer.byteLength);
+
+    // We write list blob of ASM/structures into the MainFS, in a location
+    // that is not used by the game.
+    let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
+    mainfs.write(mainFsDir, mainFsFile, buffer);
+
+    //saveAs(new Blob([buffer]), "eventBuffer");
 
     // Write the hook
     this._writeEventAsmHook(boardInfo, boardIndex);

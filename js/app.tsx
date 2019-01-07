@@ -274,4 +274,4 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 };
 
 const body = document.getElementById("body");
-(window as any)._PP64instance = ReactDOM.render(<PP64App />, body) as PP64App;
+(window as any)._PP64instance = ReactDOM.render(<PP64App /> as any, body);

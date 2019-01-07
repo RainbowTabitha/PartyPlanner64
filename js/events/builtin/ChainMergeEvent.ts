@@ -1,4 +1,4 @@
-import { createEvent, EventCache, IEvent, IEventWriteInfo, IEventParseInfo } from "../events";
+import { createEvent, IEvent, IEventWriteInfo, IEventParseInfo } from "../events";
 import { EventActivationType, EventExecutionType, Game } from "../../types";
 import { hashEqual, copyRange } from "../../utils/arrays";
 import { addConnection } from "../../boards";
@@ -79,7 +79,7 @@ interface IChainMergeEvent extends IEvent {
 
 // TODO: We can do a O(1) + n/2 style improvement for this event.
 ChainMerge.write = function(dataView: DataView, event: IChainMergeEvent, info: IEventWriteInfo, temp: any) {
-  const asm = prepAsm(`
+  const asm = `
     ADDIU SP, SP, -0x18
     SW    RA, 0x10(SP)
     ADDIU A0, R0, -1
@@ -89,8 +89,12 @@ ChainMerge.write = function(dataView: DataView, event: IChainMergeEvent, info: I
     LW    RA, 0x10(SP)
     JR    RA
     ADDIU SP, SP, 0x18
-  `, undefined, info);
-  const bytes = assemble(asm) as ArrayBuffer;
+  `;
+
+  if (info.gameVersion === 1) {
+    return asm;
+  }
+  const bytes = assemble(prepAsm(asm, event, info)) as ArrayBuffer;
   copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset, bytes.byteLength];
+  return [info.offset!, bytes.byteLength];
 };
