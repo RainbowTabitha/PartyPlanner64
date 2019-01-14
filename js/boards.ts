@@ -1,4 +1,4 @@
-import { BoardType, Space, SpaceSubtype } from "./types";
+import { BoardType, Space, SpaceSubtype, Game } from "./types";
 import { getSavedBoards } from "./utils/localstorage";
 import { copyObject } from "./utils/obj";
 import { createCustomEvent } from "./events/customevents";
@@ -14,12 +14,27 @@ export interface IBoard {
   spaces: ISpace[];
   links: { [startingSpaceIndex: number]: (number | number[]) };
   game: 1 | 2 | 3;
-  bg: any;
+  bg: IBoardBgDetails;
   otherbg: any;
   animbg?: any;
   audioIndex: number;
   _rom?: boolean;
   _deadSpace?: number;
+}
+
+interface IBoardBgDetails {
+  width: number;
+  height: number;
+  src: string; // sometimes boolean inside this file.
+
+  fov: number;
+  scaleFactor: number;
+  cameraEyePosX: number;
+  cameraEyePosY: number;
+  cameraEyePosZ: number;
+  lookatPointX: number;
+  lookatPointY: number;
+  lookatPointZ: number;
 }
 
 export interface ISpace {
@@ -52,6 +67,14 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
         "width": 960,
         "height": 720,
         "src": true, // Replaced with theme url later.
+        fov: 17,
+        scaleFactor: 1,
+        cameraEyePosX: 0,
+        cameraEyePosY: 1355,
+        cameraEyePosZ: 1780,
+        lookatPointX: 0,
+        lookatPointY: 0,
+        lookatPointZ: 0,
       };
       board.otherbg = {
         boardselect: true, // Replaced with theme url later.
@@ -66,7 +89,15 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
       board.bg = {
         width: 1152,
         height: 864,
-        src: true
+        src: true,
+        fov: 3,
+        scaleFactor: 0.1,
+        cameraEyePosX: 0,
+        cameraEyePosY: 1570,
+        cameraEyePosZ: 1577,
+        lookatPointX: 0,
+        lookatPointY: 0,
+        lookatPointZ: 0,
       };
       board.animbg = [];
       board.otherbg = {
@@ -82,14 +113,30 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
           board.bg = {
             width: 1152,
             height: 864,
-            src: true
+            src: true,
+            fov: 15,
+            scaleFactor: 0.1,
+            cameraEyePosX: 0,
+            cameraEyePosY: 300,
+            cameraEyePosZ: 300,
+            lookatPointX: 0,
+            lookatPointY: 0,
+            lookatPointZ: 0,
           };
           break;
         case BoardType.DUEL:
           board.bg = {
             width: 896,
             height: 672,
-            src: true
+            src: true,
+            fov: 15,
+            scaleFactor: 0.1,
+            cameraEyePosX: 0,
+            cameraEyePosY: 210,
+            cameraEyePosZ: 210,
+            lookatPointX: 0,
+            lookatPointY: 0,
+            lookatPointZ: 0,
           };
           break;
       }
@@ -158,6 +205,8 @@ export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 
   }
   else
     collection.push(board);
+
+  _fixPotentiallyOldBoard(board);
 
   _findAllCustomEvents(board);
 
@@ -445,6 +494,71 @@ function _findAllCustomEvents(board: IBoard) {
         // Since it errored out, I guess remove it?
         space.events.splice(e, 1);
       }
+    }
+  }
+}
+
+function _fixPotentiallyOldBoard(board: IBoard) {
+  if (!("game" in board)) {
+    (board as IBoard).game = 1;
+  }
+
+  if (!("type" in board)) {
+    (board as IBoard).type = BoardType.NORMAL;
+  }
+
+  if (!("fov" in board.bg)) {
+    switch (board.game) {
+      case 3:
+        if (board.type === BoardType.DUEL) {
+          Object.assign(board.bg, {
+            fov: 15,
+            scaleFactor: 0.1,
+            cameraEyePosX: 0,
+            cameraEyePosY: 210,
+            cameraEyePosZ: 210,
+            lookatPointX: 0,
+            lookatPointY: 0,
+            lookatPointZ: 0,
+          });
+        }
+        else {
+          Object.assign(board.bg, {
+            fov: 15,
+            scaleFactor: 0.1,
+            cameraEyePosX: 0,
+            cameraEyePosY: 300,
+            cameraEyePosZ: 300,
+            lookatPointX: 0,
+            lookatPointY: 0,
+            lookatPointZ: 0,
+          });
+        }
+        break;
+      case 2:
+        Object.assign(board.bg, {
+          fov: 3,
+          scaleFactor: 0.1,
+          cameraEyePosX: 0,
+          cameraEyePosY: 1570,
+          cameraEyePosZ: 1577,
+          lookatPointX: 0,
+          lookatPointY: 0,
+          lookatPointZ: 0,
+        });
+        break;
+      case 1:
+        Object.assign(board.bg, {
+          fov: 17,
+          scaleFactor: 1,
+          cameraEyePosX: 0,
+          cameraEyePosY: 1355,
+          cameraEyePosZ: 1780,
+          lookatPointX: 0,
+          lookatPointY: 0,
+          lookatPointZ: 0,
+        });
+        break;
     }
   }
 }

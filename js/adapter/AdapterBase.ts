@@ -27,6 +27,8 @@ import { get, $setting } from "../settings";
 import { render } from "../renderer";
 import { showMessage } from "../appControl";
 import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
+import THREE = require("three");
+import { Vector3 } from "three";
 
 export type IBoardInfo = any;
 
@@ -81,7 +83,7 @@ export abstract class AdapterBase {
       $$log(`Board ${i} chains: `, chains);
 
       this.onChangeBoardSpaceTypesFromGameSpaceTypes(newBoard, chains);
-      this._applyPerspective(newBoard, i);
+      this._applyPerspective(newBoard);
       this._cleanLoadedBoard(newBoard);
 
       this.onParseStrings(newBoard, boardInfo);
@@ -135,7 +137,7 @@ export abstract class AdapterBase {
     boardCopy._deadSpace = deadSpace;
 
     this.onChangeGameSpaceTypesFromBoardSpaceTypes(boardCopy);
-    this._reversePerspective(boardCopy, boardIndex);
+    this._reversePerspective(boardCopy);
 
     let boarddef = createBoardDef(boardCopy, chains);
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
@@ -200,55 +202,95 @@ export abstract class AdapterBase {
     $$log("Adapter does not implement onWriteStrings");
   }
 
-  _applyPerspective(board: IBoard, boardIndex: number) {
-    let width = board.bg.width;
-    let height = board.bg.height;
+  _applyPerspective(board: IBoard) {
+    const bg = board.bg;
+    const [width, height] = [bg.width, bg.height]
+    const camera = new THREE.PerspectiveCamera(bg.fov, width / height, 1, 10000);
+    if (board.game === 1) {
+      camera.position.set(bg.cameraEyePosX, bg.cameraEyePosY, bg.cameraEyePosZ);
+    }
+    else {
+      // gamemasterplc says don't divide anything by 1.2 if bg.cameraEyePosY === 1000,
+      // according to game logic.
+      // Observation: 18 / 15 == 1.2, this relates to tile count
+      camera.position.set(bg.cameraEyePosX / 1.2, bg.cameraEyePosY / 1.2, bg.cameraEyePosZ / 1.2);
+    }
+    camera.lookAt(new THREE.Vector3(bg.lookatPointX, bg.lookatPointY, bg.lookatPointZ));
+    camera.scale.y = -1;
+    camera.updateMatrix();
+    camera.updateMatrixWorld(true);
+    camera.updateProjectionMatrix();
 
     for (let spaceIdx = 0; spaceIdx < board.spaces.length; spaceIdx++) {
       let space = board.spaces[spaceIdx];
-      [space.x, space.y, space.z] = this.onGetBoardCoordsFromGameCoords(space.x, space.y, space.z, width, height, boardIndex);
+
+      const spacePoint = new THREE.Vector3(space.x, space.y, space.z);
+      if (board.game === 2 || board.game === 3) {
+        spacePoint.x *= (bg.scaleFactor / 1.2);
+        spacePoint.y *= (bg.scaleFactor / 1.2);
+        spacePoint.z *= (bg.scaleFactor / 1.2);
+      }
+
+      const vector = spacePoint.project(camera);
+      const widthHalf = width / 2;
+      const heightHalf = height / 2;
+      space.x = Math.round((vector.x * widthHalf) + widthHalf);
+      space.y = Math.round(-(vector.y * heightHalf) + heightHalf);
+      space.z = 0;
     }
   }
 
-  onGetBoardCoordsFromGameCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
-    $$log("Adapter does not implement onGetBoardCoordsFromGameCoords");
-    let newX = (width / 2) + x;
-    let newY = (height / 2) + y;
-    let newZ = 0;
-    return [Math.round(newX), Math.round(newY), Math.round(newZ)];
-  }
+  _reversePerspective(board: IBoard) {
+    const bg = board.bg;
+    const [width, height] = [bg.width, bg.height]
+    const camera = new THREE.PerspectiveCamera(bg.fov, width / height, 1, 10000);
 
-  _reversePerspective(board: IBoard, boardIndex: number) {
-    let width = board.bg.width;
-    let height = board.bg.height;
+    if (board.game === 1) {
+      camera.position.set(bg.cameraEyePosX, bg.cameraEyePosY, bg.cameraEyePosZ);
+    }
+    else {
+      // gamemasterplc says don't divide anything by 1.2 if bg.cameraEyePosY === 1000,
+      // according to game logic.
+      // Observation: 18 / 15 == 1.2, this relates to tile count
+      camera.position.set(bg.cameraEyePosX / 1.2, bg.cameraEyePosY / 1.2, bg.cameraEyePosZ / 1.2);
+    }
+    camera.lookAt(new THREE.Vector3(bg.lookatPointX, bg.lookatPointY, bg.lookatPointZ));
+    camera.scale.y = -1;
+    camera.updateMatrix();
+    camera.updateMatrixWorld(true);
+    camera.updateProjectionMatrix();
 
     for (let spaceIdx = 0; spaceIdx < board.spaces.length; spaceIdx++) {
       let space = board.spaces[spaceIdx];
-      [space.x, space.y, space.z] = this.onGetGameCoordsFromBoardCoords(space.x, space.y, space.z, width, height, boardIndex);
+
+      const vec2d = new THREE.Vector3(
+        (space.x / width) * 2 - 1,
+        -(space.y / height) * 2 + 1,
+        0.5
+      );
+
+      vec2d.unproject(camera);
+      vec2d.sub(camera.position).normalize();
+      const distance = -camera.position.z / vec2d.z;
+      const pos = new THREE.Vector3();
+      pos.copy(camera.position).add(vec2d.multiplyScalar(distance));
+
+      if (board.game === 2 || board.game === 3) {
+        pos.x /= (bg.scaleFactor / 1.2);
+        pos.y /= (bg.scaleFactor / 1.2);
+        pos.z /= (bg.scaleFactor / 1.2);
+      }
+
+      space.x = pos.x;
+      space.y = pos.y;
+      space.z = pos.z;
     }
   }
 
-  onGetGameCoordsFromBoardCoords(x: number, y: number, z: number, width: number, height: number, boardIndex: number) {
+  onGetGameCoordsFromBoardCoords(x: number, y: number, z: number, board: IBoard) {
     $$log("Adapter does not implement onGetGameCoordsFromBoardCoords");
-    let gameX = x - (width / 2);
-    let gameY = y - (height / 2);
-    let gameZ = 0.048;
-    return [gameX, gameY, gameZ];
+    return [x, y, z];
   }
-
-  // if ($$debug) { // These need to be proper inverses
-  //   try {
-  //     for (let boardIndex = 0; boardIndex < 9; boardIndex++) {
-  //       let [beforeX, beforeY, beforeZ] = [-200, -200, 0];
-  //       let [boardX, boardY, boardZ] = this.onGetBoardCoordsFromGameCoords(beforeX, beforeY, beforeZ, 960, 720, boardIndex);
-  //       let [afterX, afterY, afterZ] = this.onGetGameCoordsFromBoardCoords(boardX, boardY, boardZ, 960, 720, boardIndex);
-  //       if (beforeX !== afterX)
-  //         $$log(`Bad X inverse, boardIndex: ${boardIndex}, beforeX: ${beforeX}, afterX: ${afterX}`);
-  //       if (beforeY !== afterY)
-  //         $$log(`Bad Y inverse, boardIndex: ${boardIndex}, beforeY: ${beforeY}, afterY: ${afterY}`);
-  //     }
-  //   } catch(e) {}
-  // }
 
   onChangeBoardSpaceTypesFromGameSpaceTypes(board: IBoard, chains: number[][]) {
     $$log("Adapter does not implement onChangeBoardSpaceTypesFromGameSpaceTypes");
@@ -1551,13 +1593,5 @@ export abstract class AdapterBase {
   getCharacterMap(): { [num: number]: string } {
     $$log("Adapter does not implement getCharacterMap");
     return {};
-  }
-
-  // For debug
-  _debugBoardGameCoordsCycle(boardIndex: number) {
-    let board = getCurrentBoard();
-    this._applyPerspective(board, boardIndex);
-    this._reversePerspective(board, boardIndex);
-    render();
   }
 };
