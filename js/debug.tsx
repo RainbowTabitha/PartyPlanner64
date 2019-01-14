@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Button } from "./controls";
-import { images, load as loadDump, create as createDump, formImages } from "./utils/dump";
+import { images, load as loadDump, create as createDump, formImages, printSceneTable, printSceneN64Split } from "./utils/dump";
 import { openFile } from "./utils/input";
 import { blockUI } from "./appControl";
 import { romhandler } from "./romhandler";
@@ -20,6 +20,9 @@ export const DebugView = class DebugView extends React.Component {
         <br /><br />
         {romLoaded && <Button onClick={images}>Dump images</Button>}
         {romLoaded && <Button onClick={formImages}>Print FORM images (console)</Button>}
+        <br /><br />
+        {romLoaded && <Button onClick={printSceneTable}>Print scene table (console)</Button>}
+        {romLoaded && <Button onClick={printSceneN64Split}>Print scene table n64split (console)</Button>}
       </div>
     );
   }
