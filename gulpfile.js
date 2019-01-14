@@ -45,6 +45,7 @@ const CSS = [
   "css/createevent.css",
   "css/strings.css",
   "css/patches.css",
+  "css/debug.css",
   // css/fonts.css is not included in prod
 ];
 function MAKE_CSS_ORDER(css) {

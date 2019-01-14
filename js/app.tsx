@@ -29,6 +29,7 @@ import "./events/events.MP2";
 import "./events/events.MP3";
 import { showMessage } from "./appControl";
 import "file-saver";
+import { DebugView } from "./debug";
 
 interface IPP64AppState {
   currentView: View,
@@ -120,6 +121,9 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         break;
       case View.PATCHES:
         mainView = <GamesharkView />;
+        break;
+      case View.DEBUG:
+        mainView = <DebugView />;
         break;
     }
 

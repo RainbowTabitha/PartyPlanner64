@@ -11,6 +11,7 @@ export enum View {
   STRINGS = 6,
   EVENTS = 7,
   CREATEEVENT = 8,
+  DEBUG = 9,
 }
 
 export enum Space {
@@ -69,8 +70,6 @@ export enum Action {
   BOARD_DETAILS = 11,
   BOARD_EDITOR = 12,
   BOARD_COPY = 13,
-  DUMP_LOAD = 13.1,
-  DUMP_SAVE = 13.2,
   MODEL_VIEWER = 13.3,
   STRINGS_EDITOR = 13.4,
   EVENTS = 13.5,
@@ -84,6 +83,7 @@ export enum Action {
   SETTINGS = 15.1,
   ABOUT = 15.2,
   PATCHES = 15.3,
+  DEBUG = 15.4,
 
   ADD_OTHER = 16,
   ADD_BLUE = 17,

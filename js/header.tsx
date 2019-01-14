@@ -37,9 +37,7 @@ const actions_norom: IHeaderActionItem[] = [
   },
   { "name": "Import board", "icon": "img/header/loadboard.png", "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
   { "name": "Export board", "icon": "img/header/saveboard.png", "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  //{ "name": "Copy", "icon": "img/header/copyboard.png", "type": Action.BOARD_COPY, "details": "Create a copy of this board" },
-  // { "name": "Edit Details", "icon": "img/header/editdetails.png", "type": Action.BOARD_DETAILS, "details": "View and edit various board details" },
-  // { "name": "Set BG", "icon": "img/header/setbg.png", "type": Action.SET_BG, "details": "Change the board background image" },
+  { "name": "Debug", "icon": "img/header/settings.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
   { "name": "Screenshot", "icon": "img/header/screenshot.png",
     "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
     "dropdownFn": screenshotDropdown
@@ -58,8 +56,7 @@ const actions_rom_romboard: IHeaderActionItem[] = [
   },
   { "name": "Import board", "icon": "img/header/loadboard.png", "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
   { "name": "Export board", "icon": "img/header/saveboard.png", "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Import file dump", "icon": "img/header/dump.png", "type": Action.DUMP_LOAD, "details": "Import and overwrite with a dump of ROM data", "advanced": true },
-  { "name": "Export file dump", "icon": "img/header/dump.png", "type": Action.DUMP_SAVE, "details": "Export a zip of all the ROM file data", "advanced": true },
+  { "name": "Debug", "icon": "img/header/settings.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
   { "name": "Screenshot", "icon": "img/header/screenshot.png",
     "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
     "dropdownFn": screenshotDropdown
@@ -68,8 +65,6 @@ const actions_rom_romboard: IHeaderActionItem[] = [
   { "name": "Patches", "icon": "img/header/rompatch.png", "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
   { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
   //{ "name": "Strings", "icon": "img/header/stringseditor.png", "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
-  //{ "name": "Copy", "icon": "img/header/copyboard.png", "type": Action.BOARD_COPY, "details": "Create a copy of this board" },
-  // { "name": "View Details", "icon": "img/header/editdetails.png", "type": Action.BOARD_DETAILS, "details": "View various board details" },
   { "name": "Settings", "icon": "img/header/settings.png", "type": Action.SETTINGS, "details": "Editor settings" },
   { "name": "About", "icon": "img/header/about.png", "type": Action.ABOUT, "details": "About PartyPlanner64" },
 ];
@@ -88,8 +83,7 @@ const actions_rom_normalboard: IHeaderActionItem[] = [
   },
   { "name": "Import board", "icon": "img/header/loadboard.png", "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
   { "name": "Export board", "icon": "img/header/saveboard.png", "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Import file dump", "icon": "img/header/dump.png", "type": Action.DUMP_LOAD, "details": "Import and overwrite with a dump of ROM data", "advanced": true },
-  { "name": "Export file dump", "icon": "img/header/dump.png", "type": Action.DUMP_SAVE, "details": "Export a zip of all the ROM file data", "advanced": true },
+  { "name": "Debug", "icon": "img/header/settings.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
   { "name": "Screenshot", "icon": "img/header/screenshot.png",
     "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
     "dropdownFn": screenshotDropdown
@@ -98,9 +92,6 @@ const actions_rom_normalboard: IHeaderActionItem[] = [
   { "name": "Patches", "icon": "img/header/rompatch.png", "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
   { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
   //{ "name": "Strings", "icon": "img/header/stringseditor.png", "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
-  //{ "name": "Copy", "icon": "img/header/copyboard.png", "type": Action.BOARD_COPY, "details": "Create a copy of this board" },
-  // { "name": "Edit Details", "icon": "img/header/editdetails.png", "type": Action.BOARD_DETAILS, "details": "View and edit various board details" },
-  // { "name": "Set BG", "icon": "img/header/setbg.png", "type": Action.SET_BG, "details": "Change the board background image" },
   { "name": "Settings", "icon": "img/header/settings.png", "type": Action.SETTINGS, "details": "Editor settings" },
   { "name": "About", "icon": "img/header/about.png", "type": Action.ABOUT, "details": "About PartyPlanner64" },
 ];
@@ -196,15 +187,11 @@ function _handleAction(action: Action) {
     case Action.PATCHES:
       changeView(View.PATCHES);
       break;
+    case Action.DEBUG:
+      changeView(View.DEBUG);
+      break;
     case Action.SET_BG:
       openFile("image/*", bgSelected);
-      break;
-    case Action.DUMP_LOAD:
-      openFile(".zip", dumpSelected);
-      break;
-    case Action.DUMP_SAVE:
-      blockUI(true);
-      createDump(dumpCreated);
       break;
     default:
       break;
@@ -293,24 +280,6 @@ function eventFileSelected(event: any) {
     };
     reader.readAsText(files[i]);
   }
-}
-
-function dumpSelected(event: any) {
-  let file = event.target.files[0];
-  if (!file)
-    return;
-
-  let reader = new FileReader();
-  reader.onload = error => {
-    // Extract the dump and replace ROM files.
-    load(reader.result as ArrayBuffer);
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function dumpCreated(blob: Blob) {
-  saveAs(blob, `mp${romhandler.getGameVersion()}-files.zip`);
-  blockUI(false);
 }
 
 function getActions(view: View, board: IBoard, romLoaded: boolean) {
