@@ -23,6 +23,8 @@ export const DebugView = class DebugView extends React.Component {
       <div id="debugView">
         <h3>Debug Functionality</h3>
 
+        {!romLoaded && <p>Load a ROM to access more functionality here.</p>}
+
         {romLoaded && <Button onClick={onImportFileDumpClick}>Import file dump</Button>}
         {romLoaded && <Button onClick={onExportFileDumpClick}>Export file dump</Button>}
         <br /><br />

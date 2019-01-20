@@ -37,7 +37,7 @@ const actions_norom: IHeaderActionItem[] = [
   },
   { "name": "Import board", "icon": "img/header/loadboard.png", "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
   { "name": "Export board", "icon": "img/header/saveboard.png", "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Debug", "icon": "img/header/settings.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
+  { "name": "Debug", "icon": "img/header/debug.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
   { "name": "Screenshot", "icon": "img/header/screenshot.png",
     "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
     "dropdownFn": screenshotDropdown
@@ -56,7 +56,7 @@ const actions_rom_romboard: IHeaderActionItem[] = [
   },
   { "name": "Import board", "icon": "img/header/loadboard.png", "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
   { "name": "Export board", "icon": "img/header/saveboard.png", "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Debug", "icon": "img/header/settings.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
+  { "name": "Debug", "icon": "img/header/debug.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
   { "name": "Screenshot", "icon": "img/header/screenshot.png",
     "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
     "dropdownFn": screenshotDropdown
@@ -83,7 +83,7 @@ const actions_rom_normalboard: IHeaderActionItem[] = [
   },
   { "name": "Import board", "icon": "img/header/loadboard.png", "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
   { "name": "Export board", "icon": "img/header/saveboard.png", "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Debug", "icon": "img/header/settings.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
+  { "name": "Debug", "icon": "img/header/debug.png", "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
   { "name": "Screenshot", "icon": "img/header/screenshot.png",
     "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
     "dropdownFn": screenshotDropdown
