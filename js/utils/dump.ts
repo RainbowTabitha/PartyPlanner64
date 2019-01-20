@@ -371,18 +371,22 @@ export function printSceneAsm(sceneIndex: number) {
   console.log(insts.join("\n"));
 
   const roDataView = scenes.getRoDataView(sceneIndex);
-  const lines = [];
+  let lines = [];
   currentAsmAddr = sceneInfo.rodata_start;
   let i = 0;
   while (i < roDataView.byteLength) {
-    lines.push($$hex(currentAsmAddr)
-    + ": " + pad($$hex(roDataView.getUint32(i), ""), 8, "0")
-    + " " + pad($$hex(roDataView.getUint32(i + 4), ""), 8, "0")
-    + " " + pad($$hex(roDataView.getUint32(i + 8), ""), 8, "0")
-    + " " + pad($$hex(roDataView.getUint32(i + 12), ""), 8, "0"));
+    lines.push("D_" + $$hex(currentAsmAddr, "") + ": " + pad($$hex(roDataView.getUint32(i), ""), 8, "0"));
+    lines.push("D_" + $$hex(currentAsmAddr + 4, "") + ": " + pad($$hex(roDataView.getUint32(i + 4), ""), 8, "0"));
+    lines.push("D_" + $$hex(currentAsmAddr + 8, "") + ": " + pad($$hex(roDataView.getUint32(i + 8), ""), 8, "0"));
+    lines.push("D_" + $$hex(currentAsmAddr + 12, "") + ": " + pad($$hex(roDataView.getUint32(i + 12), ""), 8, "0"));
     currentAsmAddr += 16;
     i += 16;
   }
+  console.log(lines.join("\n"));
 
+  lines = [];
+  for (let b = sceneInfo.bss_start; b < sceneInfo.bss_end; b += 4) {
+    lines.push(`D_${$$hex(b, "")}: .word 0`);
+  }
   console.log(lines.join("\n"));
 }

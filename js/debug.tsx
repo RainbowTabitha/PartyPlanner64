@@ -1,12 +1,20 @@
 import * as React from "react";
 import { Button } from "./controls";
-import { images, load as loadDump, create as createDump, formImages, printSceneTable, printSceneN64Split } from "./utils/dump";
 import { openFile } from "./utils/input";
 import { blockUI } from "./appControl";
 import { romhandler } from "./romhandler";
+import {
+  images, load as loadDump,
+  create as createDump,
+  formImages,
+  printSceneTable,
+  printSceneN64Split,
+  printSceneAsm
+} from "./utils/dump";
 
 export const DebugView = class DebugView extends React.Component {
   state = {
+    printSceneAsmNumber: "",
   }
 
   render() {
@@ -23,8 +31,23 @@ export const DebugView = class DebugView extends React.Component {
         <br /><br />
         {romLoaded && <Button onClick={printSceneTable}>Print scene table (console)</Button>}
         {romLoaded && <Button onClick={printSceneN64Split}>Print scene table n64split (console)</Button>}
+        <br /><br />
+        {romLoaded && <>
+          <input type="text" placeholder="Scene number" className="dbInputShort"
+            value={this.state.printSceneAsmNumber}
+            onChange={e => this.setState({ printSceneAsmNumber: e.target.value })}
+          />
+          <Button onClick={this.onPrintSceneAsmClick}>Print scene assembly (console)</Button>
+        </>}
       </div>
     );
+  }
+
+  onPrintSceneAsmClick = () => {
+    const num = parseInt(this.state.printSceneAsmNumber);
+    if (!isNaN(num)) {
+      printSceneAsm(num);
+    }
   }
 }
 
