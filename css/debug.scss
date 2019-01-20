@@ -15,4 +15,9 @@
   input.dbInputShort {
     width: 7em;
   }
+
+  .dbMonospace {
+    font-family: "Courier New", Courier, monospace;
+    white-space: pre;
+  }
 }

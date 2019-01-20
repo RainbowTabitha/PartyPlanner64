@@ -15,6 +15,7 @@ interface ISceneInfo {
   bss_end: number;
 }
 
+/** Handles the overlays used in the game. */
 export const scenes = new class Scenes {
   private _sceneInfo: ISceneInfo[] | null;
 
