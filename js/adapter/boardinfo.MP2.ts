@@ -6,6 +6,7 @@ import { strings } from "../fs/strings";
 import { mainfs } from "../fs/mainfs";
 import { arrayToArrayBuffer } from "../utils/arrays";
 import { toPack } from "../utils/img/ImgPack";
+import { scenes } from "../fs/scenes";
 
 // Western Land - (U) ROM
 const MP2_WESTERN = createBoardInfo("MP2_WESTERN");
@@ -32,42 +33,40 @@ MP2_WESTERN.sceneIndex = 0x3E; // 62
 // First I tried 0x0029CF24 / 0x80107C54, but then I included the star event
 // at 0x0029E91C / 0x80?. But then, using items NOP sledded, and I found a mystery
 // table at 0x800DF720 that suggests I should use this actually:
-MP2_WESTERN.eventASMStart = 0x002A4E20; // 0x8010FB50
-MP2_WESTERN.eventASMEnd = 0x002A65B4; // 0x801112E4
-MP2_WESTERN.spaceEventsStartAddr = 0x0011280C;
-MP2_WESTERN.spaceEventsStartOffset = 0x002A7ADC;
-MP2_WESTERN.spaceEventsEndOffset = 0x002A7BE0;
+MP2_WESTERN.eventASMStart = 0xD350; // 0x8010FB50, 0x002A4E20
+MP2_WESTERN.eventASMEnd = 0xEAE4; // 0x801112E4, 0x002A65B4
+// MP2_WESTERN.spaceEventsStartAddr = 0x0011280C;
+// MP2_WESTERN.spaceEventsStartOffset = 0x002A7ADC;
+// MP2_WESTERN.spaceEventsEndOffset = 0x002A7BE0;
 MP2_WESTERN.spaceEventTables = [
-  { upper: 0x29AEBC, lower: 0x29AEC4 }, // 0x80105BEC, 0x80105BF4, table 0x80112484
-  { upper: 0x29AEC8, lower: 0x29AED0, primary: true }, // 0x80105BF8, 0x80105C00, table 0x8011280C
-  { upper: 0x29AED4, lower: 0x29AEDC }, // 0x80105C04, 0x80105C0C, table 0x801124EC
+  { upper: 0x33EC, lower: 0x33F4 }, // 0x80105BEC, 0x80105BF4, table 0x80112484
+  { upper: 0x33F8, lower: 0x3400, primary: true }, // 0x80105BF8, 0x80105C00, table 0x8011280C
+  { upper: 0x3404, lower: 0x340C }, // 0x80105C04, 0x80105C0C, table 0x801124EC
 ];
-MP2_WESTERN.starSpaceArrOffset = [0x002A6C54, 0x002A6CC4]; // 0x80111984, 0x801119F4
+MP2_WESTERN.starSpaceArrOffset = [0xF184, 0xF1F4]; // [0x002A6C54, 0x002A6CC4]; // 0x80111984, 0x801119F4
 MP2_WESTERN.starSpaceCount = 7;
-MP2_WESTERN.toadSpaceArrOffset = [0x002A6C64, 0x002A6D14];
-MP2_WESTERN.bankArrOffset = [0x002A6E58]; // 0x80111B88
-MP2_WESTERN.bankCoinArrOffset = [0x002A6D3C]; // 0x80111A6C
+MP2_WESTERN.toadSpaceArrOffset = [0xF194, 0xF244]; //  [0x002A6C64, 0x002A6D14];
+MP2_WESTERN.bankArrOffset = [0xF388]; // [0x002A6E58]; // 0x80111B88
+MP2_WESTERN.bankCoinArrOffset = [0xF26C]; // [0x002A6D3C]; // 0x80111A6C
 MP2_WESTERN.bankCount = 2;
-MP2_WESTERN.itemShopArrOffset = [0x002A6E5C]; // 0x80111B8C
+MP2_WESTERN.itemShopArrOffset = [0xF38C]; // [0x002A6E5C]; // 0x80111B8C
 MP2_WESTERN.itemShopCount = 1;
-MP2_WESTERN.booArrOffset = [0x002A6D38]; // 0x80111A68
+MP2_WESTERN.booArrOffset = [0xF268]; // [0x002A6D38]; // 0x80111A68
 MP2_WESTERN.booCount = 2;
-MP2_WESTERN.audioIndexOffset = 0x0029AE7A; // 0x80105BA4
+MP2_WESTERN.audioIndexOffset = 0x33AA; // 0x0029AE7A; // 0x80105BA4
 MP2_WESTERN.onLoad = function(board: IBoard) {
   board.otherbg.largescene = hvqfs.readBackground(MP2_WESTERN.bgDir + 2).src;
 };
-MP2_WESTERN.onWriteEvents = function(board: IBoard) {
-
-};
-MP2_WESTERN.onAfterOverwrite = function(romView: DataView, board: IBoard) {
+MP2_WESTERN.onAfterOverwrite = function(board: IBoard) {
+  const sceneView = scenes.getDataView(62);
   //romView.setUint32(0x29AE18, 0); Baby Bowser
   //romView.setUint32(0x29AE20, 0); Toad
   //romView.setUint32(0x29AE28, 0); // Boo assets
   //romView.setUint32(0x29AE30, 0); // ... not the train
-  romView.setUint32(0x29AE38, 0); // Wipe out wood gates fn, which reads 2 space indices at 2A6DB8
+  sceneView.setUint32(0x3368, 0); // 0x29AE38 // Wipe out wood gates fn, which reads 2 space indices at 2A6DB8
   //romView.setUint32(0x29AE40, 0); // ... not the train
   //romView.setUint32(0x29AE48, 0); // ... not the train
-  romView.setUint32(0x29AE50, 0); // Train!
+  sceneView.setUint32(0x3380, 0); // 0x29AE50 // Train!
 
   // Prevent unused event table hydration
   // romView.setUint32(0x29AEBC, 0); // 0x80112484 table
@@ -81,7 +80,8 @@ MP2_WESTERN.onAfterOverwrite = function(romView: DataView, board: IBoard) {
   // 0x004F is the Bowser scene, 0x0051 is the results scene.
   // To debug, end game early with 0x800F93AF (turn count)
   // Then watch scene change 0x800FA63C
-  romView.setUint16(0x35BBEE, 0x0051); // 0x8010560C
+  const sceneEndView = scenes.getDataView(82);
+  sceneEndView.setUint16(0x2E0E, 0x0051); // 0x8010560C, 0x35BBEE
 
   // Then, make the scared Koopa's message at the endgame be more chill.
   let bytes: number[] = [];
@@ -180,14 +180,14 @@ MP2_HORROR.img = {
 MP2_HORROR.sceneIndex = 0x43; // 67
 MP2_HORROR.eventASMStart = 0; // 0x80112248 ballpark for safe start
 MP2_HORROR.eventASMEnd = 0; // 0x80112C2C same, c2c is big boo event b2w
-MP2_HORROR.spaceEventsStartAddr = 0x0011466C; // There's more...
-MP2_HORROR.spaceEventsStartOffset = 0x002D9B5C;
-MP2_HORROR.spaceEventsEndOffset = 0x002D9CD4;
+// MP2_HORROR.spaceEventsStartAddr = 0x0011466C; // There's more...
+// MP2_HORROR.spaceEventsStartOffset = 0x002D9B5C;
+// MP2_HORROR.spaceEventsEndOffset = 0x002D9CD4;
 MP2_HORROR.spaceEventTables = [ // Tables around 0x80114xxx
-  { upper: 0x002CB544, lower: 0x002CB54C }, // 0x80106054, 0x8010605C
-  { upper: 0x002CB550, lower: 0x002CB558 }, // 0x80106060, 0x80106068
-  { upper: 0x002CB588, lower: 0x002CB590 }, // 0x80106098, 0x801060A0
-  { upper: 0x002CB594, lower: 0x002CB598 }, // 0x801060A4, 0x801060A8 // Puts the JAL afterwards for some reason.
+  { upper: 0x3854, lower: 0x385C }, // 0x80106054, 0x8010605C
+  { upper: 0x3860, lower: 0x3868 }, // 0x80106060, 0x80106068
+  { upper: 0x3898, lower: 0x38A0 }, // 0x80106098, 0x801060A0
+  { upper: 0x38A4, lower: 0x38A8 }, // 0x801060A4, 0x801060A8 // Puts the JAL afterwards for some reason.
 ];
 
 // Space Land - (U) ROM

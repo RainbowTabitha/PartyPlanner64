@@ -5,6 +5,7 @@ import { makeDivisibleBy } from "../utils/number";
 import { Game } from "../types";
 import { romhandler } from "../romhandler";
 import { $setting, get } from "../settings";
+import { getRegSetUpperAndLower, getRegSetAddress } from "../utils/MIPS";
 
 interface IOffsetInfo {
   upper: number;
@@ -80,15 +81,12 @@ export class mainfs {
   public static setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
     let patchOffsets = mainfs.getPatchOffsets();
-    let upper = (newOffset & 0xFFFF0000) >>> 16;
-    let lower = newOffset & 0x0000FFFF;
-    if (lower & 0x8000)
-      upper += 1; // ASM adjust for the signed addition.
+    const [upper, lower] = getRegSetUpperAndLower(newOffset);
     for (let i = 0; i < patchOffsets.length; i++) {
       romView.setUint16(patchOffsets[i].upper, upper);
       romView.setUint16(patchOffsets[i].lower, lower);
     }
-    $$log(`MainFS.setROMOffset -> ${$$hex((upper << 16) | lower)}`);
+    $$log(`MainFS.setROMOffset -> ${$$hex(getRegSetAddress(upper, lower))}`);
   }
 
   public static getPatchOffsets() {

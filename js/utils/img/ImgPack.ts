@@ -78,7 +78,7 @@ export function fromPack(buffer: ArrayBuffer) {
     let imgHeight = curEntryView.getUint16(6);
     let imgByteCount;
     if (bitCount >= 8)
-      imgByteCount = ((bitCount * imgWidth * imgHeight) / 8) * 2;
+      imgByteCount = ((bitCount * imgWidth * imgHeight) / 8);
     else
       imgByteCount = (imgWidth * imgHeight) / (8 / bitCount);
     let rawImgBuffer = buffer.slice(imgOffset, imgOffset + imgByteCount);

@@ -2,6 +2,7 @@ import { Game } from "../types";
 import { createBoardInfo } from "./boardinfobase";
 import { IBoard } from "../boards";
 import { hvqfs } from "../fs/hvqfs";
+import { scenes } from "../fs/scenes";
 
 // Chilly Waters - (U) ROM
 const MP3_CHILLY = createBoardInfo("MP3_CHILLY");
@@ -28,45 +29,47 @@ MP3_CHILLY.img = {
   pauseLogoImg: 125,
   gateImg: 354, // dir 19
 };
+MP3_CHILLY.sceneIndex = 0x48;
 MP3_CHILLY.mainfsEventFile = [19, 618];
-MP3_CHILLY.eventASMStart = 0x00330000; // ballpark, but this is wrong -> // 0x0031E814; // is this 0x8011A490 ?
-MP3_CHILLY.eventASMEnd = 0x003320FC; // 0x8011C58C
-MP3_CHILLY.spaceEventsStartAddr = 0x0011E718;
-MP3_CHILLY.spaceEventsStartOffset = 0x00334288;
+MP3_CHILLY.eventASMStart = 0x14AF0; // 0x00330000 // ballpark, but this is wrong -> // 0x0031E814; // is this 0x8011A490 ?
+MP3_CHILLY.eventASMEnd = 0x16BEC; // 0x003320FC, 0x8011C58C
+// MP3_CHILLY.spaceEventsStartAddr = 0x0011E718;
+// MP3_CHILLY.spaceEventsStartOffset = 0x00334288;
 MP3_CHILLY.spaceEventTables = [
-  { upper: 0x31DBB8, lower: 0x31DBC0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
-  { upper: 0x31DBC4, lower: 0x31DBCC }, // 0x80108054, 0x8010805C, table 0x8011E718
+  { upper: 0x26A8, lower: 0x26B0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
+  { upper: 0x26B4, lower: 0x26BC }, // 0x80108054, 0x8010805C, table 0x8011E718
   // { upper: 0x31DBD0, lower: 0x31DBD8 }, // 0x80108060, 0x80108068 // This is not a table actually, it is related to the happening spaces
-  { upper: 0x31DBDC, lower: 0x31DBE4 }, // 0x8010806C, 0x80108074, table 0x8011E344
+  { upper: 0x26CC, lower: 0x26D4 }, // 0x8010806C, 0x80108074, table 0x8011E344
   // A table, but if we remove it Poison Shrooms break and probably other things
   // { upper: 0x31DBE8, lower: 0x31DBF0 }, // 0x80108078, 0x80108080, table 0x8011E4D8
 ];
-MP3_CHILLY.spaceEventsEndOffset = 0x00334428;
-MP3_CHILLY.starSpaceArrOffset = [0x00332E20, 0x00332E90]; // 0x8011D2B0, 0x8011D320
+MP3_CHILLY.spaceEventsEndOffset = 0x18F18; // 0x00334428;
+MP3_CHILLY.starSpaceArrOffset = [0x17910, 0x17980]; // [0x00332E20, 0x00332E90]; // 0x8011D2B0, 0x8011D320
 MP3_CHILLY.starSpaceCount = 8;
-MP3_CHILLY.toadSpaceArrOffset = [0x00332E30, 0x00332EEC]; // 0x8011D2C0, 0x8011D37C
-MP3_CHILLY.bankArrOffset = [0x00333074]; // 0x8011D504
-MP3_CHILLY.bankCoinArrOffset = [0x00332F10]; // 0x8011D3A0
+MP3_CHILLY.toadSpaceArrOffset = [0x17920, 0x179DC]; // [0x00332E30, 0x00332EEC]; // 0x8011D2C0, 0x8011D37C
+MP3_CHILLY.bankArrOffset = [0x17B64]; //  [0x00333074]; // 0x8011D504
+MP3_CHILLY.bankCoinArrOffset = [0x17A00]; // [0x00332F10]; // 0x8011D3A0
 MP3_CHILLY.bankCount = 2;
-MP3_CHILLY.itemShopArrOffset = [0x00333078]; // 0x8011D508
+MP3_CHILLY.itemShopArrOffset = [0x17B68]; // [0x00333078]; // 0x8011D508
 MP3_CHILLY.itemShopCount = 2;
-MP3_CHILLY.booArrOffset = [0x00332F0C]; // 0x8011D39C
+MP3_CHILLY.booArrOffset = [0x179FC]; // [0x00332F0C]; // 0x8011D39C
 MP3_CHILLY.booCount = 1;
-MP3_CHILLY.gateNeighborsOffset = [0x00332EE4]; // 0x8011D374
-MP3_CHILLY.gateArrOffset = [0x00332F8C]; // 0x8011D41C
+MP3_CHILLY.gateNeighborsOffset = [0x179D4]; //  [0x00332EE4]; // 0x8011D374
+MP3_CHILLY.gateArrOffset = [0x17A7C]; // [0x00332F8C]; // 0x8011D41C
 MP3_CHILLY.gateCount = 2;
-MP3_CHILLY.arrowRotStartOffset = 0x0031D8A8; // 0x80107D38
-MP3_CHILLY.arrowRotEndOffset = 0x0031D950; // 0x80107DDC
-MP3_CHILLY.audioIndexOffset = 0x0031DB92;
+MP3_CHILLY.arrowRotStartOffset = 0x2398; // 0x0031D8A8; // 0x80107D38
+MP3_CHILLY.arrowRotEndOffset = 0x2440; // 0x0031D950; // 0x80107DDC
+MP3_CHILLY.audioIndexOffset = 0x2682; // 0x0031DB92;
 MP3_CHILLY.onLoad = function(board: IBoard) {
   board.otherbg.largescene = hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
 };
-MP3_CHILLY.onAfterOverwrite = function(romView: DataView, board: IBoard) {
+MP3_CHILLY.onAfterOverwrite = function(board: IBoard) {
+  const sceneView = scenes.getDataView(72);
   // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
   // Since we don't use any default events, we can overwrite it.
-  romView.setUint32(0x0031DBD0, 0);
-  romView.setUint32(0x0031DBD4, 0);
-  romView.setUint32(0x0031DBD8, 0); // Could also try to set this to 2484B960, and bump up eventASMStart past 8011A8D8
+  sceneView.setUint32(0x26C0, 0); // 0x0031DBD0
+  sceneView.setUint32(0x26C4, 0); // 0x0031DBD4
+  sceneView.setUint32(0x26C8, 0); // 0x0031DBD8 // Could also try to set this to 2484B960, and bump up eventASMStart past 8011A8D8
   // This current approach only works because of another patch in onAfterSave
 
   // Board specific calls
@@ -80,8 +83,8 @@ MP3_CHILLY.onAfterOverwrite = function(romView: DataView, board: IBoard) {
   //romView.setUint32(0x0031DB44, 0);
 
   // Banish the snowman assets to the dead space.
-  romView.setUint16(0x0032E72E, (board as any)._deadSpace);
-  romView.setUint16(0x0032E74E, (board as any)._deadSpace);
+  sceneView.setUint16(0x1321E, (board as any)._deadSpace); // 0x0032E72E
+  sceneView.setUint16(0x1323E, (board as any)._deadSpace); // 0x0032E74E
 };
 
 // Deep Bloober Sea - (U) ROM
@@ -204,11 +207,12 @@ MP3U_GATEGUY.img = {
   miniMapWithBg: 279, // dir 19
   miniMapDots: 280,
 };
-MP3U_GATEGUY.spaceEventsStartAddr = 0x00118914;
-MP3U_GATEGUY.spaceEventsStartOffset = 0x003EBA04;
+MP3U_GATEGUY.sceneIndex = 0x5B;
+// MP3U_GATEGUY.spaceEventsStartAddr = 0x00118914;
+// MP3U_GATEGUY.spaceEventsStartOffset = 0x003EBA04;
 MP3U_GATEGUY.spaceEventTables = [ // JAL 800EA46C
-  { upper: 0x3E0BAC, lower: 0x3E0BB4 }, // 0x8010DABC, 0x8010DAC4, table 0x80118914
-  { upper: 0x3E0BB8, lower: 0x3E0BC0 }, // 0x8010DAC8, 0x8010DAD0, table 0x80118DEC
+  { upper: 0x811C, lower: 0x8124 }, // 0x8010DABC, 0x8010DAC4, table 0x80118914
+  { upper: 0x8128, lower: 0x8130 }, // 0x8010DAC8, 0x8010DAD0, table 0x80118DEC
 ];
 MP3U_GATEGUY.onAfterOverwrite = function(romView: DataView, board: IBoard) {
   // TODO Need this for duels?

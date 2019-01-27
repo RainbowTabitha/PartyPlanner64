@@ -102,7 +102,11 @@ export const romhandler = new class RomHandler {
     if (gameVersion === 2)
       promises.push(animationfs.extractAsync());
 
-    return Promise.all(promises);
+    return Promise.all(promises).then(() => {
+      // Now that we've extracted, shrink _rom to just be the initial part of the ROM.
+      const ovlStart = scenes.getInfo(0);
+      this._rom = this._rom!.slice(0, ovlStart.rom_start);
+    });
   }
 
   saveROM() {
@@ -111,10 +115,10 @@ export const romhandler = new class RomHandler {
 
     let gameVersion = this.getGameVersion();
 
-    // We never move main FS, so this represents the first part of the ROM.
-    let initialLen = mainfs.getROMOffset()!;
+    let initialLen = this._rom.byteLength;
 
     // Grab all the sizes of the different sections.
+    let sceneLen = makeDivisibleBy(scenes.getByteLength(), 16);
     let mainLen = makeDivisibleBy(mainfs.getByteLength(), 16);
     let strsLen;
     if (gameVersion === 3)
@@ -128,38 +132,43 @@ export const romhandler = new class RomHandler {
       animationLen = makeDivisibleBy(animationfs.getByteLength(), 16);
 
     // Seems to crash unless HVQ is aligned so that the +1 ADDIU trick is not needed. Just fudge strsLen to push it up.
-    while ((initialLen + mainLen + strsLen) & 0x8000) {
+    while ((initialLen + sceneLen + mainLen + strsLen) & 0x8000) {
       strsLen += 0x1000;
     }
 
-    let newROMBuffer = new ArrayBuffer(initialLen + mainLen + strsLen + hvqLen + animationLen + audioLen);
+    let newROMBuffer = new ArrayBuffer(
+      initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen + audioLen
+    );
 
     copyRange(newROMBuffer, this._rom, 0, 0, initialLen);
 
     applyHook(newROMBuffer); // Before main fs is packed
 
-    mainfs.pack(newROMBuffer, initialLen);
-    mainfs.setROMOffset(initialLen, newROMBuffer);
+    mainfs.pack(newROMBuffer, initialLen + sceneLen);
+    mainfs.setROMOffset(initialLen + sceneLen, newROMBuffer);
 
     if (gameVersion === 3) {
-      strings3.pack(newROMBuffer, initialLen + mainLen);
-      strings3.setROMOffset(initialLen + mainLen, newROMBuffer);
+      strings3.pack(newROMBuffer, initialLen + sceneLen + mainLen);
+      strings3.setROMOffset(initialLen + sceneLen + mainLen, newROMBuffer);
     }
     else {
-      strings.pack(newROMBuffer, initialLen + mainLen);
-      strings.setROMOffset(initialLen + mainLen, newROMBuffer);
+      strings.pack(newROMBuffer, initialLen + sceneLen + mainLen);
+      strings.setROMOffset(initialLen + sceneLen + mainLen, newROMBuffer);
     }
 
-    hvqfs.pack(newROMBuffer, initialLen + mainLen + strsLen);
-    hvqfs.setROMOffset(initialLen + mainLen + strsLen, newROMBuffer);
+    hvqfs.pack(newROMBuffer, initialLen + sceneLen + mainLen + strsLen);
+    hvqfs.setROMOffset(initialLen + mainLen + sceneLen + strsLen, newROMBuffer);
 
     if (gameVersion === 2) {
-      animationfs.pack(newROMBuffer, initialLen + mainLen + strsLen + hvqLen);
-      animationfs.setROMOffset(initialLen + mainLen + strsLen + hvqLen, newROMBuffer);
+      animationfs.pack(newROMBuffer, initialLen + sceneLen + mainLen + strsLen + hvqLen);
+      animationfs.setROMOffset(initialLen + sceneLen + mainLen + strsLen + hvqLen, newROMBuffer);
     }
 
-    audio.pack(newROMBuffer, initialLen + mainLen + strsLen + hvqLen + animationLen);
-    audio.setROMOffset(initialLen + mainLen + strsLen + hvqLen + animationLen, newROMBuffer);
+    audio.pack(newROMBuffer, initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen);
+    audio.setROMOffset(initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen, newROMBuffer);
+
+    // Do this last, so that any patches made to scenes just prior take effect.
+    scenes.pack(newROMBuffer, initialLen);
 
     let adapter = getROMAdapter()!;
     if (adapter.onAfterSave)
@@ -167,19 +176,15 @@ export const romhandler = new class RomHandler {
 
     fixChecksum(newROMBuffer);
 
-    this._rom = newROMBuffer;
+    this._rom = newROMBuffer.slice(0, initialLen);
     this._u8array = new Uint8Array(this._rom);
 
-    let romBlob = new Blob([newROMBuffer]);
+    const romBlob = new Blob([newROMBuffer]);
     saveAs(romBlob, `MyMarioParty${gameVersion}.z64`);
   }
 
   romIsLoaded() {
     return !!this._rom;
-  }
-
-  getByteArray() {
-    return this._u8array;
   }
 
   getDataView(startingOffset = 0, endOffset = 0) {

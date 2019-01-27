@@ -13,6 +13,7 @@ import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { FORM } from "../models/FORM";
 import { romhandler } from "../romhandler";
+import { scenes } from "../fs/scenes";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -50,8 +51,14 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
     // gamemasterplc: patch both ROM address 0x50DA60 and 0x50DA80 with the value 0x24020001 to fix character unlocks
     // gamemasterplc: aka MIPS Instruction ADDIU V0, R0, 0x1
-    romView.setUint32(0x50DA60, 0x24020001);
-    romView.setUint32(0x50DA80, 0x24020001);
+    const playerSelectScene = scenes.getDataView(120);
+    playerSelectScene.setUint32(0xBE60, 0x24020001); // 0x50DA60
+    playerSelectScene.setUint32(0xBE80, 0x24020001); // 0x50DA80
+
+    // This generally fixes duels on happening spaces.
+    // gamemasterplc: try making 0x00111F04 in ROM 0x10800009 for a temporary fix for question space duels until we figure out events better
+    const boardPlayScene = scenes.getDataView(128);
+    boardPlayScene.setUint32(0x27774, 0x10800009); // 800FE2E4
 
     // The game will soft hang on the first player's turn when the number of plain spaces
     // (red/blue) is less than a certain lowish number.
@@ -69,8 +76,8 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     }
     if (blueSpaceCount < 14 || redSpaceCount < 1) {
       // Fix low spaces issues
-      // gamemasterplc: patch ROM offset 0x1101C4 with 0x10000085 to fix low space hangs
-      romView.setUint32(0x001101C4, 0x10000085); // Something like BEQ R0 R0 0x85, so it always branches
+      // gamemasterplc: patch ROM offset 0x001101C4 with 0x10000085 to fix low space hangs
+      boardPlayScene.setUint32(0x25A34, 0x10000085); // Something like BEQ R0 R0 0x85, so it always branches
       $$log("Patching for low space count.");
     }
   }
@@ -104,10 +111,6 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     romView.setUint32(0x0007FC58, 0); // Don't check if KMC worked...
     romView.setUint32(0x0007FC60, 0); // Don't do KMC success action...
     // The "return;" is just hit after this and the rest of the checks are skipped.
-
-    // This generally fixes duels on happening spaces.
-    // gamemasterplc: try making 0x00111F04 in ROM 0x10800009 for a temporary fix for question space duels until we figure out events better
-    romView.setUint32(0x00111F04, 0x10800009); // 800FE2E4
   }
 
   hydrateSpace(space: ISpace) {
@@ -734,14 +737,14 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
     super.onWriteAudio(board, boardInfo, boardIndex);
-    if (!boardInfo.audioIndexOffset)
+    if (!boardInfo.audioIndexOffset || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
-    let index = board.audioIndex;
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    const index = board.audioIndex;
     // MP3 writes the index in a couple other places too.
-    boardView.setUint16(boardInfo.audioIndexOffset + 4, index);
-    boardView.setUint16(boardInfo.audioIndexOffset + 0x14, index);
+    sceneView.setUint16(boardInfo.audioIndexOffset + 4, index);
+    sceneView.setUint16(boardInfo.audioIndexOffset + 0x14, index);
   }
 
   // Writes to 0x800A1904, break 0x8004a520 (JAL 0C012948)

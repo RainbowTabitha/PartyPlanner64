@@ -13,8 +13,14 @@ export class SpaceEventList {
   /*
   * Populates this SpaceEventTable from an event table existing in the buffer.
   */
-  parse(buffer: ArrayBuffer, offset: number) {
-    let dataView = new DataView(buffer, offset);
+  parse(arr: DataView): void
+  parse(arr: ArrayBuffer, offset: number): void;
+  parse(arr: ArrayBuffer | DataView, offset?: number): void {
+    let dataView: DataView;
+    if (arr instanceof ArrayBuffer)
+      dataView = new DataView(arr, offset);
+    else
+      dataView = arr;
     let currentOffset = 0;
     let activationType, executionType, address;
     while ((activationType = dataView.getUint16(currentOffset)) !== 0) {

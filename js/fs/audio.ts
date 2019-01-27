@@ -144,20 +144,24 @@ _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
 
 export namespace audio {
   export function getROMOffset(subsection = 0) {
-    let romView = romhandler.getDataView();
     let patchInfo = getPatchInfo()[subsection];
     if (!patchInfo)
       return null;
     let romPatchInfo = patchInfo.offsets[0];
     let upperReadOffset = romPatchInfo.upper;
     let lowerReadOffset = romPatchInfo.lower;
+    let upper, lower;
     if (typeof romPatchInfo.ovl === "number") {
-      const sceneInfo = scenes.getInfo(romPatchInfo.ovl);
-      upperReadOffset += sceneInfo.rom_start;
-      lowerReadOffset += sceneInfo.rom_start;
+      const sceneView = scenes.getDataView(romPatchInfo.ovl);
+      upper = sceneView.getUint16(upperReadOffset);
+      lower = sceneView.getUint16(lowerReadOffset);
     }
-    let upper = romView.getUint16(upperReadOffset);
-    let lower = romView.getUint16(lowerReadOffset);
+    else {
+      const romView = romhandler.getDataView();
+      upper = romView.getUint16(upperReadOffset);
+      lower = romView.getUint16(lowerReadOffset);
+    }
+
     const offset = getRegSetAddress(upper, lower);
     $$log(`Audio.getROMOffset -> ${$$hex(offset)}`);
 
@@ -165,13 +169,18 @@ export namespace audio {
       patchInfo.offsets.forEach((offsetInfo, oIndex) => {
         let anotherUpperReadOffset = offsetInfo.upper;
         let anotherLowerReadOffset = offsetInfo.lower;
+        let anotherUpper, anotherLower;
         if (typeof offsetInfo.ovl === "number") {
-          const sceneInfo = scenes.getInfo(offsetInfo.ovl);
-          anotherUpperReadOffset += sceneInfo.rom_start;
-          anotherLowerReadOffset += sceneInfo.rom_start;
+          const sceneView = scenes.getDataView(offsetInfo.ovl);
+          anotherUpper = sceneView.getUint16(anotherUpperReadOffset);
+          anotherLower = sceneView.getUint16(anotherLowerReadOffset);
         }
-        let anotherUpper = romView.getUint16(anotherUpperReadOffset);
-        let anotherLower = romView.getUint16(anotherLowerReadOffset);
+        else {
+          const romView = romhandler.getDataView();
+          anotherUpper = romView.getUint16(anotherUpperReadOffset);
+          anotherLower = romView.getUint16(anotherLowerReadOffset);
+        }
+
         const anotherOffset = getRegSetAddress(anotherUpper, anotherLower);
         if (anotherOffset !== offset)
           throw `AudioFS.getROMOffset patch offset ${subsection}/${oIndex} seems wrong:
@@ -186,7 +195,6 @@ export namespace audio {
 
   export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     $$log(`Audio.setROMOffset(${$$hex(newOffset)})`);
-    let romView = new DataView(buffer);
     let patchSubsections = getPatchInfo();
     for (let i = 0; i < patchSubsections.length; i++) {
       let subsection = patchSubsections[i];
@@ -197,12 +205,15 @@ export namespace audio {
         let patchROMUpper = patchOffset.upper;
         let patchROMLower = patchOffset.lower;
         if (typeof patchOffset.ovl === "number") {
-          const sceneInfo = scenes.getInfo(patchOffset.ovl);
-          patchROMUpper += sceneInfo.rom_start;
-          patchROMLower += sceneInfo.rom_start;
+          const sceneView = scenes.getDataView(patchOffset.ovl);
+          sceneView.setUint16(patchROMUpper, upper);
+          sceneView.setUint16(patchROMLower, lower);
         }
-        romView.setUint16(patchROMUpper, upper);
-        romView.setUint16(patchROMLower, lower);
+        else {
+          const romView = new DataView(buffer);
+          romView.setUint16(patchROMUpper, upper);
+          romView.setUint16(patchROMLower, lower);
+        }
       }
     }
   }

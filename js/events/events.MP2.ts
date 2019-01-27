@@ -3,9 +3,9 @@ import { hashEqual } from "../utils/arrays";
 import { getSpacesOfSubType } from "../boards";
 import { SpaceSubtype } from "../types";
 import { distance } from "../utils/number";
-import { romhandler } from "../romhandler";
 import { copyObject } from "../utils/obj";
 import { StarEvent, BooEvent, BankEvent, ItemShop } from "./events.common";
+import { scenes } from "../fs/scenes";
 
 (StarEvent as any)._parse2 = function(dataView: DataView, info: IEventParseInfo) {
   let hashes = {
@@ -63,15 +63,16 @@ import { StarEvent, BooEvent, BankEvent, ItemShop } from "./events.common";
   }
 
   if (info.boardIndex === 0) {
-    let romView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(62);
 
+    // base 0x002A0D18
     if (curBoo === 1) {
-      romView.setUint16(0x002A0D18 + 0x82, info.curSpaceIndex); // 0x1010BAC8
-      romView.setUint16(0x002A0D18 + 0xA6, bestBooIdx); // 0x8010BAEC
+      sceneView.setUint16(0x9248 + 0x82, info.curSpaceIndex); // 0x1010BAC8
+      sceneView.setUint16(0x9248 + 0xA6, bestBooIdx); // 0x8010BAEC
     }
     else if (curBoo === 2) {
-      romView.setUint16(0x002A0D18 + 0x8A, info.curSpaceIndex); // 0x8010BAD0
-      romView.setUint16(0x002A0D18 + 0xAE, bestBooIdx); // 0x8010BAF4
+      sceneView.setUint16(0x9248 + 0x8A, info.curSpaceIndex); // 0x8010BAD0
+      sceneView.setUint16(0x9248 + 0xAE, bestBooIdx); // 0x8010BAF4
     }
 
     // Just point to the event because we left it there.
@@ -121,21 +122,22 @@ import { StarEvent, BooEvent, BankEvent, ItemShop } from "./events.common";
   }
 
   if (info.boardIndex === 0) {
-    let romView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(62);
 
+    const base = 0x6E4C; // 0x0029E91C
     if (curBank === 1) {
       // The current space
-      romView.setUint16(0x0029E91C + 0x6A, info.curSpaceIndex); // 0x801096B4
+      sceneView.setUint16(base + 0x6A, info.curSpaceIndex); // 0x801096B4
 
       // The bank's space
-      romView.setUint16(0x0029E91C + 0x92, bestBankIdx); // 0x801096DC
+      sceneView.setUint16(base + 0x92, bestBankIdx); // 0x801096DC
     }
     else if (curBank === 2) {
       // The current space
-      romView.setUint16(0x0029E91C + 0x72, info.curSpaceIndex); // 0x801096BC
+      sceneView.setUint16(base + 0x72, info.curSpaceIndex); // 0x801096BC
 
       // The bank's space
-      romView.setUint16(0x0029E91C + 0x86, bestBankIdx); // 0x801096D0
+      sceneView.setUint16(base + 0x86, bestBankIdx); // 0x801096D0
     }
 
     // Just point to the event because we left it alone.
@@ -185,11 +187,11 @@ import { StarEvent, BooEvent, BankEvent, ItemShop } from "./events.common";
   }
 
   if (info.boardIndex === 0) {
-    let romView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(62);
 
     if (curItemShop === 1) {
       // The shop's space
-      romView.setUint16(0x0029EE00 + 0x62, bestItemShopIdx); // 0x80109B90
+      sceneView.setUint16(0x7330 + 0x62, bestItemShopIdx); // 0x80109B90
     }
 
     // Just point to the event because we left it alone.

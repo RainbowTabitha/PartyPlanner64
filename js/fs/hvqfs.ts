@@ -191,7 +191,6 @@ interface IHVQMetadata {
 
 export namespace hvqfs {
   export function getROMOffset() {
-    let romView = romhandler.getDataView();
     let patchOffsets = getPatchOffsets();
     if (!patchOffsets)
       return null;
@@ -200,13 +199,18 @@ export namespace hvqfs {
       return null;
     let upperReadOffset = romPatchInfo.upper;
     let lowerReadOffset = romPatchInfo.lower;
+    let upper, lower;
     if (typeof romPatchInfo.ovl === "number") {
-      const sceneInfo = scenes.getInfo(romPatchInfo.ovl);
-      upperReadOffset += sceneInfo.rom_start;
-      lowerReadOffset += sceneInfo.rom_start;
+      const sceneView = scenes.getDataView(romPatchInfo.ovl);
+      upper = sceneView.getUint16(upperReadOffset);
+      lower = sceneView.getUint16(lowerReadOffset);
     }
-    let upper = romView.getUint16(upperReadOffset);
-    let lower = romView.getUint16(lowerReadOffset);
+    else {
+      const romView = romhandler.getDataView();
+      upper = romView.getUint16(upperReadOffset);
+      lower = romView.getUint16(lowerReadOffset);
+    }
+
     const offset = getRegSetAddress(upper, lower);
 
     // $$log(`HVQFS.getROMOffset -> ${$$hex(offset)}`);
@@ -216,13 +220,18 @@ export namespace hvqfs {
         const anotherPatchOffset = patchOffsets[i];
         let anotherUpperReadOffset = anotherPatchOffset.upper;
         let anotherLowerReadOffset = anotherPatchOffset.lower;
+        let anotherUpper, anotherLower;
         if (typeof anotherPatchOffset.ovl === "number") {
-          const sceneInfo = scenes.getInfo(anotherPatchOffset.ovl);
-          anotherUpperReadOffset += sceneInfo.rom_start;
-          anotherLowerReadOffset += sceneInfo.rom_start;
+          const sceneView = scenes.getDataView(anotherPatchOffset.ovl);
+          anotherUpper = sceneView.getUint16(anotherUpperReadOffset);
+          anotherLower = sceneView.getUint16(anotherLowerReadOffset);
         }
-        let anotherUpper = romView.getUint16(anotherUpperReadOffset);
-        let anotherLower = romView.getUint16(anotherLowerReadOffset);
+        else {
+          const romView = romhandler.getDataView();
+          anotherUpper = romView.getUint16(anotherUpperReadOffset);
+          anotherLower = romView.getUint16(anotherLowerReadOffset);
+        }
+
         if (anotherUpper !== upper || anotherLower !== lower)
           throw `HVQFS.getROMOffset patch offset ${i} seems wrong:
           offset: ${$$hex(offset)} vs ${$$hex(anotherUpper >>> 16) + $$hex(anotherLower, "")}
@@ -235,8 +244,7 @@ export namespace hvqfs {
   }
 
   export function setROMOffset(newOffset: number, buffer: ArrayBuffer) {
-    $$log(`HVQFS.setROMOffset(0x${Number(newOffset).toString(16)})`);
-    let romView = new DataView(buffer);
+    $$log(`HVQFS.setROMOffset(${$$hex(newOffset)}})`);
     let patchOffsets = getPatchOffsets();
     const [upper, lower] = getRegSetUpperAndLower(newOffset);
     for (let i = 0; i < patchOffsets.length; i++) {
@@ -244,12 +252,15 @@ export namespace hvqfs {
       let patchROMUpper = patchOffset.upper;
       let patchROMLower = patchOffset.lower;
       if (typeof patchOffset.ovl === "number") {
-        const sceneInfo = scenes.getInfo(patchOffset.ovl);
-        patchROMUpper += sceneInfo.rom_start;
-        patchROMLower += sceneInfo.rom_start;
+        const sceneView = scenes.getDataView(patchOffset.ovl);
+        sceneView.setUint16(patchROMUpper, upper);
+        sceneView.setUint16(patchROMLower, lower);
       }
-      romView.setUint16(patchROMUpper, upper);
-      romView.setUint16(patchROMLower, lower);
+      else {
+        const romView = new DataView(buffer);
+        romView.setUint16(patchROMUpper, upper);
+        romView.setUint16(patchROMLower, lower);
+      }
     }
     $$log(`HVQFS.setROMOffset -> ${$$hex((upper << 16) | lower)}`);
   }

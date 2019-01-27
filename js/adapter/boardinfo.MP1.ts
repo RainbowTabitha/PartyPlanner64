@@ -5,6 +5,7 @@ import { create as createEvent } from "../events/events";
 import { hvqfs } from "../fs/hvqfs";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer } from "../utils/arrays";
+import { scenes } from "../fs/scenes";
 
 // DK's Jungle Adventure - (U) ROM
 const MP1_USA_DK = createBoardInfo("MP1_USA_DK");
@@ -30,26 +31,26 @@ MP1_USA_DK.img = {
 // dump.printAsm(0x2418A0, 0x244B50)
 MP1_USA_DK.sceneIndex = 0x36; // 54
 MP1_USA_DK.mainfsEventFile = [10, 422];
-MP1_USA_DK.eventASMStart = 0x00242CDC;
-MP1_USA_DK.eventASMEnd = 0x00244AFC; // 0x00244AC4
-MP1_USA_DK.spaceEventsStartAddr = 0x000FA0CC; // 0x800F7A1C
-MP1_USA_DK.spaceEventsStartOffset = 0x0024538C;
-MP1_USA_DK.spaceEventsEndOffset = 0x00245500;
+MP1_USA_DK.eventASMStart = 0x143C; // 0x00242CDC;
+MP1_USA_DK.eventASMEnd = 0x325C; // 0x00244AC4, 800F983C
+// MP1_USA_DK.spaceEventsStartAddr = 0x000FA0CC; // 0x800F7A1C
+// MP1_USA_DK.spaceEventsStartOffset = 0x0024538C;
+// MP1_USA_DK.spaceEventsEndOffset = 0x00245500;
 MP1_USA_DK.spaceEventTables = [
-  { upper: 0x00242470, lower: 0x00242478 }, // 0x800F71B0, 0x800F71B8
-  { upper: 0x0024248C, lower: 0x00242494 }, // 0x800F71CC, 0x800F71D4
-  { upper: 0x002424A8, lower: 0x002424B0 }, // 0x800F71E8, 0x800F71F0
-  { upper: 0x002424C4, lower: 0x002424CC }, // 0x800F7204, 0x800F720C
+  { upper: 0xBD0, lower: 0xBD8 }, // 0x800F71B0, 0x800F71B8
+  { upper: 0xBEC, lower: 0xBF4 }, // 0x800F71CC, 0x800F71D4
+  { upper: 0xC08, lower: 0xC10 }, // 0x800F71E8, 0x800F71F0
+  { upper: 0xC24, lower: 0xC2C }, // 0x800F7204, 0x800F720C
   // tables: 0x800FA0CC
 ];
-MP1_USA_DK.koopaSpaceInst = 0x002425F4; // 0x800F7330
-MP1_USA_DK.bowserSpaceInst = 0x00242558;
-MP1_USA_DK.boosLoopFnOffset = 0x00242A78;
-MP1_USA_DK.boosReadbackFnOffset = 0x00242970;
-MP1_USA_DK.starSpaceArrOffset = 0x00244BC0;
+MP1_USA_DK.koopaSpaceInst = 0xD54; // 0x002425F4, 0x800F7330
+MP1_USA_DK.bowserSpaceInst = 0xCB8; // 0x00242558;
+MP1_USA_DK.boosLoopFnOffset = 0x11D8; // 0x00242A78;
+MP1_USA_DK.boosReadbackFnOffset = 0x10D0; // 0x00242970;
+MP1_USA_DK.starSpaceArrOffset = 0x3320; // 0x00244BC0
 MP1_USA_DK.starSpaceCount = 7;
-MP1_USA_DK.toadSpaceArrOffset = [0x00244BD0, 0x00244BE8];
-MP1_USA_DK.audioIndexOffset = 0x0024245E;
+MP1_USA_DK.toadSpaceArrOffset = [0x3330, 0x3348]; // [0x00244BD0, 0x00244BE8];
+MP1_USA_DK.audioIndexOffset = 0xBBE; // 0x0024245E
 MP1_USA_DK.onLoad = function(board: IBoard) {
   board.otherbg.largescene = hvqfs.readBackground(MP1_USA_DK.bgDir + 1).src;
   board.otherbg.conversation = hvqfs.readBackground(MP1_USA_DK.bgDir + 2).src;
@@ -69,16 +70,19 @@ MP1_USA_DK.onWriteEvents = function(board: IBoard) {
       addEventToSpace(space, createEvent("STARCHANCE"));
   }
 };
-MP1_USA_DK.onAfterOverwrite = function(romView: DataView) {
+MP1_USA_DK.onAfterOverwrite = function() {
+  const sceneView = scenes.getDataView(MP1_USA_DK.sceneIndex);
+
   // Wipe out thwomps
-  romView.setUint32(0x2423E4, 0);
+  sceneView.setUint32(0xB44, 0); // 0x2423E4
   // Wipe out doors
-  romView.setUint32(0x2423EC, 0);
+  sceneView.setUint32(0xB4C, 0); // 0x2423EC
 
   // Remove the "box" from the game start scenery.
-  romView.setUint32(0x2A9598, 0xC57A0000); // Some random float to get it away
-  romView.setUint32(0x2A959C, 0);
-  romView.setUint32(0x2A95A0, 0);
+  const introSceneView = scenes.getDataView(98);
+  introSceneView.setUint32(0x7098, 0xC57A0000); // 0x2A9598 // Some random float to get it away
+  introSceneView.setUint32(0x709C, 0); // 0x2A959C
+  introSceneView.setUint32(0x70A0, 0); // 0x2A95A0
 
   // Make Bowser's event text a bit more generic.
   let bytes: number[] = [];
@@ -90,12 +94,13 @@ MP1_USA_DK.onAfterOverwrite = function(romView: DataView) {
   strings.write(399, strBuffer);
   strings.write(402, strBuffer);
 };
-MP1_USA_DK.clearSpaceEventTableCalls = function(romView: DataView) {
+MP1_USA_DK.clearSpaceEventTableCalls = function(sceneView: DataView) {
   // Remove extra separated event table reads because we don't use them.
   // If we supported the "Remove Boo/Bowser" items from the shop, remove this.
   // 0xF71B0 - 0xF7210
-  for (let offset = 0x242470; offset < 0x2424D0; offset += 4)
-    romView.setUint32(offset, 0);
+  // 0x242470 - 0x2424D0
+  for (let offset = 0xBD0; offset < 0xC30; offset += 4)
+    sceneView.setUint32(offset, 0);
 }
 
 // DK's Jungle Adventure - (J) ROM
@@ -116,9 +121,9 @@ MP1_JPN_DK.img = {
 };
 MP1_JPN_DK.eventASMStart = 0x00;
 MP1_JPN_DK.eventASMEnd = 0x00;
-MP1_JPN_DK.spaceEventsStartAddr = 0x000F951C;
-MP1_JPN_DK.spaceEventsStartOffset = 0x002448BC;
-MP1_JPN_DK.spaceEventsEndOffset = 0x00244A20;
+// MP1_JPN_DK.spaceEventsStartAddr = 0x000F951C;
+// MP1_JPN_DK.spaceEventsStartOffset = 0x002448BC;
+// MP1_JPN_DK.spaceEventsEndOffset = 0x00244A20;
 
 // Peach's Birthday Cake - (U) ROM
 const MP1_USA_PEACH = createBoardInfo("MP1_USA_PEACH");
@@ -137,12 +142,12 @@ MP1_USA_PEACH.img = {
 };
 MP1_USA_PEACH.sceneIndex = 0x37; // 55
 MP1_USA_PEACH.eventASMStart = 0x00;
-MP1_USA_PEACH.spaceEventsStartAddr = 0x000F7C70;
-MP1_USA_PEACH.spaceEventsStartOffset = 0x00246C50;
-MP1_USA_PEACH.spaceEventsEndOffset = 0x00246D10;
-MP1_USA_PEACH.koopaSpaceInst = 0x00245D80;
-MP1_USA_PEACH.bowserSpaceInst = 0x00245F48;
-MP1_USA_PEACH.goombaSpaceInst = 0x00245EC0;
+// MP1_USA_PEACH.spaceEventsStartAddr = 0x000F7C70;
+// MP1_USA_PEACH.spaceEventsStartOffset = 0x00246C50;
+// MP1_USA_PEACH.spaceEventsEndOffset = 0x00246D10;
+MP1_USA_PEACH.koopaSpaceInst = 0x7C0; // 0x00245D80;
+MP1_USA_PEACH.bowserSpaceInst = 0x988; // // 0x00245F48
+MP1_USA_PEACH.goombaSpaceInst = 0x900; // 0x00245EC0;
 
 // Yoshi's Tropical Island - (U) ROM
 const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI");
@@ -161,9 +166,9 @@ MP1_USA_YOSHI.img = {
 };
 MP1_USA_YOSHI.sceneIndex = 0x38; // 56
 MP1_USA_YOSHI.eventASMStart = 0x00;
-MP1_USA_YOSHI.spaceEventsStartAddr = 0x000F861C;
-MP1_USA_YOSHI.spaceEventsStartOffset = 0x00248E2C;
-MP1_USA_YOSHI.spaceEventsEndOffset = 0x00248EE4;
+// MP1_USA_YOSHI.spaceEventsStartAddr = 0x000F861C;
+// MP1_USA_YOSHI.spaceEventsStartOffset = 0x00248E2C;
+// MP1_USA_YOSHI.spaceEventsEndOffset = 0x00248EE4;
 
 // Wario's Battle Canyon = (U) ROM
 const MP1_USA_WARIO = createBoardInfo("MP1_USA_WARIO");
@@ -182,16 +187,16 @@ MP1_USA_WARIO.img = {
 };
 MP1_USA_WARIO.sceneIndex = 0x39; // 57
 MP1_USA_WARIO.eventASMStart = 0x00;
-MP1_USA_WARIO.spaceEventsStartAddr = 0x000F99C4;
-MP1_USA_WARIO.spaceEventsStartOffset = 0x0024C2E4;
-MP1_USA_WARIO.spaceEventsEndOffset = 0x0024C38C;
-MP1_USA_WARIO.koopaSpaceInst = 0x00249DD0;
-MP1_USA_WARIO.bowserSpaceInst = 0x00249CA8;
-MP1_USA_WARIO.boosLoopFnOffset = 0x0024A09C;
-MP1_USA_WARIO.boosReadbackFnOffset = 0x00249F94;
-MP1_USA_WARIO.starSpaceArrOffset = 0x0024C140;
+// MP1_USA_WARIO.spaceEventsStartAddr = 0x000F99C4;
+// MP1_USA_WARIO.spaceEventsStartOffset = 0x0024C2E4;
+// MP1_USA_WARIO.spaceEventsEndOffset = 0x0024C38C;
+MP1_USA_WARIO.koopaSpaceInst = 0xED0; // 0x00249DD0;
+MP1_USA_WARIO.bowserSpaceInst = 0xDA8; // 0x00249CA8;
+MP1_USA_WARIO.boosLoopFnOffset = 0x119C; // 0x0024A09C;
+MP1_USA_WARIO.boosReadbackFnOffset = 0x1094; // 0x00249F94;
+MP1_USA_WARIO.starSpaceArrOffset = 0x3240; // 0x0024C140;
 MP1_USA_WARIO.starSpaceCount = 7;
-MP1_USA_WARIO.toadSpaceArrOffset = [0x0024C150, 0x0024C170];
+MP1_USA_WARIO.toadSpaceArrOffset = [0x3250, 0x3270]; // [0x0024C150, 0x0024C170];
 
 // Luigi's Engine Room - (U) ROM
 const MP1_USA_LUIGI = createBoardInfo("MP1_USA_LUIGI");
@@ -210,12 +215,12 @@ MP1_USA_LUIGI.img = {
 };
 MP1_USA_LUIGI.sceneIndex = 0x3A; // 58
 MP1_USA_LUIGI.eventASMStart = 0x00;
-MP1_USA_LUIGI.spaceEventsStartAddr = 0x000F9B90;
-MP1_USA_LUIGI.spaceEventsStartOffset = 0x0024F940;
-MP1_USA_LUIGI.spaceEventsEndOffset = 0x0024FA70;
-MP1_USA_LUIGI.starSpaceArrOffset = 0x0024F2F0;
+// MP1_USA_LUIGI.spaceEventsStartAddr = 0x000F9B90;
+// MP1_USA_LUIGI.spaceEventsStartOffset = 0x0024F940;
+// MP1_USA_LUIGI.spaceEventsEndOffset = 0x0024FA70;
+MP1_USA_LUIGI.starSpaceArrOffset = 0x2F60; // 0x0024F2F0;
 MP1_USA_LUIGI.starSpaceCount = 7;
-MP1_USA_LUIGI.toadSpaceArrOffset = [0x0024F300, 0x0024F384];
+MP1_USA_LUIGI.toadSpaceArrOffset = [0x2F70, 0x2FF4]; // [0x0024F300, 0x0024F384];
 
 // Mario's Rainbow Castle - (U) ROM
 const MP1_USA_MARIO = createBoardInfo("MP1_USA_MARIO");
@@ -234,9 +239,9 @@ MP1_USA_MARIO.img = {
 };
 MP1_USA_MARIO.sceneIndex = 0x3B; // 59
 MP1_USA_MARIO.eventASMStart = 0x00;
-MP1_USA_MARIO.spaceEventsStartAddr = 0x000F8390;
-MP1_USA_MARIO.spaceEventsStartOffset = 0x00251830;
-MP1_USA_MARIO.spaceEventsEndOffset = 0x002518D0;
+// MP1_USA_MARIO.spaceEventsStartAddr = 0x000F8390;
+// MP1_USA_MARIO.spaceEventsStartOffset = 0x00251830;
+// MP1_USA_MARIO.spaceEventsEndOffset = 0x002518D0;
 
 // Bowser's Magma Mountain - (U) ROM
 const MP1_USA_BOWSER = createBoardInfo("MP1_USA_BOWSER");
@@ -254,12 +259,12 @@ MP1_USA_BOWSER.img = {
 };
 MP1_USA_BOWSER.sceneIndex = 0x3C; // 60
 MP1_USA_BOWSER.eventASMStart = 0x00;
-MP1_USA_BOWSER.spaceEventsStartAddr = 0x000F9080;
-MP1_USA_BOWSER.spaceEventsStartOffset = 0x00254370;
-MP1_USA_BOWSER.spaceEventsEndOffset = 0x00254450;
-MP1_USA_BOWSER.starSpaceArrOffset = 0x00253B68;
+// MP1_USA_BOWSER.spaceEventsStartAddr = 0x000F9080;
+// MP1_USA_BOWSER.spaceEventsStartOffset = 0x00254370;
+// MP1_USA_BOWSER.spaceEventsEndOffset = 0x00254450;
+MP1_USA_BOWSER.starSpaceArrOffset = 0x2298; // 0x00253B68;
 MP1_USA_BOWSER.starSpaceCount = 7;
-MP1_USA_BOWSER.toadSpaceArrOffset = [0x00253B78, 0x00253B98];
+MP1_USA_BOWSER.toadSpaceArrOffset = [0x22A8, 0x22C8]; // [0x00253B78, 0x00253B98];
 
 // Eternal Star - (U) ROM
 const MP1_USA_ETERNALSTAR = createBoardInfo("MP1_USA_ETERNALSTAR");
@@ -277,13 +282,13 @@ MP1_USA_ETERNALSTAR.img = {
 };
 MP1_USA_ETERNALSTAR.sceneIndex = 0x3D; // 61
 MP1_USA_ETERNALSTAR.eventASMStart = 0x00;
-MP1_USA_ETERNALSTAR.spaceEventsStartAddr = 0x000F905C;
-MP1_USA_ETERNALSTAR.spaceEventsStartOffset = 0x00256ECC;
-MP1_USA_ETERNALSTAR.spaceEventsEndOffset = 0x00256FF0;
-MP1_USA_ETERNALSTAR.bowserSpaceInst = 0x0025522C;
-MP1_USA_ETERNALSTAR.starSpaceArrOffset = 0x00256A40;
+// MP1_USA_ETERNALSTAR.spaceEventsStartAddr = 0x000F905C;
+// MP1_USA_ETERNALSTAR.spaceEventsStartOffset = 0x00256ECC;
+// MP1_USA_ETERNALSTAR.spaceEventsEndOffset = 0x00256FF0;
+MP1_USA_ETERNALSTAR.bowserSpaceInst = 0xDDC; // 0x0025522C;
+MP1_USA_ETERNALSTAR.starSpaceArrOffset = 0x25F0; // 0x00256A40;
 MP1_USA_ETERNALSTAR.starSpaceCount = 7;
-MP1_USA_ETERNALSTAR.toadSpaceArrOffset = 0x00256A50;
+MP1_USA_ETERNALSTAR.toadSpaceArrOffset = 0x2600; // 0x00256A50;
 
 // Training - (U) ROM
 const MP1_USA_TRAINING = createBoardInfo("MP1_USA_TRAINING");
@@ -294,13 +299,13 @@ MP1_USA_TRAINING.str = {};
 MP1_USA_TRAINING.img = {};
 MP1_USA_TRAINING.sceneIndex = 0x3E; // 62
 MP1_USA_TRAINING.eventASMStart = 0x00;
-MP1_USA_TRAINING.spaceEventsStartAddr = 0x000F87A8;
-MP1_USA_TRAINING.spaceEventsStartOffset = 0x002591B8;
-MP1_USA_TRAINING.spaceEventsEndOffset = 0x002591E8;
-MP1_USA_TRAINING.bowserSpaceInst = 0x0025731C;
-MP1_USA_TRAINING.toadSpaceInst = 0x0025715C;
-MP1_USA_TRAINING.koopaSpaceInst = 0x002571E4;
-MP1_USA_TRAINING.booSpaceInst = 0x00257294;
+// MP1_USA_TRAINING.spaceEventsStartAddr = 0x000F87A8;
+// MP1_USA_TRAINING.spaceEventsStartOffset = 0x002591B8;
+// MP1_USA_TRAINING.spaceEventsEndOffset = 0x002591E8;
+MP1_USA_TRAINING.bowserSpaceInst = 0x32C; // 0x0025731C;
+MP1_USA_TRAINING.toadSpaceInst = 0x16C; // 0x0025715C;
+MP1_USA_TRAINING.koopaSpaceInst = 0x1F4; // 0x002571E4;
+MP1_USA_TRAINING.booSpaceInst = 0x2A4; // 0x00257294;
 
 // Mini-Game Stadium - (U) ROM
 const MP1_USA_STADIUM = createBoardInfo("MP1_USA_STADIUM");
@@ -320,9 +325,9 @@ MP1_USA_ISLAND.str = {};
 MP1_USA_ISLAND.img = {};
 MP1_USA_ISLAND.sceneIndex = 0x72; // 114
 MP1_USA_ISLAND.eventASMStart = 0x00;
-MP1_USA_ISLAND.spaceEventsStartAddr = 0x000F8448;
-MP1_USA_ISLAND.spaceEventsStartOffset = 0x002F8EE8;
-MP1_USA_ISLAND.spaceEventsEndOffset = 0x002F9040;
+// MP1_USA_ISLAND.spaceEventsStartAddr = 0x000F8448;
+// MP1_USA_ISLAND.spaceEventsStartOffset = 0x002F8EE8;
+// MP1_USA_ISLAND.spaceEventsEndOffset = 0x002F9040;
 
 export function getBoardInfos(gameID: Game) {
   switch(gameID) {

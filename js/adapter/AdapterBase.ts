@@ -16,13 +16,13 @@ import { SpaceEventList } from "./eventlist";
 import { create as createEvent, IEventWriteInfo, write as writeEvent, parse as parseEvent, EventParameterType } from "../events/events";
 import { toU32 } from "../utils/string";
 import { makeDivisibleBy, distance, getRawFloat32Format } from "../utils/number";
-import { parse as parstInst } from "mips-inst";
+import { parse as parseInst } from "mips-inst";
 import { assemble } from "mips-assembler";
 import { createContext } from "../utils/canvas";
 import { toArrayBuffer } from "../utils/image";
 import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
-import { arrayBufferToDataURL } from "../utils/arrays";
+import { arrayBufferToDataURL, copyRange } from "../utils/arrays";
 import { get, $setting } from "../settings";
 import { render } from "../renderer";
 import { showMessage } from "../appControl";
@@ -142,19 +142,13 @@ export abstract class AdapterBase {
     let boarddef = createBoardDef(boardCopy, chains);
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
-    // Wipe out the space event definition array.
-    // let spaceEventStart = boardInfo.spaceEventsStartOffset;
-    // let spaceEventEnd = boardInfo.spaceEventsEndOffset;
-    let romView = romhandler.getDataView();
-    // for (let offset = spaceEventStart; offset < spaceEventEnd; offset += 4)
-    //   romView.setUint32(offset, 0xFFFF0000);
-
     // Wipe out the event ASM from those events.
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let eventASMStart = boardInfo.eventASMStart;
     if (eventASMStart) {
       let eventASMEnd = boardInfo.eventASMEnd;
       for (let offset = eventASMStart; offset < eventASMEnd; offset += 4)
-        romView.setUint32(offset, 0);
+        sceneView.setUint32(offset, 0);
     }
 
     this.onWriteStrings(boardCopy, boardInfo);
@@ -173,8 +167,9 @@ export abstract class AdapterBase {
     this._clearOtherBoardNames(boardIndex);
 
     if (boardInfo.onAfterOverwrite)
-      boardInfo.onAfterOverwrite(romView, boardCopy);
+      boardInfo.onAfterOverwrite(boardCopy);
 
+    const romView = romhandler.getDataView();
     if (this.onAfterOverwrite)
       this.onAfterOverwrite(romView, boardCopy, boardInfo);
 
@@ -309,33 +304,22 @@ export abstract class AdapterBase {
   _offsetToAddr(offset: number, boardInfo: IBoardInfo) {
     if (typeof boardInfo.sceneIndex === "number" && boardInfo.sceneIndex >= 0) {
       const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
-      return (sceneInfo.ram_start & 0x7FFFFFFF)
+      if (offset < sceneInfo.rom_start) {
+        // This is an offset that is already relative to the scene.
+        return (sceneInfo.ram_start & 0x7FFFFFFF)
+            + offset;
+      }
+      else {
+        return (sceneInfo.ram_start & 0x7FFFFFFF)
             - (sceneInfo.rom_start - offset);
+      }
     }
 
-    return boardInfo.spaceEventsStartAddr
-        - (boardInfo.spaceEventsStartOffset - offset);
+    throw new Error("How do I _offsetToAddr?");
   }
 
   _offsetToAddrBase(offset: number, base: number) {
     return (base + offset) >>> 0;
-  }
-
-  /**
-   * Converts an in-game address to ROM offset.
-   * Assumes the address is within the scene overlay for a given board.
-   * @param {number} addr Address to convert
-   * @param {object} boardInfo Board info related to the address.
-   */
-  _addrToOffset(addr: number, boardInfo: IBoardInfo) {
-    if (typeof boardInfo.sceneIndex === "number" && boardInfo.sceneIndex >= 0) {
-      const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
-      return sceneInfo.rom_start
-            - ((sceneInfo.ram_start & 0x7FFFFFFF) - (addr & 0x7FFFFFFF));
-    }
-
-    return boardInfo.spaceEventsStartOffset
-        - (boardInfo.spaceEventsStartAddr - addr);
   }
 
   _addrToOffsetBase(addr: number, base: number) {
@@ -358,7 +342,7 @@ export abstract class AdapterBase {
 
     const game = romhandler.getROMGame()!;
     const hydrateEventTableAddr = getSymbol(game, "EventTableHydrate");
-
+    const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
     const boardCodeDataView = scenes.getCodeDataView(boardInfo.sceneIndex);
     const tableCalls = findCalls(boardCodeDataView, hydrateEventTableAddr);
 
@@ -371,82 +355,14 @@ export abstract class AdapterBase {
       const upper = boardCodeDataView.getUint32(callOffset - 4);
       const lower = boardCodeDataView.getUint32(callOffset + 4);
       const tableAddr = getRegSetAddress(upper, lower);
-      const tableOffset = this._addrToOffset(tableAddr, boardInfo);
+      const tableOffset = this._addrToOffsetBase(tableAddr, sceneInfo.ram_start);
       $$log(`Found event table ${$$hex(tableAddr)} (ROM ${$$hex(tableOffset)})`);
       spaceEventTables.push({ tableOffset });
     }
   }
 
   _extractEvents(boardInfo: IBoardInfo, board: IBoard, boardIndex: number, chains: number[][]) {
-    if (boardInfo.spaceEventTables) {
-      this._extractEventsNew(boardInfo, board, boardIndex, chains);
-      return;
-    }
-
-    // When we convert everything to spaceEventTables, just remove this and rename _extractEventsNew
-    if (!boardInfo.spaceEventsStartAddr)
-      return;
-
-    let boardView = romhandler.getDataView();
-    let curOffset = boardInfo.spaceEventsStartOffset;
-
-    // Generic events
-    while (curOffset < boardInfo.spaceEventsEndOffset) {
-      if (boardView.getInt16(curOffset) === -1) { // Sometimes there's -1 dividers.
-        curOffset += 8;
-        continue;
-      }
-
-      // Figure out the current info struct offset in the ROM.
-      let curInfoAddr = boardView.getUint32(curOffset + 4) & 0x7FFFFFFF;
-      let curInfoOffset = this._addrToOffset(curInfoAddr, boardInfo);
-      let eventActivationType = boardView.getUint16(curInfoOffset);
-
-      if (!curInfoAddr && !boardView.getInt16(curOffset)) // Just ran out of events and into 00s.
-        break;
-
-      while (eventActivationType) {
-        // Figure out the event ASM info in ROM.
-        let eventExecutionType = boardView.getUint16(curInfoOffset + 2);
-        let asmAddr = boardView.getUint32(curInfoOffset + 4) & 0x7FFFFFFF;
-        let asmOffset = boardInfo.spaceEventsStartOffset
-          - (boardInfo.spaceEventsStartAddr - asmAddr);
-
-        let curSpace = boardView.getInt16(curOffset);
-        let eventInfo = parseEvent(boardView, {
-          addr: asmAddr,
-          offset: asmOffset,
-          board,
-          boardIndex,
-          curSpace,
-          chains,
-          game: romhandler.getROMGame()!,
-          gameVersion: this.gameVersion,
-        } as any);
-
-        // We parsed an actual event.
-        if (eventInfo && eventInfo !== true) {
-          eventInfo.activationType = eventActivationType;
-          eventInfo.executionType = eventExecutionType;
-          addEventByIndex(board, curSpace, eventInfo);
-
-          //console.log(`Found event 0x${asmOffset.toString(16)} (${eventInfo.name})`);
-        }
-        else if (!eventInfo) {
-          //console.log(`Unknown event 0x${asmOffset.toString(16)} on board ${boardIndex} (${boardInfo.name})`);
-        }
-
-        curInfoAddr += 8;
-        curInfoOffset = this._addrToOffset(curInfoAddr, boardInfo);
-        eventActivationType = boardView.getUint16(curInfoOffset);
-      }
-
-      curOffset += 8;
-    }
-  }
-
-  _extractEventsNew(boardInfo: IBoardInfo, board: IBoard, boardIndex: number, chains: number[][]) {
-    if (!boardInfo.spaceEventTables)
+    if (!boardInfo.spaceEventTables || !boardInfo.sceneIndex)
       return;
 
     // PP64 sometimes stores board ASM in the main filesystem. We need to
@@ -464,9 +380,10 @@ export abstract class AdapterBase {
       }
     }
 
+    const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
     if (!buffer) {
-      buffer = romhandler.getROMBuffer()!;
-      bufferView = romhandler.getDataView();
+      bufferView = scenes.getDataView(boardInfo.sceneIndex);
+      buffer = bufferView.buffer;
 
       boardInfo.spaceEventTables.forEach((tableDeflateCall: any) => {
         // Each board can have several event tables, which it "deflates" by
@@ -483,7 +400,7 @@ export abstract class AdapterBase {
           if (!upper && !lower)
             return;
           let tableAddr = getRegSetAddress(upper, lower);
-          tableOffset = this._addrToOffset(tableAddr, boardInfo);
+          tableOffset = this._addrToOffsetBase(tableAddr, sceneInfo.ram_start);
         }
 
         eventTable.parse(buffer!, tableOffset); // Build up all the events into one collection.
@@ -499,7 +416,7 @@ export abstract class AdapterBase {
       if (curInfoAddr > (this.EVENT_RAM_LOC & 0x7FFFFFFF))
         curInfoOffset = this._addrToOffsetBase(curInfoAddr, this.EVENT_RAM_LOC);
       else
-        curInfoOffset = this._addrToOffset(curInfoAddr, boardInfo);
+        curInfoOffset = this._addrToOffsetBase(curInfoAddr, sceneInfo.ram_start);
       let boardList = new SpaceEventList();
       boardList.parse(buffer!, curInfoOffset);
       boardList.forEach(listEntry => {
@@ -512,8 +429,8 @@ export abstract class AdapterBase {
         }
         else {
           // This event actually points back to the original ROM.
-          asmOffset = this._addrToOffset(asmAddr, boardInfo);
-          codeView = romhandler.getDataView();
+          asmOffset = this._addrToOffsetBase(asmAddr, sceneInfo.ram_start);
+          codeView = scenes.getDataView(boardInfo.sceneIndex);
         }
 
         let eventInfo = parseEvent(codeView, {
@@ -666,13 +583,13 @@ export abstract class AdapterBase {
 
       // There is also a listing of the entry/exit spaces, probably used by the gate animation.
       if (boardInfo.gateNeighborsOffset) {
-        let romView = romhandler.getDataView();
+        const sceneView = scenes.getDataView(boardInfo.sceneIndex);
         for (let gateAddrIndex = 0; gateAddrIndex < boardInfo.gateNeighborsOffset.length; gateAddrIndex++) {
           let gateAddr = boardInfo.gateNeighborsOffset[gateAddrIndex];
           gateAddr += (gateIndex * 4);
 
-          romView.setUint16(gateAddr, entrySpaceIndex);
-          romView.setUint16(gateAddr + 2, exitSpaceIndex);
+          sceneView.setUint16(gateAddr, entrySpaceIndex);
+          sceneView.setUint16(gateAddr + 2, exitSpaceIndex);
         }
       }
 
@@ -717,93 +634,6 @@ export abstract class AdapterBase {
         this._writeEventsNew(board, boardInfo, boardIndex, chains);
       }
       return;
-    }
-
-    let romView = romhandler.getDataView();
-    let romBytes = romhandler.getByteArray()!;
-
-    let curEventListingOffset = boardInfo.spaceEventsStartOffset;
-    let curEventRedirectOffset = curEventListingOffset - 8; // This moves backwards.
-    let curASMOffset = boardInfo.eventASMStart;
-
-    romBytes.fill(0, curEventRedirectOffset, curEventRedirectOffset + 8); // Pad zeros between the two sections.
-
-    let eventTemp: any = {};
-
-    for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
-      if (!space.events || !space.events.length)
-        continue;
-
-      // Prepare the redirection area.
-      let redirEntryLen = (space.events.length + 1) * 8;
-      space.events.forEach(event => {
-        if (event.inlineArgs) {
-          redirEntryLen += this._getArgsSize(event.inlineArgs.length);
-        }
-      });
-      curEventRedirectOffset -= redirEntryLen;
-      romBytes.fill(0, curEventRedirectOffset, curEventRedirectOffset + redirEntryLen);
-
-      // Reads entries first to last, but leave empty zeroes in front.
-      let redirEntry = curEventRedirectOffset + 8;
-
-      let hasWrittenListingOffset = false;
-
-      space.events.forEach(event => {
-        let temp = eventTemp[event.id] || {};
-        let info: Partial<IEventWriteInfo> = {
-          boardIndex,
-          offset: curASMOffset,
-          addr: this._offsetToAddr(curASMOffset, boardInfo) | 0x80000000,
-          game: romhandler.getROMGame()!,
-          gameVersion: this.gameVersion,
-        };
-
-        // Write any inline arguments
-        let argsCount = 0;
-        let argsSize = 0;
-        if (event.inlineArgs) {
-          argsCount = event.inlineArgs.length;
-          argsSize = this._getArgsSize(argsCount);
-          info.argsAddr = this._offsetToAddr(redirEntry, boardInfo) | 0x80000000;
-        }
-        for (let arg = 0; arg < argsCount; arg++) {
-          let argOffset = redirEntry + (arg * 2);
-          romView.setUint16(argOffset, event.inlineArgs[arg]);
-        }
-
-        let [writtenASMOffset, len] = writeEvent(romhandler.getROMBuffer()!, event,
-          info as IEventWriteInfo, temp) as number[];
-        eventTemp[event.id] = temp;
-
-        romView.setUint16(argsSize + redirEntry, event.activationType);
-        romView.setUint16(argsSize + redirEntry + 2, event.executionType || event.mystery);
-        romView.setUint32(argsSize + redirEntry + 4, this._offsetToAddr(writtenASMOffset, boardInfo) | 0x80000000);
-
-        if (!hasWrittenListingOffset) {
-          // Write the event listing for this space once we know the args size.
-          romView.setUint16(curEventListingOffset, i); // Space index
-          romView.setUint32(curEventListingOffset + 4, this._offsetToAddr(argsSize + redirEntry, boardInfo) | 0x80000000); // Redirect addr
-
-          hasWrittenListingOffset = true;
-        }
-
-        redirEntry += 8 + argsSize;
-
-        // If we actually wrote to the new space, update curASMOffset, else assume we reused some ASM.
-        if (writtenASMOffset === curASMOffset)
-          curASMOffset += len;
-
-        if (curASMOffset > boardInfo.eventASMEnd) {
-          showMessage(`Oops! This board is too complicated and overflowed the game's available space.
-            Try removing some events or reducing the number of branching paths.
-            The ROM has also been corrupted in memory so please close and open it.`); // '
-          throw "Overflowed board event ASM region.";
-        }
-      });
-
-      curEventListingOffset += 8;
     }
   }
 
@@ -1002,82 +832,88 @@ export abstract class AdapterBase {
   }
 
   _writeEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
+    if (!boardInfo.eventASMStart)
+      throw new Error("eventASMStart is not specified for board " + boardIndex);
+
     // The hook logic will be placed at the top of eventASMStart, since
     // we don't put anything there much anymore.
     const hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
-    const hookJAL = parstInst(`JAL ${hookAddr}`);
+    const hookJAL = parseInst(`JAL ${hookAddr}`);
 
-    const romView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
 
     // Clear the space event table hydrations, because we want a NOP sled
     // through the old logic basically, and no hook interference.
-    this._clearSpaceEventTableCalls(romView, boardInfo);
+    this._clearSpaceEventTableCalls(sceneView, boardInfo);
 
     // We will JAL to the eventASMStart location from the location where the
     // board data is hydrated.
     const hookOffset = boardInfo.spaceEventTables[0].upper;
-    romView.setUint32(hookOffset, hookJAL);
+    sceneView.setUint32(hookOffset, hookJAL);
 
     $$log(`Installed event hook at ROM ${$$hex(hookOffset)}, JAL ${hookAddr}`);
 
     //this.onWriteEventAsmHook(romView, boardInfo, boardIndex);
     // We essentially repeat the logic that all the boards use to hydrate the
     // MainFS code blob (and bring the blob into RAM of course.)
-    let offset = boardInfo.eventASMStart;
-
-    // Set up the stack (this is a legit function call)
-    romView.setUint32(offset, parstInst("ADDIU SP SP 0xFFE8"));
-    romView.setUint32(offset += 4, parstInst("SW RA, 0x0010(SP)"));
-
-    // Call for the MainFS to read in the ASM blob.
     const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
-    romView.setUint32(offset += 4, parstInst(`LUI A0 ${mainFsDir}`));
-    romView.setUint32(offset += 4, parstInst(`JAL ${this.MAINFS_READ_ADDR}`));
-    romView.setUint32(offset += 4, parstInst(`ADDIU A0 A0 ${mainFsFile}`));
+    const hookAsm = `
+      .orga ${boardInfo.eventASMStart}
 
-    // Now, V0 has the location that the MainFSRead put the blob... it isn't
-    // where we want it, it is in the heap somewhere, so we will move it.
+      // Set up the stack (this is a legit function call)
+      ADDIU SP SP 0xFFE8
+      SW RA, 0x0010(SP)
 
-    // This is a pretty simple copy loop
-    // T4 = Copy of V0, Current source RAM location
-    // T0 = Current dest RAM location
-    // T1 = Size of buffer remaining to copy
-    // T2 = Temp word register to do the copy
-    romView.setUint32(offset += 4, parstInst("ADDU T4 V0 R0")); // Copy V0 -> T4
-    romView.setUint32(offset += 4, parstInst("LW T0 0x4(T4)")); // LW T0, 0x4(T4) [RAM dest]
-    romView.setUint32(offset += 4, parstInst("LW T1 0x8(T4)")); // LW T1, 0x8(T4) [Buffer size]
-    // Loop start:
-    romView.setUint32(offset += 4, parstInst("LW T2 0(T4)"));
-    romView.setUint32(offset += 4, parstInst("SW T2 0(T0)"));
-    romView.setUint32(offset += 4, parstInst("ADDIU T4 T4 4"));
-    romView.setUint32(offset += 4, parstInst("ADDIU T0 T0 4"));
-    romView.setUint32(offset += 4, parstInst("ADDIU T1 T1 -4"));
-    romView.setUint32(offset += 4, parstInst("BGTZ T1 -6")); // BGTZ T1, -5 instructions 0xFFE8
-    romView.setUint32(offset += 4, 0); // NOP
+      // Call for the MainFS to read in the ASM blob.
+      LUI A0 ${mainFsDir}
+      JAL ${this.MAINFS_READ_ADDR}
+      ADDIU A0 A0 ${mainFsFile}
 
-    // Now we can hydrate the table.
-    // T9 = V0 copy (least likely to be overwritten by an uncontrolled JAL)
-    // T4 = Dest buffer addr + 0x10, where the table really starts
-    romView.setUint32(offset += 4, parstInst("ADDU T9 V0 R0")); // Copy V0 -> T9
-    romView.setUint32(offset += 4, parstInst("LW T4 4(T9)")); // LW T4, 0x4(T9) [RAM dest]
-    romView.setUint32(offset += 4, parstInst(`JAL ${this.TABLE_HYDRATE_ADDR}`));
-    romView.setUint32(offset += 4, parstInst("ADDIU A0 T4 16")); // ADDIU A0, T4, 16
+      // Now, V0 has the location that the MainFSRead put the blob... it isn't
+      // where we want it, it is in the heap somewhere, so we will move it.
 
-    // Well, we copied the buffer... now we should "free" it with this magic JAL...
-    // Free our T9 reference, which theoretically could be corrupted, but in practice not.
-    romView.setUint32(offset += 4, parstInst(`JAL ${this.HEAP_FREE_ADDR}`));
-    romView.setUint32(offset += 4, parstInst("ADDU A0 T9 R0"));
+      // This is a pretty simple copy loop
+      // T4 = Copy of V0, Current source RAM location
+      // T0 = Current dest RAM location
+      // T1 = Size of buffer remaining to copy
+      // T2 = Temp word register to do the copy
+      ADDU T4 V0 R0 // Copy V0 -> T4
+      LW T0 0x4(T4) // LW T0, 0x4(T4) [RAM dest]
+      LW T1 0x8(T4) // LW T1, 0x8(T4) [Buffer size]
+    loop_start:
+      LW T2 0(T4)
+      SW T2 0(T0)
+      ADDIU T4 T4 4
+      ADDIU T0 T0 4
+      ADDIU T1 T1 -4
+      BGTZ T1 loop_start
+      NOP
 
-    // End the call stack
-    romView.setUint32(offset += 4, parstInst("LW RA 0x10(SP)"));
-    romView.setUint32(offset += 4, parstInst("JR RA"));
-    romView.setUint32(offset += 4, parstInst("ADDIU SP SP 0x18"));
+      // Now we can hydrate the table.
+      // T9 = V0 copy (least likely to be overwritten by an uncontrolled JAL)
+      // T4 = Dest buffer addr + 0x10, where the table really starts
+      ADDU T9 V0 R0 // Copy V0 -> T9
+      LW T4 4(T9) // LW T4, 0x4(T9) [RAM dest]
+      JAL ${this.TABLE_HYDRATE_ADDR}
+      ADDIU A0 T4 16 // ADDIU A0, T4, 16
+
+      // Well, we copied the buffer... now we should "free" it with this magic JAL...
+      // Free our T9 reference, which theoretically could be corrupted, but in practice not.
+      JAL ${this.HEAP_FREE_ADDR}
+      ADDU A0 T9 R0
+
+      // End the call stack
+      LW RA 0x10(SP)
+      JR RA
+      ADDIU SP SP 0x18
+    `;
+    assemble(hookAsm, { buffer: sceneView.buffer });
   }
 
-  _clearSpaceEventTableCalls(romView: DataView, boardInfo: IBoardInfo) {
+  _clearSpaceEventTableCalls(sceneView: DataView, boardInfo: IBoardInfo) {
     // The BoardInfo might have special logic.
     if (boardInfo.clearSpaceEventTableCalls) {
-      boardInfo.clearSpaceEventTableCalls(romView);
+      boardInfo.clearSpaceEventTableCalls(sceneView);
       return;
     }
 
@@ -1086,7 +922,7 @@ export abstract class AdapterBase {
     let tables = boardInfo.spaceEventTables;
     tables.forEach((tableInfo: any) => {
       for (let offset = tableInfo.upper; offset <= tableInfo.lower; offset += 4)
-        romView.setUint32(offset, 0);
+        sceneView.setUint32(offset, 0);
     });
   }
 
@@ -1095,11 +931,14 @@ export abstract class AdapterBase {
   }
 
   _extractStarGuardians(board: IBoard, boardInfo: IBoardInfo) { // AKA Toads or Baby Bowsers lol
-    let boardView = new DataView(romhandler.getROMBuffer()!);
+    if (!boardInfo.sceneIndex)
+      return;
+
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
 
     // Training writes the toad directly.
     if (boardInfo.toadSpaceInst) {
-      let toadSpace = boardView.getUint16(boardInfo.toadSpaceInst + 2);
+      let toadSpace = sceneView.getUint16(boardInfo.toadSpaceInst + 2);
       if (board.spaces[toadSpace])
         board.spaces[toadSpace].subtype = SpaceSubtype.TOAD;
     }
@@ -1110,7 +949,7 @@ export abstract class AdapterBase {
       if (Array.isArray(starSpacesOffset))
         starSpacesOffset = starSpacesOffset[0];
       for (let i = 0; i < boardInfo.starSpaceCount; i++) {
-        let starSpace = boardView.getUint16(starSpacesOffset + (i * 2));
+        let starSpace = sceneView.getUint16(starSpacesOffset + (i * 2));
         if (board.spaces[starSpace]) {
           board.spaces[starSpace].star = true;
         }
@@ -1121,7 +960,7 @@ export abstract class AdapterBase {
         let toadSpacesOffset = boardInfo.toadSpaceArrOffset;
         if (Array.isArray(toadSpacesOffset))
           toadSpacesOffset = toadSpacesOffset[0];
-        let toadSpace = boardView.getUint16(toadSpacesOffset + (i * 2));
+        let toadSpace = sceneView.getUint16(toadSpacesOffset + (i * 2));
         if (board.spaces[toadSpace])
           board.spaces[toadSpace].subtype = SpaceSubtype.TOAD;
       }
@@ -1131,7 +970,7 @@ export abstract class AdapterBase {
   _writeStarInfo(board: IBoard, boardInfo: IBoardInfo) {
     let starCount = boardInfo.starSpaceCount;
     if (starCount) {
-      let romView = romhandler.getDataView();
+      const sceneView = scenes.getDataView(boardInfo.sceneIndex);
 
       let starIndices = [];
       for (let i = 0; i < board.spaces.length; i++) {
@@ -1146,7 +985,7 @@ export abstract class AdapterBase {
         let offset = starSpacesOffsets[i];
         for (let j = 0; j < starCount; j++) {
           let starIdx = (j < starIndices.length ? j : starIndices.length - 1); // Keep writing last space to fill
-          romView.setUint16(offset + (j * 2), starIndices[starIdx]);
+          sceneView.setUint16(offset + (j * 2), starIndices[starIdx]);
         }
       }
 
@@ -1173,41 +1012,42 @@ export abstract class AdapterBase {
             }
           }
 
-          romView.setUint16(offset + (j * 2), bestToadIdx);
+          sceneView.setUint16(offset + (j * 2), bestToadIdx);
         }
       }
     }
   }
 
   _extractBoos(board: IBoard, boardInfo: IBoardInfo) {
-    let boardView = romhandler.getDataView();
+    if (!boardInfo.sceneIndex)
+      return;
+
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let booSpace;
     if (boardInfo.boosLoopFnOffset) {
       let booFnOffset = boardInfo.boosLoopFnOffset;
 
       // Read the Boo count.
-      let booCount = boardView.getUint16(booFnOffset + 0x2A);
-      if (boardView.getUint32(booFnOffset + 0x28) === 0x1A00FFFC) // BNEZ when a single boo is made (Wario)
+      let booCount = sceneView.getUint16(booFnOffset + 0x2A);
+      if (sceneView.getUint32(booFnOffset + 0x28) === 0x1A00FFFC) // BNEZ when a single boo is made (Wario)
         booCount = 1;
       if (booCount === 0)
         return;
 
       booFnOffset = boardInfo.boosReadbackFnOffset;
-      let booRelativeAddr = boardView.getInt16(booFnOffset + 0xD2);
+      let booRelativeAddr = sceneView.getInt16(booFnOffset + 0xD2);
       booRelativeAddr = 0x00100000 + booRelativeAddr; // Going to be a subtraction.
 
-      // Assuming this is less than the space events.
-      let booSpacesOffset = boardInfo.spaceEventsStartOffset
-        - (boardInfo.spaceEventsStartAddr - booRelativeAddr);
-
+      const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
+      const booSpacesOffset = this._addrToOffsetBase(booRelativeAddr, sceneInfo.ram_start);
       for (let i = 0; i < booCount; i++) {
-        booSpace = boardView.getUint16(booSpacesOffset + (2 * i));
+        booSpace = sceneView.getUint16(booSpacesOffset + (2 * i));
         if (board.spaces[booSpace])
           board.spaces[booSpace].subtype = SpaceSubtype.BOO;
       }
     }
     else if (boardInfo.booSpaceInst) { // Just one Boo
-      booSpace = boardView.getUint16(boardInfo.booSpaceInst + 2);
+      booSpace = sceneView.getUint16(boardInfo.booSpaceInst + 2);
       if (board.spaces[booSpace])
         board.spaces[booSpace].subtype = SpaceSubtype.BOO;
     }
@@ -1215,7 +1055,7 @@ export abstract class AdapterBase {
       for (let b = 0; b < boardInfo.booArrOffset.length; b++) {
         let curBooSpaceIndexOffset = boardInfo.booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
-          let booSpace = boardView.getUint16(curBooSpaceIndexOffset);
+          let booSpace = sceneView.getUint16(curBooSpaceIndexOffset);
           if (board.spaces[booSpace])
             board.spaces[booSpace].subtype = SpaceSubtype.BOO;
           curBooSpaceIndexOffset += 2;
@@ -1225,46 +1065,49 @@ export abstract class AdapterBase {
   }
 
   _writeBoos(board: IBoard, boardInfo: IBoardInfo) {
+    if (!boardInfo.sceneIndex)
+      return;
+
     // Find the boo spaces
     let booSpaces = getSpacesOfSubType(SpaceSubtype.BOO, board);
 
-    let boardView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     if (boardInfo.boosLoopFnOffset) {
       let booFnOffset = boardInfo.boosLoopFnOffset;
 
       // Read the Boo count.
-      let booCount = boardView.getUint16(booFnOffset + 0x2A);
-      if (boardView.getUint32(booFnOffset + 0x28) === 0x1A00FFFC) // BNEZ when a single boo is made (Wario)
+      let booCount = sceneView.getUint16(booFnOffset + 0x2A);
+      if (sceneView.getUint32(booFnOffset + 0x28) === 0x1A00FFFC) // BNEZ when a single boo is made (Wario)
         booCount = 1;
       else if (booSpaces.length && booCount > booSpaces.length) {
         // Basically lower the boo count if we only have 1 boo instead of 2.
-        boardView.setUint16(booFnOffset + 0x2A, booSpaces.length);
+        sceneView.setUint16(booFnOffset + 0x2A, booSpaces.length);
       }
       if (booCount === 0)
         return;
 
       booFnOffset = boardInfo.boosReadbackFnOffset;
-      let booRelativeAddr = boardView.getInt16(booFnOffset + 0xD2);
+      let booRelativeAddr = sceneView.getInt16(booFnOffset + 0xD2);
       booRelativeAddr = 0x00100000 + booRelativeAddr; // Going to be a subtraction.
 
-      let booSpacesOffset = boardInfo.spaceEventsStartOffset
-        - (boardInfo.spaceEventsStartAddr - booRelativeAddr);
+      const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
+      const booSpacesOffset = this._addrToOffsetBase(booRelativeAddr, sceneInfo.ram_start);
 
       for (let i = 0; i < booCount; i++) {
         let booSpace = (booSpaces[i] === undefined ? board._deadSpace : booSpaces[i]);
-        boardView.setUint16(booSpacesOffset + (2 * i), booSpace!);
+        sceneView.setUint16(booSpacesOffset + (2 * i), booSpace!);
       }
     }
     else if (boardInfo.booSpaceInst) { // Just one Boo
       let booSpace = (booSpaces[0] === undefined ? board._deadSpace : booSpaces[0]);
-      boardView.setUint16(boardInfo.booSpaceInst + 2, booSpace!);
+      sceneView.setUint16(boardInfo.booSpaceInst + 2, booSpace!);
     }
     else if (boardInfo.booCount) {
       for (let b = 0; b < boardInfo.booArrOffset.length; b++) {
         let curBooSpaceIndexOffset = boardInfo.booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
           let booSpace = booSpaces[i] === undefined ? board._deadSpace : booSpaces[i];
-          boardView.setUint16(curBooSpaceIndexOffset, booSpace!);
+          sceneView.setUint16(curBooSpaceIndexOffset, booSpace!);
           curBooSpaceIndexOffset += 2;
         }
       }
@@ -1272,14 +1115,14 @@ export abstract class AdapterBase {
   }
 
   _extractBanks(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.bankCount)
+    if (!boardInfo.bankCount || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     for (let b = 0; b < boardInfo.bankArrOffset.length; b++) {
       let curBankSpaceIndexOffset = boardInfo.bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankSpace = boardView.getUint16(curBankSpaceIndexOffset);
+        let bankSpace = sceneView.getUint16(curBankSpaceIndexOffset);
         if (board.spaces[bankSpace])
           board.spaces[bankSpace].subtype = SpaceSubtype.BANK;
         curBankSpaceIndexOffset += 2;
@@ -1288,7 +1131,7 @@ export abstract class AdapterBase {
     for (let b = 0; b < boardInfo.bankCoinArrOffset.length; b++) {
       let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankCoinSpace = boardView.getUint16(curBankCoinSpaceIndexOffset);
+        let bankCoinSpace = sceneView.getUint16(curBankCoinSpaceIndexOffset);
         if (board.spaces[bankCoinSpace])
           board.spaces[bankCoinSpace].subtype = SpaceSubtype.BANKCOIN;
         curBankCoinSpaceIndexOffset += 2;
@@ -1297,16 +1140,16 @@ export abstract class AdapterBase {
   }
 
   _writeBanks(board: IBoard, boardInfo: IBoardInfo) {
-    let boardView = romhandler.getDataView();
-    if (!boardInfo.bankCount)
+    if (!boardInfo.bankCount || !boardInfo.sceneIndex)
       return;
 
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let bankSpaces = getSpacesOfSubType(SpaceSubtype.BANK, board);
     for (let b = 0; b < boardInfo.bankArrOffset.length; b++) {
       let curBankSpaceIndexOffset = boardInfo.bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
         let bankSpace = bankSpaces[i] === undefined ? board._deadSpace : bankSpaces[i];
-        boardView.setUint16(curBankSpaceIndexOffset, bankSpace!);
+        sceneView.setUint16(curBankSpaceIndexOffset, bankSpace!);
         curBankSpaceIndexOffset += 2;
       }
     }
@@ -1316,21 +1159,21 @@ export abstract class AdapterBase {
       let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
         let bankCoinSpace = bankCoinSpaces[i] === undefined ? board._deadSpace : bankCoinSpaces[i];
-        boardView.setUint16(curBankCoinSpaceIndexOffset, bankCoinSpace!);
+        sceneView.setUint16(curBankCoinSpaceIndexOffset, bankCoinSpace!);
         curBankCoinSpaceIndexOffset += 2;
       }
     }
   }
 
   _extractItemShops(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.itemShopCount)
+    if (!boardInfo.itemShopCount || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     for (let b = 0; b < boardInfo.itemShopArrOffset.length; b++) {
       let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset[b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
-        let itemShopSpace = boardView.getUint16(curItemShopSpaceIndexOffset);
+        let itemShopSpace = sceneView.getUint16(curItemShopSpaceIndexOffset);
         if (board.spaces[itemShopSpace])
           board.spaces[itemShopSpace].subtype = SpaceSubtype.ITEMSHOP;
         curItemShopSpaceIndexOffset += 2;
@@ -1339,26 +1182,26 @@ export abstract class AdapterBase {
   }
 
   _writeItemShops(board: IBoard, boardInfo: IBoardInfo) {
-    let boardView = romhandler.getDataView();
-    if (!boardInfo.itemShopCount)
+    if (!boardInfo.itemShopCount || !boardInfo.sceneIndex)
       return;
 
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let itemShopSpaces = getSpacesOfSubType(SpaceSubtype.ITEMSHOP, board);
     for (let b = 0; b < boardInfo.itemShopArrOffset.length; b++) {
       let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset[b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
         let ItemShopSpace = itemShopSpaces[i] === undefined ? board._deadSpace : itemShopSpaces[i];
-        boardView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace!);
+        sceneView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace!);
         curItemShopSpaceIndexOffset += 2;
       }
     }
   }
 
   _writeGates(board: IBoard, boardInfo: IBoardInfo) {
-    let boardView = romhandler.getDataView();
-    if (!boardInfo.gateCount)
+    if (!boardInfo.gateCount || !boardInfo.sceneIndex)
       return;
 
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let gateSpaces = [];
     for (let i = 0; i < board.spaces.length; i++) {
       if (board.spaces[i].subtype === SpaceSubtype.GATE)
@@ -1369,21 +1212,21 @@ export abstract class AdapterBase {
       let curGateSpaceIndexOffset = boardInfo.gateArrOffset[b];
       for (let i = 0; i < boardInfo.gateCount; i++) {
         let gateSpace = gateSpaces[i] === undefined ? board._deadSpace : gateSpaces[i];
-        boardView.setUint16(curGateSpaceIndexOffset, gateSpace!);
+        sceneView.setUint16(curGateSpaceIndexOffset, gateSpace!);
         curGateSpaceIndexOffset += 2;
       }
     }
   }
 
   _writeArrowRotations(board: IBoard, boardInfo: IBoardInfo) {
-    const romView = romhandler.getDataView();
-    const { arrowRotStartOffset, arrowRotEndOffset } = boardInfo;
-    if (!arrowRotStartOffset)
+    const { arrowRotStartOffset, arrowRotEndOffset, sceneIndex } = boardInfo;
+    if (!arrowRotStartOffset || !sceneIndex)
       return;
 
+    const sceneView = scenes.getDataView(sceneIndex);
     // Clear the original board's instructions.
     for (let offset = arrowRotStartOffset; offset < arrowRotEndOffset; offset += 4) {
-      romView.setUint32(offset, 0);
+      sceneView.setUint32(offset, 0);
     }
 
     const rotations = [];
@@ -1406,7 +1249,7 @@ export abstract class AdapterBase {
       insts.push("MTC1 A0 F12");
     }
 
-    assemble(insts, { buffer: romView.buffer });
+    assemble(insts, { buffer: sceneView.buffer });
   }
 
   _writeBackground(bgIndex: number, src: string, width: number, height: number) {
@@ -1569,20 +1412,20 @@ export abstract class AdapterBase {
   }
 
   _parseAudio(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.audioIndexOffset)
+    if (!boardInfo.audioIndexOffset || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
-    board.audioIndex = boardView.getUint16(boardInfo.audioIndexOffset);
+    let sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    board.audioIndex = sceneView.getUint16(boardInfo.audioIndexOffset);
   }
 
   onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
-    if (!boardInfo.audioIndexOffset)
+    if (!boardInfo.audioIndexOffset || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
-    let index = board.audioIndex;
-    boardView.setUint16(boardInfo.audioIndexOffset, index);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    const index = board.audioIndex;
+    sceneView.setUint16(boardInfo.audioIndexOffset, index);
   }
 
   getAudioMap(): string[] {

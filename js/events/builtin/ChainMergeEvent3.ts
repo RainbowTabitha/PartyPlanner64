@@ -75,7 +75,7 @@ ChainMerge3.write = function(dataView: DataView, event: IChainMergeEvent, info: 
     ADDIU SP, SP, -0x18
     SW    RA, 0x10(SP)
     ADDIU A0, R0, ${event.prevSpace}
-    ADDIU A1, R0, ${event.chain}
+    ADDIU A1, R0, ${event.chain || 0}
     JAL   ${$$hex(staticHelperJal)}
     ADDIU A2, R0, ${event.spaceIndex || 0}
     LW    RA, 0x10(SP)

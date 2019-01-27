@@ -31,8 +31,14 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
       );
     }
 
+    let findSpace;
+    if ($$debug) {
+      findSpace = <FindSpace />
+    }
+
     return (
       <div className="properties">
+        {findSpace}
         <EditDetails romBoard={romBoard} />
         <BGSelect gameVersion={gameVersion} boardType={this.props.currentBoard.type} />
         {deadEndCheck}
@@ -309,5 +315,31 @@ const AnimationPlayButton = class AnimationPlayButton extends React.Component<{}
 
   componentWillUnmount() {
     stopAnimation();
+  }
+};
+
+interface IFindSpaceProps {
+}
+
+class FindSpace extends React.Component<IFindSpaceProps> {
+  state = { }
+
+  onFindSpace() {
+    const value = prompt("Enter a space index");
+    if (value) {
+      const spaceIndex = parseInt(value);
+      if (!isNaN(spaceIndex)) {
+        highlightSpaces([spaceIndex]);
+      }
+    }
+  }
+
+  render() {
+    return (
+      <div className="propertiesActionButton" onClick={this.onFindSpace}>
+        <img src="img/header/board.png" className="propertiesActionButtonImg" width="24" height="24" />
+        <span className="propertiesActionButtonSpan">Find space by index</span>
+      </div>
+    );
   }
 };

@@ -16,6 +16,7 @@ import { toPack } from "../utils/img/ImgPack";
 import { prepAsm } from "../events/prepAsm";
 import { assemble } from "mips-assembler";
 import THREE = require("three");
+import { scenes } from "../fs/scenes";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -61,42 +62,45 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     romView.setUint16(0x5F3F6, 0x0020);
 
     // Patch HVQ decode RAM 0x4a3a4 to redirect to raw decode hook.
-    let romStartOffset = 0xCBFD0;
+    const romStartOffset = 0xCBFD0;
     let asmStartOffset = 0xCB3D0;
     romView.setUint32(0x4AFD4, parseInst(`J ${asmStartOffset}`));
 
     // Patch over some debug strings with logic to handle raw images.
-    romView.setUint32(romStartOffset, parseInst("LW S5, 0x0(A0)"));
-    romView.setUint32(romStartOffset += 4, parseInst("LUI S6, 0x4856")); // "HV"
-    romView.setUint32(romStartOffset += 4, parseInst("ADDIU S6, S6, 0x5120")); // "Q "
-    romView.setUint32(romStartOffset += 4, parseInst(`BEQ S5, S6, 12`)); // +12 instructions
-    romView.setUint32(romStartOffset += 4, 0); // NOP
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S5, R0, A1"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDIU S6, S5, 0x1800")); // (64 x 48 tile)
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S7, R0, A0"));
-    romView.setUint32(romStartOffset += 4, parseInst("LW GP, 0(S7)"));
-    romView.setUint32(romStartOffset += 4, parseInst("SW GP, 0(S5)"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDIU S5, S5, 4"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDIU S7, S7, 4")); // ADDIU S7, S7, 4
-    romView.setUint32(romStartOffset += 4, parseInst("BEQ S5, S6, 9")); // +9 instructions
-    romView.setUint32(romStartOffset += 4, 0); // NOP
-    romView.setUint32(romStartOffset += 4, parseInst(`J ${asmStartOffset + 0x20}`)); // J back to LW
-    romView.setUint32(romStartOffset += 4, 0); // NOP
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S5, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S6, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S7, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU GP, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("JAL 0x7F54C")); // JAL HVQDecode
-    romView.setUint32(romStartOffset += 4, 0); // NOP
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S5, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S6, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU S7, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("ADDU GP, R0, R0"));
-    romView.setUint32(romStartOffset += 4, parseInst("J 0x4A3DC")); // J back into original function, skipping HVQDecode
-    romView.setUint32(romStartOffset += 4, 0); // NOP
-
-
-
+    const hvqAsm = `
+      .orga ${romStartOffset}
+      LW S5, 0x0(A0)
+      LUI S6, 0x4856 // "HV"
+      ADDIU S6, S6, 0x5120 // "Q "
+      BEQ S5, S6, call_hvq_decode
+      NOP
+      ADDU S5, R0, A1
+      ADDIU S6, S5, 0x1800 // (64 x 48 tile)
+      ADDU S7, R0, A0
+      LW GP, 0(S7)
+      SW GP, 0(S5)
+      ADDIU S5, S5, 4
+      ADDIU S7, S7, 4
+      BEQ S5, S6, ret_to_hook
+      NOP
+      J ${asmStartOffset + 0x20} // J back to LW
+      NOP
+    call_hvq_decode:
+      ADDU S5, R0, R0
+      ADDU S6, R0, R0
+      ADDU S7, R0, R0
+      ADDU GP, R0, R0
+      JAL 0x7F54C // JAL HVQDecode
+      NOP
+    ret_to_hook:
+      ADDU S5, R0, R0
+      ADDU S6, R0, R0
+      ADDU S7, R0, R0
+      ADDU GP, R0, R0
+      J 0x4A3DC // J back into original function, skipping HVQDecode
+      NOP
+    `;
+    assemble(hvqAsm, { buffer: romView.buffer });
 
     // const asm = prepAsm(`
 
@@ -242,17 +246,17 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   _extractKoopa(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.koopaSpaceInst)
+    if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
-    let koopaSpace = boardView.getUint16(boardInfo.koopaSpaceInst + 2);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    let koopaSpace = sceneView.getUint16(boardInfo.koopaSpaceInst + 2);
     if (board.spaces[koopaSpace])
       board.spaces[koopaSpace].subtype = SpaceSubtype.KOOPA;
   }
 
   _writeKoopa(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.koopaSpaceInst)
+    if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex)
       return;
 
     let koopaSpace;
@@ -264,22 +268,22 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     }
 
     koopaSpace = (koopaSpace === undefined ? board._deadSpace! : koopaSpace);
-    let boardView = romhandler.getDataView();
-    boardView.setUint16(boardInfo.koopaSpaceInst + 2, koopaSpace);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    sceneView.setUint16(boardInfo.koopaSpaceInst + 2, koopaSpace);
   }
 
   _extractBowser(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.bowserSpaceInst)
+    if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
-    let bowserSpace = boardView.getUint16(boardInfo.bowserSpaceInst + 2);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    let bowserSpace = sceneView.getUint16(boardInfo.bowserSpaceInst + 2);
     if (board.spaces[bowserSpace])
       board.spaces[bowserSpace].subtype = SpaceSubtype.BOWSER;
   }
 
   _writeBowser(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.bowserSpaceInst)
+    if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex)
       return;
 
     let bowserSpace;
@@ -291,16 +295,16 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     }
 
     bowserSpace = (bowserSpace === undefined ? board._deadSpace! : bowserSpace);
-    let boardView = romhandler.getDataView();
-    boardView.setUint16(boardInfo.bowserSpaceInst + 2, bowserSpace);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    sceneView.setUint16(boardInfo.bowserSpaceInst + 2, bowserSpace);
   }
 
   _extractGoomba(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.goombaSpaceInst)
+    if (!boardInfo.goombaSpaceInst || boardInfo.sceneIndex)
       return;
 
-    let boardView = romhandler.getDataView();
-    let goombaSpace = boardView.getUint16(boardInfo.goombaSpaceInst + 2);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    let goombaSpace = sceneView.getUint16(boardInfo.goombaSpaceInst + 2);
     if (board.spaces[goombaSpace])
       board.spaces[goombaSpace].subtype = SpaceSubtype.GOOMBA;
   }

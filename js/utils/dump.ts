@@ -245,6 +245,7 @@ export function searchForPatchLocations(offset: number) {
 
   let found = 0;
 
+  // FIXME: Won't work once scenes are in separate data views.
   let romView = romhandler.getDataView();
   let upperLimit = romView.byteLength - 10; // Since we read ahead for every i, just stop early.
   for (let i = 2; i < upperLimit; i += 2) {

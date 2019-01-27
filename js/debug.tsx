@@ -16,7 +16,7 @@ import { $$hex } from "./utils/debug";
 
 export const DebugView = class DebugView extends React.Component {
   state = {
-    printSceneAsmNumber: "",
+    sceneIndex: "",
     romToRamNumber: "",
     romToRamResult: "",
   }
@@ -46,14 +46,15 @@ export const DebugView = class DebugView extends React.Component {
           />
           <Button onClick={this.onRomToRamClick}>ROM -> RAM</Button>
           <br />
-          <span className="dbMonospace">{this.state.romToRamResult}</span>
+          <span className="selectable dbMonospace">{this.state.romToRamResult}</span>
           <br /><br />
 
           <input type="text" placeholder="Scene number" className="dbInputShort"
-            value={this.state.printSceneAsmNumber}
-            onChange={e => this.setState({ printSceneAsmNumber: e.target.value })}
+            value={this.state.sceneIndex}
+            onChange={e => this.setState({ sceneIndex: e.target.value })}
           />
           <Button onClick={this.onPrintSceneAsmClick}>Print scene assembly (console)</Button>
+          <Button onClick={this.onOverlayDownloadClick}>Download</Button>
         </>
       );
     }
@@ -70,9 +71,17 @@ export const DebugView = class DebugView extends React.Component {
   }
 
   onPrintSceneAsmClick = () => {
-    const num = parseInt(this.state.printSceneAsmNumber);
+    const num = parseInt(this.state.sceneIndex);
     if (!isNaN(num)) {
       printSceneAsm(num);
+    }
+  }
+
+  onOverlayDownloadClick = () => {
+    const num = parseInt(this.state.sceneIndex);
+    if (!isNaN(num)) {
+      const dataView = scenes.getDataView(num);
+      saveAs(new Blob([dataView]), `overlay-${num}.bin`);
     }
   }
 
@@ -131,3 +140,41 @@ function dumpCreated(blob: Blob) {
   saveAs(blob, `mp${romhandler.getGameVersion()}-files.zip`);
   blockUI(false);
 }
+
+// Don't allow bugs where undefined/null become silent 0 byte writes.
+const dataViewMethods = [
+  "setUint8",
+  "setInt8",
+  "setUint16",
+  "setInt16",
+  "setUint32",
+  "setInt32",
+  "setFloat32",
+  "setFloat64",
+];
+dataViewMethods.forEach(methodName => {
+  const methodOrig = DataView.prototype[methodName];
+  DataView.prototype[methodName] = function(offset: number, value: number)
+  {
+    if (typeof offset !== "number")
+      throw new Error(`Invalid offset in ${methodName}`);
+    if (typeof value !== "number")
+      throw new Error(`Invalid value in ${methodName}`);
+    methodOrig.apply(this, arguments);
+  }
+});
+
+// Don't support weird clamping behavior.
+// const arrayBufferSliceOrig = ArrayBuffer.prototype.slice;
+// ArrayBuffer.prototype.slice = function(begin, end): ArrayBuffer {
+//   if (begin > this.byteLength) {
+//     debugger;
+//     throw new Error(`Slicing buffer from ${begin} seems wrong`);
+//   }
+//   if (typeof end === "number" && end > this.byteLength) {
+//     debugger;
+//     throw new Error(`Slicing buffer until ${end} seems wrong`);
+//   }
+
+//   return arrayBufferSliceOrig.apply(this, arguments as any);
+// }
