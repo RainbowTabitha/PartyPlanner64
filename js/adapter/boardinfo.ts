@@ -1,22 +1,19 @@
 import { Game } from "../types";
-import { getBoardInfos as getMP1BoardInfos } from "./boardinfo.MP1";
+import { getBoardInfos as getMP1UBoardInfos } from "./boardinfo.MP1.U";
+import { getBoardInfos as getMP1JBoardInfos } from "./boardinfo.MP1.J";
 import { getBoardInfos as getMP2BoardInfos } from "./boardinfo.MP2";
 import { getBoardInfos as getMP3BoardInfos } from "./boardinfo.MP3";
 
 export function getBoardInfos(gameID: Game): any[] {
   switch(gameID) {
     case Game.MP1_USA:
+      return getMP1UBoardInfos();
     case Game.MP1_JPN:
-    case Game.MP1_PAL:
-      return getMP1BoardInfos(gameID)!;
+      return getMP1JBoardInfos();
     case Game.MP2_USA:
-    case Game.MP2_JPN:
-    case Game.MP2_PAL:
-      return getMP2BoardInfos(gameID)!;
+      return getMP2BoardInfos();
     case Game.MP3_USA:
-    case Game.MP3_JPN:
-    case Game.MP3_PAL:
-      return getMP3BoardInfos(gameID)!;
+      return getMP3BoardInfos();
   }
 
   throw new Error("Missing boardinfo for " + gameID);

@@ -296,25 +296,22 @@ MP3U_BACKTRACK.img = {
   miniMapDots: 320,
 };
 
-export function getBoardInfos(gameID: Game) {
-  switch(gameID) {
-    case Game.MP3_USA:
-      return [
-        MP3_CHILLY,
-        MP3_BLOOBER,
-        MP3_SPINY,
-        MP3_WOODY,
-        MP3_CAVERN,
-        MP3_WALUIGI,
+export function getBoardInfos() {
+  return [
+    MP3_CHILLY,
+    MP3_BLOOBER,
+    MP3_SPINY,
+    MP3_WOODY,
+    MP3_CAVERN,
+    MP3_WALUIGI,
 
-        MP3U_GATEGUY,
-        MP3U_ARROWHEAD,
-        MP3U_PIPESQUEAK,
-        MP3U_BLOWHARD,
-        MP3U_MRMOVER,
-        MP3U_BACKTRACK,
-      ];
-  }
+    MP3U_GATEGUY,
+    MP3U_ARROWHEAD,
+    MP3U_PIPESQUEAK,
+    MP3U_BLOWHARD,
+    MP3U_MRMOVER,
+    MP3U_BACKTRACK,
+  ];
 }
 
 /*

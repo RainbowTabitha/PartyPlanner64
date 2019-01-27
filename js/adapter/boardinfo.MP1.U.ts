@@ -1,4 +1,3 @@
-import { Game } from "../types";
 import { createBoardInfo } from "./boardinfobase";
 import { IBoard, addEventToSpace } from "../boards";
 import { create as createEvent } from "../events/events";
@@ -32,18 +31,13 @@ MP1_USA_DK.img = {
 MP1_USA_DK.sceneIndex = 0x36; // 54
 MP1_USA_DK.mainfsEventFile = [10, 422];
 MP1_USA_DK.mainfsBoardFile = [10, 423];
-MP1_USA_DK.eventASMStart = 0x143C; // 0x00242CDC;
-MP1_USA_DK.eventASMEnd = 0x325C; // 0x00244AC4, 800F983C
-// MP1_USA_DK.spaceEventsStartAddr = 0x000FA0CC; // 0x800F7A1C
-// MP1_USA_DK.spaceEventsStartOffset = 0x0024538C;
-// MP1_USA_DK.spaceEventsEndOffset = 0x00245500;
-MP1_USA_DK.spaceEventTables = [
-  { upper: 0xBD0, lower: 0xBD8 }, // 0x800F71B0, 0x800F71B8
-  { upper: 0xBEC, lower: 0xBF4 }, // 0x800F71CC, 0x800F71D4
-  { upper: 0xC08, lower: 0xC10 }, // 0x800F71E8, 0x800F71F0
-  { upper: 0xC24, lower: 0xC2C }, // 0x800F7204, 0x800F720C
-  // tables: 0x800FA0CC
-];
+// MP1_USA_DK.spaceEventTables = [
+//   { upper: 0xBD0, lower: 0xBD8 }, // 0x800F71B0, 0x800F71B8
+//   { upper: 0xBEC, lower: 0xBF4 }, // 0x800F71CC, 0x800F71D4
+//   { upper: 0xC08, lower: 0xC10 }, // 0x800F71E8, 0x800F71F0
+//   { upper: 0xC24, lower: 0xC2C }, // 0x800F7204, 0x800F720C
+//   // tables: 0x800FA0CC
+// ];
 MP1_USA_DK.koopaSpaceInst = 0xD54; // 0x002425F4, 0x800F7330
 MP1_USA_DK.bowserSpaceInst = 0xCB8; // 0x00242558;
 MP1_USA_DK.boosLoopFnOffset = 0x11D8; // 0x00242A78;
@@ -89,28 +83,6 @@ MP1_USA_DK.onAfterOverwrite = function() {
   strings.write(402, strBuffer);
 };
 
-// DK's Jungle Adventure - (J) ROM
-const MP1_JPN_DK = createBoardInfo("MP1_JPN_DK");
-MP1_JPN_DK.name = "DK's Jungle Adventure";
-MP1_JPN_DK.boardDefFile = 69;
-MP1_JPN_DK.bgDir = 0;
-MP1_JPN_DK.str = {
-  boardSelect: 652,
-  koopaIntro: 571,
-  starComments: [286, 287, 288, 289, 290, 291, 292],
-};
-MP1_JPN_DK.img = {
-  boardSelectImg: 17,
-  pauseLogoImg: 276,
-  introLogoImg: [356, 357],
-  titleScreenImg: 385,
-};
-MP1_JPN_DK.eventASMStart = 0x00;
-MP1_JPN_DK.eventASMEnd = 0x00;
-// MP1_JPN_DK.spaceEventsStartAddr = 0x000F951C;
-// MP1_JPN_DK.spaceEventsStartOffset = 0x002448BC;
-// MP1_JPN_DK.spaceEventsEndOffset = 0x00244A20;
-
 // Peach's Birthday Cake - (U) ROM
 const MP1_USA_PEACH = createBoardInfo("MP1_USA_PEACH");
 MP1_USA_PEACH.name = "Peach's Birthday Cake";
@@ -127,6 +99,8 @@ MP1_USA_PEACH.img = {
   titleScreenImg: 382,
 };
 MP1_USA_PEACH.sceneIndex = 0x37; // 55
+MP1_USA_PEACH.mainfsEventFile = [10, 424];
+MP1_USA_PEACH.mainfsBoardFile = [10, 425];
 MP1_USA_PEACH.eventASMStart = 0x00;
 // MP1_USA_PEACH.spaceEventsStartAddr = 0x000F7C70;
 // MP1_USA_PEACH.spaceEventsStartOffset = 0x00246C50;
@@ -315,35 +289,18 @@ MP1_USA_ISLAND.eventASMStart = 0x00;
 // MP1_USA_ISLAND.spaceEventsStartOffset = 0x002F8EE8;
 // MP1_USA_ISLAND.spaceEventsEndOffset = 0x002F9040;
 
-export function getBoardInfos(gameID: Game) {
-  switch(gameID) {
-    case Game.MP1_USA:
-      return [
-        MP1_USA_DK,
-        MP1_USA_PEACH,
-        MP1_USA_YOSHI,
-        MP1_USA_WARIO,
-        MP1_USA_LUIGI,
-        MP1_USA_MARIO,
-        MP1_USA_BOWSER,
-        MP1_USA_ETERNALSTAR,
-        MP1_USA_TRAINING,
-        MP1_USA_ISLAND,
-        MP1_USA_STADIUM,
-      ];
-    case Game.MP1_JPN:
-      return [
-        MP1_JPN_DK,
-        // MP1_J_PEACH,
-        // MP1_J_YOSHI,
-        // MP1_J_WARIO,
-        // MP1_J_LUIGI,
-        // MP1_J_MARIO,
-        // MP1_J_BOWSER,
-        // MP1_J_ETERNALSTAR,
-        // MP1_J_TRAINING,
-        // MP1_J_ISLAND,
-        // MP1_J_STADIUM,
-      ];
-  }
+export function getBoardInfos() {
+  return [
+    MP1_USA_DK,
+    MP1_USA_PEACH,
+    MP1_USA_YOSHI,
+    MP1_USA_WARIO,
+    MP1_USA_LUIGI,
+    MP1_USA_MARIO,
+    MP1_USA_BOWSER,
+    MP1_USA_ETERNALSTAR,
+    MP1_USA_TRAINING,
+    MP1_USA_ISLAND,
+    MP1_USA_STADIUM,
+  ];
 }

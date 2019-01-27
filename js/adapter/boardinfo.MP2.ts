@@ -376,16 +376,13 @@ MP2_BOWSER.img = {
     },
   ];*/
 
-export function getBoardInfos(gameID: Game) {
-  switch(gameID) {
-    case Game.MP2_USA:
-      return [
-        MP2_WESTERN,
-        MP2_PIRATE,
-        MP2_HORROR,
-        MP2_SPACE,
-        MP2_MYSTERY,
-        MP2_BOWSER,
-      ];
-  }
+export function getBoardInfos() {
+  return [
+    MP2_WESTERN,
+    MP2_PIRATE,
+    MP2_HORROR,
+    MP2_SPACE,
+    MP2_MYSTERY,
+    MP2_BOWSER,
+  ];
 }
