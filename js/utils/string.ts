@@ -4,6 +4,7 @@ export function fromU32(u32: number) {
     String.fromCharCode((u32 & 0xFF00) >>> 8) +
     String.fromCharCode(u32 & 0xFF);
 }
+
 export function toU32(str: string) {
   let charCodes = toCharCodes(str);
   let u32 = 0;
@@ -13,26 +14,58 @@ export function toU32(str: string) {
   u32 |= charCodes[3];
   return u32;
 }
+
 export function toCharCodes(str: string) {
   let charCodes = new Array(str.length);
   for (let i = 0; i < str.length; ++i)
     charCodes[i] = str.charCodeAt(i);
   return charCodes;
 }
+
+/**
+ * Converts a string to an ArrayBuffer.
+ * @param str String to bufferize
+ */
+export function stringToArrayBuffer(str: string): ArrayBuffer {
+  if ("TextEncoder" in window) {
+    return new TextEncoder().encode(str).buffer;
+  }
+
+  // This might have some issues if we use any characters that take up more
+  // than 2 bytes. But only maybe Edge will hit this code.
+  const buffer = new ArrayBuffer(str.length * 2);
+  const bufferView = new Uint16Array(buffer);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufferView[i] = str.charCodeAt(i);
+  }
+  return buffer;
+}
+
+export function stringFromArrayBuffer(buffer: ArrayBuffer): string {
+  if ("TextDecoder" in window) {
+    return new TextDecoder().decode(buffer);
+  }
+
+  return String.fromCharCode.apply(null, new Uint16Array(buffer) as any);
+}
+
 export function pad(str: string, len: number, padChar: string) {
   while (str.length < len) {
     str = padChar + str;
   }
   return str;
 }
+
 export function splice(value: string, start: number, delCount: number, newSubStr: string) {
   return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
 }
+
 export function normalizeLineEndings(str: string) {
   if (!str)
     return str;
   return str.replace(/\r\n|\r/g, "\n");
 }
+
 export function mpFormatToPlainText(value: string) {
   if (!value)
     return "";

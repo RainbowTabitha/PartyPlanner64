@@ -31,6 +31,7 @@ MP1_USA_DK.img = {
 // dump.printAsm(0x2418A0, 0x244B50)
 MP1_USA_DK.sceneIndex = 0x36; // 54
 MP1_USA_DK.mainfsEventFile = [10, 422];
+MP1_USA_DK.mainfsBoardFile = [10, 423];
 MP1_USA_DK.eventASMStart = 0x143C; // 0x00242CDC;
 MP1_USA_DK.eventASMEnd = 0x325C; // 0x00244AC4, 800F983C
 // MP1_USA_DK.spaceEventsStartAddr = 0x000FA0CC; // 0x800F7A1C
@@ -71,13 +72,6 @@ MP1_USA_DK.onWriteEvents = function(board: IBoard) {
   }
 };
 MP1_USA_DK.onAfterOverwrite = function() {
-  const sceneView = scenes.getDataView(MP1_USA_DK.sceneIndex);
-
-  // Wipe out thwomps
-  sceneView.setUint32(0xB44, 0); // 0x2423E4
-  // Wipe out doors
-  sceneView.setUint32(0xB4C, 0); // 0x2423EC
-
   // Remove the "box" from the game start scenery.
   const introSceneView = scenes.getDataView(98);
   introSceneView.setUint32(0x7098, 0xC57A0000); // 0x2A9598 // Some random float to get it away
@@ -94,14 +88,6 @@ MP1_USA_DK.onAfterOverwrite = function() {
   strings.write(399, strBuffer);
   strings.write(402, strBuffer);
 };
-MP1_USA_DK.clearSpaceEventTableCalls = function(sceneView: DataView) {
-  // Remove extra separated event table reads because we don't use them.
-  // If we supported the "Remove Boo/Bowser" items from the shop, remove this.
-  // 0xF71B0 - 0xF7210
-  // 0x242470 - 0x2424D0
-  for (let offset = 0xBD0; offset < 0xC30; offset += 4)
-    sceneView.setUint32(offset, 0);
-}
 
 // DK's Jungle Adventure - (J) ROM
 const MP1_JPN_DK = createBoardInfo("MP1_JPN_DK");

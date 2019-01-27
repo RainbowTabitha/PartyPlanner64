@@ -11,12 +11,34 @@ import {
   printSceneN64Split,
   printSceneAsm
 } from "./utils/dump";
-import { scenes } from "./fs/scenes";
+import { scenes, ISceneInfo } from "./fs/scenes";
 import { $$hex } from "./utils/debug";
 
-export const DebugView = class DebugView extends React.Component {
+interface IDebugViewState {
+  sceneIndex: string;
+  sceneRamStartAddr: string;
+  sceneCodeStartAddr: string;
+  sceneCodeEndAddr: string;
+  sceneRodataStartAddr: string;
+  sceneRodataEndAddr: string;
+  sceneBssStartAddr: string;
+  sceneBssEndAddr: string;
+
+  romToRamNumber: string;
+  romToRamResult: string;
+}
+
+export const DebugView = class DebugView extends React.Component<{}, IDebugViewState> {
   state = {
     sceneIndex: "",
+    sceneRamStartAddr: "",
+    sceneCodeStartAddr: "",
+    sceneCodeEndAddr: "",
+    sceneRodataStartAddr: "",
+    sceneRodataEndAddr: "",
+    sceneBssStartAddr: "",
+    sceneBssEndAddr: "",
+
     romToRamNumber: "",
     romToRamResult: "",
   }
@@ -51,10 +73,30 @@ export const DebugView = class DebugView extends React.Component {
 
           <input type="text" placeholder="Scene number" className="dbInputShort"
             value={this.state.sceneIndex}
-            onChange={e => this.setState({ sceneIndex: e.target.value })}
+            onChange={this.onSceneIndexChange}
           />
           <Button onClick={this.onPrintSceneAsmClick}>Print scene assembly (console)</Button>
           <Button onClick={this.onOverlayDownloadClick}>Download</Button>
+          <Button onClick={this.onOverlayReplaceClick}>Replace</Button>
+          <br />
+          <table role="presentation">
+            <tbody>
+              <OverlayValueInput label="RAM start:" value={this.state.sceneRamStartAddr}
+                onChange={this.makeSceneValueSetter("sceneRamStartAddr")} />
+              <OverlayValueInput label="code start:" value={this.state.sceneCodeStartAddr}
+                onChange={this.makeSceneValueSetter("sceneCodeStartAddr")} />
+              <OverlayValueInput label="code end:" value={this.state.sceneCodeEndAddr}
+                onChange={this.makeSceneValueSetter("sceneCodeEndAddr")} />
+              <OverlayValueInput label="rodata start:" value={this.state.sceneRodataStartAddr}
+                onChange={this.makeSceneValueSetter("sceneRodataStartAddr")} />
+              <OverlayValueInput label="rodata end:" value={this.state.sceneRodataEndAddr}
+                onChange={this.makeSceneValueSetter("sceneRodataEndAddr")} />
+              <OverlayValueInput label="bss start:" value={this.state.sceneBssStartAddr}
+                onChange={this.makeSceneValueSetter("sceneBssStartAddr")} />
+              <OverlayValueInput label="bss end:" value={this.state.sceneBssEndAddr}
+                onChange={this.makeSceneValueSetter("sceneBssEndAddr")} />
+            </tbody>
+          </table>
         </>
       );
     }
@@ -74,14 +116,6 @@ export const DebugView = class DebugView extends React.Component {
     const num = parseInt(this.state.sceneIndex);
     if (!isNaN(num)) {
       printSceneAsm(num);
-    }
-  }
-
-  onOverlayDownloadClick = () => {
-    const num = parseInt(this.state.sceneIndex);
-    if (!isNaN(num)) {
-      const dataView = scenes.getDataView(num);
-      saveAs(new Blob([dataView]), `overlay-${num}.bin`);
     }
   }
 
@@ -112,6 +146,106 @@ export const DebugView = class DebugView extends React.Component {
       this.setState({ romToRamResult: "Unknown" });
     }
   }
+
+  onSceneIndexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ sceneIndex: e.target.value });
+
+    const sceneIndex = parseInt(e.target.value);
+    if (isNaN(sceneIndex)) {
+      this.clearSceneValues();
+      return;
+    }
+    const sceneInfo = scenes.getInfo(sceneIndex);
+    if (!sceneInfo) {
+      this.clearSceneValues();
+      return;
+    }
+
+    this.setState({ sceneRamStartAddr: $$hex(sceneInfo.ram_start, "") });
+    this.setState({ sceneCodeStartAddr: $$hex(sceneInfo.code_start, "") });
+    this.setState({ sceneCodeEndAddr: $$hex(sceneInfo.code_end, "") });
+    this.setState({ sceneRodataStartAddr: $$hex(sceneInfo.rodata_start, "") });
+    this.setState({ sceneRodataEndAddr: $$hex(sceneInfo.rodata_end, "") });
+    this.setState({ sceneBssStartAddr: $$hex(sceneInfo.bss_start, "") });
+    this.setState({ sceneBssEndAddr: $$hex(sceneInfo.bss_end, "") });
+  }
+
+  private makeSceneValueSetter(name: keyof IDebugViewState) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(e.target.value, 16);
+      if (isNaN(value)) {
+        return;
+      }
+      this.setState({ [name]: $$hex(value, "") } as any);
+    }
+  }
+
+  private clearSceneValues() {
+    this.setState({ sceneRamStartAddr: "" });
+    this.setState({ sceneCodeStartAddr: "" });
+    this.setState({ sceneCodeEndAddr: "" });
+    this.setState({ sceneRodataStartAddr: "" });
+    this.setState({ sceneRodataEndAddr: "" });
+    this.setState({ sceneBssStartAddr: "" });
+    this.setState({ sceneBssEndAddr: "" });
+  }
+
+  onOverlayDownloadClick = () => {
+    const num = parseInt(this.state.sceneIndex);
+    if (!isNaN(num)) {
+      const dataView = scenes.getDataView(num);
+      saveAs(new Blob([dataView]), `overlay-${num}.bin`);
+    }
+  }
+
+  onOverlayReplaceClick = () => {
+    const sceneIndex = parseInt(this.state.sceneIndex);
+    if (isNaN(sceneIndex)) {
+      return;
+    }
+
+    openFile("", (event) => {
+      const file = (event.target! as HTMLInputElement).files![0];
+      if (!file)
+        return;
+
+      const reader = new FileReader();
+      reader.onload = error => {
+        const infoValues: Partial<ISceneInfo> = {
+          ram_start: parseInt(this.state.sceneRamStartAddr, 16),
+          code_start: parseInt(this.state.sceneCodeStartAddr, 16),
+          code_end: parseInt(this.state.sceneCodeEndAddr, 16),
+          rodata_start: parseInt(this.state.sceneRodataStartAddr, 16),
+          rodata_end: parseInt(this.state.sceneRodataEndAddr, 16),
+          bss_start: parseInt(this.state.sceneBssStartAddr, 16),
+          bss_end: parseInt(this.state.sceneBssEndAddr, 16),
+        };
+
+        scenes.replace(sceneIndex, reader.result as ArrayBuffer, infoValues);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+}
+
+interface IOverlayValueInputProps {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function OverlayValueInput(props: IOverlayValueInputProps) {
+  return (
+    <tr>
+      <td>
+        <label>{props.label}</label>
+      </td>
+      <td>
+        <input type="text" className="dbInputShort" value={props.value}
+          onChange={props.onChange} />
+      </td>
+    </tr>
+  );
 }
 
 function onImportFileDumpClick() {

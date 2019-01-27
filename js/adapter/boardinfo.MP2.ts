@@ -29,6 +29,7 @@ MP2_WESTERN.img = {
   boardSelectIconMask: 20,
 };
 MP2_WESTERN.mainfsEventFile = [10, 682];
+MP2_WESTERN.mainfsBoardFile = [10, 683];
 MP2_WESTERN.sceneIndex = 0x3E; // 62
 // First I tried 0x0029CF24 / 0x80107C54, but then I included the star event
 // at 0x0029E91C / 0x80?. But then, using items NOP sledded, and I found a mystery

@@ -1,9 +1,9 @@
-import { openFile } from "../utils/input";
 import { copyRange } from "../utils/arrays";
 import { romhandler } from "../romhandler";
 import { getROMAdapter } from "../adapter/adapters";
+import { $$log, $$hex } from "../utils/debug";
 
-interface ISceneInfo {
+export interface ISceneInfo {
   rom_start: number;
   rom_end: number;
   ram_start: number;
@@ -139,12 +139,7 @@ export const scenes = new class Scenes {
     }
   }
 
-  replace(index: number, buffer: ArrayBuffer | null = null) {
-    if (!buffer) {
-      this._promptReplace(index);
-      return;
-    }
-
+  replace(index: number, buffer: ArrayBuffer, newInfoValues?: Partial<ISceneInfo>) {
     if (buffer.byteLength % 16) {
       throw new Error("Cannot have overlay byte length that is not divisible by 16");
     }
@@ -155,24 +150,22 @@ export const scenes = new class Scenes {
     const oldSize = info.rom_end - info.rom_start;
     const diff = buffer.byteLength - oldSize;
     info.rom_end = info.rom_start + buffer.byteLength;
+
+    if (newInfoValues) {
+      for (let valueName in newInfoValues) {
+        const newValue = newInfoValues[valueName as keyof ISceneInfo];
+        if (newValue) {
+          info[valueName as keyof ISceneInfo] = newValue;
+        }
+      }
+    }
+
     for (let i = index + 1; i < this._sceneInfo!.length; i++) {
       const info = this._sceneInfo![i];
-      info.rom_start -= diff;
-      info.rom_end -= diff;
+      info.rom_start += diff;
+      info.rom_end += diff;
     }
-  }
 
-  _promptReplace(index: number) {
-    openFile("", (event) => {
-      const file = (event.target! as HTMLInputElement).files![0];
-      if (!file)
-        return;
-
-      const reader = new FileReader();
-      reader.onload = error => {
-        this.replace(index, reader.result as ArrayBuffer);
-      };
-      reader.readAsArrayBuffer(file);
-    });
+    $$log(`Replaced overlay ${$$hex(index)} with new buffer of length ${buffer.byteLength}`, newInfoValues);
   }
 }

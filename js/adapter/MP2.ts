@@ -25,16 +25,19 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
   public SCENE_TABLE_ROM: number = 0x000C9474;
 
+  public writeFullOverlay: boolean = false;
+
   constructor() {
     super();
   }
 
-  onLoad(board: IBoard, boardInfo: IBoardInfo) {
-    this._extractBanks(board, boardInfo);
-    this._extractItemShops(board, boardInfo);
+  onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
+    if (!boardWasStashed) {
+      this._extractBanks(board, boardInfo);
+      this._extractItemShops(board, boardInfo);
+    }
 
     this._parseBoardSelectIcon(board, boardInfo);
-
     this._readAnimationBackgrounds(board, boardInfo);
   }
 

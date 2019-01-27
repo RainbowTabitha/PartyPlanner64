@@ -227,25 +227,37 @@ export class mainfs {
     let fileData = _mainfsCache![d][f];
     let writeDecompressed = get($setting.writeDecompressed);
 
-    view.setUint32(offset, fileData.decompressedSize || fileData.decompressed.byteLength);
-
-    let compressionType = writeDecompressed ? 0 : fileData.compressionType;
-    view.setUint32(offset + 4, compressionType);
-
-    let fileStartOffset = offset + 8;
-    if (_getFileHeaderSize(compressionType) === 12) { // Duplicate decompressed size
-      view.setUint32(offset + 8, fileData.decompressedSize || fileData.decompressed.byteLength);
-      fileStartOffset += 4;
+    if (!fileData) {
+      view.setUint32(offset, 0); // No file, no size
+      view.setUint32(offset + 4, 0);
+      let fileStartOffset = offset + 8;
+      if (_getFileHeaderSize(0) === 12) { // Duplicate decompressed size
+        view.setUint32(offset + 8, 0);
+        fileStartOffset += 4;
+      }
+      return fileStartOffset;
     }
+    else {
+      view.setUint32(offset, fileData.decompressedSize || fileData.decompressed.byteLength);
 
-    let bytesToWrite;
-    if (writeDecompressed)
-      bytesToWrite = fileData.decompressed;
-    else
-      bytesToWrite = fileData.compressed || fileData.decompressed;
-    copyRange(view, bytesToWrite, fileStartOffset, 0, bytesToWrite.byteLength);
+      let compressionType = writeDecompressed ? 0 : fileData.compressionType;
+      view.setUint32(offset + 4, compressionType);
 
-    return fileStartOffset + bytesToWrite.byteLength;
+      let fileStartOffset = offset + 8;
+      if (_getFileHeaderSize(compressionType) === 12) { // Duplicate decompressed size
+        view.setUint32(offset + 8, fileData.decompressedSize || fileData.decompressed.byteLength);
+        fileStartOffset += 4;
+      }
+
+      let bytesToWrite;
+      if (writeDecompressed)
+        bytesToWrite = fileData.decompressed;
+      else
+        bytesToWrite = fileData.compressed || fileData.decompressed;
+      copyRange(view, bytesToWrite, fileStartOffset, 0, bytesToWrite.byteLength);
+
+      return fileStartOffset + bytesToWrite.byteLength;
+    }
   }
 
   public static getDirectoryCount() {
@@ -284,14 +296,22 @@ export class mainfs {
       byteLen += 4 * fileCount; // File offsets
 
       for (let f = 0; f < fileCount; f++) {
-        // Decompressed size, compression type, and perhaps duplicated decompressed size.
-        byteLen += _getFileHeaderSize(writeDecompressed ? 0 : _mainfsCache![d][f].compressionType);
+        const fileData = _mainfsCache![d][f];
 
-        if (_mainfsCache![d][f].compressed && !writeDecompressed) // We never touched it.
-          byteLen += _mainfsCache![d][f].compressed!.byteLength;
-        else
-          byteLen += _mainfsCache![d][f].decompressed.byteLength;
-        byteLen = makeDivisibleBy(byteLen, 2);
+        if (!fileData) {
+          // Happens if we write a new file at a specific place and leave gaps.
+          byteLen += _getFileHeaderSize(0);
+        }
+        else {
+          // Decompressed size, compression type, and perhaps duplicated decompressed size.
+          byteLen += _getFileHeaderSize(writeDecompressed ? 0 : fileData.compressionType);
+
+          if (fileData.compressed && !writeDecompressed) // We never touched it.
+            byteLen += fileData.compressed!.byteLength;
+          else
+            byteLen += fileData.decompressed.byteLength;
+          byteLen = makeDivisibleBy(byteLen, 2);
+        }
       }
     }
 

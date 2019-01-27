@@ -1,9 +1,12 @@
 import { IBoard, getSpacesOfSubType } from "../boards";
-import { SpaceSubtype } from "../types";
+import { SpaceSubtype, Game } from "../types";
 import { distance } from "../utils/number";
 import { IBoardInfo } from "./AdapterBase";
+import { getSymbol } from "../symbols/symbols";
 
 export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string {
+  const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile;
+
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
 
   const koopaIndices = getSpacesOfSubType(SpaceSubtype.KOOPA, board);
@@ -300,7 +303,7 @@ L800F68EC:
   jr    RA
    addiu SP, SP, 0x30
 
-__PP64_STAR_SPACE_INTERNAL:
+__PP64_INTERNAL_STAR_SPACE:
   addiu SP, SP, -0x28
   sw    RA, 0x20(SP)
   sw    S1, 0x1c(SP)
@@ -742,25 +745,26 @@ overlaycall1:
    NOP
 L800F6FB8:
   jal   SetBoardFeatureEnabled
-   addiu    A0, R0, 70
+   addiu    A0, R0, 0x46
   jal   SetBoardFeatureEnabled
-   addiu    A0, R0, 71
+   addiu    A0, R0, 0x47
   jal   SetBoardFeatureEnabled
-   addiu    A0, R0, 73
+   addiu    A0, R0, 0x49
   j     L800F6FE4
-   addiu    A0, R0, 75
+   addiu    A0, R0, 0x4B
 L800F6FD8:
   jal   SetBoardFeatureEnabled
-   addiu    A0, R0, 71
-  addiu    A0, R0, 73
+   addiu    A0, R0, 0x47
+  addiu    A0, R0, 0x49
 L800F6FE4:
   jal   SetBoardFeatureEnabled
    NOP
 L800F6FEC:
   jal   SetBoardFeatureEnabled
-   addiu    A0, R0, 67
+   addiu    A0, R0, 0x43
   jal   func_800F663C
    NOP
+  ; Clear board-specific persistent state values
   lui   V0, hi(CORE_800ED154)
   addiu V0, V0, lo(CORE_800ED154)
   sh    R0, 0(V0)
@@ -795,12 +799,12 @@ setup_routine:
   addiu    A2, R0, 64
   jal   0x800234B8
    addiu    A3, R0, 96
-  lui   A1, 0xc2c8
-  lui   A2, 0x42c8
-  lui   A3, 0x4396
+  lui   A1, 0xc2c8 ; -100.0
+  lui   A2, 0x42c8 ; 100.0
+  lui   A3, 0x4396 ; 300.0
   jal   0x80023504
    addiu    A0, R0, 1
-  addu  A0, R0, R0
+  addu  A0, R0, R0 ; TODO: HVQ background index?
   addiu    A1, R0, ${boardInfo.boardDefFile}
   addiu    A2, R0, 4
   jal   0x80056A08 ; setup board?
@@ -851,7 +855,9 @@ L800F714C:
    addiu    A0, R0, 15
   bne  V0, R0, L800F7164
    NOP
+.if BOO_COUNT
   jal   boo_draw_outer
+.endif
    NOP
 L800F7164:
   jal   IsBoardFeatureDisabled
@@ -871,14 +877,13 @@ overlaycall2:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
   jal   0x80060128
-   addiu A0, R0, 8
+   addiu A0, R0, ${board.audioIndex}
   jal   0x8001D240
    addiu A0, R0, 2
   jal   setup_routine
    NOP
-  lui   A0, hi(main_event_table) ; TODO EVENT HYDRATE
-  jal   EventTableHydrate
-   addiu A0, A0, lo(main_event_table)
+  JAL hydrate_events
+   NOP
 
 ; TODO: Support the disabled koopa, boo, bowser setting with split event tables
 ;  jal   IsBoardFeatureDisabled
@@ -1120,6 +1125,7 @@ L800F74F0:
   jr    RA
    addiu SP, SP, 0x20
 
+.if BOO_COUNT
 boo_draw_inner:
   addiu SP, SP, -0x20
   sw    RA, 0x18(SP)
@@ -1210,6 +1216,7 @@ boo_draw_outer_loop:
   lw    S0, 0x10(SP)
   jr    RA
    addiu SP, SP, 0x18
+.endif ; BOO_COUNT
 
 overlaycall4:
   addiu SP, SP, -0x18
@@ -1234,10 +1241,55 @@ overlaycall4:
   jr    RA
    addiu SP, SP, 0x18
 
+hydrate_events:
+  ADDIU SP SP 0xFFE8
+  SW RA, 0x0010(SP)
+
+  // Call for the MainFS to read in the ASM blob.
+  LUI A0 ${mainFsEventDir}
+  JAL ${getSymbol(Game.MP1_USA, "ReadMainFS")}
+  ADDIU A0 A0 ${mainFsEventFile}
+
+  // Now, V0 has the location that the MainFSRead put the blob... it isn't
+  // where we want it, it is in the heap somewhere, so we will move it.
+
+  // This is a pretty simple copy loop
+  // T4 = Copy of V0, Current source RAM location
+  // T0 = Current dest RAM location
+  // T1 = Size of buffer remaining to copy
+  // T2 = Temp word register to do the copy
+  ADDU T4 V0 R0 // Copy V0 -> T4
+  LW T0 0x4(T4) // LW T0, 0x4(T4) [RAM dest]
+  LW T1 0x8(T4) // LW T1, 0x8(T4) [Buffer size]
+hydrate_events_loop_start:
+  LW T2 0(T4)
+  SW T2 0(T0)
+  ADDIU T4 T4 4
+  ADDIU T0 T0 4
+  ADDIU T1 T1 -4
+  BGTZ T1 hydrate_events_loop_start
+  NOP
+
+  // Now we can hydrate the table.
+  // T9 = V0 copy
+  // T4 = Dest buffer addr + 0x10, where the table really starts
+  ADDU T9 V0 R0 // Copy V0 -> T9
+  LW T4 4(T9) // LW T4, 0x4(T9) [RAM dest]
+  JAL ${getSymbol(Game.MP1_USA, "EventTableHydrate")}
+  ADDIU A0 T4 16 // ADDIU A0, T4, 16
+
+  // Well, we copied the buffer... now we should "free" it with this magic JAL...
+  // Free our T9 reference, which theoretically could be corrupted, but in practice not.
+  JAL ${getSymbol(Game.MP1_USA, "FreeMainFS")}
+  ADDU A0 T9 R0
+
+  LW RA 0x10(SP)
+  JR RA
+  ADDIU SP SP 0x18
 .align 16
 
 ; 800F9890
-rodata_start:
+rodata:
 overlaycalls:
 .word 0x00000000, overlaycall0
 .word 0x00010000, overlaycall1
@@ -1287,8 +1339,10 @@ RO_800F994A:
 .halfword 0
 .word 0x0000FFFD, 0x0000FFF8, 0xFFFD0000, 0xFFFE0000, 0xFFFE0000, 0xFFFD0000
 
+.if BOO_COUNT
 boo_space_indices:
 .halfword ${booIndices.join(",")}
+.endif
 
 .align 16
 
@@ -1297,8 +1351,11 @@ bss_bowser_model: .word 0
 bss_koopa_model: .word 0
 bss_toad_model: .word 0, 0
 bss_toad_2: .word 0, 0
+
+.if BOO_COUNT
 bss_boo: .word 0
 bss_boo_2: .word 0, 0
+.endif
 
 .align 16
 

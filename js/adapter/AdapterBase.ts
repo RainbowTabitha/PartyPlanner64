@@ -9,12 +9,12 @@ import { determineChains, padChains, create as createBoardDef, parse as parseBoa
 import { Space, BoardType, EventActivationType, SpaceSubtype } from "../types";
 import { $$log, $$hex } from "../utils/debug";
 import { getSymbol } from "../symbols/symbols";
-import { scenes } from "../fs/scenes";
+import { scenes, ISceneInfo } from "../fs/scenes";
 import { findCalls, getRegSetAddress } from "../utils/MIPS";
 import { SpaceEventTable } from "./eventtable";
 import { SpaceEventList } from "./eventlist";
-import { create as createEvent, IEventWriteInfo, write as writeEvent, parse as parseEvent, EventParameterType } from "../events/events";
-import { toU32 } from "../utils/string";
+import { create as createEvent, write as writeEvent, parse as parseEvent, EventParameterType } from "../events/events";
+import { toU32, stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
 import { makeDivisibleBy, distance, getRawFloat32Format } from "../utils/number";
 import { parse as parseInst } from "mips-inst";
 import { assemble } from "mips-assembler";
@@ -24,11 +24,8 @@ import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
 import { arrayBufferToDataURL, copyRange } from "../utils/arrays";
 import { get, $setting } from "../settings";
-import { render } from "../renderer";
-import { showMessage } from "../appControl";
 import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
 import THREE = require("three");
-import { Vector3 } from "three";
 
 export type IBoardInfo = any;
 
@@ -55,6 +52,7 @@ export abstract class AdapterBase {
   public abstract MAINFS_READ_ADDR: number;
   public abstract TABLE_HYDRATE_ADDR: number;
   public abstract HEAP_FREE_ADDR: number;
+  public abstract writeFullOverlay: boolean;
 
   constructor() {}
 
@@ -66,25 +64,41 @@ export abstract class AdapterBase {
       if ($$debug)
         console.group(`Board ${i}`);
 
-      let boardInfo = boardInfos[i];
-      let bgDir = boardInfo.bgDir;
-      let background = hvqfs.readBackground(bgDir);
-      let partialBoard = {
-        "game": this.gameVersion,
-        "type": boardInfo.type || BoardType.NORMAL,
-        "bg": background,
-        "otherbg": {},
-      };
+      const boardInfo = boardInfos[i];
+      const bgDir = boardInfo.bgDir;
+      const background = hvqfs.readBackground(bgDir);
 
-      let boardBuffer = mainfs.get(this.boardDefDirectory, boardInfo.boardDefFile);
-      let newBoard = parseBoardDef(boardBuffer, partialBoard);
-      let chains: number[][] = (newBoard as any)._chains;
-      delete (newBoard as any)._chains;
-      $$log(`Board ${i} chains: `, chains);
+      let newBoard: IBoard;
+      const boardFromRom = this._pullBoardFromRom(boardInfo);
+      if (boardFromRom) {
+        newBoard = boardFromRom;
+        newBoard.bg = background;
+        newBoard.otherbg = {};
+      }
+      else {
+        let partialBoard = {
+          "game": this.gameVersion,
+          "type": boardInfo.type || BoardType.NORMAL,
+          "bg": background,
+          "otherbg": {},
+        };
+        let boardBuffer = mainfs.get(this.boardDefDirectory, boardInfo.boardDefFile);
+        newBoard = parseBoardDef(boardBuffer, partialBoard);
+        let chains: number[][] = (newBoard as any)._chains;
+        delete (newBoard as any)._chains;
+        $$log(`Board ${i} chains: `, chains);
 
-      this.onChangeBoardSpaceTypesFromGameSpaceTypes(newBoard, chains);
-      this._applyPerspective(newBoard);
-      this._cleanLoadedBoard(newBoard);
+        this.onChangeBoardSpaceTypesFromGameSpaceTypes(newBoard, chains);
+        this._applyPerspective(newBoard);
+        this._cleanLoadedBoard(newBoard);
+
+        this._parseAudio(newBoard, boardInfo);
+
+        this._findEventTableLocations(boardInfo);
+        this._extractEvents(boardInfo, newBoard, i, chains);
+        this._extractStarGuardians(newBoard, boardInfo);
+        this._extractBoos(newBoard, boardInfo);
+      }
 
       this.onParseStrings(newBoard, boardInfo);
       if (!newBoard.name)
@@ -93,18 +107,11 @@ export abstract class AdapterBase {
       this.onParseBoardSelectImg(newBoard, boardInfo);
       this.onParseBoardLogoImg(newBoard, boardInfo);
 
-      this._parseAudio(newBoard, boardInfo);
-
-      this._findEventTableLocations(boardInfo);
-      this._extractEvents(boardInfo, newBoard, i, chains);
-      this._extractStarGuardians(newBoard, boardInfo);
-      this._extractBoos(newBoard, boardInfo);
-
       if (boardInfo.onLoad)
         boardInfo.onLoad(newBoard);
 
       if (this.onLoad)
-        this.onLoad(newBoard, boardInfo);
+        this.onLoad(newBoard, boardInfo, !!boardFromRom);
 
       boards.push(newBoard);
 
@@ -122,7 +129,7 @@ export abstract class AdapterBase {
     return boards;
   }
 
-  protected abstract onLoad?(board: IBoard, boardInfo: IBoardInfo): void;
+  protected abstract onLoad?(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean): void;
   protected abstract onAfterOverwrite?(romView: DataView, boardCopy: IBoard, boardInfo: IBoardInfo): void;
 
   overwriteBoard(boardIndex: number, board: IBoard) {
@@ -142,17 +149,26 @@ export abstract class AdapterBase {
     let boarddef = createBoardDef(boardCopy, chains);
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
-    // Wipe out the event ASM from those events.
-    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let eventASMStart = boardInfo.eventASMStart;
-    if (eventASMStart) {
-      let eventASMEnd = boardInfo.eventASMEnd;
-      for (let offset = eventASMStart; offset < eventASMEnd; offset += 4)
-        sceneView.setUint32(offset, 0);
+    let eventSyms: string = "";
+    if (this.writeFullOverlay) {
+      eventSyms = this._writeNewBoardOverlay(board, boardInfo);
+    }
+    else {
+      // Wipe out the event ASM from those events.
+      const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+      let eventASMStart = boardInfo.eventASMStart;
+      if (eventASMStart) {
+        let eventASMEnd = boardInfo.eventASMEnd;
+        for (let offset = eventASMStart; offset < eventASMEnd; offset += 4)
+          sceneView.setUint32(offset, 0);
+      }
+
+      this._writeStarInfo(boardCopy, boardInfo);
+      this._writeBoos(boardCopy, boardInfo);
+      this.onWriteAudio(boardCopy, boardInfo, boardIndex);
     }
 
     this.onWriteStrings(boardCopy, boardInfo);
-    this.onWriteAudio(boardCopy, boardInfo, boardIndex);
 
     // Write out the board events to ROM.
     this.onCreateChainEvents(boardCopy, chains);
@@ -160,11 +176,10 @@ export abstract class AdapterBase {
     this._createGateEvents(boardCopy, boardInfo, chains);
     if (boardInfo.onWriteEvents)
       boardInfo.onWriteEvents(boardCopy);
-    this._writeEvents(boardCopy, boardInfo, boardIndex, chains);
-    this._writeStarInfo(boardCopy, boardInfo);
-    this._writeBoos(boardCopy, boardInfo);
+    this._writeEvents(boardCopy, boardInfo, boardIndex, chains, eventSyms);
 
     this._clearOtherBoardNames(boardIndex);
+    this._stashBoardIntoRom(board, boardInfo); // Don't use the boardCopy here
 
     if (boardInfo.onAfterOverwrite)
       boardInfo.onAfterOverwrite(boardCopy);
@@ -174,6 +189,40 @@ export abstract class AdapterBase {
       this.onAfterOverwrite(romView, boardCopy, boardInfo);
 
     return this.onOverwritePromises(board, boardInfo);
+  }
+
+  private _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
+    const overlayAsm = this.onCreateBoardOverlay(board, boardInfo);
+    const asm = `
+        ${makeGameSymbolLabels(romhandler.getROMGame()!).join("\n")}
+
+        ${overlayAsm}
+      `;
+    $$log(asm);
+    const outSyms = Object.create(null);
+    const buffer = assemble(asm, { symbolOutputMap: outSyms }) as ArrayBuffer;
+
+    // TODO if (buffer.byteLength > some max) {
+    //   throw new Error(``);
+    // }
+
+    const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
+    const eventSyms: string = this._makeSymbolsForEventAssembly(outSyms, sceneInfo);
+
+    // Replace the overlay. We actually have enough info to accurately define
+    // the code/rodata/bss regions.
+    scenes.replace(boardInfo.sceneIndex, buffer.slice(0, outSyms.bss), {
+      code_end: sceneInfo.code_start + outSyms.rodata,
+      rodata_start: sceneInfo.code_start + outSyms.rodata,
+      rodata_end: sceneInfo.code_start + outSyms.bss,
+      bss_start: sceneInfo.code_start + outSyms.bss,
+      bss_end: sceneInfo.code_start + buffer.byteLength,
+    });
+    return eventSyms;
+  }
+
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
+    throw new Error("Adapter does not implement onCreateBoardOverlay");
   }
 
   onAfterSave(romView: DataView): void
@@ -324,6 +373,33 @@ export abstract class AdapterBase {
 
   _addrToOffsetBase(addr: number, base: number) {
     return ((addr & 0x7FFFFFFF) - (base & 0x7FFFFFFF)) >>> 0;
+  }
+
+  _stashBoardIntoRom(board: IBoard, boardInfo: IBoardInfo) {
+    if (!boardInfo.mainfsBoardFile)
+      return;
+
+    const boardCopy = copyObject(board);
+    delete boardCopy.bg;
+    delete boardCopy.otherbg;
+    delete boardCopy.animbg;
+    const boardJsonBuffer = stringToArrayBuffer(JSON.stringify(boardCopy));
+
+    const [dir, file] = boardInfo.mainfsBoardFile;
+    mainfs.write(dir, file, boardJsonBuffer);
+  }
+
+  _pullBoardFromRom(boardInfo: IBoardInfo): IBoard | null {
+    if (!boardInfo.mainfsBoardFile)
+      return null;
+
+    const [dir, file] = boardInfo.mainfsBoardFile;
+    if (!mainfs.has(dir, file))
+      return null;
+
+    const boardJsonBuffer = mainfs.get(dir, file);
+    const board: IBoard = JSON.parse(stringFromArrayBuffer(boardJsonBuffer));
+    return board;
   }
 
   // Handles any _deadSpace we may have added in overwriteBoard
@@ -625,10 +701,10 @@ export abstract class AdapterBase {
   }
 
   // Write out all of the events ASM.
-  _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
+  _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
     if (boardInfo.mainfsEventFile) {
       if (this.gameVersion === 1) {
-        this._writeEventsNew2(board, boardInfo, boardIndex, chains);
+        this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms);
       }
       else {
         this._writeEventsNew(board, boardInfo, boardIndex, chains);
@@ -752,7 +828,7 @@ export abstract class AdapterBase {
     this._writeEventAsmHook(boardInfo, boardIndex);
   }
 
-  _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
+  _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
     if (!boardInfo.mainfsEventFile)
       throw `No MainFS file specified to place board ASM for board ${boardIndex}.`;
 
@@ -799,9 +875,7 @@ export abstract class AdapterBase {
 
       ${makeGameSymbolLabels(romhandler.getROMGame()!).join("\n")}
 
-      // TODO: Remove these hacks?
-      .definelabel __PP64_INTERNAL_GET_NEXT_TOAD_INDEX,0x800F6610
-      .definelabel __PP64_STAR_SPACE_INTERNAL,0x800F6958 // TODO: Probably wrong now
+      ${eventSyms}
 
       ${eventTable.getAssembly()}
       ${eventLists.map(eventList => eventList.getAssembly()).join("\n")}
@@ -826,9 +900,6 @@ export abstract class AdapterBase {
     mainfs.write(mainFsDir, mainFsFile, buffer);
 
     //saveAs(new Blob([buffer]), "eventBuffer");
-
-    // Write the hook
-    this._writeEventAsmHook(boardInfo, boardIndex);
   }
 
   _writeEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
@@ -924,6 +995,16 @@ export abstract class AdapterBase {
       for (let offset = tableInfo.upper; offset <= tableInfo.lower; offset += 4)
         sceneView.setUint32(offset, 0);
     });
+  }
+
+  _makeSymbolsForEventAssembly(syms: { [symbol: string]: number }, sceneInfo: ISceneInfo): string {
+    let result: string = "";
+    for (let symName in syms) {
+      if (symName.indexOf("__PP64_INTERNAL") === 0) {
+        result += `.definelabel ${symName},${$$hex(sceneInfo.ram_start + syms[symName])}\n`;
+      }
+    }
+    return result;
   }
 
   onWriteEventAsmHook(romView: DataView, boardInfo: IBoardInfo, boardIndex: number) {

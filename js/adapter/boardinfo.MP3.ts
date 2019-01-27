@@ -31,6 +31,7 @@ MP3_CHILLY.img = {
 };
 MP3_CHILLY.sceneIndex = 0x48;
 MP3_CHILLY.mainfsEventFile = [19, 618];
+MP3_CHILLY.mainfsBoardFile = [19, 619];
 MP3_CHILLY.eventASMStart = 0x14AF0; // 0x00330000 // ballpark, but this is wrong -> // 0x0031E814; // is this 0x8011A490 ?
 MP3_CHILLY.eventASMEnd = 0x16BEC; // 0x003320FC, 0x8011C58C
 // MP3_CHILLY.spaceEventsStartAddr = 0x0011E718;

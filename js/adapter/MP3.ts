@@ -12,7 +12,6 @@ import { toPack } from "../utils/img/ImgPack";
 import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { FORM } from "../models/FORM";
-import { romhandler } from "../romhandler";
 import { scenes } from "../fs/scenes";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
@@ -28,13 +27,17 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   public SCENE_TABLE_ROM: number = 0x00096EF4;
 
+  public writeFullOverlay: boolean = false;
+
   constructor() {
     super();
   }
 
-  onLoad(board: IBoard, boardInfo: IBoardInfo) {
-    this._extractBanks(board, boardInfo);
-    this._extractItemShops(board, boardInfo);
+  onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
+    if (!boardWasStashed) {
+      this._extractBanks(board, boardInfo);
+      this._extractItemShops(board, boardInfo);
+    }
   }
 
   onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {

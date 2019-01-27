@@ -7,6 +7,7 @@ import { render } from "./renderer";
 import { MPEditor, MPEditorDisplayMode } from "./texteditor";
 
 import * as basicContext from "basiccontext";
+import { $$log } from "./utils/debug";
 
 interface IBoardMenuProps {
   boards: IBoard[];
@@ -50,6 +51,8 @@ const Board = class Board extends React.Component<IBoardProps> {
   handleClick = () => {
     const boardIsRom = boardIsROM(this.props.board);
     setCurrentBoard(this.props.index, boardIsRom);
+
+    $$log("Now viewing board", this.props.board);
   }
 
   onDragStart = (event: any) => {

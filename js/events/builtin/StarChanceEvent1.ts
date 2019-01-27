@@ -31,7 +31,7 @@ StarChanceEvent.write = function(dataView: DataView, event: IEvent, info: IEvent
     jal   GetCurrentSpaceIndex
     sw    S0, 0x10(SP)
     sll   V0, V0, 0x10
-    jal   __PP64_STAR_SPACE_INTERNAL
+    jal   __PP64_INTERNAL_STAR_SPACE
     sra   A0, V0, 0x10
     sll   V0, V0, 0x10
     sra   V0, V0, 0x10

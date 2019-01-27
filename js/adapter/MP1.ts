@@ -1,11 +1,10 @@
 import { AdapterBase, IBoardInfo } from "./AdapterBase";
 import { ISpace, addEventToSpace, IBoard } from "../boards";
-import { Space, SpaceSubtype, Game } from "../types";
+import { Space, SpaceSubtype } from "../types";
 import { create as createEvent } from "../events/events";
 import { parse as parseInst } from "mips-inst";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL } from "../utils/arrays";
-import { romhandler } from "../romhandler";
 import { fromTiles, toTiles } from "../utils/img/tiler";
 import { FORM } from "../models/FORM";
 import { mainfs } from "../fs/mainfs";
@@ -13,10 +12,9 @@ import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { toArrayBuffer } from "../utils/image";
 import { toPack } from "../utils/img/ImgPack";
-import { prepAsm } from "../events/prepAsm";
 import { assemble } from "mips-assembler";
-import THREE = require("three");
 import { scenes } from "../fs/scenes";
+import { createBoardOverlay } from "./MP1.U.boardoverlay";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -30,6 +28,8 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   public TABLE_HYDRATE_ADDR: number = 0x0004C900;
 
   public SCENE_TABLE_ROM: number = 0x000C2874;
+
+  public writeFullOverlay: boolean = true;
 
   constructor() {
     super();
@@ -45,15 +45,21 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     }
   }
 
-  onLoad(board: IBoard, boardInfo: IBoardInfo) {
-    this._extractKoopa(board, boardInfo);
-    this._extractBowser(board, boardInfo);
-    this._extractGoomba(board, boardInfo);
+  onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
+    if (!boardWasStashed) {
+      this._extractKoopa(board, boardInfo);
+      this._extractBowser(board, boardInfo);
+      this._extractGoomba(board, boardInfo);
+    }
+  }
+
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
+    return createBoardOverlay(board, boardInfo);
   }
 
   onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
-    this._writeKoopa(board, boardInfo);
-    this._writeBowser(board, boardInfo);
+    // this._writeKoopa(board, boardInfo);
+    // this._writeBowser(board, boardInfo);
 
     // Patch game to use all 8MB.
     romView.setUint16(0x3BF62, 0x8040); // Main heap now starts at 0x80400000
@@ -101,24 +107,6 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       NOP
     `;
     assemble(hvqAsm, { buffer: romView.buffer });
-
-    // const asm = prepAsm(`
-
-    // `, undefined, {
-    //   boardIndex: 0,
-    //   board: board,
-    //   curSpaceIndex: 0,
-    //   curSpace: null as any,
-    //   chains: new Array(),
-    //   offset: 0x2418A0,
-    //   addr: 0x800F65E0,
-    //   game: Game.MP1_USA,
-    //   gameVersion: 1,
-    //   parameterValues: {},
-    // });
-    // const buff = assemble(asm) as ArrayBuffer;
-    // console.log(buff);
-    // saveAs(new Blob([buff]), "reassembly.bin");
   }
 
   onOverwritePromises(board: IBoard, boardInfo: IBoardInfo) {
