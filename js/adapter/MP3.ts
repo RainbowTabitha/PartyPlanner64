@@ -1,4 +1,4 @@
-import { AdapterBase, IBoardInfo } from "./AdapterBase";
+import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace, getConnections, addEventByIndex } from "../boards";
 import { Space, BoardType, SpaceSubtype, EventActivationType } from "../types";
 import { $$log } from "../utils/debug";
@@ -13,6 +13,7 @@ import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { FORM } from "../models/FORM";
 import { scenes } from "../fs/scenes";
+import { IBoardInfo } from "./boardinfobase";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -85,7 +86,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     }
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo) {
+  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
     let bgIndex = boardInfo.bgDir;
     let bgPromises = [
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
@@ -425,7 +426,9 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   onParseStrings(board: IBoard, boardInfo: IBoardInfo) {
     let strs = boardInfo.str || {};
     if (strs.boardSelect) {
-      let idx = strs.boardSelect[0];
+      if (!Array.isArray(strs.boardSelect))
+        throw new Error("Expected number[][]");
+      let idx = strs.boardSelect[0] as number[];
       let str = strings3.read("en", idx[0], idx[1]);
       let lines = str.split("\n");
 
@@ -448,7 +451,8 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   onWriteStrings(board: IBoard, boardInfo: IBoardInfo) {
     let strs = boardInfo.str || {};
-    if (strs.boardSelect && strs.boardSelect.length) {
+    const boardSelect = strs.boardSelect as number[][];
+    if (boardSelect && boardSelect.length) {
       let bytes = [];
       bytes.push(0x0B); // Clear?
       bytes.push(0x05); // Start GREEN
@@ -481,7 +485,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
       let strBuffer = arrayToArrayBuffer(bytes);
 
-      let idx = strs.boardSelect[0];
+      let idx = boardSelect[0];
       strings3.write("en", idx[0], idx[1], strBuffer);
 
       // The second copy is mostly the same, but add a couple more bytes at the end.
@@ -492,7 +496,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
       strBuffer = arrayToArrayBuffer(bytes);
 
-      idx = strs.boardSelect[1];
+      idx = boardSelect[1];
       strings3.write("en", idx[0], idx[1], strBuffer);
     }
 
@@ -538,7 +542,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       let strBuffer = arrayToArrayBuffer(bytes);
 
       for (let i = 0; i < strs.boardNames.length; i++) {
-        let idx = strs.boardNames[i];
+        let idx = strs.boardNames[i] as number[];
         strings3.write("en", idx[0], idx[1], strBuffer);
       }
     }
@@ -582,7 +586,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         let imgBuffer = toArrayBuffer(srcImage, 64, 64);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(20, boardSelectImg);
+        let oldPack = mainfs.get(20, boardSelectImg!);
 
         // Then, pack the image and write it.
         let imgInfoArr = [
@@ -595,7 +599,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
         // saveAs(new Blob([newPack]), "imgpack");
-        mainfs.write(20, boardSelectImg, newPack);
+        mainfs.write(20, boardSelectImg!, newPack);
 
         clearTimeout(failTimer);
         resolve();
@@ -609,7 +613,8 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       return;
 
     board.otherbg.boardlogo = this._readImgFromMainFS(19, boardInfo.img.splashLogoImg, 0);
-    board.otherbg.boardlogotext = this._readImgFromMainFS(19, boardInfo.img.splashLogoTextImg, 0);
+    board.otherbg.boardlogotext =
+      this._readImgFromMainFS(19, boardInfo.img.splashLogoTextImg!, 0);
   }
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
@@ -627,7 +632,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         let imgBuffer = toArrayBuffer(srcImage, 226, 120);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(19, splashLogoImg);
+        let oldPack = mainfs.get(19, splashLogoImg!);
 
         // Then, pack the image and write it.
         let imgInfoArr = [
@@ -640,7 +645,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
         // saveAs(new Blob([newPack]), "imgpack");
-        mainfs.write(19, splashLogoImg, newPack);
+        mainfs.write(19, splashLogoImg!, newPack);
 
         clearTimeout(failTimer);
         resolve();
@@ -678,7 +683,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         let imgBuffer = toArrayBuffer(srcImage, 226, 36);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(19, splashLogoTextImg);
+        let oldPack = mainfs.get(19, splashLogoTextImg!);
 
         // Then, pack the image and write it.
         let imgInfoArr = [
@@ -691,7 +696,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
         // saveAs(new Blob([newPack]), "imgpack");
-        mainfs.write(19, splashLogoTextImg, newPack);
+        mainfs.write(19, splashLogoTextImg!, newPack);
 
         clearTimeout(failTimer);
         resolve();
@@ -729,7 +734,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         // Now write the FORM.
         let gatePacked = FORM.pack(gateUnpacked);
         //saveAs(new Blob([gatePacked]), "gatePacked");
-        mainfs.write(19, gateIndex, gatePacked);
+        mainfs.write(19, gateIndex!, gatePacked);
 
         clearTimeout(failTimer);
         resolve();

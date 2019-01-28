@@ -5,109 +5,132 @@ import { hvqfs } from "../fs/hvqfs";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer } from "../utils/arrays";
 import { scenes } from "../fs/scenes";
+import { toPack } from "../utils/img/ImgPack";
+import { mainfs } from "../fs/mainfs";
 
 // DK's Jungle Adventure - (U) ROM
-const MP1_USA_DK = createBoardInfo("MP1_USA_DK");
-MP1_USA_DK.name = "DK's Jungle Adventure";
-MP1_USA_DK.boardDefFile = 69;
-MP1_USA_DK.bgDir = 0;
-MP1_USA_DK.str = {
-  boardSelect: 652,
-  koopaIntro: 571,
-  starComments: [286, 287, 288, 289, 290, 291, 292],
-};
-MP1_USA_DK.img = {
-  boardSelectImg: 17,
+const MP1_USA_DK = createBoardInfo("MP1_USA_DK", {
+  name: "DK's Jungle Adventure",
+  canOverwrite: true,
+  boardDefFile: 69,
+  bgDir: 0,
+  pauseBgDir: 4,
+  sceneIndex: 0x36, // 54
+  mainfsEventFile: [10, 422],
+  mainfsBoardFile: [10, 423],
+  koopaSpaceInst: 0xD54, // 0x002425F4, 0x800F7330
+  bowserSpaceInst: 0xCB8, // 0x00242558
+  boosLoopFnOffset: 0x11D8, // 0x00242A78
+  boosReadbackFnOffset: 0x10D0, // 0x00242970
+  starSpaceArrOffset: 0x3320, // 0x00244BC0
+  starSpaceCount: 7,
+  toadSpaceArrOffset: [0x3330, 0x3348], // [0x00244BD0, 0x00244BE8]
+  audioIndexOffset: 0xBBE, // 0x0024245E
+  str: {
+    boardSelect: 652,
+    koopaIntro: 571,
+    starComments: [286, 287, 288, 289, 290, 291, 292],
+  },
+  img: {
+    boardSelectImg: 17,
 
-  //gamemasterplc: overwrite ROM offset 0x25FA08 with 0x006B0226 to hide the comic sans board logo far off the bottom of the screen
-  pauseLogoImg: 276,
-  introLogoImg: [356, 357],
-  introLogoImgDimens: [272, 112],
-  titleScreenImg: 385,
-};
+    //gamemasterplc: overwrite ROM offset 0x25FA08 with 0x006B0226 to hide the comic sans board logo far off the bottom of the screen
+    pauseLogoImg: 276,
+    introLogoImg: [356, 357],
+    introLogoImgDimens: [272, 112],
+    titleScreenImg: 385,
+  },
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP1_USA_DK.bgDir + 1).src;
+    board.otherbg.conversation = hvqfs.readBackground(MP1_USA_DK.bgDir + 2).src;
+    board.otherbg.splashscreen = hvqfs.readBackground(MP1_USA_DK.bgDir + 6).src;
+  },
+  onWriteEvents: function(board: IBoard) {
+    // Right now this board is always going to put Chance time spaces where Stars were,
+    // so we will just automate adding the post-star chance event.
+    const spaces = board.spaces;
+    for (let i = 0; i < spaces.length; i++) {
+      let space = board.spaces[i];
+      if (!space || !space.star)
+        continue;
+      let events = space.events || [];
+      let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
+      if (!hasStarChance)
+        addEventToSpace(space, createEvent("STARCHANCE"));
+    }
+  },
+  onAfterOverwrite: function() {
+    // Remove the "box" from the game start scenery.
+    const introSceneView = scenes.getDataView(98);
+    introSceneView.setUint32(0x7098, 0xC57A0000); // 0x2A9598 // Some random float to get it away
+    introSceneView.setUint32(0x709C, 0); // 0x2A959C
+    introSceneView.setUint32(0x70A0, 0); // 0x2A95A0
 
-// scene 0x36 code 0x2418A0, 0x244B50
-// dump.printAsm(0x2418A0, 0x244B50)
-MP1_USA_DK.sceneIndex = 0x36; // 54
-MP1_USA_DK.mainfsEventFile = [10, 422];
-MP1_USA_DK.mainfsBoardFile = [10, 423];
-// MP1_USA_DK.spaceEventTables = [
+    // Make Bowser's event text a bit more generic.
+    let bytes: number[] = [];
+    bytes = bytes.concat(strings._strToBytes("You're looking for Stars?\nHow about this instead..."));
+    bytes.push(0xFF); // PAUSE
+    bytes.push(0x00); // Null byte
+    let strBuffer = arrayToArrayBuffer(bytes);
+    strings.write(396, strBuffer);
+    strings.write(399, strBuffer);
+    strings.write(402, strBuffer);
+  }
+});
+
+// spaceEventTables: [
 //   { upper: 0xBD0, lower: 0xBD8 }, // 0x800F71B0, 0x800F71B8
 //   { upper: 0xBEC, lower: 0xBF4 }, // 0x800F71CC, 0x800F71D4
 //   { upper: 0xC08, lower: 0xC10 }, // 0x800F71E8, 0x800F71F0
 //   { upper: 0xC24, lower: 0xC2C }, // 0x800F7204, 0x800F720C
 //   // tables: 0x800FA0CC
 // ];
-MP1_USA_DK.koopaSpaceInst = 0xD54; // 0x002425F4, 0x800F7330
-MP1_USA_DK.bowserSpaceInst = 0xCB8; // 0x00242558;
-MP1_USA_DK.boosLoopFnOffset = 0x11D8; // 0x00242A78;
-MP1_USA_DK.boosReadbackFnOffset = 0x10D0; // 0x00242970;
-MP1_USA_DK.starSpaceArrOffset = 0x3320; // 0x00244BC0
-MP1_USA_DK.starSpaceCount = 7;
-MP1_USA_DK.toadSpaceArrOffset = [0x3330, 0x3348]; // [0x00244BD0, 0x00244BE8];
-MP1_USA_DK.audioIndexOffset = 0xBBE; // 0x0024245E
-MP1_USA_DK.onLoad = function(board: IBoard) {
-  board.otherbg.largescene = hvqfs.readBackground(MP1_USA_DK.bgDir + 1).src;
-  board.otherbg.conversation = hvqfs.readBackground(MP1_USA_DK.bgDir + 2).src;
-  board.otherbg.splashscreen = hvqfs.readBackground(MP1_USA_DK.bgDir + 6).src;
-};
-MP1_USA_DK.onWriteEvents = function(board: IBoard) {
-  // Right now this board is always going to put Chance time spaces where Stars were,
-  // so we will just automate adding the post-star chance event.
-  let spaces = board.spaces;
-  for (let i = 0; i < spaces.length; i++) {
-    let space = board.spaces[i];
-    if (!space || !space.star)
-      continue;
-    let events = space.events || [];
-    let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
-    if (!hasStarChance)
-      addEventToSpace(space, createEvent("STARCHANCE"));
-  }
-};
-MP1_USA_DK.onAfterOverwrite = function() {
-  // Remove the "box" from the game start scenery.
-  const introSceneView = scenes.getDataView(98);
-  introSceneView.setUint32(0x7098, 0xC57A0000); // 0x2A9598 // Some random float to get it away
-  introSceneView.setUint32(0x709C, 0); // 0x2A959C
-  introSceneView.setUint32(0x70A0, 0); // 0x2A95A0
 
-  // Make Bowser's event text a bit more generic.
-  let bytes: number[] = [];
-  bytes = bytes.concat(strings._strToBytes("You're looking for Stars?\nHow about this instead..."));
-  bytes.push(0xFF); // PAUSE
-  bytes.push(0x00); // Null byte
-  let strBuffer = arrayToArrayBuffer(bytes);
-  strings.write(396, strBuffer);
-  strings.write(399, strBuffer);
-  strings.write(402, strBuffer);
-};
+
 
 // Peach's Birthday Cake - (U) ROM
-const MP1_USA_PEACH = createBoardInfo("MP1_USA_PEACH");
-MP1_USA_PEACH.name = "Peach's Birthday Cake";
-MP1_USA_PEACH.boardDefFile = 70;
-MP1_USA_PEACH.bgDir = 7;
-MP1_USA_PEACH.str = {
-  boardSelect: 653,
-  koopaIntro: 572,
-};
-MP1_USA_PEACH.img = {
-  boardSelectImg: 20,
-  pauseLogoImg: 277,
-  introLogoImg: [359],
-  titleScreenImg: 382,
-};
-MP1_USA_PEACH.sceneIndex = 0x37; // 55
-MP1_USA_PEACH.mainfsEventFile = [10, 424];
-MP1_USA_PEACH.mainfsBoardFile = [10, 425];
-MP1_USA_PEACH.eventASMStart = 0x00;
-// MP1_USA_PEACH.spaceEventsStartAddr = 0x000F7C70;
-// MP1_USA_PEACH.spaceEventsStartOffset = 0x00246C50;
-// MP1_USA_PEACH.spaceEventsEndOffset = 0x00246D10;
-MP1_USA_PEACH.koopaSpaceInst = 0x7C0; // 0x00245D80;
-MP1_USA_PEACH.bowserSpaceInst = 0x988; // // 0x00245F48
-MP1_USA_PEACH.goombaSpaceInst = 0x900; // 0x00245EC0;
+const MP1_USA_PEACH = createBoardInfo("MP1_USA_PEACH", {
+  name: "Peach's Birthday Cake",
+  canOverwrite: true,
+  boardDefFile: 70,
+  bgDir: 7,
+  pauseBgDir: 14,
+  str: {
+    boardSelect: 653,
+    koopaIntro: 572,
+  },
+  img: {
+    boardSelectImg: 20,
+    pauseLogoImg: 277,
+    introLogoImg: [359],
+    introLogoImgDimens: [284, 126],
+    titleScreenImg: 382,
+  },
+  sceneIndex: 0x37, // 55
+  mainfsEventFile: [10, 424],
+  mainfsBoardFile: [10, 425],
+  eventASMStart: 0x00,
+  // spaceEventsStartAddr: 0x000F7C70
+  // spaceEventsStartOffset: 0x00246C50
+  // spaceEventsEndOffset: 0x00246D10
+  koopaSpaceInst: 0x7C0, // 0x00245D80
+  bowserSpaceInst: 0x988, // // 0x00245F48
+  goombaSpaceInst: 0x900, // 0x00245EC0
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP1_USA_PEACH.bgDir + 1).src;
+    board.otherbg.conversation = hvqfs.readBackground(MP1_USA_PEACH.bgDir + 2).src;
+    board.otherbg.splashscreen = hvqfs.readBackground(MP1_USA_PEACH.bgDir + 10).src;
+  },
+
+  onAfterOverwrite: function(board: IBoard) {
+    // Text banner that appears over the logo
+    let oldPack = mainfs.get(10, 360);
+    let imgInfoArr = [{ src: new ArrayBuffer(250 * 50 * 4), width: 250, height: 50, bpp: 32 }];
+    let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    mainfs.write(10, 360, newPack);
+  }
+});
 
 // Yoshi's Tropical Island - (U) ROM
 const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI");

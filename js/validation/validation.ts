@@ -6,12 +6,18 @@ import { getValidationRulesForBoard as getValidationRulesForMP2 } from "./valida
 import { getValidationRulesForBoard as getValidationRulesForMP3 } from "./validation.MP3";
 import { get, $setting } from "../settings";
 import { getRule, IValidationRule } from "./validationrules";
+import { getBoardInfos } from "../adapter/boardinfo";
+import { IBoardInfo } from "../adapter/boardinfobase";
 
-function _overwriteAvailable(boardIndex: number) {
-  return boardIndex === 0 || get($setting.uiSkipValidation);
+function _overwriteAvailable(boardInfo: IBoardInfo) {
+  if (boardInfo.canOverwrite)
+    return true;
+  if (get($setting.uiSkipValidation))
+    return true;
+  return false;
 }
 
-function _dontShowInUI(romBoard: IBoard, boardIndex: number, boardType: BoardType) {
+function _dontShowInUI(romBoard: IBoard, boardType: BoardType) {
   if (typeof boardType !== "string") {
     // Because default is normal
     return romBoard.type === BoardType.DUEL;
@@ -67,11 +73,13 @@ export function validateCurrentBoardForOverwrite() {
   let results: IValidationResult[] = [];
   let romBoards = getROMBoards();
   let currentBoard = getCurrentBoard();
+  const boardInfos = getBoardInfos(gameID);
   romBoards.forEach((board, boardIndex) => {
-    if (_dontShowInUI(board, boardIndex, currentBoard.type))
+    if (_dontShowInUI(board, currentBoard.type))
       return;
 
-    let unavailable = !_overwriteAvailable(boardIndex);
+    const boardInfo = boardInfos[boardIndex];
+    let unavailable = !_overwriteAvailable(boardInfo);
 
     let errors: string[] = [];
     let warnings: string[] = [];

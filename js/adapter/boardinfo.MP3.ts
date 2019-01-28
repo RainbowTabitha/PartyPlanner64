@@ -1,8 +1,8 @@
-import { Game } from "../types";
 import { createBoardInfo } from "./boardinfobase";
 import { IBoard } from "../boards";
 import { hvqfs } from "../fs/hvqfs";
 import { scenes } from "../fs/scenes";
+import { BoardType } from "../types";
 
 // Chilly Waters - (U) ROM
 const MP3_CHILLY = createBoardInfo("MP3_CHILLY");
@@ -36,6 +36,7 @@ MP3_CHILLY.eventASMStart = 0x14AF0; // 0x00330000 // ballpark, but this is wrong
 MP3_CHILLY.eventASMEnd = 0x16BEC; // 0x003320FC, 0x8011C58C
 // MP3_CHILLY.spaceEventsStartAddr = 0x0011E718;
 // MP3_CHILLY.spaceEventsStartOffset = 0x00334288;
+// MP3_CHILLY.spaceEventsEndOffset = 0x18F18; // 0x00334428;
 MP3_CHILLY.spaceEventTables = [
   { upper: 0x26A8, lower: 0x26B0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
   { upper: 0x26B4, lower: 0x26BC }, // 0x80108054, 0x8010805C, table 0x8011E718
@@ -44,7 +45,6 @@ MP3_CHILLY.spaceEventTables = [
   // A table, but if we remove it Poison Shrooms break and probably other things
   // { upper: 0x31DBE8, lower: 0x31DBF0 }, // 0x80108078, 0x80108080, table 0x8011E4D8
 ];
-MP3_CHILLY.spaceEventsEndOffset = 0x18F18; // 0x00334428;
 MP3_CHILLY.starSpaceArrOffset = [0x17910, 0x17980]; // [0x00332E20, 0x00332E90]; // 0x8011D2B0, 0x8011D320
 MP3_CHILLY.starSpaceCount = 8;
 MP3_CHILLY.toadSpaceArrOffset = [0x17920, 0x179DC]; // [0x00332E30, 0x00332EEC]; // 0x8011D2C0, 0x8011D37C
@@ -187,7 +187,7 @@ MP3_WALUIGI.img = {
 // Gate Guy - (U) ROM
 const MP3U_GATEGUY = createBoardInfo("MP3U_GATEGUY");
 MP3U_GATEGUY.name = "Gate Guy";
-MP3U_GATEGUY.type = "DUEL";
+MP3U_GATEGUY.type = BoardType.DUEL;
 MP3U_GATEGUY.boardDefFile = 577;
 MP3U_GATEGUY.bgDir = 24;
 // MP3U_GATEGUY.str = {
@@ -215,7 +215,7 @@ MP3U_GATEGUY.spaceEventTables = [ // JAL 800EA46C
   { upper: 0x811C, lower: 0x8124 }, // 0x8010DABC, 0x8010DAC4, table 0x80118914
   { upper: 0x8128, lower: 0x8130 }, // 0x8010DAC8, 0x8010DAD0, table 0x80118DEC
 ];
-MP3U_GATEGUY.onAfterOverwrite = function(romView: DataView, board: IBoard) {
+MP3U_GATEGUY.onAfterOverwrite = function(board: IBoard) {
   // TODO Need this for duels?
   // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
   // Since we don't use any default events, we can overwrite it.
@@ -229,7 +229,7 @@ MP3U_GATEGUY.onAfterOverwrite = function(romView: DataView, board: IBoard) {
 // Arrowhead - (U) ROM
 const MP3U_ARROWHEAD = createBoardInfo("MP3U_ARROWHEAD");
 MP3U_ARROWHEAD.name = "Arrowhead";
-MP3U_ARROWHEAD.type = "DUEL";
+MP3U_ARROWHEAD.type = BoardType.DUEL;
 MP3U_ARROWHEAD.boardDefFile = 578;
 MP3U_ARROWHEAD.bgDir = 25;
 MP3U_ARROWHEAD.img = {
@@ -243,7 +243,7 @@ MP3U_ARROWHEAD.img = {
 // Pipesqueak - (U) ROM
 const MP3U_PIPESQUEAK = createBoardInfo("MP3U_PIPESQUEAK");
 MP3U_PIPESQUEAK.name = "Pipesqueak";
-MP3U_PIPESQUEAK.type = "DUEL";
+MP3U_PIPESQUEAK.type = BoardType.DUEL;
 MP3U_PIPESQUEAK.boardDefFile = 579;
 MP3U_PIPESQUEAK.bgDir = 26;
 MP3U_PIPESQUEAK.img = {
@@ -257,7 +257,7 @@ MP3U_PIPESQUEAK.img = {
 // Blowhard - (U) ROM
 const MP3U_BLOWHARD = createBoardInfo("MP3U_BLOWHARD");
 MP3U_BLOWHARD.name = "Blowhard";
-MP3U_BLOWHARD.type = "DUEL";
+MP3U_BLOWHARD.type = BoardType.DUEL;
 MP3U_BLOWHARD.boardDefFile = 580;
 MP3U_BLOWHARD.bgDir = 27;
 MP3U_BLOWHARD.img = {
@@ -271,7 +271,7 @@ MP3U_BLOWHARD.img = {
 // Mr. Mover - (U) ROM
 const MP3U_MRMOVER = createBoardInfo("MP3U_MRMOVER");
 MP3U_MRMOVER.name = "Mr. Mover";
-MP3U_MRMOVER.type = "DUEL";
+MP3U_MRMOVER.type = BoardType.DUEL;
 MP3U_MRMOVER.boardDefFile = 581;
 MP3U_MRMOVER.bgDir = 28;
 MP3U_MRMOVER.img = {
@@ -285,7 +285,7 @@ MP3U_MRMOVER.img = {
 // Backtrack - (U) ROM
 const MP3U_BACKTRACK = createBoardInfo("MP3U_BACKTRACK");
 MP3U_BACKTRACK.name = "Backtrack";
-MP3U_BACKTRACK.type = "DUEL";
+MP3U_BACKTRACK.type = BoardType.DUEL;
 MP3U_BACKTRACK.boardDefFile = 582;
 MP3U_BACKTRACK.bgDir = 29;
 MP3U_BACKTRACK.img = {
@@ -319,37 +319,7 @@ export function getBoardInfos() {
       "name": "Training?",
       "fileNum": 576,
       "bgNum": 21,
-    },
-    {
-      "name": "Gate Guy",
-      "fileNum": 577,
-      "bgNum": 24,
-    },
-    {
-      "name": "Arrowhead",
-      "fileNum": 578,
-      "bgNum": 25,
-    },
-    {
-      "name": "Pipesqueak",
-      "fileNum": 579,
-      "bgNum": 26,
-    },
-    {
-      "name": "Blowhard",
-      "fileNum": 580,
-      "bgNum": 27,
-    },
-    {
-      "name": "Mr. Mover",
-      "fileNum": 581,
-      "bgNum": 28,
-    },
-    {
-      "name": "Backtrack",
-      "fileNum": 582,
-      "bgNum": 29,
-    },
+    }
     {
       "name": "mystery",
       "fileNum": 583,

@@ -26,8 +26,7 @@ import { arrayBufferToDataURL, copyRange } from "../utils/arrays";
 import { get, $setting } from "../settings";
 import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
 import THREE = require("three");
-
-export type IBoardInfo = any;
+import { IBoardInfo } from "./boardinfobase";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -188,7 +187,7 @@ export abstract class AdapterBase {
     if (this.onAfterOverwrite)
       this.onAfterOverwrite(romView, boardCopy, boardInfo);
 
-    return this.onOverwritePromises(board, boardInfo);
+    return this.onOverwritePromises(board, boardInfo, boardIndex);
   }
 
   private _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
@@ -206,12 +205,12 @@ export abstract class AdapterBase {
     //   throw new Error(``);
     // }
 
-    const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
+    const sceneInfo = scenes.getInfo(boardInfo.sceneIndex!);
     const eventSyms: string = this._makeSymbolsForEventAssembly(outSyms, sceneInfo);
 
     // Replace the overlay. We actually have enough info to accurately define
     // the code/rodata/bss regions.
-    scenes.replace(boardInfo.sceneIndex, buffer.slice(0, outSyms.bss), {
+    scenes.replace(boardInfo.sceneIndex!, buffer.slice(0, outSyms.bss), {
       code_end: sceneInfo.code_start + outSyms.rodata,
       rodata_start: sceneInfo.code_start + outSyms.rodata,
       rodata_end: sceneInfo.code_start + outSyms.bss,
@@ -229,7 +228,7 @@ export abstract class AdapterBase {
   {
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo): Promise<any> {
+  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<any> {
     throw "Adapter does not implement onOverwritePromises";
   }
 
@@ -506,7 +505,7 @@ export abstract class AdapterBase {
         else {
           // This event actually points back to the original ROM.
           asmOffset = this._addrToOffsetBase(asmAddr, sceneInfo.ram_start);
-          codeView = scenes.getDataView(boardInfo.sceneIndex);
+          codeView = scenes.getDataView(boardInfo.sceneIndex!);
         }
 
         let eventInfo = parseEvent(codeView, {
@@ -659,7 +658,7 @@ export abstract class AdapterBase {
 
       // There is also a listing of the entry/exit spaces, probably used by the gate animation.
       if (boardInfo.gateNeighborsOffset) {
-        const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+        const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
         for (let gateAddrIndex = 0; gateAddrIndex < boardInfo.gateNeighborsOffset.length; gateAddrIndex++) {
           let gateAddr = boardInfo.gateNeighborsOffset[gateAddrIndex];
           gateAddr += (gateIndex * 4);
@@ -911,7 +910,7 @@ export abstract class AdapterBase {
     const hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
     const hookJAL = parseInst(`JAL ${hookAddr}`);
 
-    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
 
     // Clear the space event table hydrations, because we want a NOP sled
     // through the old logic basically, and no hook interference.
@@ -919,7 +918,7 @@ export abstract class AdapterBase {
 
     // We will JAL to the eventASMStart location from the location where the
     // board data is hydrated.
-    const hookOffset = boardInfo.spaceEventTables[0].upper;
+    const hookOffset = boardInfo.spaceEventTables![0].upper;
     sceneView.setUint32(hookOffset, hookJAL);
 
     $$log(`Installed event hook at ROM ${$$hex(hookOffset)}, JAL ${hookAddr}`);
@@ -927,7 +926,7 @@ export abstract class AdapterBase {
     //this.onWriteEventAsmHook(romView, boardInfo, boardIndex);
     // We essentially repeat the logic that all the boards use to hydrate the
     // MainFS code blob (and bring the blob into RAM of course.)
-    const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
+    const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile!;
     const hookAsm = `
       .orga ${boardInfo.eventASMStart}
 
@@ -982,15 +981,9 @@ export abstract class AdapterBase {
   }
 
   _clearSpaceEventTableCalls(sceneView: DataView, boardInfo: IBoardInfo) {
-    // The BoardInfo might have special logic.
-    if (boardInfo.clearSpaceEventTableCalls) {
-      boardInfo.clearSpaceEventTableCalls(sceneView);
-      return;
-    }
-
     // Otherwise, we can probably just clear all memory between the upper and
     // lower for each table.
-    let tables = boardInfo.spaceEventTables;
+    let tables = boardInfo.spaceEventTables!;
     tables.forEach((tableInfo: any) => {
       for (let offset = tableInfo.upper; offset <= tableInfo.lower; offset += 4)
         sceneView.setUint32(offset, 0);
@@ -1026,7 +1019,7 @@ export abstract class AdapterBase {
 
     if (boardInfo.starSpaceCount) {
       // Parse the spaces that can be considered for star placement.
-      let starSpacesOffset = boardInfo.starSpaceArrOffset;
+      let starSpacesOffset = boardInfo.starSpaceArrOffset!;
       if (Array.isArray(starSpacesOffset))
         starSpacesOffset = starSpacesOffset[0];
       for (let i = 0; i < boardInfo.starSpaceCount; i++) {
@@ -1038,7 +1031,7 @@ export abstract class AdapterBase {
 
       // Parse the associated toads
       for (let i = 0; i < boardInfo.starSpaceCount; i++) {
-        let toadSpacesOffset = boardInfo.toadSpaceArrOffset;
+        let toadSpacesOffset = boardInfo.toadSpaceArrOffset!;
         if (Array.isArray(toadSpacesOffset))
           toadSpacesOffset = toadSpacesOffset[0];
         let toadSpace = sceneView.getUint16(toadSpacesOffset + (i * 2));
@@ -1051,7 +1044,7 @@ export abstract class AdapterBase {
   _writeStarInfo(board: IBoard, boardInfo: IBoardInfo) {
     let starCount = boardInfo.starSpaceCount;
     if (starCount) {
-      const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+      const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
 
       let starIndices = [];
       for (let i = 0; i < board.spaces.length; i++) {
@@ -1059,7 +1052,7 @@ export abstract class AdapterBase {
           starIndices.push(i);
       }
 
-      let starSpacesOffsets = boardInfo.starSpaceArrOffset;
+      let starSpacesOffsets = boardInfo.starSpaceArrOffset!;
       if (!Array.isArray(starSpacesOffsets))
         starSpacesOffsets = [starSpacesOffsets];
       for (let i = 0; i < starSpacesOffsets.length; i++) {
@@ -1073,7 +1066,7 @@ export abstract class AdapterBase {
       let toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
 
       // Write the toad spaces, using distance formula for now.
-      let toadSpacesOffsets = boardInfo.toadSpaceArrOffset;
+      let toadSpacesOffsets = boardInfo.toadSpaceArrOffset!;
       if (!Array.isArray(toadSpacesOffsets))
         toadSpacesOffsets = [toadSpacesOffsets];
       for (let i = 0; i < toadSpacesOffsets.length; i++) {
@@ -1115,7 +1108,7 @@ export abstract class AdapterBase {
       if (booCount === 0)
         return;
 
-      booFnOffset = boardInfo.boosReadbackFnOffset;
+      booFnOffset = boardInfo.boosReadbackFnOffset!;
       let booRelativeAddr = sceneView.getInt16(booFnOffset + 0xD2);
       booRelativeAddr = 0x00100000 + booRelativeAddr; // Going to be a subtraction.
 
@@ -1133,8 +1126,9 @@ export abstract class AdapterBase {
         board.spaces[booSpace].subtype = SpaceSubtype.BOO;
     }
     else if (boardInfo.booCount) {
-      for (let b = 0; b < boardInfo.booArrOffset.length; b++) {
-        let curBooSpaceIndexOffset = boardInfo.booArrOffset[b];
+      const booArrOffset = boardInfo.booArrOffset!;
+      for (let b = 0; b < booArrOffset.length; b++) {
+        let curBooSpaceIndexOffset = booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
           let booSpace = sceneView.getUint16(curBooSpaceIndexOffset);
           if (board.spaces[booSpace])
@@ -1167,7 +1161,7 @@ export abstract class AdapterBase {
       if (booCount === 0)
         return;
 
-      booFnOffset = boardInfo.boosReadbackFnOffset;
+      booFnOffset = boardInfo.boosReadbackFnOffset!;
       let booRelativeAddr = sceneView.getInt16(booFnOffset + 0xD2);
       booRelativeAddr = 0x00100000 + booRelativeAddr; // Going to be a subtraction.
 
@@ -1184,8 +1178,9 @@ export abstract class AdapterBase {
       sceneView.setUint16(boardInfo.booSpaceInst + 2, booSpace!);
     }
     else if (boardInfo.booCount) {
-      for (let b = 0; b < boardInfo.booArrOffset.length; b++) {
-        let curBooSpaceIndexOffset = boardInfo.booArrOffset[b];
+      const booArrOffset = boardInfo.booArrOffset!;
+      for (let b = 0; b < booArrOffset.length; b++) {
+        let curBooSpaceIndexOffset = booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
           let booSpace = booSpaces[i] === undefined ? board._deadSpace : booSpaces[i];
           sceneView.setUint16(curBooSpaceIndexOffset, booSpace!);
@@ -1200,8 +1195,9 @@ export abstract class AdapterBase {
       return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    for (let b = 0; b < boardInfo.bankArrOffset.length; b++) {
-      let curBankSpaceIndexOffset = boardInfo.bankArrOffset[b];
+    const bankArrOffset = boardInfo.bankArrOffset!;
+    for (let b = 0; b < bankArrOffset.length; b++) {
+      let curBankSpaceIndexOffset = bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
         let bankSpace = sceneView.getUint16(curBankSpaceIndexOffset);
         if (board.spaces[bankSpace])
@@ -1226,8 +1222,9 @@ export abstract class AdapterBase {
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let bankSpaces = getSpacesOfSubType(SpaceSubtype.BANK, board);
-    for (let b = 0; b < boardInfo.bankArrOffset.length; b++) {
-      let curBankSpaceIndexOffset = boardInfo.bankArrOffset[b];
+    const bankArrOffset = boardInfo.bankArrOffset!;
+    for (let b = 0; b < bankArrOffset.length; b++) {
+      let curBankSpaceIndexOffset = bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
         let bankSpace = bankSpaces[i] === undefined ? board._deadSpace : bankSpaces[i];
         sceneView.setUint16(curBankSpaceIndexOffset, bankSpace!);
@@ -1289,8 +1286,9 @@ export abstract class AdapterBase {
         gateSpaces.push(i);
     }
 
-    for (let b = 0; b < boardInfo.gateArrOffset.length; b++) {
-      let curGateSpaceIndexOffset = boardInfo.gateArrOffset[b];
+    const gateArrOffset = boardInfo.gateArrOffset!;
+    for (let b = 0; b < gateArrOffset.length; b++) {
+      let curGateSpaceIndexOffset = gateArrOffset[b];
       for (let i = 0; i < boardInfo.gateCount; i++) {
         let gateSpace = gateSpaces[i] === undefined ? board._deadSpace : gateSpaces[i];
         sceneView.setUint16(curGateSpaceIndexOffset, gateSpace!);
@@ -1301,7 +1299,7 @@ export abstract class AdapterBase {
 
   _writeArrowRotations(board: IBoard, boardInfo: IBoardInfo) {
     const { arrowRotStartOffset, arrowRotEndOffset, sceneIndex } = boardInfo;
-    if (!arrowRotStartOffset || !sceneIndex)
+    if (!arrowRotStartOffset || !arrowRotEndOffset || !sceneIndex)
       return;
 
     const sceneView = scenes.getDataView(sceneIndex);
@@ -1341,6 +1339,12 @@ export abstract class AdapterBase {
       let failTimer = setTimeout(() => reject(`Failed to write bg ${bgIndex}`), 45000);
       srcImage.onload = () => {
         canvasCtx.drawImage(srcImage, 0, 0, width, height);
+
+        // if ($$debug) {
+        //   canvasCtx.fillStyle = "red";
+        //   canvasCtx.font = "bold 16px Arial";
+        //   canvasCtx.fillText(bgIndex.toString(), 10, 20);
+        // }
 
         let imgData = canvasCtx.getImageData(0, 0, width, height);
         hvqfs.writeBackground(bgIndex, imgData, width, height);

@@ -1,4 +1,3 @@
-import { Game } from "../types";
 import { createBoardInfo } from "./boardinfobase";
 import { IBoard } from "../boards";
 import { hvqfs } from "../fs/hvqfs";

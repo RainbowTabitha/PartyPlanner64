@@ -1,4 +1,4 @@
-import { AdapterBase, IBoardInfo } from "./AdapterBase";
+import { AdapterBase } from "./AdapterBase";
 import { ISpace, addEventToSpace, IBoard } from "../boards";
 import { Space, SpaceSubtype } from "../types";
 import { create as createEvent } from "../events/events";
@@ -15,6 +15,7 @@ import { toPack } from "../utils/img/ImgPack";
 import { assemble } from "mips-assembler";
 import { scenes } from "../fs/scenes";
 import { createBoardOverlay } from "./MP1.U.boardoverlay";
+import { IBoardInfo } from "./boardinfobase";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -109,20 +110,43 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     assemble(hvqAsm, { buffer: romView.buffer });
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo) {
-    let bgIndex = boardInfo.bgDir;
+  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
+    const bgIndex = boardInfo.bgDir;
     let bgPromises = [
-      this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
-      this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
-      this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Conversation
-      this._writeBackground(bgIndex + 3, board.otherbg.conversation, 320, 240), // Treasure thing...
-      this._writeBackground(bgIndex + 4, board.bg.src, 320, 240), // Overview map
-      this._writeBackground(bgIndex + 5, board.bg.src, 320, 240), // End game overview map
-      this._writeBackground(bgIndex + 6, board.otherbg.splashscreen, 320, 240), // Splashscreen bg
       this.onWriteBoardSelectImg(board, boardInfo), // The board select image/icon
       this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
       this._brandBootSplashscreen(),
+      this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
+      this._writeBackground(boardInfo.pauseBgDir!, board.bg.src, 320, 240), // Overview map
     ];
+
+    switch (boardIndex) {
+      case 0:
+        bgPromises = bgPromises.concat([
+          this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Conversation
+          this._writeBackground(bgIndex + 3, board.otherbg.conversation, 320, 240), // Treasure thing...
+          // Pause bg
+          this._writeBackground(bgIndex + 5, board.bg.src, 320, 240), // End game overview map
+          this._writeBackground(bgIndex + 6, board.otherbg.splashscreen, 320, 240), // Splashscreen bg
+        ]);
+        break;
+
+      case 1:
+        bgPromises = bgPromises.concat([
+          this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Mini-Game results, Boo?
+          this._writeBackground(bgIndex + 3, board.otherbg.conversation, 320, 240), // Conversation
+          this._writeBackground(bgIndex + 4, board.otherbg.conversation, 320, 240), // Visit Toad
+          this._writeBackground(bgIndex + 5, board.otherbg.conversation, 320, 240),
+          this._writeBackground(bgIndex + 6, board.otherbg.largescene, 320, 240), // Third end game cutscene bg
+          // Pause bg
+          this._writeBackground(bgIndex + 8, board.bg.src, 320, 240), // First end game cutscene bg
+          this._writeBackground(bgIndex + 9, board.bg.src, 320, 240), // Second end game cutscene bg
+          this._writeBackground(bgIndex + 10, board.otherbg.splashscreen, 320, 240), // Splashscreen
+        ]);
+        break;
+    }
 
     return Promise.all(bgPromises)
   }
@@ -136,7 +160,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     if (strs.boardSelect) {
       let idx = strs.boardSelect;
       if (Array.isArray(idx))
-        idx = idx[0];
+        idx = idx[0] as number;
 
       let str = strings.read(idx)
       let lines = str.split("\n");
@@ -191,7 +215,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       let idx = strs.boardSelect;
       if (Array.isArray(idx)) {
         for (let i = 0; i < idx.length; i++) {
-          strings.write(idx[i], strBuffer);
+          strings.write(idx[i] as number, strBuffer);
         }
       }
       else {
@@ -288,7 +312,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   _extractGoomba(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.goombaSpaceInst || boardInfo.sceneIndex)
+    if (!boardInfo.goombaSpaceInst || !boardInfo.sceneIndex)
       return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
@@ -338,7 +362,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
         });
 
         // Now write the BMPs back into the FORM.
-        let boardSelectFORM = mainfs.get(9, boardSelectIndex);
+        let boardSelectFORM = mainfs.get(9, boardSelectIndex!);
         let boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
         for (let i = 0; i < 4; i++) {
           let palette = boardSelectBmps[i][1];
@@ -354,7 +378,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
         // Now write the FORM.
         let boardSelectPacked = FORM.pack(boardSelectUnpacked);
         //saveAs(new Blob([boardSelectPacked]), "formPacked");
-        mainfs.write(9, boardSelectIndex, boardSelectPacked);
+        mainfs.write(9, boardSelectIndex!, boardSelectPacked);
 
         clearTimeout(failTimer);
         resolve();
@@ -380,7 +404,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       }
 
       // We need to write the image onto a canvas to get the RGBA32 values.
-      let [introWidth, introHeight] = boardInfo.img.introLogoImgDimens;
+      let [introWidth, introHeight] = boardInfo.img.introLogoImgDimens!;
 
       let srcImage = new Image();
       let failTimer = setTimeout(() => reject(`Failed to write logos for ${boardInfo.name}`), 45000);

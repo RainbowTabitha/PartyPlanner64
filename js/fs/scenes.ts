@@ -59,7 +59,7 @@ export const scenes = new class Scenes {
     return new DataView(
       this._overlays![index],
       startAddr - ramStart,
-      endAddr - ramStart
+      endAddr - startAddr
     );
   }
 

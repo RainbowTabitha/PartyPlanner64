@@ -1,4 +1,4 @@
-import { AdapterBase, IBoardInfo } from "./AdapterBase";
+import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace } from "../boards";
 import { animationfs } from "../fs/animationfs";
 import { Space } from "../types";
@@ -11,6 +11,7 @@ import { $$log } from "../utils/debug";
 import { toArrayBuffer, cutFromWhole } from "../utils/image";
 import { mainfs } from "../fs/mainfs";
 import { toPack } from "../utils/img/ImgPack";
+import { IBoardInfo } from "./boardinfobase";
 
 export const MP2 = new class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
@@ -53,15 +54,15 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     romView.setUint16(0x7869E, 0x001A);
 
     // Remove the animations (we might add our own after this though).
-    if (!isNaN(boardInfo.animBgSet))
+    if (typeof boardInfo.animBgSet === "number")
       animationfs.setSetEntryCount(boardInfo.animBgSet, 0);
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo) {
+  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
     let bgIndex = boardInfo.bgDir;
     let bgPromises = [
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
-      this._writeAnimationBackgrounds(boardInfo.animBgSet, board.bg.src, board.animbg, board.bg.width, board.bg.height),
+      this._writeAnimationBackgrounds(boardInfo.animBgSet!, board.bg.src, board.animbg, board.bg.width, board.bg.height),
       this._writeBackground(bgIndex + 2, board.otherbg.largescene, 320, 240), // Game start, end
       this._writeOverviewBackground(bgIndex + 6, board.bg.src), // Overview map
       this.onWriteBoardSelectImg(board, boardInfo), // The board select image
@@ -86,7 +87,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       // if (Array.isArray(idx))
       //   idx = idx[0];
 
-      let str = strings.read(idx);
+      let str = strings.read(idx as number);
       let lines = str.split("\n");
 
       // Read the board name and description.
@@ -138,7 +139,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
       let strBuffer = arrayToArrayBuffer(bytes);
 
-      let idx = strs.boardSelect;
+      let idx = strs.boardSelect as number;
       strings.write(idx, strBuffer);
     }
 
@@ -153,7 +154,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       let strBuffer = arrayToArrayBuffer(bytes);
 
       for (let i = 0; i < strs.boardNames.length; i++) {
-        let idx = strs.boardNames[i];
+        let idx = strs.boardNames[i] as number;
         strings.write(idx, strBuffer);
       }
     }
@@ -294,7 +295,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   }
 
   _readAnimationBackgrounds(board: IBoard, boardInfo: IBoardInfo) {
-    if (isNaN(boardInfo.animBgSet) || !boardInfo.bgDir)
+    if (typeof boardInfo.animBgSet !== "number" || !boardInfo.bgDir)
       return;
 
     // Perf: This is a bit redundant because we read the data URI previously.
@@ -379,7 +380,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         let imgBuffer = toArrayBuffer(srcImage, 64, 48);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(9, boardSelectImg);
+        let oldPack = mainfs.get(9, boardSelectImg!);
 
         // Then, pack the image and write it.
         let imgInfoArr = [
@@ -391,7 +392,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
           }
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        mainfs.write(9, boardSelectImg, newPack);
+        mainfs.write(9, boardSelectImg!, newPack);
 
         clearTimeout(failTimer);
         resolve();
@@ -453,7 +454,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         canvasCtx.putImageData(origImageData, 0, 0);
 
         // Then draw the "clean slate" for the icon, and the given icon.
-        let [x, y] = boardInfo.img.boardSelectIconCoords;
+        let [x, y] = boardInfo.img.boardSelectIconCoords!;
         canvasCtx.drawImage(blankBackImage, x, y, 32, 32);
         canvasCtx.drawImage(newBoardSelectIconImage, x, y, 32, 32);
 
@@ -539,7 +540,8 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     if (!boardInfo.img.introLogoImg)
       return;
 
-    board.otherbg.boardlogo = this._readImgFromMainFS(10, boardInfo.img.introLogoImg, 0);
+    board.otherbg.boardlogo =
+      this._readImgFromMainFS(10, boardInfo.img.introLogoImg as number, 0);
   }
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
@@ -557,7 +559,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         let imgBuffer = toArrayBuffer(srcImage, 260, 120);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(10, introLogoImg);
+        let oldPack = mainfs.get(10, introLogoImg as number);
 
         // Then, pack the image and write it.
         let imgInfoArr = [
@@ -569,7 +571,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
           }
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        mainfs.write(10, introLogoImg, newPack);
+        mainfs.write(10, introLogoImg as number, newPack);
 
         clearTimeout(failTimer);
         resolve();

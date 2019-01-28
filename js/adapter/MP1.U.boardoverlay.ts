@@ -1,11 +1,11 @@
 import { IBoard, getSpacesOfSubType } from "../boards";
 import { SpaceSubtype, Game } from "../types";
 import { distance } from "../utils/number";
-import { IBoardInfo } from "./AdapterBase";
+import { IBoardInfo } from "./boardinfobase";
 import { getSymbol } from "../symbols/symbols";
 
 export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string {
-  const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile;
+  const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
 
@@ -804,9 +804,9 @@ setup_routine:
   lui   A3, 0x4396 ; 300.0
   jal   0x80023504
    addiu    A0, R0, 1
-  addu  A0, R0, R0 ; TODO: HVQ background index?
+  addiu  A0, R0, ${boardInfo.bgDir}
   addiu    A1, R0, ${boardInfo.boardDefFile}
-  addiu    A2, R0, 4
+  addiu    A2, R0, ${boardInfo.pauseBgDir!}
   jal   0x80056A08 ; setup board?
    addu  A3, R0, R0
   jal   0x80052E84 ; reset animations for characters?
