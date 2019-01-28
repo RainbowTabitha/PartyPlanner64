@@ -103,6 +103,16 @@ exports["default"] = [
       name: "SleepVProcess",
       desc: "Sleep 1 frame" },
 {
+      addr: 2147808676, // 0x8004F5A4
+      type: "code",
+      name: "SaveFileEncode",
+      desc: "A0=start addr of data to encode" },
+{
+      addr: 2147809868, // 0x8004FA4C
+      type: "code",
+      name: "SaveFileDecode",
+      desc: "A0=start addr of portion to decode" },
+{
       addr: 2147833872, // 0x80055810
       type: "code",
       name: "ImgPackParse" },
@@ -1537,6 +1547,15 @@ exports["default"] = [
       name: "midpoint",
       desc: "A0=output_xyz" },
 {
+      addr: 2148103760, // 0x80097650
+      type: "u32",
+      name: "rng_seed" },
+{
+      addr: 2148146544, // 0x800A1D70
+      type: "data",
+      name: "generic_save_data_decode_table",
+      desc: "44 bytes" },
+{
       addr: 2148317348, // 0x800CB8A4
       type: "u32",
       name: "debug_font_color",
@@ -1550,9 +1569,27 @@ exports["default"] = [
       type: "u8",
       name: "current_turn" },
 {
+      addr: 2148323431, // 0x800CD067
+      type: "u8",
+      name: "current_player_index",
+      desc: "Player who's turn is active" },
+{
       addr: 2148327938, // 0x800CE202
       type: "u16",
       name: "current_scene" },
+{
+      addr: 2148339976, // 0x800D1108
+      type: "data",
+      name: "player_structs" },
+{
+      addr: 2148339977, // 0x800D1109
+      type: "u8",
+      name: "p1_cpu_difficulty" },
+{
+      addr: 2148339979, // 0x800D110B
+      type: "u8",
+      name: "p1_char",
+      desc: "Mario=0" },
 {
       addr: 2148339986, // 0x800D1112
       type: "u16",
@@ -1604,6 +1641,14 @@ exports["default"] = [
       name: "p1_item3",
       desc: "Player 1 third item" },
 {
+      addr: 2148340033, // 0x800D1141
+      type: "u8",
+      name: "p2_cpu_difficulty" },
+{
+      addr: 2148340035, // 0x800D1143
+      type: "u8",
+      name: "p2_char" },
+{
       addr: 2148340042, // 0x800D114A
       type: "u16",
       name: "p2_coins",
@@ -1654,6 +1699,14 @@ exports["default"] = [
       name: "p2_item3",
       desc: "Player 2 third item" },
 {
+      addr: 2148340089, // 0x800D1179
+      type: "u8",
+      name: "p3_cpu_difficulty" },
+{
+      addr: 2148340091, // 0x800D117B
+      type: "u8",
+      name: "p3_char" },
+{
       addr: 2148340098, // 0x800D1182
       type: "u16",
       name: "p3_coins",
@@ -1703,6 +1756,14 @@ exports["default"] = [
       type: "u8",
       name: "p3_item3",
       desc: "Player 3 third item" },
+{
+      addr: 2148340145, // 0x800D11B1
+      type: "u8",
+      name: "p4_cpu_difficulty" },
+{
+      addr: 2148340147, // 0x800D11B3
+      type: "u8",
+      name: "p4_char" },
 {
       addr: 2148340154, // 0x800D11BA
       type: "u16",
@@ -1763,6 +1824,16 @@ exports["default"] = [
       name: "ShowPlayerCoinChange",
       desc: "A0=player_index" },
 {
+      addr: 2148419960, // 0x800E4978
+      type: "code",
+      name: "PlayerHasItem",
+      desc: "A0=player_index" },
+{
+      addr: 2148420060, // 0x800E49DC
+      type: "code",
+      name: "PlayerHasEmptyItemSlot",
+      desc: "A0=player_index" },
+{
       addr: 2148443744, // 0x800EA660
       type: "code",
       name: "AddArrowAngle",
@@ -1796,6 +1867,35 @@ exports["default"] = [
       addr: 2148449480, // 0x800EBCC8
       type: "code",
       name: "GetCurrentSpaceIndex" },
+{
+      addr: 2148453916, // 0x800ECE1C
+      type: "code",
+      name: "SetPlayerBlue",
+      desc: "Sets the player's turn state blue" },
+{
+      addr: 2148453924, // 0x800ECE24
+      type: "code",
+      name: "SetPlayerRed",
+      desc: "Sets the player's turn state red" },
+{
+      addr: 2148453932, // 0x800ECE2C
+      type: "code",
+      name: "SetPlayerGreen",
+      desc: "Sets the player's turn state green" },
+{
+      addr: 2148453964, // 0x800ECE4C
+      type: "code",
+      name: "GetSumOfPlayerStars",
+      desc: "sums the star count of all players" },
+{
+      addr: 2148454044, // 0x800ECE9C
+      type: "code",
+      name: "RNGPercentChance",
+      desc: "A0=percent_chance" },
+{
+      addr: 2148454116, // 0x800ECEE4
+      type: "code",
+      name: "GetTurnsElapsed" },
 {
       addr: 2148456732, // 0x800ED91C
       type: "code",

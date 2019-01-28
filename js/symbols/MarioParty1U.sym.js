@@ -219,6 +219,11 @@ exports["default"] = [
       name: "GetSumOfPlayerStars",
       desc: "sums the star count of all players" },
 {
+      addr: 2147798976, // 0x8004CFC0
+      type: "code",
+      name: "RNGPercentChance",
+      desc: "A0=percent chance the call returns true" },
+{
       addr: 2147799048, // 0x8004D008
       type: "code",
       name: "GetTurnsElapsed",
