@@ -74,6 +74,9 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     return Promise.all(bgPromises)
   }
 
+  onWriteEvents(board: IBoard) {
+  }
+
   hydrateSpace(space: ISpace) {
     if (space.type === Space.BANK) {
       addEventToSpace(space, createEvent("BANK"));

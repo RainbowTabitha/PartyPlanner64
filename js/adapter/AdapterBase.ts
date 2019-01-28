@@ -130,6 +130,7 @@ export abstract class AdapterBase {
 
   protected abstract onLoad?(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean): void;
   protected abstract onAfterOverwrite?(romView: DataView, boardCopy: IBoard, boardInfo: IBoardInfo): void;
+  protected abstract onWriteEvents?(board: IBoard): void;
 
   overwriteBoard(boardIndex: number, board: IBoard) {
     let boardCopy = copyObject(board);
@@ -150,7 +151,7 @@ export abstract class AdapterBase {
 
     let eventSyms: string = "";
     if (this.writeFullOverlay) {
-      eventSyms = this._writeNewBoardOverlay(board, boardInfo);
+      eventSyms = this._writeNewBoardOverlay(boardCopy, boardInfo);
     }
     else {
       // Wipe out the event ASM from those events.
@@ -175,6 +176,8 @@ export abstract class AdapterBase {
     this._createGateEvents(boardCopy, boardInfo, chains);
     if (boardInfo.onWriteEvents)
       boardInfo.onWriteEvents(boardCopy);
+    if (this.onWriteEvents)
+      this.onWriteEvents(boardCopy);
     this._writeEvents(boardCopy, boardInfo, boardIndex, chains, eventSyms);
 
     this._clearOtherBoardNames(boardIndex);

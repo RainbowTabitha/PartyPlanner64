@@ -151,6 +151,21 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     return Promise.all(bgPromises)
   }
 
+  onWriteEvents(board: IBoard) {
+    // Right now the boards always put Chance time spaces where Stars were,
+    // so we will just automate adding the post-star chance event.
+    const spaces = board.spaces;
+    for (let i = 0; i < spaces.length; i++) {
+      let space = board.spaces[i];
+      if (!space || !space.star)
+        continue;
+      let events = space.events || [];
+      let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
+      if (!hasStarChance)
+        addEventToSpace(space, createEvent("STARCHANCE"));
+    }
+  }
+
   onWriteEventAsmHook(romView: DataView, boardInfo: IBoardInfo, boardIndex: number) {
     
   }

@@ -117,6 +117,9 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     // The "return;" is just hit after this and the rest of the checks are skipped.
   }
 
+  onWriteEvents(board: IBoard) {
+  }
+
   hydrateSpace(space: ISpace) {
     if (space.type === Space.BANK) {
       addEventToSpace(space, createEvent("BANK"));

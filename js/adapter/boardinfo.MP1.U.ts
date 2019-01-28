@@ -40,25 +40,13 @@ const MP1_USA_DK = createBoardInfo("MP1_USA_DK", {
     introLogoImgDimens: [272, 112],
     titleScreenImg: 385,
   },
+
   onLoad: function(board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP1_USA_DK.bgDir + 1).src;
     board.otherbg.conversation = hvqfs.readBackground(MP1_USA_DK.bgDir + 2).src;
     board.otherbg.splashscreen = hvqfs.readBackground(MP1_USA_DK.bgDir + 6).src;
   },
-  onWriteEvents: function(board: IBoard) {
-    // Right now this board is always going to put Chance time spaces where Stars were,
-    // so we will just automate adding the post-star chance event.
-    const spaces = board.spaces;
-    for (let i = 0; i < spaces.length; i++) {
-      let space = board.spaces[i];
-      if (!space || !space.star)
-        continue;
-      let events = space.events || [];
-      let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
-      if (!hasStarChance)
-        addEventToSpace(space, createEvent("STARCHANCE"));
-    }
-  },
+
   onAfterOverwrite: function() {
     // Remove the "box" from the game start scenery.
     const introSceneView = scenes.getDataView(98);
