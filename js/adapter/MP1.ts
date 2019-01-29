@@ -121,7 +121,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     ];
 
     switch (boardIndex) {
-      case 0:
+      case 0: // DK board
         bgPromises = bgPromises.concat([
           this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
           this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Conversation
@@ -132,7 +132,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
         ]);
         break;
 
-      case 1:
+      case 1: // Peach board
         bgPromises = bgPromises.concat([
           this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
           this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Mini-Game results, Boo?
@@ -144,6 +144,20 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
           this._writeBackground(bgIndex + 8, board.bg.src, 320, 240), // First end game cutscene bg
           this._writeBackground(bgIndex + 9, board.bg.src, 320, 240), // Second end game cutscene bg
           this._writeBackground(bgIndex + 10, board.otherbg.splashscreen, 320, 240), // Splashscreen
+        ]);
+        break;
+
+      case 2: // Yoshi board
+        bgPromises = bgPromises.concat([
+          // 18: bgDir
+          this._writeBackground(bgIndex + 1 /* 19 */, board.otherbg.largescene, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2 /* 20 */, board.otherbg.conversation, 320, 240), // Conversation, Boo, Koopa
+          this._writeBackground(bgIndex + 3 /* 21 */, board.otherbg.conversation, 320, 240), // Conversation
+          this._writeBackground(bgIndex + 4 /* 22 */, board.otherbg.conversation, 320, 240), // Conversation, Toad
+          this._writeBackground(bgIndex + 5 /* 23 */, board.otherbg.conversation, 320, 240), // Conversation, Bowser
+          this._writeBackground(bgIndex + 6 /* 24 */, board.bg.src, 320, 240), //
+          // 25: Pause bg
+          this._writeBackground(bgIndex + 8 /* 26 */, board.otherbg.splashscreen, 320, 240), // Splashscreen
         ]);
         break;
     }

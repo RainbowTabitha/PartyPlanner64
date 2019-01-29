@@ -1,6 +1,5 @@
 import { createBoardInfo } from "./boardinfobase";
-import { IBoard, addEventToSpace } from "../boards";
-import { create as createEvent } from "../events/events";
+import { IBoard } from "../boards";
 import { hvqfs } from "../fs/hvqfs";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer } from "../utils/arrays";
@@ -113,33 +112,51 @@ const MP1_USA_PEACH = createBoardInfo("MP1_USA_PEACH", {
 
   onAfterOverwrite: function(board: IBoard) {
     // Text banner that appears over the logo
-    let oldPack = mainfs.get(10, 360);
-    let imgInfoArr = [{ src: new ArrayBuffer(250 * 50 * 4), width: 250, height: 50, bpp: 32 }];
-    let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    const oldPack = mainfs.get(10, 360);
+    const imgInfoArr = [{ src: new ArrayBuffer(250 * 50 * 4), width: 250, height: 50, bpp: 32 }];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
     mainfs.write(10, 360, newPack);
+
+    // TODO: There's some cake graphics in the end cutscenes that could be wiped.
   }
 });
 
 // Yoshi's Tropical Island - (U) ROM
-const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI");
-MP1_USA_YOSHI.name = "Yoshi's Tropical Island";
-MP1_USA_YOSHI.boardDefFile = 71;
-MP1_USA_YOSHI.bgDir = 18;
-MP1_USA_YOSHI.str = {
-  boardSelect: 654,
-  koopaIntro: 573,
-};
-MP1_USA_YOSHI.img = {
-  boardSelectImg: 18,
-  pauseLogoImg: 278,
-  introLogoImg: [362],
-  titleScreenImg: 383,
-};
-MP1_USA_YOSHI.sceneIndex = 0x38; // 56
-MP1_USA_YOSHI.eventASMStart = 0x00;
-// MP1_USA_YOSHI.spaceEventsStartAddr = 0x000F861C;
-// MP1_USA_YOSHI.spaceEventsStartOffset = 0x00248E2C;
-// MP1_USA_YOSHI.spaceEventsEndOffset = 0x00248EE4;
+const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI", {
+  name: "Yoshi's Tropical Island",
+  canOverwrite: true,
+  boardDefFile: 71,
+  bgDir: 18,
+  pauseBgDir: 25,
+  str: {
+    boardSelect: 654,
+    koopaIntro: 573,
+  },
+  img: {
+    boardSelectImg: 18,
+    pauseLogoImg: 278,
+    introLogoImg: [362],
+    introLogoImgDimens: [270, 120],
+    titleScreenImg: 383,
+  },
+  sceneIndex: 0x38, // 56
+  mainfsEventFile: [10, 426],
+  mainfsBoardFile: [10, 427],
+  // spaceEventsStartAddr: 0x000F861C;
+  // spaceEventsStartOffset: 0x00248E2C;
+  // spaceEventsEndOffset: 0x00248EE4;
+
+  onAfterOverwrite: function(board: IBoard) {
+    // Text banner that appears over the logo
+    const oldPack = mainfs.get(10, 363);
+    const imgInfoArr = [{ src: new ArrayBuffer(208 * 40 * 4), width: 208, height: 40, bpp: 32 }];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    mainfs.write(10, 363, newPack);
+
+    // TODO: Yoshis and whirlpools in the intro board showing
+    // TODO: Koopa Troopa rides a shell into the intro
+  }
+});
 
 // Wario's Battle Canyon = (U) ROM
 const MP1_USA_WARIO = createBoardInfo("MP1_USA_WARIO");
@@ -154,6 +171,7 @@ MP1_USA_WARIO.img = {
   boardSelectImg: 19,
   pauseLogoImg: 279,
   introLogoImg: [365],
+  introLogoImgDimens: [290, 114],
   titleScreenImg: 384,
 };
 MP1_USA_WARIO.sceneIndex = 0x39; // 57
@@ -182,6 +200,7 @@ MP1_USA_LUIGI.img = {
   boardSelectImg: 21,
   pauseLogoImg: 280,
   introLogoImg: [368],
+  introLogoImgDimens: [276, 128],
   titleScreenImg: 381,
 };
 MP1_USA_LUIGI.sceneIndex = 0x3A; // 58
@@ -206,6 +225,7 @@ MP1_USA_MARIO.img = {
   boardSelectImg: 22,
   pauseLogoImg: 281,
   introLogoImg: [371],
+  introLogoImgDimens: [270, 96],
   titleScreenImg: 380,
 };
 MP1_USA_MARIO.sceneIndex = 0x3B; // 59
@@ -227,6 +247,7 @@ MP1_USA_BOWSER.img = {
   boardSelectImg: 23,
   pauseLogoImg: 282,
   introLogoImg: [374],
+  introLogoImgDimens: [270, 106],
 };
 MP1_USA_BOWSER.sceneIndex = 0x3C; // 60
 MP1_USA_BOWSER.eventASMStart = 0x00;
@@ -250,6 +271,8 @@ MP1_USA_ETERNALSTAR.img = {
   boardSelectImg: 24,
   pauseLogoImg: 283,
   introLogoImg: [378],
+  //introLogoImgDimens: [276, 92], // The text  377
+  //introLogoImgDimens: [252, 128], // The star  378
 };
 MP1_USA_ETERNALSTAR.sceneIndex = 0x3D; // 61
 MP1_USA_ETERNALSTAR.eventASMStart = 0x00;
