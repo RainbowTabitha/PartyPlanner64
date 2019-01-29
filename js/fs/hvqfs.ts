@@ -389,6 +389,8 @@ export namespace hvqfs {
     let fileCount = getHVQFileCount(b);
     view.setUint32(offset, fileCount + 1);
 
+    _writeMetadata(b);
+
     let curFileIndexOffset = offset + 4;
     let curFileWriteOffset = offset + 4 + ((fileCount + 1) * 4);
     for (let f = 0; f < fileCount; f++) {
@@ -432,7 +434,32 @@ export namespace hvqfs {
       cameraUpVecZ: infoView.getFloat32(52),
       cameraUpVecY: infoView.getFloat32(56),
     }
-    _hvqMetadata![dir] = metadata;
+    _setMetadata(dir, metadata);
+  }
+
+  function _writeMetadata(dir: number): void {
+    let infoView = new DataView(_hvqCache![dir][0], 0);
+    const metadata = getMetadata(dir);
+
+    infoView.setUint32(0, metadata.tileWidth);
+    infoView.setUint32(4, metadata.tileHeight);
+    infoView.setUint32(8, metadata.tileCountX);
+    infoView.setUint32(12, metadata.tileCountY);
+
+    infoView.setFloat32(16, metadata.fov);
+    infoView.setFloat32(20, metadata.scaleFactor);
+
+    infoView.setFloat32(24, metadata.cameraEyePosX);
+    infoView.setFloat32(28, metadata.cameraEyePosZ);
+    infoView.setFloat32(32, metadata.cameraEyePosY);
+
+    infoView.setFloat32(36, metadata.lookatPointX);
+    infoView.setFloat32(40, metadata.lookatPointZ);
+    infoView.setFloat32(44, metadata.lookatPointY);
+
+    infoView.setFloat32(48, metadata.cameraUpVecX);
+    infoView.setFloat32(52, metadata.cameraUpVecZ);
+    infoView.setFloat32(56, metadata.cameraUpVecY);
   }
 
   function _getBgDimensions(dir: number) {
@@ -447,14 +474,63 @@ export namespace hvqfs {
     return _hvqMetadata![dir];
   }
 
+  export function _setMetadata(dir: number, metadata: IHVQMetadata): void {
+    _hvqMetadata![dir] = metadata;
+  }
+
+  /**
+   * Updates the HVQ metadata to reflect new values.
+   * Need to be careful, old boards may not have all or some values.
+   */
+  export function updateMetadata(dir: number, values: Partial<IHVQMetadata>): void {
+    const metadata = getMetadata(dir);
+
+    if ("tileWidth" in values)
+      metadata["tileWidth"] = values["tileWidth"]!;
+    if ("tileHeight" in values)
+      metadata["tileHeight"] = values["tileHeight"]!;
+    if ("tileCountX" in values)
+      metadata["tileCountX"] = values["tileCountX"]!;
+    if ("tileCountY" in values)
+      metadata["tileCountY"] = values["tileCountY"]!;
+
+    if ("fov" in values)
+      metadata["fov"] = values["fov"]!;
+    if ("scaleFactor" in values)
+      metadata["scaleFactor"] = values["scaleFactor"]!;
+
+    if ("cameraEyePosX" in values)
+      metadata["cameraEyePosX"] = values["cameraEyePosX"]!;
+    if ("cameraEyePosZ" in values)
+      metadata["cameraEyePosZ"] = values["cameraEyePosZ"]!;
+    if ("cameraEyePosY" in values)
+      metadata["cameraEyePosY"] = values["cameraEyePosY"]!;
+
+    if ("lookatPointX" in values)
+      metadata["lookatPointX"] = values["lookatPointX"]!;
+    if ("lookatPointZ" in values)
+      metadata["lookatPointZ"] = values["lookatPointZ"]!;
+    if ("lookatPointY" in values)
+      metadata["lookatPointY"] = values["lookatPointY"]!;
+
+    if ("cameraUpVecX" in values)
+      metadata["cameraUpVecX"] = values["cameraUpVecX"]!;
+    if ("cameraUpVecZ" in values)
+      metadata["cameraUpVecZ"] = values["cameraUpVecZ"]!;
+    if ("cameraUpVecY" in values)
+      metadata["cameraUpVecY"] = values["cameraUpVecY"]!;
+
+    _setMetadata(dir, metadata);
+  }
+
   export function readBackgroundImgData(dir: number) {
     let tileCount = _hvqCache![dir].length - 1;
 
-    let infoView = new DataView(_hvqCache![dir][0], 0);
-    let tile_width = infoView.getUint32(0);
-    let tile_height = infoView.getUint32(4);
-    let tile_x_count = infoView.getUint32(8);
-    let tile_y_count = infoView.getUint32(12);
+    const metadata = getMetadata(dir);
+    let tile_width = metadata.tileWidth;
+    let tile_height = metadata.tileHeight;
+    let tile_x_count = metadata.tileCountX;
+    let tile_y_count = metadata.tileCountY;
 
     let width = tile_width * tile_x_count;
     let height = tile_height * tile_y_count;

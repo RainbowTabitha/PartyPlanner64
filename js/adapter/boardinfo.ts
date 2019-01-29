@@ -3,8 +3,9 @@ import { getBoardInfos as getMP1UBoardInfos } from "./boardinfo.MP1.U";
 import { getBoardInfos as getMP1JBoardInfos } from "./boardinfo.MP1.J";
 import { getBoardInfos as getMP2BoardInfos } from "./boardinfo.MP2";
 import { getBoardInfos as getMP3BoardInfos } from "./boardinfo.MP3";
+import { IBoardInfo } from "./boardinfobase";
 
-export function getBoardInfos(gameID: Game): any[] {
+export function getBoardInfos(gameID: Game): IBoardInfo[] {
   switch(gameID) {
     case Game.MP1_USA:
       return getMP1UBoardInfos();
@@ -19,7 +20,7 @@ export function getBoardInfos(gameID: Game): any[] {
   throw new Error("Missing boardinfo for " + gameID);
 }
 
-export function getBoardInfoByIndex(gameID: Game, index: number) {
+export function getBoardInfoByIndex(gameID: Game, index: number): IBoardInfo {
   return getBoardInfos(gameID)[index];
 }
 

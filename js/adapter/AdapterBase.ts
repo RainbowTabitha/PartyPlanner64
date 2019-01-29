@@ -155,10 +155,10 @@ export abstract class AdapterBase {
     }
     else {
       // Wipe out the event ASM from those events.
-      const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-      let eventASMStart = boardInfo.eventASMStart;
-      if (eventASMStart) {
-        let eventASMEnd = boardInfo.eventASMEnd;
+      const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
+      const eventASMStart = boardInfo.eventASMStart;
+      const eventASMEnd = boardInfo.eventASMEnd;
+      if (eventASMStart && eventASMEnd) {
         for (let offset = eventASMStart; offset < eventASMEnd; offset += 4)
           sceneView.setUint32(offset, 0);
       }
@@ -182,6 +182,8 @@ export abstract class AdapterBase {
 
     this._clearOtherBoardNames(boardIndex);
     this._stashBoardIntoRom(board, boardInfo); // Don't use the boardCopy here
+
+    hvqfs.updateMetadata(boardInfo.bgDir, boardCopy);
 
     if (boardInfo.onAfterOverwrite)
       boardInfo.onAfterOverwrite(boardCopy);
