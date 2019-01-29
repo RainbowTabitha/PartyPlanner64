@@ -11,6 +11,10 @@ $notification-font-color: white;
   width: 100%;
   color: $notification-font-color;
   flex-shrink: 1;
+
+  a {
+    color: $notification-font-color;
+  }
 }
 
 .notification {

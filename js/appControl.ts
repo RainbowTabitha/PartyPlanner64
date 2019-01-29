@@ -2,6 +2,7 @@ import { romhandler } from "./romhandler";
 import { IBoard, ISpace } from "./boards";
 import { View, Action } from "./types";
 import { IEvent } from "./events/events";
+import { Notification } from "./components/notifications";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
@@ -65,4 +66,17 @@ export function showMessageHTML(html: string) {
 
 export function refresh() {
   getAppInstance().forceUpdate();
+}
+
+export function addNotification(notification: React.ReactElement<Notification>) {
+  const notifications = getAppInstance().state.notifications.slice();
+  notifications.push(notification);
+  getAppInstance().setState({ notifications });
+}
+
+export function removeNotification(notification: React.ReactElement<Notification>) {
+  const notifications = getAppInstance().state.notifications.slice();
+  const index = notifications.indexOf(notification);
+  notifications.splice(index, 1);
+  getAppInstance().setState({ notifications });
 }

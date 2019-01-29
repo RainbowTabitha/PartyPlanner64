@@ -44,6 +44,7 @@ interface IPP64AppState {
   messageHTML: string,
   updateExists: boolean,
   updateHideNotification: boolean,
+  notifications: React.ReactElement<Notification>[],
   error: Error | null,
   errorInfo: React.ErrorInfo | null,
 }
@@ -62,6 +63,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     messageHTML: "",
     updateExists: false,
     updateHideNotification: false,
+    notifications: [],
     error: null,
     errorInfo: null,
   }
@@ -241,8 +243,8 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     this.setState({ updateExists: true });
   }
 
-  getNotifications(): React.ReactElement<any>[] {
-    const notifications = [];
+  getNotifications(): React.ReactElement<Notification>[] {
+    const notifications = this.state.notifications.slice();
 
     if (this.state.updateExists && !this.state.updateHideNotification) {
       notifications.push(
