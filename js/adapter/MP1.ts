@@ -160,6 +160,23 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
           this._writeBackground(bgIndex + 8 /* 26 */, board.otherbg.splashscreen, 320, 240), // Splashscreen
         ]);
         break;
+
+      case 3: // Wario board
+        bgPromises = bgPromises.concat([
+          // 27: bgDir
+          this._writeBackground(bgIndex + 1 /* 28 */, board.otherbg.largescene, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2 /* 29 */, board.otherbg.conversation, 320, 240), // Conversation, Koopa
+          this._writeBackground(bgIndex + 3 /* 30 */, board.otherbg.conversation, 320, 240), // Conversation, Bowser, Boo
+          this._writeBackground(bgIndex + 4 /* 31 */, board.otherbg.conversation, 320, 240), //
+          this._writeBackground(bgIndex + 5 /* 32 */, board.otherbg.conversation, 320, 240), // Conversation, Bowser, Toad
+          this._writeBackground(bgIndex + 6 /* 33 */, board.bg.src, 320, 240), //
+          this._writeBackground(bgIndex + 7 /* 34 */, board.otherbg.conversation, 320, 240), //
+          this._writeBackground(bgIndex + 8 /* 35 */, board.otherbg.conversation, 320, 240), //
+          // 36: Pause bg
+          this._writeBackground(bgIndex + 10 /* 37 */, board.otherbg.conversation, 320, 240), //
+          this._writeBackground(bgIndex + 11 /* 38 */, board.otherbg.splashscreen, 320, 240), // Splashscreen
+        ]);
+        break;
     }
 
     return Promise.all(bgPromises)

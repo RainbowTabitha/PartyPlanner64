@@ -183,7 +183,7 @@ export abstract class AdapterBase {
     this._clearOtherBoardNames(boardIndex);
     this._stashBoardIntoRom(board, boardInfo); // Don't use the boardCopy here
 
-    hvqfs.updateMetadata(boardInfo.bgDir, boardCopy);
+    hvqfs.updateMetadata(boardInfo.bgDir, boardCopy.bg);
 
     if (boardInfo.onAfterOverwrite)
       boardInfo.onAfterOverwrite(boardCopy);

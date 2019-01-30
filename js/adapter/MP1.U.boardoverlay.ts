@@ -804,11 +804,13 @@ setup_routine:
   lui   A3, 0x4396 ; 300.0
   jal   0x80023504
    addiu    A0, R0, 1
+
   addiu  A0, R0, ${boardInfo.bgDir}
-  addiu    A1, R0, ${boardInfo.boardDefFile}
-  addiu    A2, R0, ${boardInfo.pauseBgDir!}
+  addiu  A1, R0, ${boardInfo.boardDefFile}
+  addiu  A2, R0, ${boardInfo.pauseBgDir!}
   jal   0x80056A08 ; setup board?
    addu  A3, R0, R0
+
   jal   0x80052E84 ; reset animations for characters?
    addu  A0, R0, R0
   jal   0x80052E84

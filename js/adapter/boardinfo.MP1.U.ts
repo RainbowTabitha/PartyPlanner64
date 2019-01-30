@@ -146,6 +146,12 @@ const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI", {
   // spaceEventsStartOffset: 0x00248E2C;
   // spaceEventsEndOffset: 0x00248EE4;
 
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP1_USA_YOSHI.bgDir + 1).src;
+    board.otherbg.conversation = hvqfs.readBackground(MP1_USA_YOSHI.bgDir + 2).src;
+    board.otherbg.splashscreen = hvqfs.readBackground(MP1_USA_YOSHI.bgDir + 8).src;
+  },
+
   onAfterOverwrite: function(board: IBoard) {
     // Text banner that appears over the logo
     const oldPack = mainfs.get(10, 363);
@@ -159,33 +165,52 @@ const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI", {
 });
 
 // Wario's Battle Canyon = (U) ROM
-const MP1_USA_WARIO = createBoardInfo("MP1_USA_WARIO");
-MP1_USA_WARIO.name = "Wario's Battle Canyon";
-MP1_USA_WARIO.boardDefFile = 72;
-MP1_USA_WARIO.bgDir = 27;
-MP1_USA_WARIO.str = {
-  boardSelect: 655,
-  koopaIntro: 574,
-};
-MP1_USA_WARIO.img = {
-  boardSelectImg: 19,
-  pauseLogoImg: 279,
-  introLogoImg: [365],
-  introLogoImgDimens: [290, 114],
-  titleScreenImg: 384,
-};
-MP1_USA_WARIO.sceneIndex = 0x39; // 57
-MP1_USA_WARIO.eventASMStart = 0x00;
-// MP1_USA_WARIO.spaceEventsStartAddr = 0x000F99C4;
-// MP1_USA_WARIO.spaceEventsStartOffset = 0x0024C2E4;
-// MP1_USA_WARIO.spaceEventsEndOffset = 0x0024C38C;
-MP1_USA_WARIO.koopaSpaceInst = 0xED0; // 0x00249DD0;
-MP1_USA_WARIO.bowserSpaceInst = 0xDA8; // 0x00249CA8;
-MP1_USA_WARIO.boosLoopFnOffset = 0x119C; // 0x0024A09C;
-MP1_USA_WARIO.boosReadbackFnOffset = 0x1094; // 0x00249F94;
-MP1_USA_WARIO.starSpaceArrOffset = 0x3240; // 0x0024C140;
-MP1_USA_WARIO.starSpaceCount = 7;
-MP1_USA_WARIO.toadSpaceArrOffset = [0x3250, 0x3270]; // [0x0024C150, 0x0024C170];
+const MP1_USA_WARIO = createBoardInfo("MP1_USA_WARIO", {
+  name: "Wario's Battle Canyon",
+  canOverwrite: true,
+  boardDefFile: 72,
+  bgDir: 27,
+  pauseBgDir: 36,
+  str: {
+    boardSelect: 655,
+    koopaIntro: 574,
+  },
+  img: {
+    boardSelectImg: 19,
+    pauseLogoImg: 279,
+    introLogoImg: [365],
+    introLogoImgDimens: [290, 114],
+    titleScreenImg: 384,
+  },
+  sceneIndex: 0x39, // 57
+  mainfsEventFile: [10, 428],
+  mainfsBoardFile: [10, 429],
+  // spaceEventsStartAddr: 0x000F99C4,
+  // spaceEventsStartOffset: 0x0024C2E4,
+  // spaceEventsEndOffset: 0x0024C38C,
+  koopaSpaceInst: 0xED0, // 0x00249DD0,
+  bowserSpaceInst: 0xDA8, // 0x00249CA8,
+  boosLoopFnOffset: 0x119C, // 0x0024A09C,
+  boosReadbackFnOffset: 0x1094, // 0x00249F94,
+  starSpaceArrOffset: 0x3240, // 0x0024C140,
+  starSpaceCount: 7,
+  toadSpaceArrOffset: [0x3250, 0x3270], // [0x0024C150, 0x0024C170]
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP1_USA_WARIO.bgDir + 1).src;
+    board.otherbg.conversation = hvqfs.readBackground(MP1_USA_WARIO.bgDir + 2).src;
+    board.otherbg.splashscreen = hvqfs.readBackground(MP1_USA_WARIO.bgDir + 11).src;
+  },
+
+  onAfterOverwrite: function(board: IBoard) {
+    // Text banner that appears over the logo
+    const oldPack = mainfs.get(10, 366);
+    const imgInfoArr = [{ src: new ArrayBuffer(280 * 76 * 4), width: 280, height: 76, bpp: 32 }];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    mainfs.write(10, 366, newPack);
+  }
+});
+
 
 // Luigi's Engine Room - (U) ROM
 const MP1_USA_LUIGI = createBoardInfo("MP1_USA_LUIGI");
