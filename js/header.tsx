@@ -270,8 +270,8 @@ function eventFileSelected(event: any) {
     reader.onload = () => {
       try {
         const asm = reader.result as string;
-        createCustomEvent(asm, true);
-        addEventToLibrary(event);
+        const customEvent = createCustomEvent(asm, true);
+        addEventToLibrary(customEvent);
         refreshEventsView();
       } catch (e) {
         showMessage("Event file load failed. " + e.toString());

@@ -3,8 +3,8 @@ import * as React from "react";
 import { getCustomEvents, IEvent } from "./events/events";
 import { ICustomEvent, createCustomEvent } from "./events/customevents";
 import { changeCurrentEvent, changeView } from "./appControl";
-import { IBoard, removeEventFromBoard } from "./boards";
-import { removeEventFromLibrary } from "./events/EventLibrary";
+import { IBoard, removeEventFromBoard, addEventToBoard } from "./boards";
+import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "./events/EventLibrary";
 
 let _eventsViewInstance: EventsView | null;
 
@@ -34,7 +34,7 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
     }
 
     let listing = null;
-
+    const board = this.props.board;
     const customEvents = getCustomEvents();
     if (!customEvents.length) {
       listing = (
@@ -43,22 +43,30 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
     }
     else {
       listing = customEvents.map(customEvent => {
+        const isDestructive = _copyToBoardWillOverwrite(customEvent, board);
+        const isUnchanged = _boardAndLibraryEventAreInSync(customEvent, board);
         return (
           <EventRow key={customEvent.id} event={customEvent}
             onEditEvent={this.onEditEvent}
-            onDeleteEvent={this.onDeleteEvent} />
+            onDeleteEvent={this.onDeleteEvent}
+            isDestructiveCopy={isDestructive}
+            onCopyToBoard={isUnchanged ? undefined : this.onCopyToBoard}
+            />
         );
       });
     }
 
-    const board = this.props.board;
     let boardEvents = [];
     for (let eventName in board.events) {
       const customEvent = createCustomEvent(board.events[eventName]);
+      const isDestructive = _copyToLibraryWillOverwrite(customEvent);
+      const isUnchanged = _boardAndLibraryEventAreInSync(customEvent, board);
       boardEvents.push(
         <EventRow key={eventName} event={customEvent}
           onEditEvent={this.onEditBoardEvent}
-          onDeleteEvent={this.onDeleteBoardEvent} />
+          onDeleteEvent={this.onDeleteBoardEvent}
+          isDestructiveCopy={isDestructive}
+          onCopyToLibrary={isUnchanged ? undefined : this.onCopyToLibrary} />
       );
     }
 
@@ -115,6 +123,28 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
       this.forceUpdate();
     }
   }
+
+  onCopyToBoard = (event: ICustomEvent, isDestructiveCopy: boolean) => {
+    let proceed = true;
+    if (isDestructiveCopy) {
+      proceed = window.confirm(`Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`);
+    }
+    if (proceed) {
+      addEventToBoard(this.props.board, event.id, event.asm);
+      this.forceUpdate();
+    }
+  }
+
+  onCopyToLibrary = (event: ICustomEvent, isDestructiveCopy: boolean) => {
+    let proceed = true;
+    if (isDestructiveCopy) {
+      proceed = window.confirm(`Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`);
+    }
+    if (proceed) {
+      addEventToLibrary(event);
+      this.forceUpdate();
+    }
+  }
 }
 
 function EventEntryTable(props: { listing: any }) {
@@ -123,6 +153,7 @@ function EventEntryTable(props: { listing: any }) {
       {Array.isArray(props.listing) ? (
         <thead>
           <tr>
+            <th className="eventsViewTableIconColumn"></th>
             <th className="eventsViewTableIconColumn"></th>
             <th className="eventsViewTableIconColumn"></th>
             <th></th>
@@ -136,14 +167,69 @@ function EventEntryTable(props: { listing: any }) {
   )
 }
 
+function _copyToBoardWillOverwrite(customEvent: ICustomEvent, board: IBoard): boolean {
+  if (!board.events || !(customEvent.id in board.events))
+    return false;
+  return board.events[customEvent.id] !== customEvent.asm;
+}
+
+function _copyToLibraryWillOverwrite(customEvent: ICustomEvent): boolean {
+  const libEvent = getEventFromLibrary(customEvent.id) as ICustomEvent;
+  return !!libEvent && libEvent.asm !== customEvent.asm;
+}
+
+function _boardAndLibraryEventAreInSync(customEvent: ICustomEvent, board: IBoard): boolean {
+  if (!board.events || !(customEvent.id in board.events))
+    return false;
+  const libEvent = getEventFromLibrary(customEvent.id) as ICustomEvent;
+  if (!libEvent)
+    return false;
+  return board.events[customEvent.id] === libEvent.asm;
+}
+
 interface IEventRowProps {
   event: ICustomEvent;
+  isDestructiveCopy: boolean;
   onDeleteEvent(event: ICustomEvent): any;
   onEditEvent(event: ICustomEvent): any;
+  onCopyToLibrary?(event: ICustomEvent, isDestructiveCopy: boolean): void;
+  onCopyToBoard?(event: ICustomEvent, isDestructiveCopy: boolean): void;
 }
 
 class EventRow extends React.Component<IEventRowProps> {
   render() {
+    let copyOption;
+    if (this.props.onCopyToLibrary) {
+      copyOption = (
+        <td>
+          <img src={`img/events/copytolibrary${this.props.isDestructiveCopy ? "_destructive" : ""}.png`}
+            alt="Copy this event into the local library"
+            title="Copy this event into the local library"
+            onClick={() => this.props.onCopyToLibrary!(this.props.event, this.props.isDestructiveCopy)} />
+        </td>
+      );
+    }
+    else if (this.props.onCopyToBoard) {
+      copyOption = (
+        <td>
+          <img src={`img/events/copytoboard${this.props.isDestructiveCopy ? "_destructive" : ""}.png`}
+            alt="Copy this event into the board file"
+            title="Copy this event into the board file"
+            onClick={() => this.props.onCopyToBoard!(this.props.event, this.props.isDestructiveCopy)} />
+        </td>
+      );
+    }
+    else {
+      copyOption = (
+        <td>
+          <img src="img/events/nocopyoption.png"
+            className="eventRowIconNoAction"
+            alt="The event is the same in both the board and library"
+            title="The event is the same in both the board and library" />
+        </td>
+      );
+    }
+
     return (
       <tr className="eventTableRow">
         <td>
@@ -156,6 +242,7 @@ class EventRow extends React.Component<IEventRowProps> {
             alt="Download event code" title="Download event code"
             onClick={this.onExportEvent} />
         </td>
+        {copyOption}
         <td className="eventNameTableCell"
           onClick={() => this.props.onEditEvent(this.props.event)}>
           <span className="eventNameText">{this.props.event.name}</span>

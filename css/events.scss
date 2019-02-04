@@ -25,7 +25,12 @@
     vertical-align: top;
     flex-grow: 0;
 
-    &:hover {
+    &.eventRowIconNoAction {
+      opacity: 0.2;
+      cursor: default;
+    }
+
+    &:not(.eventRowIconNoAction):hover {
       opacity: 1;
     }
   }
