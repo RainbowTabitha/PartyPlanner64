@@ -2,7 +2,7 @@ import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace } from "../boards";
 import { animationfs } from "../fs/animationfs";
 import { Space } from "../types";
-import { create as createEvent } from "../events/events";
+import { createSpaceEvent } from "../events/events";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL, arrayBufferToImageData } from "../utils/arrays";
 import { hvqfs } from "../fs/hvqfs";
@@ -12,6 +12,7 @@ import { toArrayBuffer, cutFromWhole } from "../utils/image";
 import { mainfs } from "../fs/mainfs";
 import { toPack } from "../utils/img/ImgPack";
 import { IBoardInfo } from "./boardinfobase";
+import { BankEvent } from "../events/builtin/events.common";
 
 export const MP2 = new class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
@@ -77,9 +78,9 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   onWriteEvents(board: IBoard) {
   }
 
-  hydrateSpace(space: ISpace) {
+  hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.BANK) {
-      addEventToSpace(space, createEvent("BANK"));
+      addEventToSpace(board, space, createSpaceEvent(BankEvent));
     }
   }
 

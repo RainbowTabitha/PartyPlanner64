@@ -3,7 +3,7 @@ import { getBoardInfos, getBoardInfoByIndex, getArrowRotationLimit } from "./boa
 import { hvqfs } from "../fs/hvqfs";
 import { mainfs } from "../fs/mainfs";
 import { audio } from "../fs/audio";
-import { IBoard, addSpace, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, getCurrentBoard, ISpace } from "../boards";
+import { IBoard, addSpace, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, ISpace } from "../boards";
 import { copyObject } from "../utils/obj";
 import { determineChains, padChains, create as createBoardDef, parse as parseBoardDef } from "./boarddef";
 import { Space, BoardType, EventActivationType, SpaceSubtype } from "../types";
@@ -13,7 +13,7 @@ import { scenes, ISceneInfo } from "../fs/scenes";
 import { findCalls, getRegSetAddress } from "../utils/MIPS";
 import { SpaceEventTable } from "./eventtable";
 import { SpaceEventList } from "./eventlist";
-import { create as createEvent, write as writeEvent, parse as parseEvent, EventParameterType } from "../events/events";
+import { createSpaceEvent, write as writeEvent, parse as parseEvent, getEvent } from "../events/events";
 import { toU32, stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
 import { makeDivisibleBy, distance, getRawFloat32Format } from "../utils/number";
 import { parse as parseInst } from "mips-inst";
@@ -22,11 +22,17 @@ import { createContext } from "../utils/canvas";
 import { toArrayBuffer } from "../utils/image";
 import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
-import { arrayBufferToDataURL, copyRange } from "../utils/arrays";
+import { arrayBufferToDataURL } from "../utils/arrays";
 import { get, $setting } from "../settings";
 import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
 import THREE = require("three");
 import { IBoardInfo } from "./boardinfobase";
+import { createCustomEvent } from "../events/customevents";
+import { ChainSplit1 } from "../events/builtin/MP1/U/ChainSplit1";
+import { ChainMerge } from "../events/builtin/ChainMergeEvent";
+import { StarEvent, Gate, GateClose } from "../events/builtin/events.common";
+import { ChainSplit2 } from "../events/builtin/MP2/U/ChainSplit2";
+import { ChainSplit3 } from "../events/builtin/MP3/U/ChainSplit3";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -238,7 +244,7 @@ export abstract class AdapterBase {
   }
 
   // Gives a new space the default things it would need.
-  hydrateSpace(space: ISpace) {
+  hydrateSpace(space: ISpace, board: IBoard) {
     throw "hydrateSpace not implemented";
   }
 
@@ -563,28 +569,29 @@ export abstract class AdapterBase {
           if (links.length > 2) {
             throw new Error(`Encountered branch with ${links.length} directions, only 2 are supported currently`);
           }
-          event = createEvent("CHAINSPLIT", {
-            parameters: [
-              { name: "left_space", type: EventParameterType.Space },
-              { name: "right_space", type: EventParameterType.Space }
-            ],
+          event = createSpaceEvent(ChainSplit1, {
             parameterValues: {
               left_space: links[0],
               right_space: links[1],
+              chains: endpoints,
             },
-            chains: endpoints,
           });
         }
         else {
-          event = createEvent("CHAINSPLIT", {
+          const chainSplitEvent = this.gameVersion === 2 ? ChainSplit2 : ChainSplit3;
+          event = createSpaceEvent(chainSplitEvent, {
             inlineArgs: links.concat(0xFFFF),
-            chains: endpoints,
+            parameterValues: {
+              chains: endpoints,
+            },
           });
         }
       }
       else {
-        event = createEvent("CHAINMERGE", {
-          chain: _getChainWithSpace(links[0]),
+        event = createSpaceEvent(ChainMerge, {
+          parameterValues: {
+            chain: _getChainWithSpace(links[0])!,
+          },
         });
       }
 
@@ -608,7 +615,7 @@ export abstract class AdapterBase {
       let events = space.events || [];
       let hasStarEvent = events.some(e => { return e.id === "STAR" }); // Pretty unlikely
       if (!hasStarEvent)
-        addEventToSpace(space, createEvent("STAR"));
+        addEventToSpace(board, space, createSpaceEvent(StarEvent));
     }
   }
 
@@ -648,18 +655,24 @@ export abstract class AdapterBase {
       let nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
 
       // Redundant to write event twice, except we need it attached to both spaces.
-      let gateEvent = createEvent("GATE", {
-        gatePrevChain: [prevChainIndex, prevChainSpaceIndex],
-        gateEntryIndex: entrySpaceIndex,
-        gateSpaceIndex: i,
-        gateExitIndex: exitSpaceIndex,
-        gateNextChain: [nextChainIndex, nextChainSpaceIndex],
+      const gateEvent = createSpaceEvent(Gate, {
+        parameterValues: {
+          gatePrevChain: [prevChainIndex, prevChainSpaceIndex],
+          gateEntryIndex: entrySpaceIndex,
+          gateSpaceIndex: i,
+          gateExitIndex: exitSpaceIndex,
+          gateNextChain: [nextChainIndex, nextChainSpaceIndex],
+        },
       });
-      addEventToSpace(entrySpace, gateEvent);
-      addEventToSpace(exitSpace, gateEvent);
+      addEventToSpace(board, entrySpace, gateEvent);
+      addEventToSpace(board, exitSpace, gateEvent);
 
       // Need an additional event to close the gate.
-      addEventToSpace(space, createEvent("GATECLOSE", { gateIndex }));
+      addEventToSpace(board, space, createSpaceEvent(GateClose, {
+        parameterValues: {
+          gateIndex,
+        },
+      }));
 
       // There is also a listing of the entry/exit spaces, probably used by the gate animation.
       if (boardInfo.gateNeighborsOffset) {
@@ -743,7 +756,7 @@ export abstract class AdapterBase {
       let eventList = new SpaceEventList();
       for (let e = 0; e < space.events.length; e++) {
         let event = space.events[e];
-        eventList.add(event.activationType, event.executionType || event.mystery, 0); // Also to track size
+        eventList.add(event.activationType, event.executionType || (event as any).mystery, 0); // Also to track size
       }
       eventLists.push(eventList);
     }
@@ -771,6 +784,7 @@ export abstract class AdapterBase {
       let eventList = eventLists[eventListIndex];
       for (let e = 0; e < space.events.length; e++) {
         let event = space.events[e];
+
         let temp = eventTemp[event.id] || {};
         let info = {
           boardIndex,
@@ -848,10 +862,10 @@ export abstract class AdapterBase {
 
       let eventList = new SpaceEventList(i);
       for (let e = 0; e < space.events.length; e++) {
-        let event = space.events[e];
-        eventList.add(event.activationType, event.executionType || event.mystery, 0);
+        let spaceEvent = space.events[e];
+        eventList.add(spaceEvent.activationType, spaceEvent.executionType || (spaceEvent as any).mystery, 0);
 
-        let temp = eventTemp[event.id] || {};
+        let temp = eventTemp[spaceEvent.id] || {};
         let info = {
           boardIndex,
           board,
@@ -862,10 +876,15 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let eventAsm = writeEvent(new ArrayBuffer(0), event, info, temp);
-        eventTemp[event.id] = temp;
+        let eventAsm = writeEvent(new ArrayBuffer(0), spaceEvent, info, temp);
+        eventTemp[spaceEvent.id] = temp;
 
-        eventAsms.push(prepSingleEventAsm(eventAsm as string, event, info, e));
+        if (!(typeof eventAsm === "string")) {
+          throw new Error(`Event ${spaceEvent.id} did not return a string to assemble`);
+        }
+
+        const event = getEvent(spaceEvent.id, board);
+        eventAsms.push(prepSingleEventAsm(eventAsm, event, spaceEvent, info, e));
       }
       eventLists.push(eventList);
     }

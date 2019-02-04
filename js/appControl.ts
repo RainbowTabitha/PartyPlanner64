@@ -44,12 +44,19 @@ export function getSelectedSpaces() {
   return getAppInstance().state.selectedSpaces;
 }
 
-export function changeCurrentEvent(event: IEvent | null) {
-  getAppInstance().setState({ currentEvent: event });
+export function changeCurrentEvent(event: IEvent | null, board?: IBoard) {
+  getAppInstance().setState({
+    currentEvent: event,
+    currentEventIsBoardEvent: !!board,
+  });
 }
 
 export function getCurrentEvent() {
   return getAppInstance().state.currentEvent;
+}
+
+export function getCurrentEventIsBoardEvent(): boolean {
+  return getAppInstance().state.currentEventIsBoardEvent;
 }
 
 export function blockUI(blocked: boolean) {

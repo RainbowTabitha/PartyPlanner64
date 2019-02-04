@@ -8,6 +8,7 @@ import { $$hex } from "./utils/debug";
 import * as React from "react";
 import { RightClickMenu } from "./rightclick";
 import { attachToCanvas, detachFromCanvas } from "./interaction";
+import { getEvent } from "./events/events";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
@@ -51,13 +52,14 @@ function _renderConnections(lineCanvas: Canvas, lineCtx: CanvasContext, board: I
       const space = spaces[i];
       if (space.events && space.events.length) {
         for (let e = 0; e < space.events.length; e++) {
-          const event = space.events[e];
-          if (event.parameters && event.parameters.length) {
+          const spaceEvent = space.events[e];
+          const event = getEvent(spaceEvent.id, board);
+          if (event && event.parameters && event.parameters.length) {
             for (let p = 0; p < event.parameters.length; p++) {
               const parameter = event.parameters[p];
               if (parameter.type === "Space") {
                 const associatedSpaceIndex =
-                  event.parameterValues && event.parameterValues[parameter.name];
+                  spaceEvent.parameterValues && spaceEvent.parameterValues[parameter.name];
                 if (typeof associatedSpaceIndex === "number") {
                   const associatedSpace = spaces[associatedSpaceIndex];
                   if (!associatedSpace)
@@ -94,9 +96,6 @@ function _renderSpaces(spaceCanvas: Canvas, spaceCtx: CanvasContext, board: IBoa
   if (clear)
     spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
-  let game = board.game || 1;
-  const boardType = board.type || BoardType.NORMAL;
-
   // Draw spaces
   for (let index = 0; index < board.spaces.length; index++) {
     let space = board.spaces[index];
@@ -104,11 +103,13 @@ function _renderSpaces(spaceCanvas: Canvas, spaceCtx: CanvasContext, board: IBoa
       continue;
     space.z = space.z || 0;
 
-    drawSpace(spaceCtx, space, game, boardType, opts);
+    drawSpace(spaceCtx, space, board, opts);
   }
 }
 
-function drawSpace(spaceCtx: CanvasContext, space: ISpace, game: number, boardType: BoardType, opts: ISpaceRenderOpts = {}) {
+function drawSpace(spaceCtx: CanvasContext, space: ISpace, board: IBoard, opts: ISpaceRenderOpts = {}) {
+  const game = board.game || 1;
+  const boardType = board.type || BoardType.NORMAL;
   const x = space.x;
   const y = space.y;
   const rotation = space.rotation;
@@ -260,7 +261,7 @@ function drawSpace(spaceCtx: CanvasContext, space: ISpace, game: number, boardTy
       let iconY = y + offset;
       if (type === Space.START)
         iconY -= startOffset;
-      spaceCtx.drawImage(__determineSpaceEventImg(space), x + offset, iconY);
+      spaceCtx.drawImage(__determineSpaceEventImg(space, board), x + offset, iconY);
     }
 
     if (space.star) {
@@ -452,14 +453,17 @@ function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number
   }
 }
 
-function __determineSpaceEventImg(space: ISpace) {
+function __determineSpaceEventImg(space: ISpace, board: IBoard) {
   if (space.events && space.events.length) {
     for (let i = 0; i < space.events.length; i++) {
-      const event = space.events[i];
+      const spaceEvent = space.events[i];
+      const event = getEvent(spaceEvent.id, board);
+      if (!event)
+        return getImage("eventErrorImg");
       if (event.parameters) {
         for (let p = 0; p < event.parameters.length; p++) {
           const parameter = event.parameters[p];
-          if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
+          if (!spaceEvent.parameterValues || !spaceEvent.parameterValues.hasOwnProperty(parameter.name)) {
             return getImage("eventErrorImg");
           }
         }

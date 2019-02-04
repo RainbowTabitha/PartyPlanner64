@@ -1,19 +1,20 @@
-import { BoardType, Space, SpaceSubtype, Game } from "./types";
+import { BoardType, Space, SpaceSubtype, Game, EventActivationType, EventExecutionType } from "./types";
 import { getSavedBoards } from "./utils/localstorage";
 import { copyObject } from "./utils/obj";
-import { createCustomEvent } from "./events/customevents";
-import { getEvent } from "./events/events";
+import { ICustomEvent } from "./events/customevents";
+import { getEvent, IEvent, IEventParameter, EventParameterValues } from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
 import { getAppInstance, boardsChanged, currentBoardChanged } from "./appControl";
 
 export interface IBoard {
   name: string;
   description: string;
+  game: 1 | 2 | 3;
   type: BoardType;
   difficulty: number;
   spaces: ISpace[];
   links: { [startingSpaceIndex: number]: (number | number[]) };
-  game: 1 | 2 | 3;
+  events: { [name: string]: string };
   bg: IBoardBgDetails;
   otherbg: any;
   animbg?: any;
@@ -44,8 +45,18 @@ export interface ISpace {
   rotation?: number;
   type: Space;
   subtype?: SpaceSubtype;
-  events?: any[];
+  events?: ISpaceEvent[];
   star?: boolean;
+}
+
+/** The subset of an IEvent that is kept on a space in the board. */
+export interface ISpaceEvent {
+  id: string;
+  activationType: EventActivationType;
+  executionType: EventExecutionType;
+  parameterValues?: EventParameterValues;
+  inlineArgs?: number[]; // deprecated
+  custom?: boolean;
 }
 
 let currentBoard: number = 0;
@@ -55,11 +66,12 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
   const board: any = {
     name: "Untitled",
     description: "Use your Star Power to finish\nthis board.",
+    game: gameVersion,
     type: type,
     difficulty: 3,
     spaces: [],
     links: {},
-    game: gameVersion,
+    events: {},
   };
   switch (gameVersion) {
     case 1:
@@ -208,8 +220,6 @@ export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 
 
   _fixPotentiallyOldBoard(board);
 
-  _findAllCustomEvents(board);
-
   const app = getAppInstance();
   if (app)
     boardsChanged(getBoards());
@@ -287,7 +297,7 @@ function _removeConnections(spaceIdx: number, board: IBoard) {
 }
 
 function _removeAssociations(spaceIdx: number, board: IBoard) {
-  _forEachEventParameter(board, (parameter: any, event: any) => {
+  _forEachEventParameter(board, (parameter: IEventParameter, event: ISpaceEvent) => {
     if (parameter.type === "Space") {
       if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
         if (event.parameterValues[parameter.name] === spaceIdx) {
@@ -298,24 +308,32 @@ function _removeAssociations(spaceIdx: number, board: IBoard) {
   });
 }
 
-function _forEachEventParameter(board: IBoard, fn: any) {
+function _forEachEvent(board: IBoard, fn: (event: ISpaceEvent, space: ISpace) => void) {
   const spaces = board.spaces;
   if (spaces && spaces.length) {
     for (let s = 0; s < spaces.length; s++) {
       const space = spaces[s];
       if (space.events && space.events.length) {
-        for (let i = 0; i < space.events.length; i++) {
+        // Reverse to allow deletion in callback.
+        for (let i = space.events.length - 1; i >= 0; i--) {
           const event = space.events[i];
-          if (event.parameters) {
-            for (let p = 0; p < event.parameters.length; p++) {
-              const parameter = event.parameters[p];
-              fn(parameter, event, space);
-            }
-          }
+          fn(event, space);
         }
       }
     }
   }
+}
+
+function _forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: ISpaceEvent, space: ISpace) => void) {
+  _forEachEvent(board, (spaceEvent: ISpaceEvent, space: ISpace) => {
+    const event = getEvent(spaceEvent.id, board);
+    if (event.parameters) {
+      for (let p = 0; p < event.parameters.length; p++) {
+        const parameter = event.parameters[p];
+        fn(parameter, spaceEvent, space);
+      }
+    }
+  });
 }
 
 // Removes any _ prefixed property from a board.
@@ -335,17 +353,22 @@ function stripPrivateProps(obj: any = {}): any {
   return obj;
 }
 
-export function addEventToSpace(space: ISpace, event: any, toStart?: boolean) {
+export function addEventToSpace(board: IBoard, space: ISpace, event: ISpaceEvent, toStart?: boolean) {
   space.events = space.events || [];
   if (event) {
     if (toStart)
       space.events.unshift(event);
     else
       space.events.push(event);
+
+    if (event.custom) {
+      const customEvent = getEvent(event.id, board) as ICustomEvent;
+      addEventToBoard(board, event.id, customEvent.asm);
+    }
   }
 }
 
-export function removeEventFromSpace(space: ISpace, event: any) {
+export function removeEventFromSpace(space: ISpace, event: ISpaceEvent) {
   if (!space || !event || !space.events)
     return;
 
@@ -357,6 +380,31 @@ export function removeEventFromSpace(space: ISpace, event: any) {
   }
 
   // Otherwise, try to search for essentially the same thing?
+}
+
+export function getBoardEventAsm(board: IBoard, eventId: string): string | null {
+  if (board.events) {
+    return board.events[eventId];
+  }
+  return null;
+}
+
+export function addEventToBoard(board: IBoard, eventName: string, asm: string) {
+  if (!asm)
+    throw new Error(`Attempting to add event ${eventName} but it doesn't have assembly code`);
+  board.events[eventName] = asm;
+}
+
+export function removeEventFromBoard(board: IBoard, eventId: string): void {
+  if (board.events) {
+    delete board.events[eventId];
+  }
+
+  _forEachEvent(board, (event, space) => {
+    if (event.id === eventId) {
+      removeEventFromSpace(space, event);
+    }
+  });
 }
 
 function applyTheme(board: IBoard, name = "default") {
@@ -469,35 +517,6 @@ export function getDeadEnds(board: IBoard) {
   return deadEnds;
 }
 
-function _findAllCustomEvents(board: IBoard) {
-  if (!board.spaces)
-    return;
-
-  for (let s = 0; s < board.spaces.length; s++) {
-    const space = board.spaces[s];
-    if (!space.events)
-      continue;
-
-    for (let e = 0; e < space.events.length; e++) {
-      const event = space.events[e];
-      if (!event.asm)
-        continue;
-
-      if (getEvent(event.id))
-        continue; // Already exists
-
-      try {
-        createCustomEvent(event.asm);
-      }
-      catch (e) {
-        console.error("Error reading custom event from loaded board: " + e.toString());
-        // Since it errored out, I guess remove it?
-        space.events.splice(e, 1);
-      }
-    }
-  }
-}
-
 function _fixPotentiallyOldBoard(board: IBoard) {
   if (!("game" in board)) {
     (board as IBoard).game = 1;
@@ -506,6 +525,12 @@ function _fixPotentiallyOldBoard(board: IBoard) {
   if (!("type" in board)) {
     (board as IBoard).type = BoardType.NORMAL;
   }
+
+  if (!("events" in board)) {
+    (board as IBoard).events = {};
+  }
+
+  _migrateOldCustomEvents(board);
 
   if (!("fov" in board.bg)) {
     switch (board.game) {
@@ -561,6 +586,28 @@ function _fixPotentiallyOldBoard(board: IBoard) {
         break;
     }
   }
+}
+
+function _migrateOldCustomEvents(board: IBoard) {
+  _forEachEvent(board, (spaceEvent: ISpaceEvent) => {
+    // Unnecessary properties of space events.
+    if ("parameters" in spaceEvent) {
+      delete (spaceEvent as any).parameters;
+    }
+    if ("supportedGames" in spaceEvent) {
+      delete (spaceEvent as any).supportedGames;
+    }
+
+    // Move any asm into the single collection.
+    if ((spaceEvent as ICustomEvent).asm) {
+      spaceEvent.id = (spaceEvent as any).name;
+      if (board.events[spaceEvent.id] && (board.events[spaceEvent.id] !== (spaceEvent as ICustomEvent).asm)) {
+        console.warn(`When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`);
+      }
+      board.events[spaceEvent.id] = (spaceEvent as ICustomEvent).asm;
+      delete (spaceEvent as ICustomEvent).asm;
+    }
+  });
 }
 
 export function getCurrentBoardIndex() {
@@ -627,7 +674,7 @@ export function copyCurrentBoard(): number {
   else {
     source = boards[currentBoard];
   }
-  let copy = JSON.parse(JSON.stringify(source));
+  let copy = copyObject(source);
   delete copy._rom;
   copy.name = "Copy of " + copy.name;
 
@@ -660,15 +707,15 @@ export function addSpace(x: number, y: number, type: Space,
 
   let adapter = getAdapter(board.game || 1);
   if (adapter)
-    adapter.hydrateSpace(newSpace);
+    adapter.hydrateSpace(newSpace, board);
 
-  for (let i = 0; i < board.spaces.length; i++) {
+  //for (let i = 0; i < board.spaces.length; i++) {
     // FIXME: This was clearly not working.
     // if (board.spaces === null) {
     //   board.spaces[i] = newSpace;
     //   return i;
     // }
-  }
+  //}
 
   board.spaces.push(newSpace);
   return board.spaces.length - 1;
@@ -707,7 +754,7 @@ export function removeSpace(index: number, board: IBoard = getCurrentBoard()) {
   }
 
   // Update space event parameter indices
-  _forEachEventParameter(board, (parameter: any, event: any) => {
+  _forEachEventParameter(board, (parameter: IEventParameter, event: ISpaceEvent) => {
     if (parameter.type === "Space") {
       if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
         event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
@@ -804,7 +851,7 @@ export function setSpaceRotation(spaceIdx: number, angleYAxisDeg: number, board 
 
 export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart?: boolean) {
   const space = board.spaces[spaceIdx];
-  addEventToSpace(space, event, toStart);
+  addEventToSpace(board, space, event, toStart);
 }
 
 export function loadBoardsFromROM() {

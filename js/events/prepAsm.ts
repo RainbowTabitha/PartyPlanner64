@@ -1,16 +1,17 @@
-import { IEventWriteInfo, EventParameterType, IEvent } from "./events";
+import { IEventWriteInfo, IEvent } from "./events";
 import { getSymbols } from "../symbols/symbols";
 import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
-import { Game } from "../types";
+import { Game, EventParameterType } from "../types";
 import { $$hex } from "../utils/debug";
+import { ISpaceEvent } from "../boards";
 
 /**
  * Takes event asm, and makes it assemble (in isolation)
  */
-export function prepAsm(asm: string, event: IEvent, info: IEventWriteInfo) {
+export function prepAsm(asm: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo) {
   const orgDirective = `.org ${$$hex(info.addr!)}`;
   const syms = makeGameSymbolLabels(info.game);
-  const parameterSymbols = makeParameterSymbolLabels(event, info);
+  const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
   return [
     orgDirective,
     ...syms,
@@ -20,11 +21,11 @@ export function prepAsm(asm: string, event: IEvent, info: IEventWriteInfo) {
   ].join("\n");
 }
 
-export function prepSingleEventAsm(asm: string, event: IEvent, info: IEventWriteInfo, eventNum: number): string {
+export function prepSingleEventAsm(asm: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo, eventNum: number): string {
   return scopeLabelsStaticByDefault(`
     .beginfile ; Scopes static labels
     __PP64_INTERNAL_EVENT_${info.curSpaceIndex}_${eventNum}:
-    ${makeParameterSymbolLabels(event, info).join("\n")}
+    ${makeParameterSymbolLabels(event, spaceEvent, info).join("\n")}
     ${asm}
     .align 4
     .endfile
@@ -39,10 +40,10 @@ export function makeGameSymbolLabels(game: Game) {
   return syms;
 }
 
-export function makeParameterSymbolLabels(event: IEvent, info: IEventWriteInfo): string[] {
+export function makeParameterSymbolLabels(event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo): string[] {
   let parameterSymbols: string[] = [];
   const parameters = event.parameters;
-  const parameterValues = event.parameterValues;
+  const parameterValues = spaceEvent.parameterValues;
   if (parameters && parameters.length && parameterValues) {
     parameters.forEach(parameter => {
       const parameterValue = parameterValues[parameter.name];
@@ -54,7 +55,7 @@ export function makeParameterSymbolLabels(event: IEvent, info: IEventWriteInfo):
         case EventParameterType.Space:
           parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
           if (info.chains) {
-            const indices = getChainIndexValuesFromAbsoluteIndex(info.chains, parameterValue);
+            const indices = getChainIndexValuesFromAbsoluteIndex(info.chains, parameterValue as number);
             parameterSymbols.push(`.definelabel ${parameter.name}_chain_index,${indices[0]}`);
             parameterSymbols.push(`.definelabel ${parameter.name}_chain_space_index,${indices[1]}`);
           }
@@ -64,6 +65,15 @@ export function makeParameterSymbolLabels(event: IEvent, info: IEventWriteInfo):
             parameterSymbols.push(`.definelabel ${parameter.name}_chain_space_index,-1`);
           }
           break;
+
+        case EventParameterType.Number:
+          if (typeof parameterValue === "number") {
+            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+          }
+          break;
+
+        case EventParameterType.NumberArray:
+          break; // TODO: Maybe expose labels for these?
 
         default:
           parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);

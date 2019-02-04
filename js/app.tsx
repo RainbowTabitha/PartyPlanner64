@@ -23,10 +23,10 @@ import { SpaceProperties } from "./spaceproperties";
 import { BoardProperties } from "./boardproperties";
 import * as ReactDOM from "react-dom";
 import "./utils/onbeforeunload";
-import "./events/events.common";
-import "./events/events.MP1";
-import "./events/events.MP2";
-import "./events/events.MP3";
+import "./events/builtin/events.common";
+import "./events/builtin/MP1/events.MP1";
+import "./events/builtin/MP2/events.MP2";
+import "./events/builtin/MP3/events.MP3";
 import { showMessage } from "./appControl";
 import "file-saver";
 import { DebugView } from "./debug";
@@ -36,6 +36,7 @@ interface IPP64AppState {
   boards: IBoard[],
   currentBoard: IBoard,
   currentEvent: IEvent | null,
+  currentEventIsBoardEvent: boolean,
   romLoaded: boolean,
   currentAction: Action,
   selectedSpaces: ISpace[] | null,
@@ -55,6 +56,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     boards: getBoards(),
     currentBoard: getCurrentBoard(),
     currentEvent: null,
+    currentEventIsBoardEvent: false,
     romLoaded: false,
     currentAction: Action.MOVE,
     selectedSpaces: null,
@@ -113,7 +115,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         mainView = <ModelViewer />;
         break;
       case View.EVENTS:
-        mainView = <EventsView />;
+        mainView = <EventsView board={this.state.currentBoard} />;
         break;
       case View.CREATEEVENT:
         mainView = <CreateEventView />;
@@ -131,15 +133,16 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 
     let sidebar;
     switch (this.state.currentView) {
-    case View.EDITOR:
-    case View.DETAILS:
-      sidebar = (
-        <div className="sidebar">
-          <BoardMenu
-            boards={this.state.boards} />
-        </div>
-      );
-      break;
+      case View.EDITOR:
+      case View.DETAILS:
+      case View.EVENTS:
+        sidebar = (
+          <div className="sidebar">
+            <BoardMenu
+              boards={this.state.boards} />
+          </div>
+        );
+        break;
     }
 
     let blocked;

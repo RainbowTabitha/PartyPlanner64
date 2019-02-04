@@ -1,12 +1,15 @@
 import { View } from "./types";
 import * as React from "react";
-import { getCustomEvents, IEvent, removeEvent } from "./events/events";
-import { ICustomEvent } from "./events/customevents";
+import { getCustomEvents, IEvent } from "./events/events";
+import { ICustomEvent, createCustomEvent } from "./events/customevents";
 import { changeCurrentEvent, changeView } from "./appControl";
+import { IBoard, removeEventFromBoard } from "./boards";
+import { removeEventFromLibrary } from "./events/EventLibrary";
 
 let _eventsViewInstance: EventsView | null;
 
 interface IEventsViewProps {
+  board: IBoard;
 }
 
 interface IEventsViewState {
@@ -42,28 +45,36 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
       listing = customEvents.map(customEvent => {
         return (
           <EventRow key={customEvent.id} event={customEvent}
+            onEditEvent={this.onEditEvent}
             onDeleteEvent={this.onDeleteEvent} />
         );
       });
     }
 
+    const board = this.props.board;
+    let boardEvents = [];
+    for (let eventName in board.events) {
+      const customEvent = createCustomEvent(board.events[eventName]);
+      boardEvents.push(
+        <EventRow key={eventName} event={customEvent}
+          onEditEvent={this.onEditBoardEvent}
+          onDeleteEvent={this.onDeleteBoardEvent} />
+      );
+    }
+
     return (
       <div className="eventsViewContainer">
-        <h3>Events</h3>
-        <table className="eventsViewTable">
-          {Array.isArray(listing) ? (
-            <thead>
-              <tr>
-                <th className="eventsViewTableIconColumn"></th>
-                <th className="eventsViewTableIconColumn"></th>
-                <th></th>
-              </tr>
-            </thead>
-          ) : null }
-          <tbody>
-            {listing}
-          </tbody>
-        </table>
+        <h3>Events for {this.props.board.name}</h3>
+          {boardEvents.length ?
+            <EventEntryTable listing={boardEvents} /> :
+            <p>No events are associated with this board.</p>
+          }
+        <h3>
+          <img src="img/events/library.png" className="eventsViewHeaderIcon"></img>
+          {" "}
+          Event Library
+        </h3>
+        <EventEntryTable listing={listing} />
       </div>
     );
   }
@@ -81,17 +92,54 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
     console.error(error);
   }
 
+  onEditEvent = (event: IEvent) => {
+    changeCurrentEvent(event);
+    changeView(View.CREATEEVENT);
+  }
+
+  onEditBoardEvent = (event: IEvent) => {
+    changeCurrentEvent(event, this.props.board);
+    changeView(View.CREATEEVENT);
+  }
+
   onDeleteEvent = (event: IEvent) => {
     if (window.confirm(`Are you sure you want to delete ${event.name}?`)) {
-      removeEvent(event.id);
+      removeEventFromLibrary(event.id);
+      this.forceUpdate();
+    }
+  }
+
+  onDeleteBoardEvent = (event: IEvent) => {
+    if (window.confirm(`Are you sure you want to delete ${event.name}?`)) {
+      removeEventFromBoard(this.props.board, event.id);
       this.forceUpdate();
     }
   }
 }
 
+function EventEntryTable(props: { listing: any }) {
+  return (
+    <table className="eventsViewTable">
+      {Array.isArray(props.listing) ? (
+        <thead>
+          <tr>
+            <th className="eventsViewTableIconColumn"></th>
+            <th className="eventsViewTableIconColumn"></th>
+            <th></th>
+          </tr>
+        </thead>
+      ) : null }
+      <tbody>
+        {props.listing}
+      </tbody>
+    </table>
+  )
+}
+
 interface IEventRowProps {
   event: ICustomEvent;
   onDeleteEvent(event: ICustomEvent): any;
+  onEditEvent(event: ICustomEvent): any;
 }
 
 class EventRow extends React.Component<IEventRowProps> {
@@ -108,7 +156,8 @@ class EventRow extends React.Component<IEventRowProps> {
             alt="Download event code" title="Download event code"
             onClick={this.onExportEvent} />
         </td>
-        <td className="eventNameTableCell" onClick={this.onEditEvent}>
+        <td className="eventNameTableCell"
+          onClick={() => this.props.onEditEvent(this.props.event)}>
           <span className="eventNameText">{this.props.event.name}</span>
           <img src="img/events/edit.png" className="eventEditCellIcon"
             alt="Edit event" title="Edit event"/>
@@ -117,15 +166,10 @@ class EventRow extends React.Component<IEventRowProps> {
     );
   }
 
-  onEditEvent = () => {
-    changeCurrentEvent(this.props.event);
-    changeView(View.CREATEEVENT);
-  }
-
   onExportEvent = () => {
     const event = this.props.event;
     let asmBlob = new Blob([event.asm]);
-    saveAs(asmBlob, event.name + ".s");
+    saveAs(asmBlob, event.id + ".s");
   }
 }
 

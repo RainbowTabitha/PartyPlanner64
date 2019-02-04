@@ -1,7 +1,7 @@
 import { AdapterBase } from "./AdapterBase";
 import { ISpace, addEventToSpace, IBoard } from "../boards";
 import { Space, SpaceSubtype } from "../types";
-import { create as createEvent } from "../events/events";
+import { createSpaceEvent } from "../events/events";
 import { parse as parseInst } from "mips-inst";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL } from "../utils/arrays";
@@ -16,6 +16,8 @@ import { assemble } from "mips-assembler";
 import { scenes } from "../fs/scenes";
 import { createBoardOverlay } from "./MP1.U.boardoverlay";
 import { IBoardInfo } from "./boardinfobase";
+import { ChanceTime } from "../events/builtin/MP1/U/ChanceTimeEvent1";
+import { StarChanceEvent } from "../events/builtin/MP1/U/StarChanceEvent1";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -37,12 +39,12 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   // Gives a new space the default things it would need.
-  hydrateSpace(space: ISpace) {
+  hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.STAR) {
       space.star = true;
     }
     else if (space.type === Space.CHANCE) {
-      addEventToSpace(space, createEvent("CHANCETIME"));
+      addEventToSpace(board, space, createSpaceEvent(ChanceTime));
     }
   }
 
@@ -193,7 +195,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       let events = space.events || [];
       let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
       if (!hasStarChance)
-        addEventToSpace(space, createEvent("STARCHANCE"));
+        addEventToSpace(board, space, createSpaceEvent(StarChanceEvent));
     }
   }
 

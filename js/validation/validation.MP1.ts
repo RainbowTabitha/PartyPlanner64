@@ -1,12 +1,11 @@
 import { getRule } from "./validationrules";
-import { Game } from "../types";
 import "./validation.common";
 
 const commonRules = [
   getRule("TOOMANYGATES", { limit: 0 }),
 ];
 
-export function getValidationRulesForBoard(gameID: Game, boardIndex: number) {
+export function getValidationRulesForBoard() {
   let rules = commonRules.slice(0);
   rules.push(getRule("TOOMANYBOOS", { limit: 2 }));
   rules.push(getRule("TOOMANYBOWSERS", { limit: 1 }));

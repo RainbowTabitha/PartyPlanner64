@@ -2,7 +2,7 @@ import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace, getConnections, addEventByIndex } from "../boards";
 import { Space, BoardType, SpaceSubtype, EventActivationType } from "../types";
 import { $$log } from "../utils/debug";
-import { create as createEvent } from "../events/events";
+import { createSpaceEvent } from "../events/events";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer } from "../utils/arrays";
 import { strings3 } from "../fs/strings3";
@@ -14,6 +14,12 @@ import { BMPfromRGBA } from "../utils/img/BMP";
 import { FORM } from "../models/FORM";
 import { scenes } from "../fs/scenes";
 import { IBoardInfo } from "./boardinfobase";
+import { ChainSplit3 } from "../events/builtin/MP3/U/ChainSplit3";
+import { ChainMerge3 } from "../events/builtin/MP3/U/ChainMergeEvent3";
+import { GateChainSplit } from "../events/builtin/MP3/U/GateChainSplit3";
+import { ReverseChainSplit } from "../events/builtin/MP3/U/ReverseChainSplit3";
+import { ChainMerge } from "../events/builtin/ChainMergeEvent";
+import { BankEvent } from "../events/builtin/events.common";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -120,9 +126,9 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   onWriteEvents(board: IBoard) {
   }
 
-  hydrateSpace(space: ISpace) {
+  hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.BANK) {
-      addEventToSpace(space, createEvent("BANK"));
+      addEventToSpace(board, space, createSpaceEvent(BankEvent));
     }
   }
 
@@ -271,29 +277,32 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         inlineArgs.push(0x0000);
         inlineArgs.push(0x0000);
 
-        let args: any = {
-          inlineArgs,
-          chains: chainIndices,
-        }
         let chainWithGate = _needsGateChainSplit(chainIndices);
         if (chainWithGate != null) {
-          args.prevSpace = chains[chainWithGate][0];
-          args.altChain = [
-            chainIndices.find(i => i !== chainWithGate), // Chain index
-            0, // Index in chain
-          ];
-          $$log("GATECHAINSPLIT args ", args);
-          event = createEvent("GATECHAINSPLIT", args);
+          event = createSpaceEvent(GateChainSplit, {
+            inlineArgs,
+            parameterValues: {
+              prevSpace: chains[chainWithGate][0],
+              altChain: [
+                chainIndices.find(i => i !== chainWithGate)!, // Chain index
+                0, // Index in chain
+              ],
+            },
+          });
         }
         else {
-          event = createEvent("CHAINSPLIT", args);
+          event = createSpaceEvent(ChainSplit3, {
+            inlineArgs
+          });
         }
         addEventByIndex(board, lastSpace, event, true);
       }
       else {
-        event = createEvent("CHAINMERGE3", {
-          chain: _getChainWithSpace(endLinks[0]),
-          prevSpace, // For MP3
+        event = createSpaceEvent(ChainMerge3, {
+          parameterValues: {
+            chain: _getChainWithSpace(endLinks[0])!,
+            prevSpace, // For MP3
+          },
         });
         addEventByIndex(board, lastSpace, event, true);
       }
@@ -352,17 +361,18 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
           inlineArgs.push(0x0001); // Second space index
           inlineArgs.push(0x0000);
 
-          event = createEvent("REVERSECHAINSPLIT", {
+          event = createSpaceEvent(ReverseChainSplit, {
             inlineArgs,
-            chains: chainIndices,
           });
           addEventByIndex(board, firstSpace, event, true);
         }
         else if (pointingSpaces.length === 1) { // Build a reverse merge
-          event = createEvent("CHAINMERGE3", {
-            chain: chainIndices[0], // Go to pointing chain
-            spaceIndex: pointingChains[0].length - 1, // Go to last space of pointing chain
-            prevSpace: secondSpace, // The 2nd space of this chain, which would have been previous when going reverse.
+          event = createSpaceEvent(ChainMerge3, {
+            parameterValues: {
+              chain: chainIndices[0], // Go to pointing chain
+              spaceIndex: pointingChains[0].length - 1, // Go to last space of pointing chain
+              prevSpace: secondSpace, // The 2nd space of this chain, which would have been previous when going reverse.
+            },
           });
           addEventByIndex(board, firstSpace, event, true);
         }
@@ -379,9 +389,11 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         else {
           // This doesn't crash, but it creates a back forth loop at a dead end.
           // This probably will yield issues if the loop is over invisible spaces.
-          event = createEvent("CHAINMERGE", { // Not CHAINMERGE3
-            chain: i,
-            spaceIndex: 1, // Because of chain padding, this should be safe
+          event = createSpaceEvent(ChainMerge, { // Not CHAINMERGE3
+            parameterValues: {
+              chain: i,
+              spaceIndex: 1, // Because of chain padding, this should be safe
+            },
           });
           event.activationType = EventActivationType.BEGINORWALKOVER;
           addEventByIndex(board, firstSpace, event, true);

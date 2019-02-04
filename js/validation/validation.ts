@@ -43,7 +43,7 @@ function _getRulesForBoard(gameID: Game, boardIndex: number): IValidationRule[] 
   switch(gameID) {
     case Game.MP1_USA:
     case Game.MP1_JPN:
-      rules = rules.concat(getValidationRulesForMP1(gameID, boardIndex));
+      rules = rules.concat(getValidationRulesForMP1());
       break;
     case Game.MP2_USA:
     case Game.MP2_JPN:

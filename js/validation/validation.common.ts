@@ -1,7 +1,7 @@
-import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds } from "../boards";
+import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEventAsm } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space } from "../types";
 import { romhandler } from "../romhandler";
-import { CustomAsmHelper } from "../events/customevents";
+import { CustomAsmHelper, ICustomEvent, createCustomEvent } from "../events/customevents";
 import { getEvent, isUnsupported, IEventParameter } from "../events/events";
 import { createRule } from "./validationrules";
 
@@ -136,9 +136,9 @@ UnrecognizedEvents.fails = function(board: IBoard, args: any) {
   board.spaces.forEach(space => {
     if (!space || !space.events)
       return;
-    space.events.forEach(event => {
-      if (!getEvent(event.id) && !unrecognizedEvents[event.id])
-        unrecognizedEvents[event.id] = true;
+    space.events.forEach(spaceEvent => {
+      if (!getEvent(spaceEvent.id, board))
+        unrecognizedEvents[spaceEvent.id] = true;
     });
   });
 
@@ -164,12 +164,13 @@ UnsupportedEvents.fails = function(board: IBoard, args: any) {
   board.spaces.forEach(space => {
     if (!space || !space.events)
       return;
-    space.events.forEach(event => {
-      if (!getEvent(event.id)) {
+    space.events.forEach(spaceEvent => {
+      const event = getEvent(spaceEvent.id, board);
+      if (!event) {
         return; // Let the other rule handle this.
       }
-      if (isUnsupported(event.id, gameID) && !unsupportedEvents[event.id])
-        unsupportedEvents[event.id] = true;
+      if (isUnsupported(event, gameID))
+        unsupportedEvents[spaceEvent.id] = true;
     });
   });
 
@@ -202,7 +203,9 @@ FailingCustomEvents.fails = function(board: IBoard, args: any) {
         return;
 
       try {
-        CustomAsmHelper.testAssemble(event.asm, event.parameters, {
+        const customEvent = getEvent(event.id, board);
+        const asm = getBoardEventAsm(board, event.id)!;
+        CustomAsmHelper.testAssemble(asm, customEvent.parameters, {
           game: gameID,
         });
       }
@@ -241,7 +244,8 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
       if (!event.custom)
         return;
 
-      const parameters = event.parameters;
+      const customEvent = getEvent(event.id, board);
+      const parameters = customEvent.parameters;
       if (parameters && parameters.length) {
         parameters.forEach((parameter: IEventParameter) => {
           if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {

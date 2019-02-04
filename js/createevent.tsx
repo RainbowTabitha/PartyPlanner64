@@ -1,10 +1,12 @@
 import * as React from "react";
-import { Game, EventExecutionType, getExecutionTypeName, getGameName } from "./types";
+import { Game, EventExecutionType, getExecutionTypeName, getGameName, EventParameterType } from "./types";
 import { ICustomEvent, CustomAsmHelper, createCustomEvent } from "./events/customevents";
 import { CodeMirrorWrapper } from "./components/codemirrorwrapper";
-import { getEvent, IEventParameter, EventParameterType } from "./events/events";
+import { IEventParameter } from "./events/events";
 import { ToggleGroup, Button } from "./controls";
-import { getCurrentEvent, showMessage } from "./appControl";
+import { getCurrentEvent, showMessage, getCurrentEventIsBoardEvent } from "./appControl";
+import { getCurrentBoard, addEventToBoard } from "./boards";
+import { getEventFromLibrary, addEventToLibrary } from "./events/EventLibrary";
 
 let _createEventViewInstance: CreateEventView | null = null;
 
@@ -28,6 +30,7 @@ interface ICreateEventViewState {
   asm: string,
   parameters: IEventParameter[];
   hasError?: boolean;
+  originalAsm?: string;
 }
 
 export class CreateEventView extends React.Component<{}, ICreateEventViewState> {
@@ -44,6 +47,7 @@ export class CreateEventView extends React.Component<{}, ICreateEventViewState> 
         executionType: currentEvent.executionType,
         asm: currentEvent.asm,
         parameters: currentEvent.parameters!,
+        originalAsm: currentEvent.asm,
       };
     }
     else {
@@ -233,8 +237,8 @@ export class CreateEventView extends React.Component<{}, ICreateEventViewState> 
 
   promptExit = () => {
     const asm = this.state.asm;
-    const oldEvent = getEvent(this.state.eventName.toUpperCase()) as ICustomEvent;
-    if (!oldEvent || (oldEvent.asm && oldEvent.asm !== asm)) {
+    const oldAsm = this.state.originalAsm;
+    if (!oldAsm || oldAsm !== asm) {
       return !!window.confirm("Are you sure you want to exit without saving the event?");
     }
     return true;
@@ -431,7 +435,7 @@ export function saveEvent() {
     return;
   }
 
-  const existingEvent = getEvent(eventName);
+  const existingEvent = getEventFromLibrary(eventName);
   if (existingEvent && !existingEvent.custom) {
     showMessage("The event name collides with a reserved event name from the original boards.");
     return;
@@ -447,10 +451,22 @@ export function saveEvent() {
   }
 
   try {
-    createCustomEvent(asm);
+    if (getCurrentEventIsBoardEvent()) {
+      // A little sketch, but we can assume current board is target.
+      addEventToBoard(getCurrentBoard(), eventName, asm);
+    }
+    else {
+      const event = createCustomEvent(asm, true);
+      addEventToLibrary(event); // Add globally.
+    }
   }
   catch (e) {
     showMessage(e.toString());
+  }
+
+  if (_createEventViewInstance) {
+    // Ensure we don't prompt for unsaved changes.
+    _createEventViewInstance.setState({ originalAsm: asm });
   }
 }
 

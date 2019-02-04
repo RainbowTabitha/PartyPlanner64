@@ -19,6 +19,7 @@ import { refreshEventsView } from "./eventsview";
 import { saveEvent, createEventPromptExit } from "./createevent";
 import { changeView, blockUI, boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
+import { addEventToLibrary } from "./events/EventLibrary";
 
 interface IHeaderActionItem {
   name: string;
@@ -231,11 +232,11 @@ function boardSelected(event: any) {
   if (!file)
     return;
 
-  let reader = new FileReader();
-  reader.onload = (e: any) => {
+  const reader = new FileReader();
+  reader.onload = () => {
     let board;
     try {
-      board = JSON.parse(e.target.result);
+      board = JSON.parse(reader.result as string);
     } catch (e) {
       alert("Board could not be parsed.");
       return;
@@ -252,7 +253,7 @@ function bgSelected(event: any) {
     return;
 
   let reader = new FileReader();
-  reader.onload = error => {
+  reader.onload = () => {
     setBG(reader.result);
     render();
   };
@@ -266,10 +267,11 @@ function eventFileSelected(event: any) {
 
   for (let i = 0; i < files.length; i++) {
     let reader = new FileReader();
-    reader.onload = (e: any) => {
+    reader.onload = () => {
       try {
-        let asm = e.target.result;
-        createCustomEvent(asm);
+        const asm = reader.result as string;
+        createCustomEvent(asm, true);
+        addEventToLibrary(event);
         refreshEventsView();
       } catch (e) {
         showMessage("Event file load failed. " + e.toString());

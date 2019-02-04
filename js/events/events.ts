@@ -1,48 +1,22 @@
-import { EventActivationType, Game, EventExecutionType } from "../types";
+import { EventActivationType, Game, EventExecutionType, EventParameterType } from "../types";
 import { makeDivisibleBy } from "../utils/number";
 import { copyObject } from "../utils/obj";
-import { IBoard, getCurrentBoard, ISpace } from "../boards";
+import { IBoard, getCurrentBoard, ISpace, ISpaceEvent, getBoardEventAsm } from "../boards";
 import { romhandler } from "../romhandler";
-
-/**
- * Stores junk that the events want to keep around.
- * In particular, cached data from parsing the original game events.
- */
-const _cache = Object.create(null);
-
-export const EventCache = {
-  get: function(key: string) {
-    return _cache[key];
-  },
-  set: function(key: string, value: any) {
-    _cache[key] = value;
-  }
-};
-
-const _events: { [id: string]: IEvent } = Object.create(null);
+import { ICustomEvent, writeCustomEvent, createCustomEvent } from "./customevents";
+import { getEventFromLibrary, getEventsInLibrary } from "./EventLibrary";
 
 export interface IEvent {
-  id: string;
-  name: string;
-  parse: (dataView: DataView, info: IEventParseInfo) => boolean;
-  write: (dataView: DataView, event: any, info: IEventWriteInfo, temp: any) => number[] | string | false;
-  activationType: EventActivationType;
-  executionType: EventExecutionType;
-  fakeEvent: boolean;
-  supportedGames: Game[];
-  sharedAsm: boolean;
-  parameters?: IEventParameter[];
-  parameterValues?: { [name: string]: number };
-  inlineArgs?: number[];
-  custom?: boolean;
-}
-
-/** Types of event parameters allowed. */
-export enum EventParameterType {
-  Boolean = "Boolean",
-  Space = "Space",
-  Number = "Number",
-  PositiveNumber = "+Number",
+  readonly id: string;
+  readonly name: string;
+  readonly parse?: (dataView: DataView, info: IEventParseInfo) => boolean;
+  readonly write?: (dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) => number[] | string | false;
+  readonly activationType: EventActivationType;
+  readonly executionType: EventExecutionType;
+  readonly fakeEvent?: boolean;
+  readonly supportedGames: Game[];
+  readonly parameters?: IEventParameter[];
+  readonly custom?: boolean;
 }
 
 /** Parameter provided to an event. */
@@ -51,50 +25,7 @@ export interface IEventParameter {
   type: EventParameterType;
 }
 
-const EventBase: IEvent = {
-  id: "",
-  name: "",
-
-  // Given the ROM and some state info, determines
-  // if the event is represented by said function.
-  parse: function(dataView, info) { throw "parse not implemented"; },
-
-  // Given the ROM and various offsets, writes the event to the ROM.
-  // Return the next free offset for a subsequent event to write to.
-  write: function(dataView, event: IEvent, info, temp) {
-    throw `${event.id || "event"}.write not implemented`;
-  },
-
-  // Default activation type for the event.
-  activationType: EventActivationType.WALKOVER,
-
-  // Default execution type for the event function.
-  executionType: EventExecutionType.DIRECT,
-
-  // Returns true if event is not represented as a real event in the UI,
-  // meaning it won't return a normal event object (chain merge, star, etc.)
-  fakeEvent: false,
-
-  // Which specific game versions (MP1_USA, etc.) are supported for write to ROM
-  supportedGames: [],
-
-  // True if multiple spaces would share the same ASM function (only need
-  // to write once and point to it later)
-  sharedAsm: false,
-};
-
-export function createEvent(id: string, name: string): IEvent {
-  let event = Object.create(EventBase);
-  event.id = id;
-  event.name = name;
-  _events[id] = event;
-  return event;
-}
-
-function _getArgsSize(count: number) {
-  // return (count * 2) + (4 - ((count * 2) % 4));
-  return makeDivisibleBy(count * 2, 4);
-}
+export type EventParameterValues = { [name: string]: number | number[] };
 
 function _supportedGamesMatch(supportedGames: Game[], gameVersion: number) {
   for (let i = 0; i < supportedGames.length; i++) {
@@ -122,15 +53,25 @@ function _supportedGamesMatch(supportedGames: Game[], gameVersion: number) {
   return false;
 }
 
-export function create(id: string, args?: any) {
-  let e = _events[id];
-  if (!e)
-    throw `Requesting to create invalid event ${id}.`;
-  let event = args ? copyObject(args) : {};
-  event.id = id;
-  event.activationType = e.activationType;
-  event.executionType = e.executionType;
-  return event;
+/** Gets an event, either from the board's set or the global library. */
+export function getEvent(eventId: string, board: IBoard): IEvent {
+  if (board && board.events && board.events[eventId]) {
+    return createCustomEvent(board.events[eventId]);
+  }
+  return getEventFromLibrary(eventId);
+}
+
+/** Creates a space event (the object stored in the board json for a given event) */
+export function createSpaceEvent(event: IEvent, args?: Partial<ISpaceEvent>): ISpaceEvent {
+  const spaceEvent = Object.assign({
+    id: event.id,
+    activationType: event.activationType,
+    executionType: event.executionType,
+  }, args);
+  if (event.custom)
+    spaceEvent.custom = true;
+
+  return spaceEvent;
 }
 
 export interface IEventParseInfo {
@@ -142,20 +83,24 @@ export interface IEventParseInfo {
   curSpaceIndex: number;
   chains: number[][];
   game: Game;
-  gameVersion: number;
+  gameVersion: 1 | 2 | 3;
 }
 
 export function parse(romView: DataView, info: IEventParseInfo) {
   let currentGame = romhandler.getROMGame()!;
-  for (let event in _events) {
-    if (_events[event].supportedGames.indexOf(currentGame) === -1)
+  const _events = getEventsInLibrary();
+  for (let eventId in _events) {
+    const event = _events[eventId];
+    if (!event.parse)
       continue;
-    let args = _events[event].parse(romView, info);
+    if (event.supportedGames.indexOf(currentGame) === -1)
+      continue;
+    let args = event.parse(romView, info);
     if (args) {
-      if (_events[event].fakeEvent)
+      if (event.fakeEvent)
         return true;
       let result: any = {
-        id: event,
+        id: eventId,
       };
       if (args !== true)
         result.args = args;
@@ -165,21 +110,21 @@ export function parse(romView: DataView, info: IEventParseInfo) {
   return false;
 }
 
-export function getAvailableEvents() {
+export function getAvailableEvents(): IEvent[] {
   let events = [];
-  let _events = getEvents();
+  const _events = getEventsInLibrary();
   let curGameVersion = getCurrentBoard().game || 1;
   for (let id in _events) {
     let event = _events[id];
     if (_supportedGamesMatch(event.supportedGames, curGameVersion) && !event.fakeEvent)
-      events.push(copyObject(event));
+      events.push(event);
   }
   return events;
 }
 
-export function getCustomEvents() {
+export function getCustomEvents(): ICustomEvent[] {
   let events = [];
-  let _events = getEvents();
+  const _events = getEventsInLibrary();
   for (let id in _events) {
     let event = _events[id];
     if (event.custom)
@@ -201,7 +146,12 @@ export interface IEventWriteInfo {
   argsAddr?: number;
 }
 
-export function write(buffer: ArrayBuffer, event: IEvent, info: IEventWriteInfo, temp: any) {
+function _getArgsSize(count: number) {
+  // return (count * 2) + (4 - ((count * 2) % 4));
+  return makeDivisibleBy(count * 2, 4);
+}
+
+export function write(buffer: ArrayBuffer, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
   // Write any inline arguments.
   // Normally, these are right by the event list, but it makes more sense
   // to write them mixed in right beside the ASM that actually uses them...
@@ -225,7 +175,18 @@ export function write(buffer: ArrayBuffer, event: IEvent, info: IEventWriteInfo,
   }
 
   let asmView = new DataView(buffer, info.offset);
-  let result = _events[event.id].write(asmView, event, info, temp);
+
+  let result;
+  if (event.custom) {
+    const asm = getBoardEventAsm(info.board, event.id)!;
+    if (!asm)
+      throw new Error(`A space had the ${event.id} custom event, but its code wasn't in the board file`);
+    result = writeCustomEvent(asmView, event, info, asm, temp);
+  }
+  else {
+    result = getEventFromLibrary(event.id).write!(asmView, event, info, temp);
+  }
+
   if (result === false)
     throw "Could not write ${event.id} for game ${info.gameVersion}";
 
@@ -236,26 +197,6 @@ export function write(buffer: ArrayBuffer, event: IEvent, info: IEventWriteInfo,
   return result;
 }
 
-export function removeEvent(id: string) {
-  delete _events[id];
-}
-
-export function isUnsupported(id: string, gameId: Game) {
-  return _events[id].supportedGames.indexOf(gameId) === -1;
-}
-
-export function sharesAsm(id: string) {
-  return _events[id].sharedAsm;
-}
-
-export function getName(id: string) {
-  return (_events[id] && _events[id].name) || "";
-}
-
-export function getEvent(id: string) {
-  return _events[id];
-}
-
-export function getEvents() {
-  return _events;
+export function isUnsupported(event: IEvent, gameId: Game) {
+  return event.supportedGames.indexOf(gameId) === -1;
 }

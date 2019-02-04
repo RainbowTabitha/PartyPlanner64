@@ -1,8 +1,8 @@
 import { getRule } from "./validationrules";
 import { getBoardInfoByIndex, getArrowRotationLimit } from "../adapter/boardinfo";
-import { getEvent } from "../events/events";
 import { Game } from "../types";
 import "./validation.common";
+import { BankEvent, ItemShopEvent, BooEvent } from "../events/builtin/events.common";
 
 const commonRules = [
   getRule("TOOMANYBOWSERS", { limit: 0 }),
@@ -19,11 +19,11 @@ export function getValidationRulesForBoard(gameID: Game, boardIndex: number) {
   rules.push(getRule("TOOMANYARROWROTATIONS", { limit: totalArrowsToWrite }));
 
   if (boardIndex === 0) {
-    rules.push(getRule("TOOMANYOFEVENT", { event: getEvent("BANK"), high: 2 }));
+    rules.push(getRule("TOOMANYOFEVENT", { event: BankEvent, high: 2 }));
     rules.push(getRule("TOOMANYBANKS", { limit: 2 }));
-    rules.push(getRule("TOOMANYOFEVENT", { event: getEvent("ITEMSHOP"), high: 2 }));
+    rules.push(getRule("TOOMANYOFEVENT", { event: ItemShopEvent, high: 2 }));
     rules.push(getRule("TOOMANYITEMSHOPS", { limit: 2 }));
-    rules.push(getRule("TOOMANYOFEVENT", { event: getEvent("BOO"), high: 1 }));
+    rules.push(getRule("TOOMANYOFEVENT", { event: BooEvent, high: 1 }));
 
     // TODO: gamemasterplc: @PartyPlanner64 replace 0x323AAC in ROM with a NOP if you want more boos
     rules.push(getRule("TOOMANYBOOS", { limit: 1 }));
