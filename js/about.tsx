@@ -71,6 +71,15 @@ export const About = class About extends React.Component {
         </div>
         <br />
         <br />
+        <div className="aboutBtcBanner" title="Donate via Bitcoin">
+          <a href="bitcoin:1N6xiKibCqoRAWmrYt3DZ7u8KLTPXxAA4E" target="_blank">
+            <img className="aboutBtcImg" src="img/about/btc.png" height="32" width="32"></img>
+          </a>
+          <br />
+          <span className="aboutBtcText selectable">1N6xiKibCqoRAWmrYt3DZ7u8KLTPXxAA4E</span>
+        </div>
+        <br />
+        <br />
         <span className="aboutDisclaimer">PartyPlanner64 is not affiliated with Nintendo or Hudson.</span>
         <br />
         <span className="aboutDisclaimer">Mario Party is a registered trademark of Nintendo.</span>

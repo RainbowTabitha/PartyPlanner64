@@ -31,6 +31,30 @@
   margin: 0.3em 0;
 }
 
+.aboutBtcBanner {
+  text-align: center;
+}
+
+.aboutBtcImg {
+  opacity: 0.7;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.aboutBtcText {
+  font-size: small;
+  cursor: text;
+  opacity: 0.7;
+  font-family: "Courier New", Courier, monospace;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 .aboutDisclaimer {
   font-size: 9pt;
   opacity: 0.4;
