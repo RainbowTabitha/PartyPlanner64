@@ -193,15 +193,6 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
     case Action.ADD_BANK:
     case Action.ADD_GAMEGUY:
     case Action.ADD_ARROW:
-    case Action.MARK_STAR:
-    case Action.MARK_GATE:
-    case Action.ADD_TOAD_CHARACTER:
-    case Action.ADD_BOWSER_CHARACTER:
-    case Action.ADD_KOOPA_CHARACTER:
-    case Action.ADD_BOO_CHARACTER:
-    case Action.ADD_BANK_SUBTYPE:
-    case Action.ADD_BANKCOIN_SUBTYPE:
-    case Action.ADD_ITEMSHOP_SUBTYPE:
     case Action.ADD_DUEL_BASIC:
     case Action.ADD_DUEL_REVERSE:
     case Action.ADD_DUEL_POWERUP:
@@ -212,15 +203,34 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
       }
       break;
 
+    case Action.MARK_STAR:
+    case Action.MARK_GATE:
+    case Action.ADD_TOAD_CHARACTER:
+    case Action.ADD_BOWSER_CHARACTER:
+    case Action.ADD_KOOPA_CHARACTER:
+    case Action.ADD_BOO_CHARACTER:
+    case Action.ADD_BANK_SUBTYPE:
+    case Action.ADD_BANKCOIN_SUBTYPE:
+    case Action.ADD_ITEMSHOP_SUBTYPE:
+      if (clickedSpaceIndex === -1) {
+        if (_addSpace(curAction, clickX, clickY, clickedSpace, false, ctrlKey)) {
+          _addSelectedSpace(curBoard.spaces.length - 1);
+          if (curAction === Action.MARK_STAR) {
+            _toggleHostsStar(selectedSpaces);
+          }
+        }
+      }
+      break;
+
     case Action.MOVE:
     default:
-      spaceWasMouseDownedOn = spaceWasClicked;
-
       if (rightClickOpen()) {
         updateRightClickMenu(selectedSpaces[0]);
       }
       break;
   }
+
+  spaceWasMouseDownedOn = spaceWasClicked;
 }
 
 function onEditorTouchMove(event: TouchEvent) {
@@ -415,8 +425,6 @@ function _onEditorUp() {
     renderSpaces();
   }
 
-  spaceWasMouseDownedOn = false;
-
   if (!_hasAnySelectedSpace())
     return;
 
@@ -477,6 +485,21 @@ function onEditorClick(event: MouseEvent) {
     case Action.ADD_BANK:
     case Action.ADD_GAMEGUY:
     case Action.ADD_ARROW:
+    case Action.ADD_DUEL_BASIC:
+    case Action.ADD_DUEL_REVERSE:
+    case Action.ADD_DUEL_POWERUP:
+    case Action.ADD_DUEL_START_BLUE:
+    case Action.ADD_DUEL_START_RED:
+      if (!movedAtAll && !ctrlKey) {
+        if (!clickedSpace) {
+          _clearSelectedSpaces();
+        }
+        else {
+          _setSelectedSpace(clickedSpaceIdx);
+        }
+      }
+      break;
+
     case Action.MARK_GATE:
     case Action.ADD_TOAD_CHARACTER:
     case Action.ADD_BOWSER_CHARACTER:
@@ -485,11 +508,12 @@ function onEditorClick(event: MouseEvent) {
     case Action.ADD_BANK_SUBTYPE:
     case Action.ADD_BANKCOIN_SUBTYPE:
     case Action.ADD_ITEMSHOP_SUBTYPE:
-    case Action.ADD_DUEL_BASIC:
-    case Action.ADD_DUEL_REVERSE:
-    case Action.ADD_DUEL_POWERUP:
-    case Action.ADD_DUEL_START_BLUE:
-    case Action.ADD_DUEL_START_RED:
+      // Toggle the subtype only at the moment of mouse up, if we didn't move.
+      if (spaceWasMouseDownedOn) {
+        if (_addSpace(curAction, clickX, clickY, clickedSpace, moved, ctrlKey)) {
+          _addSelectedSpace(clickedSpaceIdx !== -1 ? clickedSpaceIdx : curBoard.spaces.length - 1);
+        }
+      }
       if (!movedAtAll && !ctrlKey) {
         if (!clickedSpace) {
           _clearSelectedSpaces();
@@ -515,6 +539,8 @@ function onEditorClick(event: MouseEvent) {
     case Action.ROTATE:
       break;
   }
+
+  spaceWasMouseDownedOn = false;
 }
 
 function onEditorRightClick(event: MouseEvent) {
@@ -638,8 +664,6 @@ function onEditorKeyDown(event: KeyboardEvent) {
 }
 
 function onEditorMouseOut(event: MouseEvent) {
-  spaceWasMouseDownedOn = false;
-
   if (event.button !== 0)
     return;
   if (currentBoardIsROM())
