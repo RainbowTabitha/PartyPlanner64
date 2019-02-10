@@ -1028,9 +1028,9 @@ draw_toads_inner:
   addu  S0, A0, R0
   sll   A0, A0, 0x10
   sra   A0, A0, 0xe
-  lui   V0, hi(bss_toad_2)
+  lui   V0, hi(bss_toad_instances)
   addu  V0, V0, A0
-  lw    V0, lo(bss_toad_2)(V0)
+  lw    V0, lo(bss_toad_instances)(V0)
   bne  V0, R0, L800F7474
    NOP
   lui   V0, hi(bss_toad_model)
@@ -1056,9 +1056,9 @@ L800F73F4:
 L800F7408:
   sra   S0, S0, 0x10
   sll   S1, S0, 2
-  lui   AT, hi(bss_toad_2)
+  lui   AT, hi(bss_toad_instances)
   addu  AT, AT, S1
-  sw    S2, lo(bss_toad_2)(AT)
+  sw    S2, lo(bss_toad_instances)(AT)
   lhu   V0, 0xa(S2)
   ori   V0, V0, 2
   sh    V0, 0xa(S2)
@@ -1098,8 +1098,8 @@ draw_toads_outer:
   lui   AT, hi(bss_toad_model)
   sw    R0, lo(bss_toad_model)(AT)
   addu  S0, R0, R0
-  lui   S2, hi(bss_toad_2)
-  addiu S2, S2, lo(bss_toad_2)
+  lui   S2, hi(bss_toad_instances)
+  addiu S2, S2, lo(bss_toad_instances)
   lui   S1, hi(data_mystery_40s_list_2)
   addiu S1, S1, lo(data_mystery_40s_list_2)
   sll   V0, S0, 2
@@ -1129,20 +1129,25 @@ L800F74F0:
 
 .if BOO_COUNT
 boo_draw_inner:
+  ; A0 = index of boo to draw
   addiu SP, SP, -0x20
   sw    RA, 0x18(SP)
   sw    S1, 0x14(SP)
   sw    S0, 0x10(SP)
   addu  S0, A0, R0
+  ; V0 = bss_boo_instances[A0]
   sll   A0, A0, 0x10
   sra   A0, A0, 0xe
-  lui   V0, hi(bss_boo_2)
+  lui   V0, hi(bss_boo_instances)
   addu  V0, V0, A0
-  lw    V0, lo(bss_boo_2)(V0)
-  bne  V0, R0, L800F77A4
+  lw    V0, lo(bss_boo_instances)(V0)
+  ; If we have a non-zero in bss_boo_instances[A0], exit.
+  bne  V0, R0, boo_draw_inner_exit
    NOP
-  lui   V0, hi(bss_boo)
-  lw    V0, lo(bss_boo)(V0)
+  ; V0 = bss_boo_model
+  lui   V0, hi(bss_boo_model)
+  lw    V0, lo(bss_boo_model)(V0)
+  ; If we have already loaded the boo model, jump ahead
   bne  V0, R0, L800F7714
    addiu    A0, R0, 106 ; Boo model_info index
   jal   0x8003DBE0
@@ -1150,35 +1155,38 @@ boo_draw_inner:
   addu  S1, V0, R0
   jal   0x8003E174
    addu  A0, S1, R0
-  lui   AT, hi(bss_boo)
-  sw    S1, lo(bss_boo)(AT)
+  lui   AT, hi(bss_boo_model)
+  sw    S1, lo(bss_boo_model)(AT)
   j     L800F7728
    sll   S0, S0, 0x10
 L800F7714:
-  lui   A0, hi(bss_boo)
-  lw    A0, lo(bss_boo)(A0)
+  ; A0 = bss_boo_model
+  lui   A0, hi(bss_boo_model)
+  lw    A0, lo(bss_boo_model)(A0)
   jal   0x8003E320
    sll   S0, S0, 0x10
   addu  S1, V0, R0
 L800F7728:
   sra   S0, S0, 0x10
   sll   V0, S0, 2
-  lui   AT, hi(bss_boo_2)
+  ; bss_boo_instances[original index] = S1
+  lui   AT, hi(bss_boo_instances)
   addu  AT, AT, V0
-  sw    S1, lo(bss_boo_2)(AT)
+  sw    S1, lo(bss_boo_instances)(AT)
   lhu   V0, 0xa(S1)
   ori   V0, V0, 2
   sh    V0, 0xa(S1)
   addiu A0, S1, 0x24
   lui A1, 0x3f19
-  ori A1, A1, 0x999a
-  addu  A2, A1, R0
+  ori A1, A1, 0x999a ; 0.6
+  addu  A2, A1, R0 ; 0.6
   jal   0x800A0D00
-   addu  A3, A1, R0
+   addu  A3, A1, R0 ; 0.6
   lui   AT, 0x42C8 ; 100.000000
   mtc1  AT, F0
   NOP
   swc1  F0, 0x30(S1)
+  ; Get the space data for boo_space_indices[original index]
   sll   S0, S0, 1
   lui   A0, hi(boo_space_indices)
   addu  A0, A0, S0
@@ -1192,7 +1200,7 @@ L800F7728:
   addu  A2, R0, R0
   jal   0x8003C314
    addu  A3, R0, R0
-L800F77A4:
+boo_draw_inner_exit:
   lw    RA, 0x18(SP)
   lw    S1, 0x14(SP)
   lw    S0, 0x10(SP)
@@ -1203,8 +1211,9 @@ boo_draw_outer:
   addiu SP, SP, -0x18
   sw    RA, 0x14(SP)
   sw    S0, 0x10(SP)
-  lui   AT, hi(bss_boo)
-  sw    R0, lo(bss_boo)(AT)
+  ; bss_boo_model = 0
+  lui   AT, hi(bss_boo_model)
+  sw    R0, lo(bss_boo_model)(AT)
   addu  S0, R0, R0
   sll   A0, S0, 0x10
 boo_draw_outer_loop:
@@ -1350,13 +1359,15 @@ boo_space_indices:
 
 bss:
 bss_bowser_model: .word 0
+
 bss_koopa_model: .word 0
-bss_toad_model: .word 0, 0
-bss_toad_2: .word 0, 0
+
+bss_toad_model: .word 0
+bss_toad_instances: .word ${toadIndices.map(() => 0).join(",")}
 
 .if BOO_COUNT
-bss_boo: .word 0
-bss_boo_2: .word 0, 0
+bss_boo_model: .word 0
+bss_boo_instances: .word ${booIndices.map(() => 0).join(",")}
 .endif
 
 .align 16
