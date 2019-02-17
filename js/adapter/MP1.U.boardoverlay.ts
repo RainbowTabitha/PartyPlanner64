@@ -716,7 +716,7 @@ overlaycall1:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
   addiu    A0, R0, 10
-  jal   0x8005CF30
+  jal   InitObjectSystem
    addu  A1, R0, R0
 ; Set players at starting chain
   addu  A0, R0, R0
@@ -783,7 +783,7 @@ setup_routine:
   sw    S1, 0x14(SP)
   sw    S0, 0x10(SP)
   addiu    A0, R0, 80
-  jal   0x8005CF30
+  jal   InitObjectSystem
    addiu    A1, R0, 40
   jal   0x80060088
    addu  S1, R0, R0
