@@ -65,7 +65,7 @@ export const About = class About extends React.Component {
         </div>
         <div className="aboutText">
           <ul>
-            <li>Check out discussion in the <a href="http://www.mariopartylegacy.com/forum/index.php?topic=15883.0" target="_blank">forum thread</a>.</li>
+            <li>Check out discussion in the <a href="https://discord.gg/BQMuUpM" target="_blank">discord chat</a>.</li>
             <li>Post your creations to the <a href="http://www.mariopartylegacy.com/forum/index.php?action=downloads" target="_blank">downloads page</a>.</li>
           </ul>
         </div>
