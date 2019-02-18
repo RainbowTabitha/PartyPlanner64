@@ -86,6 +86,7 @@ export abstract class AdapterBase {
           "type": boardInfo.type || BoardType.NORMAL,
           "bg": background,
           "otherbg": {},
+          events: {},
         };
         let boardBuffer = mainfs.get(this.boardDefDirectory, boardInfo.boardDefFile);
         newBoard = parseBoardDef(boardBuffer, partialBoard);
