@@ -9,10 +9,14 @@ import {
   formImages,
   printSceneTable,
   printSceneN64Split,
-  printSceneAsm
+  printSceneAsm,
+  findStrings,
+  findStrings3
 } from "./utils/dump";
 import { scenes, ISceneInfo } from "./fs/scenes";
 import { $$hex } from "./utils/debug";
+import { strings3 } from "./fs/strings3";
+import { strings } from "./fs/strings";
 
 interface IDebugViewState {
   sceneIndex: string;
@@ -26,6 +30,10 @@ interface IDebugViewState {
 
   romToRamNumber: string;
   romToRamResult: string;
+
+  printStringDir: string;
+  printStringIndex: string;
+  findStringValue: string;
 }
 
 export const DebugView = class DebugView extends React.Component<{}, IDebugViewState> {
@@ -41,6 +49,10 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
 
     romToRamNumber: "",
     romToRamResult: "",
+
+    printStringDir: "",
+    printStringIndex: "",
+    findStringValue: "",
   }
 
   render() {
@@ -60,6 +72,23 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
 
           <Button onClick={printSceneTable}>Print scene table (console)</Button>
           <Button onClick={printSceneN64Split}>Print scene table n64split (console)</Button>
+          <br /><br />
+
+          <input type="text" placeholder="Directory" className="dbInputShort"
+            value={this.state.printStringDir}
+            onChange={e => this.setState({ printStringDir: e.target.value })}
+          />
+          <input type="text" placeholder="Index" className="dbInputShort"
+            value={this.state.printStringIndex}
+            onChange={e => this.setState({ printStringIndex: e.target.value })}
+          />
+          <Button onClick={this.onPrintStringClick}>Print string (console)</Button>
+          <br />
+          <input type="text" placeholder="Search string" className="dbInputShort"
+            value={this.state.findStringValue}
+            onChange={e => this.setState({ findStringValue: e.target.value })}
+          />
+          <Button onClick={this.onFindStringClick}>Find string (console)</Button>
           <br /><br />
 
           <input type="text" placeholder="ROM Offset" className="dbInputShort"
@@ -116,6 +145,36 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
     const num = parseInt(this.state.sceneIndex);
     if (!isNaN(num)) {
       printSceneAsm(num);
+    }
+  }
+
+  onPrintStringClick = () => {
+    const strIndex = parseInt(this.state.printStringIndex, 16);
+    if (isNaN(strIndex)) {
+      return;
+    }
+
+    const isMP3 = romhandler.getGameVersion() === 3;
+    let dirIndex: number;
+    if (isMP3) {
+      dirIndex = parseInt(this.state.printStringDir, 16);
+      if (isNaN(dirIndex)) {
+        return;
+      }
+
+      console.log(strings3.read("en", dirIndex, strIndex));
+      return;
+    }
+
+    console.log(strings.read(strIndex));
+  }
+
+  onFindStringClick = () => {
+    if (romhandler.getGameVersion() === 3) {
+      findStrings3(this.state.findStringValue);
+    }
+    else {
+      findStrings(this.state.findStringValue)
     }
   }
 

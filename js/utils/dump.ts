@@ -164,7 +164,7 @@ export function findStrings3(searchStr = "", raw = false) {
       let str = strings3.read("en", d, s);
       if (str.indexOf(searchStr) < 0)
         continue;
-      let log = `${d}/${s}:\n` + str;
+      let log = `${d}/${s} (${$$hex(d)}/${$$hex(s)}):\n` + str;
       if (raw)
         log += "\n" + toHexString(strings3.read("en", d, s, true));
       console.log(log);
@@ -178,7 +178,7 @@ export function findStrings(searchStr: string = "", raw: boolean = false) {
     let str = strings.read(s);
     if (str.indexOf(searchStr) < 0)
       continue;
-    let log = `${s}:\n` + str;
+    let log = `${s} (${$$hex(s)}):\n` + str;
     if (raw)
       log += "\n" + toHexString(strings.read(s, true));
     console.log(log);
