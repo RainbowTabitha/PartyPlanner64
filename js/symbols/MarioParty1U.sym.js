@@ -226,8 +226,8 @@ exports["default"] = [
 {
       addr: 2147799048, // 0x8004D008
       type: "code",
-      name: "GetTurnsElapsed",
-      desc: "Subtracts remaining turns from total turns" },
+      name: "GetTurnsRemaining",
+      desc: "Subtracts elapsed turns from total turns" },
 {
       addr: 2147801048, // 0x8004D7D8
       type: "code",
@@ -1940,6 +1940,11 @@ exports["default"] = [
       type: "u16",
       name: "enabled_feature_flags" },
 {
+      addr: 2148455760, // 0x800ED550
+      type: "u16",
+      name: "max_objects",
+      desc: "set from InitObjectSystem" },
+{
       addr: 2148455878, // 0x800ED5C6
       type: "u16",
       name: "total_turns",
@@ -1947,8 +1952,8 @@ exports["default"] = [
 {
       addr: 2148455880, // 0x800ED5C8
       type: "u16",
-      name: "remaining_turns",
-      desc: "Remaining turns" },
+      name: "elapsed_turns",
+      desc: "Elapsed turns" },
 {
       addr: 2148455900, // 0x800ED5DC
       type: "u16",

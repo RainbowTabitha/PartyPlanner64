@@ -1574,6 +1574,11 @@ exports["default"] = [
       name: "current_player_index",
       desc: "Player who's turn is active" },
 {
+      addr: 2148323508, // 0x800CD0B4
+      type: "u16",
+      name: "bank_coin_total",
+      desc: "Number of coins in bank" },
+{
       addr: 2148327938, // 0x800CE202
       type: "u16",
       name: "current_scene" },
