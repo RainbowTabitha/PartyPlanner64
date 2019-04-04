@@ -1,4 +1,4 @@
-export class ALKey {
+export class ALKeyMap {
   private __type: string = "ALKey";
 
   public velocityMin!: number;
@@ -18,6 +18,6 @@ export class ALKey {
     this.keyMin = B1view.getUint8(keymapOffset + 2);
     this.keyMax = B1view.getUint8(keymapOffset + 3);
     this.keyBase = B1view.getUint8(keymapOffset + 4);
-    this.detune = B1view.getUint8(keymapOffset + 5);
+    this.detune = B1view.getInt8(keymapOffset + 5);
   }
 }

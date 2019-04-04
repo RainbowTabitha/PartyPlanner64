@@ -13,9 +13,9 @@ export class ALBank {
   }
 
   _extract(B1view: DataView, bankOffset: number) {
-    this.flags = B1view.getUint16(bankOffset + 2);
-    this.pad = B1view.getUint16(bankOffset + 4);
-    this.sampleRate = B1view.getUint16(bankOffset + 6);
+    this.flags = B1view.getUint8(bankOffset + 2);
+    this.pad = B1view.getUint8(bankOffset + 3);
+    this.sampleRate = B1view.getInt32(bankOffset + 4);
 
     let percussionOffset = B1view.getUint32(bankOffset + 8);
     if (percussionOffset)

@@ -1,4 +1,4 @@
-export class ALEnv {
+export class ALEnvelope {
   private __type: string = "ALEnv";
 
   public attackTime!: number;
@@ -13,11 +13,10 @@ export class ALEnv {
   }
 
   _extract(B1view: DataView, envOffset: number) {
-    this.attackTime = B1view.getUint32(envOffset);
-    this.decayTime = B1view.getUint32(envOffset + 4);
-    this.releaseTime = B1view.getUint32(envOffset + 8);
-    this.attackVolume = B1view.getUint8(envOffset + 12);
-    this.decayVolume = B1view.getUint8(envOffset + 13);
-    this.zeroPad = B1view.getUint16(envOffset + 14);
+    this.attackTime = B1view.getInt32(envOffset);
+    this.decayTime = B1view.getInt32(envOffset + 4);
+    this.releaseTime = B1view.getInt32(envOffset + 8);
+    this.attackVolume = B1view.getInt16(envOffset + 12);
+    this.decayVolume = B1view.getInt16(envOffset + 14);
   }
 }

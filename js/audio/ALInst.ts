@@ -35,11 +35,11 @@ export class ALInst {
     this.vibRate = B1view.getUint8(instOffset + 9);
     this.vibDepth = B1view.getUint8(instOffset + 10);
     this.vibDelay = B1view.getUint8(instOffset + 11);
-    this.bendRange = B1view.getUint16(instOffset + 12);
+    this.bendRange = B1view.getInt16(instOffset + 12);
 
-    let soundCount = B1view.getUint16(instOffset + 14);
+    const soundCount = B1view.getInt16(instOffset + 14);
     for (let i = 0; i < soundCount; i++) {
-      let soundOffset = B1view.getUint32(instOffset + 16 + (i * 4));
+      const soundOffset = B1view.getUint32(instOffset + 16 + (i * 4));
       this.sounds.push(new ALSound(B1view, soundOffset));
     }
   }
