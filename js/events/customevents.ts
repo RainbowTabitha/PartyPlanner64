@@ -179,7 +179,9 @@ export function writeCustomEvent(dataView: DataView, spaceEvent: ISpaceEvent, in
   }
 
   const customEvent = createCustomEvent(asm);
-  const bytes = assemble(prepAsm(asm, customEvent, spaceEvent, info)) as ArrayBuffer;
+  const preppedAsm = prepAsm(asm, customEvent, spaceEvent, info);
+  const bytes = assemble(preppedAsm) as ArrayBuffer;
+  $$log(preppedAsm);
   copyRange(dataView, bytes, 0, 0, bytes.byteLength);
   return [info.offset!, bytes.byteLength];
 }
