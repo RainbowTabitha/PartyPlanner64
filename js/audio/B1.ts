@@ -1,5 +1,6 @@
 import { ALBank } from "./ALBank";
 
+/** ALBankFile */
 export class B1 {
   private __type: string = "B1";
 

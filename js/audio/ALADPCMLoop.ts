@@ -14,11 +14,11 @@ export class ALADPCMLoop {
     this.start = B1view.getUint32(loopOffset);
     this.end = B1view.getUint32(loopOffset + 4);
     this.count = B1view.getUint32(loopOffset + 8);
-    this.state = B1view.getUint32(loopOffset + 12);
-    // TODO: How big is state?
+    this.state = [];
+    for (let i = 0; i < 0x10; i++) {
+      this.state[i] = B1view.getUint16(loopOffset + 12 + (i * 2));
+    }
   }
 }
 
-export enum ADPCM_STATE {
-
-}
+type ADPCM_STATE = number[]; // u16[16]

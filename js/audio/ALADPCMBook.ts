@@ -13,6 +13,12 @@ export class ALADPCMBook {
     this.order = B1view.getInt32(offset);
     this.npredictors = B1view.getInt32(offset + 4);
 
-    // TODO: How big is book? npredictors?
+    const predictorCount = this.order * this.npredictors * 8;
+    this.book = new Array(predictorCount);
+    for (let i = 0; i < predictorCount; i++) {
+      this.book[i] = B1view.getInt16(offset + 8 + (i * 2));
+    }
   }
 }
+
+// https://github.com/derselbst/N64SoundTools/blob/master/N64SoundListTool/N64SoundLibrary/N64AIFCAudio.cpp#L20065
