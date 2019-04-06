@@ -27,10 +27,10 @@ export class ALWaveTable {
     this.flags = B1view.getUint8(waveOffset + 9);
 
     if (this.type === ALWaveType.AL_ADPCM_WAVE) {
-      this.adpcmWave = new ALADPCMWaveInfo(B1view, waveOffset + 10)
+      this.adpcmWave = new ALADPCMWaveInfo(B1view, waveOffset + 12); // not 10?
     }
     else if (this.type === ALWaveType.AL_RAW16_WAVE) {
-      this.rawWave = new ALRAWWaveInfo(B1view, waveOffset + 10)
+      this.rawWave = new ALRAWWaveInfo(B1view, waveOffset + 12);
     }
     else {
       throw new Error(`Unrecognized ALWaveTable type ${this.type}`);

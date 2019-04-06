@@ -12,7 +12,7 @@ export class ALRAWWaveInfo {
   _extract(B1view: DataView, offset: number) {
     const loopOffset = B1view.getUint32(offset);
     if (loopOffset !== 0) {
-      this.loop = new ALRawLoop(B1view, loopOffset);
+      this.loop = new ALRawLoop(B1view, offset + loopOffset);
     }
   }
 }

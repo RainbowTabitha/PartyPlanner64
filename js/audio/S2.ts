@@ -77,5 +77,3 @@ export class S2 {
 // SS = Soundbank #
 // OOOOOOOO=Location of Midi (offset from 01881C40)
 // LLLLLLLL=Length of Midi
-
-// https://github.com/derselbst/N64SoundTools/blob/d0fd2d88ccc60956b7cdbaee193c454495f9396a/N64MidiTool/N64MidiLibrary/MidiParse.cpp#L296
