@@ -3,7 +3,7 @@ export class ALADPCMBook {
 
   public order!: number;
   public npredictors!: number;
-  public book!: number[];
+  public predictors!: number[];
 
   constructor(B1view: DataView, offset: number) {
     this._extract(B1view, offset);
@@ -14,9 +14,9 @@ export class ALADPCMBook {
     this.npredictors = B1view.getInt32(offset + 4);
 
     const predictorCount = this.order * this.npredictors * 8;
-    this.book = new Array(predictorCount);
+    this.predictors = new Array(predictorCount);
     for (let i = 0; i < predictorCount; i++) {
-      this.book[i] = B1view.getInt16(offset + 8 + (i * 2));
+      this.predictors[i] = B1view.getInt16(offset + 8 + (i * 2));
     }
   }
 }
