@@ -4,6 +4,8 @@ import { S2 } from "./S2";
 import { parseGameMidi } from "./midi";
 import { extractWavSound } from "./wav";
 import { ALKeyMap } from "./ALKeyMap";
+import { $$log } from "../utils/debug";
+import { romhandler } from "../romhandler";
 
 let _audioContext: AudioContext;
 let _playing: boolean = false;
@@ -16,21 +18,22 @@ export function playMidi(table: number, index: number): AudioPlayerController {
     _audioContext = new AudioContext();
   }
 
-  const s2 = audio.getSequenceTable(table)!;
-  console.log(s2);
-  const gameMidiBuffer = s2.midis[index].buffer;
+  const seqTable = audio.getSequenceTable(table)!;
+  console.log(seqTable);
+  const gameMidiBuffer = seqTable.midis[index].buffer;
   const midi = parseGameMidi(new DataView(gameMidiBuffer), gameMidiBuffer.byteLength);
+  $$log(midi);
 
   const promises = [];
   const midiData: any = [];
-  const soundbankIndex = s2.midis[index].soundbankIndex;
-  const bank = s2.soundbanks.banks[soundbankIndex];
+  const soundbankIndex = seqTable.midis[index].soundbankIndex;
+  const bank = seqTable.soundbanks.banks[soundbankIndex];
   for (let t = 0; t < bank.instruments.length; t++) {
     midiData[t] = [];
     const instrument = bank.instruments[t];
     for (let s = 0; s < instrument.sounds.length; s++) {
       const sound = instrument.sounds[s];
-      const wav = extractWavSound(s2.tbl, bank, t, s);
+      const wav = extractWavSound(seqTable.tbl, bank, t, s);
       const middt = midiData[t];
       middt.push(null);
       const insertIndex = middt.length - 1;
@@ -49,6 +52,11 @@ export function playMidi(table: number, index: number): AudioPlayerController {
 
   const activeSourceNodes: any[] = [];
 
+  const trackInstrumentMap: number[] = [];
+  for (let i = 0; i < bank.instruments.length; i++) {
+    trackInstrumentMap.push(i);
+  }
+
   const player = new MidiPlayer.Player(function(event: any) {
     //console.log(event);
 
@@ -56,10 +64,14 @@ export function playMidi(table: number, index: number): AudioPlayerController {
       console.log(`Saw channel ${event.channel} and track ${event.track}`);
     }
 
-    if (event.name === "Note on") {
-      const track = event.track - 1;
-      if (!midiData[track]) {
-        console.warn(`Track ${track} is unrecongized`);
+    if (event.name === "Program Change") {
+      trackInstrumentMap[event.track] = event.value;
+    }
+    else if (event.name === "Note on") {
+      const track = event.track;
+      const inst = trackInstrumentMap[track];
+      if (!midiData[inst]) {
+        console.warn(`Instrument ${inst} is unrecongized`);
         return;
       }
 
@@ -67,9 +79,9 @@ export function playMidi(table: number, index: number): AudioPlayerController {
         activeSourceNodes[track] = {};
       }
 
-      const sampleInfo = findSampleToPlay(midiData[track], event.noteNumber);
+      const sampleInfo = findSampleToPlay(midiData[inst], event.noteNumber);
       if (!sampleInfo) {
-        console.warn(`No note for track ${track} note number ${event.noteNumber}`);
+        console.warn(`No note for track ${track} instrument ${inst} note number ${event.noteNumber}`);
         return;
       }
 
@@ -94,7 +106,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
       }
     }
     else {
-      console.log(`Ignored event`, event);
+      $$log(`Ignored event`, event);
     }
   });
   player.on("endOfFile", function() {
@@ -103,7 +115,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
   player.loadArrayBuffer(midi);
 
   Promise.all(promises).then(() => {
-    console.log(midiData);
+    $$log(midiData);
     player.play();
   });
 

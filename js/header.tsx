@@ -31,10 +31,6 @@ interface IHeaderActionItem {
   show?: () => boolean;
 }
 
-function _showMP1Only() {
-  return romhandler.getGameVersion() === 1;
-}
-
 const actions_norom: IHeaderActionItem[] = [
   { "name": "Load ROM", "icon": "img/header/romcart.png", "type": Action.ROM_LOAD, "details": "Load a ROM image and read its boards" },
   { "name": "New board", "icon": "img/header/newboard.png",
@@ -71,8 +67,7 @@ const actions_rom_romboard: IHeaderActionItem[] = [
   { "name": "Patches", "icon": "img/header/rompatch.png", "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
   { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
   //{ "name": "Strings", "icon": "img/header/stringseditor.png", "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
-  { "name": "Audio", "icon": "img/header/audio.png", "type": Action.AUDIO, "details": "Game audio options",
-    advanced: true, show: _showMP1Only },
+  { "name": "Audio", "icon": "img/header/audio.png", "type": Action.AUDIO, "details": "Game audio options", advanced: true },
   { "name": "Settings", "icon": "img/header/settings.png", "type": Action.SETTINGS, "details": "Editor settings" },
   { "name": "About", "icon": "img/header/about.png", "type": Action.ABOUT, "details": "About PartyPlanner64" },
 ];
@@ -100,8 +95,7 @@ const actions_rom_normalboard: IHeaderActionItem[] = [
   { "name": "Patches", "icon": "img/header/rompatch.png", "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
   { "name": "Model Viewer", "icon": "img/header/modelviewer.png", "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
   //{ "name": "Strings", "icon": "img/header/stringseditor.png", "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
-  { "name": "Audio", "icon": "img/header/audio.png", "type": Action.AUDIO, "details": "Game audio options",
-    advanced: true, show: _showMP1Only },
+  { "name": "Audio", "icon": "img/header/audio.png", "type": Action.AUDIO, "details": "Game audio options", advanced: true },
   { "name": "Settings", "icon": "img/header/settings.png", "type": Action.SETTINGS, "details": "Editor settings" },
   { "name": "About", "icon": "img/header/about.png", "type": Action.ABOUT, "details": "About PartyPlanner64" },
 ];

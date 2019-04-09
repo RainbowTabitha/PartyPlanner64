@@ -5,6 +5,7 @@ import { romhandler } from "../romhandler";
 import { scenes } from "./scenes";
 import { getRegSetAddress, getRegSetUpperAndLower } from "../utils/MIPS";
 import { S2 } from "../audio/S2";
+import { MBF0 } from "../audio/MBF0";
 
 interface IOffsetInfo {
   upper: number;
@@ -13,7 +14,7 @@ interface IOffsetInfo {
 }
 
 interface IOffsetObj {
-  type?: "S2";
+  type?: "S2" | "MBF0";
   relative: number;
   offsets: IOffsetInfo[];
 }
@@ -89,7 +90,8 @@ _audioOffsets[Game.MP1_JPN] = [ // Length ?
 _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   // 0x1750450
   {
-    relative: 0, // MBF0
+    type: "MBF0",
+    relative: 0,
     offsets: [
       { upper: 0x0001D342, lower: 0x0001D346 },
       { upper: 0x0007A9EE, lower: 0x0007A9F2 },
@@ -122,7 +124,8 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
 _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
   // 0x1881C40
   {
-    relative: 0, // MBF0
+    type: "MBF0",
+    relative: 0,
     offsets: [
       { upper: 0x0000F26A, lower: 0x0000F26E },
       { upper: 0x0004BEF2, lower: 0x0004BEF6 },
@@ -243,7 +246,7 @@ export namespace audio {
     return count;
   }
 
-  export function getSequenceTable(index: number): S2 | null {
+  export function getSequenceTable(index: number): S2 | MBF0 | null {
     if (!_newCache)
       return null;
 
@@ -260,7 +263,7 @@ export namespace audio {
   }
 
   let _audioCache: ArrayBuffer | null;
-  let _newCache: (S2 | null)[] | null;
+  let _newCache: (S2 | MBF0 | null)[] | null;
 
   export function clearCache() {
     _audioCache = null;
@@ -278,12 +281,20 @@ export namespace audio {
     _newCache = [];
     const infos = getPatchInfo();
     for (let i = 0; i < infos.length; i++) {
-      if (infos[i].type === "S2") {
-        const s2Offset = getROMOffset(i)!;
-        _newCache.push(new S2(romhandler.getDataView(s2Offset)));
-      }
-      else {
-        _newCache.push(null);
+      switch (infos[i].type) {
+        case "S2":
+          const s2Offset = getROMOffset(i)!;
+          _newCache.push(new S2(romhandler.getDataView(s2Offset)));
+          break;
+
+        case "MBF0":
+          const mbf0Offset = getROMOffset(i)!;
+          _newCache.push(new MBF0(romhandler.getDataView(mbf0Offset)));
+          break;
+
+        default:
+          _newCache.push(null);
+          break;
       }
     }
 

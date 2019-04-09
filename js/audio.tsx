@@ -27,10 +27,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
       );
     }
 
-    let game = romhandler.getGameVersion();
-    if (game !== 1)
-      return null;
-
+    const game = romhandler.getGameVersion()!;
     const adapter = getAdapter(game)!;
     const names = adapter.getAudioMap();
 
@@ -46,8 +43,8 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
         );
       }
 
-      const s2 = audio.getSequenceTable(t)!;
-      for (let s = 0; s < s2.midis.length; s++) {
+      const table = audio.getSequenceTable(t)!;
+      for (let s = 0; s < table.midis.length; s++) {
         let isPlaying: boolean = false;
         let cannotPlay: boolean = false;
         if (this.state.playing) {
