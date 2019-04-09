@@ -4,6 +4,7 @@ import { Game } from "../types";
 import { romhandler } from "../romhandler";
 import { scenes } from "./scenes";
 import { getRegSetAddress, getRegSetUpperAndLower } from "../utils/MIPS";
+import { S2 } from "../audio/S2";
 
 interface IOffsetInfo {
   upper: number;
@@ -12,6 +13,7 @@ interface IOffsetInfo {
 }
 
 interface IOffsetObj {
+  type?: "S2";
   relative: number;
   offsets: IOffsetInfo[];
 }
@@ -21,6 +23,7 @@ const _audioOffsets: { [game: string]: IOffsetObj[] } = {};
 _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
   // 15396A0
   {
+    type: "S2",
     relative: 0,
     offsets: [
       { upper: 0x00061746, lower: 0x0006174A },
@@ -30,6 +33,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
 
   // 1778BC0
   {
+    type: "S2",
     relative: 0x23F520,
     offsets: [
       { upper: 0x0001AF2A, lower: 0x0001AF2E },
@@ -230,10 +234,37 @@ export namespace audio {
     throw "audio.write not implemented";
   }
 
+  export function getSequenceTableCount(): number {
+    let count = 0;
+    for (let i = 0; i < _newCache!.length; i++) {
+      if (_newCache![i])
+        count++;
+    }
+    return count;
+  }
+
+  export function getSequenceTable(index: number): S2 | null {
+    if (!_newCache)
+      return null;
+
+    let curIndex = -1;
+    for (let i = 0; i < _newCache.length; i++) {
+      if (_newCache[i])
+        curIndex++;
+
+      if (curIndex === index) {
+        return _newCache[index];
+      }
+    }
+    return null;
+  }
+
   let _audioCache: ArrayBuffer | null;
+  let _newCache: (S2 | null)[] | null;
 
   export function clearCache() {
     _audioCache = null;
+    _newCache = null;
   }
 
   export function extract() {
@@ -243,6 +274,18 @@ export namespace audio {
       return;
     let len = getByteLength();
     _audioCache = buffer.slice(offset, offset + len);
+
+    _newCache = [];
+    const infos = getPatchInfo();
+    for (let i = 0; i < infos.length; i++) {
+      if (infos[i].type === "S2") {
+        const s2Offset = getROMOffset(i)!;
+        _newCache.push(new S2(romhandler.getDataView(s2Offset)));
+      }
+      else {
+        _newCache.push(null);
+      }
+    }
 
     // Finds audio offsets relative to overlay binaries
   //   const infos = getPatchInfo();

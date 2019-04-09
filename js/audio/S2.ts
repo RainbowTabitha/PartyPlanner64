@@ -6,7 +6,7 @@ import { B1 } from "./B1";
 export class S2 {
   private __type: string = "S2";
 
-  public midis: any[] = [];
+  public midis: IMidiInfo[] = [];
   public tbl!: ArrayBuffer;
   public soundbanks!: B1;
 
@@ -45,6 +45,11 @@ export class S2 {
     let B1view = new DataView(view.buffer, view.byteOffset + B1offset);
     this.soundbanks = new B1(B1view);
   }
+}
+
+interface IMidiInfo {
+  buffer: ArrayBuffer;
+  soundbankIndex: number;
 }
 
 // Extended table notes

@@ -12,6 +12,7 @@ export enum View {
   EVENTS = 7,
   CREATEEVENT = 8,
   DEBUG = 9,
+  AUDIO = 10,
 }
 
 export enum Space {
@@ -84,6 +85,7 @@ export enum Action {
   ABOUT = 15.2,
   PATCHES = 15.3,
   DEBUG = 15.4,
+  AUDIO = 15.5,
 
   ADD_OTHER = 16,
   ADD_BLUE = 17,

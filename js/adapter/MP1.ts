@@ -523,12 +523,12 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   getAudioMap() {
     return [
       "", // "Two Beeps",
-      "Mario Party Theme",
+      "Mario Party Theme", // "Two Beeps",
       "Peaceful Mushroom Village",
-      "",
-      "",
+      "Traveling the Warp Pipe",
+      "Mushroom Bank",
       "Option House Theme",
-      "Opening", // Mushroom Shop Theme??
+      "Mushroom Shop Theme",
       "Mini-Game House Theme",
       "DK's Jungle Adventure Theme",
       "Peach's Birthday Cake Theme",
@@ -539,7 +539,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       "Magma Mountain Theme",
       "Eternal Star Theme",
       "Outcome of Adventure", // 0x10
-      "Start of Adventure",
+      "Adventure Begins",
       "Bowser Meeting",
       "Last 5 Turns",
       "", // "Two Beeps",
@@ -571,7 +571,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       "", // "Mario Bandstand",
       "The Stolen Star",
       "Bowser's Chance Game", // 0x30
-      "Waterfall?",
+      "", // "Waterfall?",
       "", // "Mini-Game Finished",
       "", // "Mini-Game Finished",
       "", // "Mini-Game Abysmal Finish",

@@ -44,6 +44,7 @@ const CSS = [
   "css/events.css",
   "css/createevent.css",
   "css/strings.css",
+  "css/audio.css",
   "css/patches.css",
   "css/debug.css",
   // css/fonts.css is not included in prod

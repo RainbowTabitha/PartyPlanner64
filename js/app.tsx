@@ -30,6 +30,7 @@ import "./events/builtin/MP3/events.MP3";
 import { showMessage } from "./appControl";
 import "file-saver";
 import { DebugView } from "./debug";
+import { AudioViewer } from "./audio";
 
 interface IPP64AppState {
   currentView: View,
@@ -128,6 +129,9 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         break;
       case View.DEBUG:
         mainView = <DebugView />;
+        break;
+      case View.AUDIO:
+        mainView = <AudioViewer />;
         break;
     }
 
