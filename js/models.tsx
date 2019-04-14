@@ -182,7 +182,7 @@ let renderTimeout: any = null;
 let camera: THREE.PerspectiveCamera | null = null;
 let scene: THREE.Scene | null = null;
 let renderer: THREE.WebGLRenderer | null = null;
-let controls: THREE.OrbitControls | null = null;
+let controls: /*THREE.OrbitControls*/ any | null = null;
 let clock: THREE.Clock | null = null;
 let mixer: THREE.AnimationMixer | null = null;
 
@@ -295,9 +295,9 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     renderer.dispose();
     renderer.forceContextLoss();
 
-    let container = this.__container!;
-    if (renderer.domElement.offsetParent)
-      container.removeChild(renderer.domElement);
+    let container = this.__container;
+    if (container)
+      container.innerHTML = "";
 
     (renderer as any).context = undefined;
     (renderer as any).domElement = undefined;
@@ -319,7 +319,8 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     }
     if (obj.material) {
       let materialArray;
-      if (obj.material instanceof THREE.MeshFaceMaterial || obj.material instanceof THREE.MultiMaterial) {
+      if (/*obj.material instanceof THREE.MeshFaceMaterial || */
+        obj.material instanceof THREE.MultiMaterial) {
         materialArray = obj.material.materials;
       }
       else if (obj.material instanceof Array) {
@@ -408,7 +409,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
 
       camera = converter.createCamera(form, width, height);
 
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls = new (THREE as any).OrbitControls(camera, renderer.domElement);
 
       this.animate();
     });
