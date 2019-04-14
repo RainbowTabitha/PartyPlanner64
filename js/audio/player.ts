@@ -6,6 +6,7 @@ import { extractWavSound } from "./wav";
 import { ALKeyMap } from "./ALKeyMap";
 import { $$log } from "../utils/debug";
 import { romhandler } from "../romhandler";
+import { string } from "prop-types";
 
 let _audioContext: AudioContext;
 let _playing: boolean = false;
@@ -50,63 +51,118 @@ export function playMidi(table: number, index: number): AudioPlayerController {
     }
   }
 
-  const activeSourceNodes: any[] = [];
+  const activeNodes: any[] = [];
 
   const trackInstrumentMap: number[] = [];
   for (let i = 0; i < bank.instruments.length; i++) {
     trackInstrumentMap.push(i);
   }
 
-  const player = new MidiPlayer.Player(function(event: any) {
-    //console.log(event);
+  const trackChannelMap: number[] = [];
 
-    if (event.channel && event.track && event.channel !== event.track) {
-      console.log(`Saw channel ${event.channel} and track ${event.track}`);
+  const CHANNEL_COUNT = 16;
+
+  const channelInstrumentMap: number[] = [];
+  const channelVolumes: number[] = [];
+  for (let i = 0; i <= CHANNEL_COUNT; i++) {
+    channelVolumes.push(127);
+  }
+
+  let runningStatus: string; // Default?
+
+  function _handleEvent(name: string, event: any) {
+    const track = event.track;
+    const channel = event.channel;
+
+    if ("channel" in event && "track" in event) {
+      trackChannelMap[track] = channel;
     }
 
-    if (event.name === "Program Change") {
-      trackInstrumentMap[event.track] = event.value;
+    if (name === "Program Change") {
+      channelInstrumentMap[event.channel] = event.value;
     }
-    else if (event.name === "Note on") {
-      const track = event.track;
-      const inst = trackInstrumentMap[track];
-      if (!midiData[inst]) {
-        console.warn(`Instrument ${inst} is unrecongized`);
-        return;
-      }
+    else if (name === "Controller Change") {
+      switch (event.number) {
+        case 7:
+          if ("value" in event) {
+            channelVolumes[channel] = event.value;
+          }
+          break;
 
-      if (!activeSourceNodes[track]) {
-        activeSourceNodes[track] = {};
+        default:
+          $$log(`Unrecongized controller change event`, event);
+          break;
       }
-
-      const sampleInfo = findSampleToPlay(midiData[inst], event.noteNumber);
-      if (!sampleInfo) {
-        console.warn(`No note for track ${track} instrument ${inst} note number ${event.noteNumber}`);
-        return;
+    }
+    else if (name === "Note on") {
+      _noteOn(event);
+    }
+    else if (event.running) {
+      if ("track" in event && "noteNumber" in event && "velocity" in event) {
+        _noteOn(event);
       }
-
-      const playingNode = activeSourceNodes[track][event.noteNumber];
-      if (!event.velocity) {
-        if (playingNode) {
-          playingNode.stop();
-        }
-        else {
-          console.warn(`There wasn't a node to stop playing for ${track} note number ${event.noteNumber}`);
-        }
-        activeSourceNodes[track][event.noteNumber] = null;
-      }
-      else {
-        if (playingNode) {
-          console.warn(`There was a previous node playing for ${track} note number ${event.noteNumber}`);
-        }
-
-        const newPlayingNode = createAudioNode(sampleInfo, event.noteNumber, event.velocity);
-        newPlayingNode.start(0);
-        activeSourceNodes[track][event.noteNumber] = newPlayingNode;
-      }
+    }
+    else if (name === "End of Track") {
+      // Do nothing
     }
     else {
       $$log(`Ignored event`, event);
+    }
+  }
+
+  function _noteOn(event: any) {
+    const track = event.track;
+    const channel = event.channel || trackChannelMap[track];
+    const inst = channelInstrumentMap[channel];
+    if (!midiData[inst]) {
+      console.warn(`Instrument ${inst} is unrecongized`);
+      return;
+    }
+
+    if (!activeNodes[channel]) {
+      activeNodes[channel] = {};
+    }
+    if (!activeNodes[channel][track]) {
+      activeNodes[channel][track] = {};
+    }
+
+    const sampleInfo = findSampleToPlay(midiData[inst], event.noteNumber);
+    if (!sampleInfo) {
+      console.warn(`No note for channel ${channel} instrument ${inst} note number ${event.noteNumber}`);
+      return;
+    }
+
+    const playingNode = activeNodes[channel][track][event.noteNumber];
+    if (!event.velocity) {
+      if (playingNode) {
+        playingNode.stop();
+      }
+      else {
+        console.warn(`There wasn't a node to stop playing for channel ${channel} track ${track} note number ${event.noteNumber}`);
+      }
+      activeNodes[channel][track][event.noteNumber] = null;
+    }
+    else {
+      if (playingNode) {
+        console.warn(`There was a previous node playing for ${channel} note number ${event.noteNumber}`);
+      }
+
+      const newPlayingNode = createAudioNode(
+        sampleInfo, event.noteNumber, event.velocity, channelVolumes[channel]
+      );
+      newPlayingNode.start(0);
+      activeNodes[channel][track][event.noteNumber] = newPlayingNode;
+    }
+  }
+
+  const player = new MidiPlayer.Player(function(event: any) {
+    $$log(event);
+
+    //const name = event.running ? runningStatus : event.name;
+    _handleEvent(event.name, event);
+
+    if (event.name) {
+      runningStatus = event.name;
     }
   });
   player.on("endOfFile", function() {
@@ -169,7 +225,8 @@ const VELOCITY_MAX = 0x7F;
 function createAudioNode(
   sampleInfo: SampleInfo,
   targetNoteNumber: number,
-  targetVelocity: number
+  targetVelocity: number,
+  channelVelocity: number
 ): AudioBufferSourceNode {
   const node = _audioContext.createBufferSource();
   node.buffer = sampleInfo.audioBuffer;
@@ -194,6 +251,7 @@ function createAudioNode(
   const gainNode = _audioContext.createGain()
   gainNode.gain.value = sampleInfo.instrumentVolume / VELOCITY_MAX;
   gainNode.gain.value *= (sampleInfo.soundVolume / VELOCITY_MAX);
+  gainNode.gain.value *= (channelVelocity / VELOCITY_MAX);
   gainNode.gain.value *= (targetVelocity / VELOCITY_MAX);
 
   gainNode.connect(_audioContext.destination);
