@@ -3,6 +3,8 @@ import { romhandler } from "./romhandler";
 import { audio } from "./fs/audio";
 import { getAdapter } from "./adapter/adapters";
 import { playMidi, AudioPlayerController } from "./audio/player";
+import { Button } from "./controls";
+import { parseGameMidi } from "./audio/midi";
 
 interface IAudioViewerState {
   hasError: boolean;
@@ -158,8 +160,23 @@ class AudioTrackRow extends React.Component<IAudioTrackRowProps> {
     return (
       <tr className="audioTableRow">
         <td>{this.props.trackName}</td>
+        <td>
+          <Button onClick={() => _exportMidi(this.props.table, this.props.index, this.props.trackName)}
+            css="btnAudioExport">
+            <img src="img/audio/export.png" height="16" width="16" />
+            midi
+          </Button>
+        </td>
         {playbackControls}
       </tr>
     );
   }
+}
+
+function _exportMidi(table: number, index: number, name?: string): void {
+  name = name || "music";
+  const seqTable = audio.getSequenceTable(table)!;
+  const gameMidiBuffer = seqTable.midis[index].buffer;
+  const midi = parseGameMidi(new DataView(gameMidiBuffer), gameMidiBuffer.byteLength);
+  saveAs(new Blob([midi]), `${name}.midi`);
 }

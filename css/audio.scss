@@ -50,3 +50,22 @@
 .audioViewTableIconColumn {
   width: 32px;
 }
+
+.btnAudioExport {
+  white-space: nowrap;
+  padding: 0;
+  padding-top: 2px;
+  padding-right: 2px;
+  margin: 1px;
+
+  background-color: rgba(0, 0, 0, 0.2);
+  &:hover {
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+
+  img {
+    vertical-align: middle;
+    margin-right: 0.25em;
+  }
+}
