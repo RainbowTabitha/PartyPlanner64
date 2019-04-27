@@ -1,11 +1,11 @@
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
 import { EventActivationType, EventExecutionType, Game } from "../../../../types";
 import { hashEqual, copyRange } from "../../../../utils/arrays";
-import { getFunctionLength, makeInst } from "../../../../utils/MIPS";
 import { ISpaceEvent } from "../../../../boards";
 import { ChainSplit3 } from "./ChainSplit3";
-import { EventCache } from "../../../EventCache";
 import { addEventToLibrary } from "../../../EventLibrary";
+import { assemble } from "mips-assembler";
+import { prepAsm } from "../../../prepAsm";
 
 // When going in reverse, there can be splits where there otherwise was only
 // chain merges going forward. The game basically wraps a chain split with a
@@ -27,41 +27,41 @@ export const ReverseChainSplit: IEvent = {
     if (!hashEqual([dataView.buffer, info.offset, 0x30], hashes.REVERSE_FILTER))
       return false;
 
-    // Get the JAL to the Chain Split.
-    // let jalChainSplit = dataView.getUint32(info.offset + 0x30);
-
-    // Cache the wrapper function ASM so we can write this event later.
-    let cacheEntry = EventCache.get(ReverseChainSplit.id) || {};
-    if (!cacheEntry[info.game]) {
-      cacheEntry[info.game] = {
-        asm: dataView.buffer.slice(info.offset, info.offset + getFunctionLength(dataView, info.offset)!)
-      };
-      EventCache.set(ReverseChainSplit.id, cacheEntry);
-    }
-
-    // We don't need to do anything aside from caching the helper function.
     return true;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    let cacheEntry = EventCache.get(ReverseChainSplit.id);
-    if (!cacheEntry || !cacheEntry[info.game] || !cacheEntry[info.game].asm)
-      throw `Cannot write ${ReverseChainSplit.id}, missing cache entry values.`;
-
     // Basically, we want to just write a normal ChainSplit, but then write
     // the wrapper and point to that as the actual event.
     temp._reverse = true;
     let [splitOffset, splitLen] = ChainSplit3.write!(dataView, event, info, temp) as number[];
     delete temp._reverse;
 
+    const asm = `
+      addiu SP, SP, -0x18
+      sw    RA, 0x10(SP)
+      jal   GetPlayerStruct
+       li    A0, -1
+      lbu   V0, 0x17(V0)
+      andi  V0, V0, 0x80
+      beq   V0, R0, revSplitExit
+       NOP
+      lui   V0, hi(cur_player_spaces_remaining)
+      lw    V0, lo(cur_player_spaces_remaining)(V0)
+      beq   V0, R0, revSplitExit
+       NOP
+      jal   ${info.addr!} ; JAL to chainSplit3Main
+       NOP
+    revSplitExit:
+      lw    RA, 0x10(SP)
+      jr    RA
+       addiu SP, SP, 0x18
+    `;
+
     // Now write the wrapper.
-    let asm = cacheEntry[info.game].asm;
-    copyRange(dataView, asm, splitLen, 0, asm.byteLength);
+    const bytes = assemble(prepAsm(asm, ReverseChainSplit, event, info)) as ArrayBuffer;
+    copyRange(dataView, bytes, splitLen, 0, bytes.byteLength);
 
-    // Patch wrapper to JAL ChainSplit
-    let jalAddr = info.addr! & 0x7FFFFFFF; // This is still pointing at the ChainSplit
-    dataView.setUint32(splitLen + 0x30, makeInst("JAL", jalAddr));
-
-    return [info.offset! + splitLen, splitLen + asm.byteLength];
+    return [info.offset! + splitLen, splitLen + bytes.byteLength];
   }
 };
 addEventToLibrary(ReverseChainSplit);

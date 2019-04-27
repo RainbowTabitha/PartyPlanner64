@@ -2,9 +2,9 @@ import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
 import { EventActivationType, EventExecutionType, Game } from "../../../../types";
 import { hashEqual, copyRange } from "../../../../utils/arrays";
 import { addConnection, ISpaceEvent } from "../../../../boards";
-import { makeInst, REG, getRegSetUpperAndLower } from "../../../../utils/MIPS";
-import { EventCache } from "../../../EventCache";
 import { addEventToLibrary } from "../../../EventLibrary";
+import { prepAsm } from "../../../prepAsm";
+import { assemble } from "mips-assembler";
 
 // Represents the "event" where the player decides between two paths.
 // This won't be an actual event when exposed to the user.
@@ -42,57 +42,281 @@ export const ChainSplit3: IEvent = {
         destinationSpace = dataView.getUint16(spacesOffset);
       }
 
-      let cacheEntry = EventCache.get(ChainSplit3.id);
-      if (!cacheEntry)
-        cacheEntry = {};
-      if (!cacheEntry[info.game])
-        cacheEntry[info.game] = {};
-      if (!cacheEntry[info.game].asm) {
-        cacheEntry[info.game].asm = dataView.buffer.slice(info.offset, info.offset + 0x38);
-        let cacheView = new DataView(cacheEntry[info.game].asm);
-        cacheView.setUint32(0x08, 0); // Blank the A0 load.
-        cacheView.setUint32(0x0C, 0);
-        cacheView.setUint32(0x10, 0); // Blank the A1 load.
-        cacheView.setUint32(0x14, 0);
-        cacheView.setUint32(0x18, 0); // Blank the A2 load.
-        cacheView.setUint32(0x20, 0);
-      }
-
-      EventCache.set(ChainSplit3.id, cacheEntry);
-
       return true;
     }
 
     return false;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    let cacheEntry = EventCache.get(ChainSplit3.id);
-    if (!cacheEntry || !cacheEntry[info.game] || !cacheEntry[info.game].asm)
-      throw `Cannot write ${ChainSplit3.id}, missing cache entry values.`;
-
-    let asm = cacheEntry[info.game].asm;
-    copyRange(dataView, asm, 0, 0, asm.byteLength);
-
-    let [argsAddrUpper, argsAddrLower] = getRegSetUpperAndLower(info.argsAddr!);
-    dataView.setUint32(0x08, makeInst("LUI", REG.A0, argsAddrUpper));
-    dataView.setUint32(0x0C, makeInst("ADDIU", REG.A0, REG.A0, argsAddrLower));
-
-    [argsAddrUpper, argsAddrLower] = getRegSetUpperAndLower(info.argsAddr! + 0x14);
-    dataView.setUint32(0x10, makeInst("LUI", REG.A1, argsAddrUpper));
-    dataView.setUint32(0x14, makeInst("ADDIU", REG.A1, REG.A1, argsAddrLower));
-
-    // Not sure what A2 is, but it seems to be fine if it is equal to an address containing 0.
-    // Oops, no it wasn't OK? CPUs wouldn't move. So now I just picked a random existing AI addr.
-    // Tried 0x8011D668, maybe causes weird path mess ups going in reverse? Maybe not...
-    dataView.setUint32(0x18, makeInst("LUI", REG.A2, 0x8012));
-    dataView.setUint32(0x20, makeInst("ADDIU", REG.A2, REG.A2, 0xD854));
-
-    if (temp._reverse) { // Blank out the extra JAL we don't do when reversing.
-      dataView.setUint32(0x24, 0);
-      dataView.setUint32(0x28, 0);
+    let endProcessCode = "";
+    if (!temp._reverse) {
+      endProcessCode = `
+        jal   EndProcess
+        move  A0, R0
+      `;
     }
 
-    return [info.offset!, asm.byteLength];
+    const asm = `
+    chainSplit3Main:
+      addiu SP, SP, -0x18
+      sw    RA, 0x10(SP)
+      lui   A0, hi(${info.argsAddr!})
+      addiu A0, A0, lo(${info.argsAddr!})
+      lui   A1, hi(${info.argsAddr! + 0x14})
+      addiu A1, A1, lo(${info.argsAddr! + 0x14})
+      lui   A2, hi(ai_logic)
+      jal   chain_split_helper
+       addiu A2, A2, lo(ai_logic)
+      ${endProcessCode}
+      lw    RA, 0x10(SP)
+      jr    RA
+       addiu SP, SP, 0x18
+
+    chain_split_helper:
+      addiu SP, SP, -0x38
+      sw    RA, 0x30(SP)
+      sw    S5, 0x2c(SP)
+      sw    S4, 0x28(SP)
+      sw    S3, 0x24(SP)
+      sw    S2, 0x20(SP)
+      sw    S1, 0x1c(SP)
+      sw    S0, 0x18(SP)
+      move  S2, A0
+      move  S3, A1
+      move  S5, A2
+      li    A0, -1
+      li    A1, -1
+      jal   0x800F2304
+       li    A2, 2
+      jal   SleepVProcess
+       move  S1, R0
+      jal   setup_arrows
+       NOP
+      lui   A0, hi(current_player_index)
+      jal   GetPlayerStruct
+       lb    A0, lo(current_player_index)(A0)
+      move  S4, V0
+      lbu   A0, 0x15(S4)
+      sll   A0, A0, 0x18
+      sra   A0, A0, 0x18
+      lbu   A1, 0x16(S4)
+      sll   A1, A1, 0x18
+      sra   A1, A1, 0x18
+      andi  A0, A0, 0xffff
+      jal   GetAbsSpaceIndexFromChainSpaceIndex
+       andi  A1, A1, 0xffff
+      sll   V0, V0, 0x10
+      sra   A1, V0, 0x10
+      li    A2, 2
+      move  V1, R0
+    L80116514:
+      sll   V0, S1, 1
+      addu  V0, V0, S1
+      sll   V0, V0, 1
+      addu  A0, V0, S2
+      sll   V0, V1, 1
+    L80116528:
+      addu  V0, V0, A0
+      lh    V0, 0(V0)
+      beq   V0, A1, L80116548
+       NOP
+      addiu V1, V1, 1
+      slti  V0, V1, 2
+      bnez  V0, L80116528
+       sll   V0, V1, 1
+    L80116548:
+      beq   V1, A2, L80116564
+       sll   V0, S1, 1
+      addiu S1, S1, 1
+      slti  V0, S1, 3
+      bnez  V0, L80116514
+       move  V1, R0
+      sll   V0, S1, 1
+    L80116564:
+      addu  V0, V0, S1
+      sll   A1, V0, 1
+      sll   V0, V0, 2
+      addu  S3, S3, V0
+      lui   S0, hi(current_player_index)
+      addiu S0, S0, lo(current_player_index)
+      lb    A0, 0(S0)
+      jal   0x800D76A0
+       addu  A1, S2, A1
+      move  S2, V0
+      move  A0, S2
+      lb    A1, 0(S0)
+      jal   0x800D742C
+       move  A2, R0
+      jal   PlayerIsCPU
+       li    A0, -1
+      beq  V0, R0, L801165EC
+       sll   V0, S1, 2
+      addu  V0, V0, S5
+      lw    A0, 0(V0)
+      jal   0x800DA190
+        move  S0, R0
+      sll   V0, V0, 0x10
+      sra   S1, V0, 0x10
+      blez  S1, L801165E4
+       move  A0, S2
+    L801165CC:
+      jal   0x800D7250
+       li    A1, -2
+      addiu S0, S0, 1
+      slt   V0, S0, S1
+      bnez  V0, L801165CC
+        move  A0, S2
+    L801165E4:
+      jal   0x800D7250
+        li    A1, -4
+    L801165EC:
+      jal   0x800D7518
+       move  A0, S2
+      move  S0, V0
+      jal   0x800D6CA0
+       move  A0, S2
+      jal   hide_arrows
+       NOP
+      bnezl S0, L80116610
+       addiu S3, S3, 6
+    L80116610:
+      lh    A1, 0(S3)
+      lh    A2, 2(S3)
+      jal   SetNextChainAndSpace
+       li    A0, -1
+      lh    A1, 4(S3)
+      beq  A1, R0, L80116640
+       NOP
+      li    V0, 1
+      beq   A1, V0, L8011664C
+       NOP
+      j     L80116658
+       NOP
+    L80116640:
+      lbu   V0, 0x17(S4)
+      j     L80116654
+       andi  V0, V0, 0xfe
+    L8011664C:
+      lbu   V0, 0x17(S4)
+      ori   V0, V0, 1
+    L80116654:
+      sb    V0, 0x17(S4)
+    L80116658:
+      lw    RA, 0x30(SP)
+      lw    S5, 0x2c(SP)
+      lw    S4, 0x28(SP)
+      lw    S3, 0x24(SP)
+      lw    S2, 0x20(SP)
+      lw    S1, 0x1c(SP)
+      lw    S0, 0x18(SP)
+      jr    RA
+       addiu SP, SP, 0x38
+
+    .definelabel CORE_800CDD58,0x800CDD58
+    .definelabel CORE_800D51F8,0x800D51F8
+
+    setup_arrows:
+      addiu SP, SP, -0x18
+      sw    RA, 0x10(SP)
+    L8010704C:
+      jal   0x800E9AE0
+       NOP
+      beq  V0, R0, L8010706C
+       NOP
+      jal   SleepVProcess
+       NOP
+      j     L8010704C
+       NOP
+    L8010706C:
+      jal   SleepVProcess
+       NOP
+      move  A0, R0
+      li    A1, 146
+      jal   0x800E210C
+       li    A2, 1
+      lui   AT, hi(memval1)
+      sw    V0, lo(memval1)(AT)
+      li    A0, 1
+      li    A1, 160
+      jal   0x800E210C
+       li    A2, 1
+      lui   AT, hi(memval2)
+      sw    V0, lo(memval2)(AT)
+      li    A0, 13
+      li    A1, 174
+      jal   0x800E210C
+       li    A2, 1
+      lui   AT, hi(memval3)
+      sw    V0, lo(memval3)(AT)
+      li    A0, 3
+      li    A1, 188
+      jal   0x800E210C
+       li    A2, 1
+      lui   AT, hi(memval4)
+      sw    V0, lo(memval4)(AT)
+      li    A0, 11
+      li    A1, 202
+      jal   0x800E210C
+       li    A2, 1
+      lui   AT, hi(memval5)
+      sw    V0, lo(memval5)(AT)
+      jal   SleepProcess
+       li    A0, 3
+      li    V0, 1
+      lui   AT, hi(CORE_800CDD58)
+      sh    V0, lo(CORE_800CDD58)(AT)
+      lui   AT, hi(CORE_800D51F8)
+      sh    V0, lo(CORE_800D51F8)(AT)
+      lw    RA, 0x10(SP)
+      jr    RA
+       addiu SP, SP, 0x18
+
+    hide_arrows:
+      addiu SP, SP, -0x18
+      sw    RA, 0x10(SP)
+      lui   AT, hi(CORE_800CDD58)
+      sh    R0, lo(CORE_800CDD58)(AT)
+      lui   AT, hi(CORE_800D51F8)
+      sh    R0, lo(CORE_800D51F8)(AT)
+      lui   A0, hi(memval1)
+      jal   0x800E21F4
+       lw    A0, lo(memval1)(A0)
+      lui   A0, hi(memval2)
+      jal   0x800E21F4
+       lw    A0, lo(memval2)(A0)
+      lui   A0, hi(memval3)
+      jal   0x800E21F4
+       lw    A0, lo(memval3)(A0)
+      lui   A0, hi(memval4)
+      jal   0x800E21F4
+       lw    A0, lo(memval4)(A0)
+      lui   A0, hi(memval5)
+      jal   0x800E21F4
+       lw    A0, lo(memval5)(A0)
+      lw    RA, 0x10(SP)
+      jr    RA
+       addiu SP, SP, 0x18
+
+      .align 4
+      memval1:
+        .word 0
+      memval2:
+        .word 0
+      memval3:
+        .word 0
+      memval4:
+        .word 0
+      memval5:
+        .word 0
+
+      ; Choose randomly
+      ai_logic:
+        .word 0x00000000, 0x00000000, 0x064C9932
+    `;
+
+    const bytes = assemble(prepAsm(asm, ChainSplit3, event, info)) as ArrayBuffer;
+    copyRange(dataView, bytes, 0, 0, bytes.byteLength);
+    return [info.offset!, bytes.byteLength];
   }
 }
 addEventToLibrary(ChainSplit3);
