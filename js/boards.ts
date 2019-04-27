@@ -300,7 +300,7 @@ function _removeConnections(spaceIdx: number, board: IBoard) {
 }
 
 function _removeAssociations(spaceIdx: number, board: IBoard) {
-  _forEachEventParameter(board, (parameter: IEventParameter, event: ISpaceEvent) => {
+  forEachEventParameter(board, (parameter: IEventParameter, event: ISpaceEvent) => {
     if (parameter.type === "Space") {
       if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
         if (event.parameterValues[parameter.name] === spaceIdx) {
@@ -327,7 +327,7 @@ function _forEachEvent(board: IBoard, fn: (event: ISpaceEvent, space: ISpace) =>
   }
 }
 
-function _forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: ISpaceEvent, space: ISpace) => void) {
+export function forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: ISpaceEvent, space: ISpace) => void) {
   _forEachEvent(board, (spaceEvent: ISpaceEvent, space: ISpace) => {
     const event = getEvent(spaceEvent.id, board);
     if (event.parameters) {
@@ -757,7 +757,7 @@ export function removeSpace(index: number, board: IBoard = getCurrentBoard()) {
   }
 
   // Update space event parameter indices
-  _forEachEventParameter(board, (parameter: IEventParameter, event: ISpaceEvent) => {
+  forEachEventParameter(board, (parameter: IEventParameter, event: ISpaceEvent) => {
     if (parameter.type === "Space") {
       if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
         event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);

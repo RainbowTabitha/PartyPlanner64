@@ -1,5 +1,5 @@
 import * as ReactDOM from "react-dom";
-import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard } from "./boards";
+import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter } from "./boards";
 import { BoardType, Space, SpaceSubtype } from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
@@ -44,35 +44,33 @@ function _renderConnections(lineCanvas: Canvas, lineCtx: CanvasContext, board: I
       _drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
     }
   }
+}
+
+function _renderAssociations(
+  canvas: Canvas, context: CanvasContext,
+  board: IBoard, selectedSpaces?: ISpace[] | null
+) {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!selectedSpaces || selectedSpaces.length !== 1)
+    return;
 
   // Draw associated spaces in event params.
-  const spaces = board.spaces;
-  if (spaces && spaces.length) {
-    for (let i = 0; i < spaces.length; i++) {
-      const space = spaces[i];
-      if (space.events && space.events.length) {
-        for (let e = 0; e < space.events.length; e++) {
-          const spaceEvent = space.events[e];
-          const event = getEvent(spaceEvent.id, board);
-          if (event && event.parameters && event.parameters.length) {
-            for (let p = 0; p < event.parameters.length; p++) {
-              const parameter = event.parameters[p];
-              if (parameter.type === "Space") {
-                const associatedSpaceIndex =
-                  spaceEvent.parameterValues && spaceEvent.parameterValues[parameter.name];
-                if (typeof associatedSpaceIndex === "number") {
-                  const associatedSpace = spaces[associatedSpaceIndex];
-                  if (!associatedSpace)
-                    continue; // I guess maybe this could happen?
-                  drawAssociation(lineCtx, space.x, space.y, associatedSpace.x, associatedSpace.y);
-                }
-              }
-            }
-          }
-        }
+  forEachEventParameter(board, (parameter, event, space) => {
+    if (parameter.type === "Space") {
+      if (selectedSpaces[0] !== space)
+        return; // Only draw associations for the selected space.
+
+      const associatedSpaceIndex =
+        event.parameterValues && event.parameterValues[parameter.name];
+      if (typeof associatedSpaceIndex === "number") {
+        const associatedSpace = board.spaces[associatedSpaceIndex];
+        if (!associatedSpace)
+          return; // I guess maybe this could happen?
+        drawAssociation(context, space.x, space.y, associatedSpace.x, associatedSpace.y);
       }
     }
-  }
+  });
 }
 
 function _isConnectedTo(links: any, start: number, end: any) {
@@ -611,6 +609,50 @@ class BoardLines extends React.Component<BoardLinesProps> {
   }
 };
 
+let _boardAssociations: BoardLines | null;
+
+interface BoardAssociationsProps {
+  board: IBoard;
+  selectedSpaces?: ISpace[] | null;
+}
+
+class BoardAssociations extends React.Component<BoardAssociationsProps> {
+  state = {}
+
+  componentDidMount() {
+    this.renderContent();
+    _boardAssociations = this;
+  }
+
+  componentWillUnmount() {
+    _boardAssociations = null;
+  }
+
+  componentDidUpdate() {
+    this.renderContent();
+  }
+
+  renderContent() {
+    // Update space parameter association lines
+    let assocCanvas = ReactDOM.findDOMNode(this) as Canvas;
+    let editor = assocCanvas.parentElement!;
+    let board = this.props.board;
+    let transformStyle = getEditorContentTransform(board, editor);
+    assocCanvas.style.transform = transformStyle;
+    if (assocCanvas.width !== board.bg.width || assocCanvas.height !== board.bg.height) {
+      assocCanvas.width = board.bg.width;
+      assocCanvas.height = board.bg.height;
+    }
+    _renderAssociations(assocCanvas, assocCanvas.getContext("2d")!, board, this.props.selectedSpaces);
+  }
+
+  render() {
+    return (
+      <canvas className="editor_association_canvas"></canvas>
+    );
+  }
+};
+
 let _boardSelectedSpaces: BoardSelectedSpaces | null;
 
 interface BoardSelectedSpacesProps {
@@ -802,6 +844,8 @@ export const Editor = class Editor extends React.Component<IEditorProps> {
       <div className="editor">
         <BoardBG board={this.props.board} />
         <BoardLines board={this.props.board} />
+        <BoardAssociations board={this.props.board}
+          selectedSpaces={this.props.selectedSpaces} />
         <BoardSelectedSpaces board={this.props.board}
           selectedSpaces={this.props.selectedSpaces} />
         <BoardSpaces board={this.props.board} />
@@ -816,6 +860,8 @@ export function render() {
     _boardBG.renderContent();
   if (_boardLines)
     _boardLines.renderContent();
+  if (_boardAssociations)
+    _boardAssociations.renderContent();
   if (_boardSelectedSpaces)
     _boardSelectedSpaces.renderContent();
   if (_boardSpaces)
@@ -828,6 +874,8 @@ export function renderBG() {
 export function renderConnections() {
   if (_boardLines)
     _boardLines.renderContent();
+  if (_boardAssociations)
+    _boardAssociations.renderContent();
 }
 export function renderSelectedSpaces() {
   if (_boardSelectedSpaces)
