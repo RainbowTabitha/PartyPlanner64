@@ -805,7 +805,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       "Waluigi",
       "Good Luck!",
       "The Winner is... Me!",
-      "Swingsy laid back", // 0x20
+      "A Winner is ME!", // 0x20
       "Foolish Bowser",
       "", // Two Beeps
       "", // Two Beeps
@@ -836,9 +836,9 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       "Genie's Theme",
       "Jeanie's Theme",
       "Start Battle",
-      "", //"Short trumpet/drums fanfare",
-      "", //"Short trumpet/drums fanfare 2", // 0x40
-      "Electronic upbeat",
+      "Bang Out a Drum Intro",
+      "Bang Out a Drum Fill", // 0x40
+      "Stardust Battle",
       "Chance Time",
       "Game Guy Mini-Game",
       "Item Mini-Game",
@@ -846,13 +846,13 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       "Game Guy Winner!",
       "Game Guy Loser!",
       "Game Guy Dance",
-      "Drumroll",
-      "Inside the Castle",
+      "Drum Roll",
+      "Sound Config",
       "", // Two Beeps
-      "Battle Theme",
-      "Electronic beat",
-      "Ocean + Birds",
-      "", //"Rapidly increase boopbop",
+      "Battle Room",
+      "Gamble Room",
+      "Murmur",
+      "Tension Drums",
       "", // Two Beeps // 0x50
       "", // "Chilly Waters splashscreen fanfare" // 0x6E
       "", // "Quick fanfare" // 0x70
