@@ -1534,7 +1534,7 @@ export abstract class AdapterBase {
       return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    const index = board.audioIndex;
+    const index = board.audioIndex || 0;
     sceneView.setUint16(boardInfo.audioIndexOffset, index);
   }
 

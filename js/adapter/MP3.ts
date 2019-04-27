@@ -811,10 +811,10 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       "", // Two Beeps
       "Bowser Event",
       "", // Two Beeps
-      "Victory!",
+      "Bring it On!",
       "", // Two Beeps
-      "Bowser Song",
-      "Intense fight song",
+      "Waluigi Appears!",
+      "VS Millennium Star!",
       "Peaceful song, bells",
       "", // Two Beeps
       "Defeat...",

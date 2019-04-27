@@ -672,10 +672,10 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       "", // 0x30 Two Beeps
       "", //"Plays in 'facing' direction mini-game",
       "Mini-Game Land",
-      "", //"Dripping Lazy beat",
-      "", //"Do da do dee doot played at times",
+      "Woody",
+      "Mini-Game Park",
       "Battle Start",
-      "", //"Energetic battle end?",
+      "Mini-Game Stadium",
       "", // Two Beeps
       "", //"Music from Tree land?",
       "", //"Anticipatory dingles",

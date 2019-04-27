@@ -118,6 +118,7 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
         boardlogo: true,
         largescene: true,
       };
+      board.audioIndex = 0x36; // Mini-Game Stadium
       break;
     case 3:
       switch (type) {
@@ -135,6 +136,7 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
             lookatPointY: 0,
             lookatPointZ: 0,
           };
+          board.audioIndex = 0x29; // VS Millenium Star!
           break;
         case BoardType.DUEL:
           board.bg = {
@@ -150,6 +152,7 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
             lookatPointY: 0,
             lookatPointZ: 0,
           };
+          board.audioIndex = 0; // TODO
           break;
       }
 
