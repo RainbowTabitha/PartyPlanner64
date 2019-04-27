@@ -113,6 +113,10 @@ exports["default"] = [
       name: "SaveFileDecode",
       desc: "A0=start addr of portion to decode" },
 {
+      addr: 2147833456, // 0x80055670
+      type: "code",
+      name: "FreeGraphics" },
+{
       addr: 2147833872, // 0x80055810
       type: "code",
       name: "ImgPackParse" },
@@ -1591,6 +1595,10 @@ exports["default"] = [
       type: "u8",
       name: "p1_cpu_difficulty" },
 {
+      addr: 2148339978, // 0x800D110A
+      type: "u8",
+      name: "p1_controller" },
+{
       addr: 2148339979, // 0x800D110B
       type: "u8",
       name: "p1_char",
@@ -1650,6 +1658,10 @@ exports["default"] = [
       type: "u8",
       name: "p2_cpu_difficulty" },
 {
+      addr: 2148340034, // 0x800D1142
+      type: "u8",
+      name: "p2_controller" },
+{
       addr: 2148340035, // 0x800D1143
       type: "u8",
       name: "p2_char" },
@@ -1708,6 +1720,10 @@ exports["default"] = [
       type: "u8",
       name: "p3_cpu_difficulty" },
 {
+      addr: 2148340090, // 0x800D117A
+      type: "u8",
+      name: "p3_controller" },
+{
       addr: 2148340091, // 0x800D117B
       type: "u8",
       name: "p3_char" },
@@ -1765,6 +1781,10 @@ exports["default"] = [
       addr: 2148340145, // 0x800D11B1
       type: "u8",
       name: "p4_cpu_difficulty" },
+{
+      addr: 2148340146, // 0x800D11B2
+      type: "u8",
+      name: "p4_controller" },
 {
       addr: 2148340147, // 0x800D11B3
       type: "u8",
@@ -1839,6 +1859,11 @@ exports["default"] = [
       name: "PlayerHasEmptyItemSlot",
       desc: "A0=player_index" },
 {
+      addr: 2148420104, // 0x800E4A08
+      type: "code",
+      name: "FixUpPlayerItemSlots",
+      desc: "A0=player_index" },
+{
       addr: 2148443744, // 0x800EA660
       type: "code",
       name: "AddArrowAngle",
@@ -1872,6 +1897,11 @@ exports["default"] = [
       addr: 2148449480, // 0x800EBCC8
       type: "code",
       name: "GetCurrentSpaceIndex" },
+{
+      addr: 2148453208, // 0x800ECB58
+      type: "code",
+      name: "GetAngleBetweenSpaces",
+      desc: "A0=space_1_data[0x8]" },
 {
       addr: 2148453916, // 0x800ECE1C
       type: "code",
@@ -1910,6 +1940,11 @@ exports["default"] = [
       addr: 2148456856, // 0x800ED998
       type: "code",
       name: "SetNextChainAndSpace",
+      desc: "A0=player_index" },
+{
+      addr: 2148456952, // 0x800ED9F8
+      type: "code",
+      name: "SetPrevChainAndSpace",
       desc: "A0=player_index" },
 {
       addr: 2148475184, // 0x800F2130
@@ -1969,6 +2004,11 @@ exports["default"] = [
 {
       addr: 2148553392, // 0x801052B0
       type: "u32",
-      name: "num_arrow_angles" }
+      name: "num_arrow_angles" },
+{
+      addr: 2148555168, // 0x801059A0
+      type: "data",
+      name: "overlay_base",
+      desc: "Overlay starting location" }
 ];
 });
