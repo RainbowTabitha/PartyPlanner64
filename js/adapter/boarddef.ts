@@ -334,9 +334,18 @@ export function padChains(board: IBoard, chains: number[][]) {
       let lastSpace = spaces[lastSpaceIdx];
       let oldLinks = links[lastSpaceIdx];
       let padX, padY;
-      if (Array.isArray(oldLinks) && oldLinks.length > 1) {
-        // CHAINSPLIT
-        if (oldLinks.length === 2) {
+      if (Array.isArray(oldLinks)) {
+        if (oldLinks.length === 1) {
+          // Shouldn't happen, but there was a bug where some boards might have these 1 length arrays.
+          // CHAINMERGE
+          // Just put it half way in between, who cares.
+          let nextSpace = spaces[oldLinks[0]];
+          let mid = midpoint(lastSpace.x, lastSpace.y, nextSpace.x, nextSpace.y);
+          padX = mid.x;
+          padY = mid.y;
+        }
+        else if (oldLinks.length === 2) {
+          // CHAINSPLIT
           // TODO: Very precisely push it towards the split spaces, otherwise the player faces down always.
           let nextLeft = spaces[oldLinks[0]];
           let nextRight = spaces[oldLinks[1]];

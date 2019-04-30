@@ -93,7 +93,7 @@ export const ChainMerge: IEvent = {
       ADDIU SP, SP, 0x18
     `;
 
-    if (info.gameVersion === 1) {
+    if (info.gameVersion !== 2) {
       return asm;
     }
     const bytes = assemble(prepAsm(asm, ChainMerge, event, info)) as ArrayBuffer;

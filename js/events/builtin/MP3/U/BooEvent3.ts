@@ -25,20 +25,6 @@ export const BooEvent3: Partial<IEvent> = {
     if (!found)
       return false;
 
-    // let cacheEntry = EventCache.get(BooEvent.id);
-    // if (!cacheEntry)
-    //   cacheEntry = {};
-    // if (!cacheEntry[info.game])
-    //   cacheEntry[info.game] = {};
-    // if (!cacheEntry[info.game][info.boardIndex])
-    //   cacheEntry[info.game][info.boardIndex] = {};
-    // if (!cacheEntry[info.game][info.boardIndex].asm) {
-    //   cacheEntry[info.game][info.boardIndex].asm = dataView.buffer.slice(info.offset, info.offset + fnLen);
-    //   //let cacheView = new DataView(cacheEntry[info.game].asm);
-    // }
-
-    // EventCache.set(BooEvent.id, cacheEntry);
-
     return true;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
@@ -65,7 +51,12 @@ export const BooEvent3: Partial<IEvent> = {
       sceneView.setUint16(0x861A, bestBooIdx); // 0x003239EC + 0x13E
       sceneView.setUint16(0x8626, bestBooIdx); // 0x003239EC + 0x14A
 
-      return [0x003239EC, 0];
+      return `
+        J 0x8010DE7C ; boo_event
+        NOP
+      `;
+
+      // return [0x003239EC, 0];
     }
 
     throw "Can't write Boo to board index " + info.boardIndex;

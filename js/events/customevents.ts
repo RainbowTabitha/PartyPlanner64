@@ -174,7 +174,7 @@ export function writeCustomEvent(dataView: DataView, spaceEvent: ISpaceEvent, in
   $$log("Writing custom event", spaceEvent, info);
 
   // Assemble and write
-  if (info.gameVersion === 1) {
+  if (info.gameVersion !== 2) {
     return asm;
   }
 

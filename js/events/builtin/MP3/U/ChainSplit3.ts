@@ -1,10 +1,8 @@
 import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
-import { EventActivationType, EventExecutionType, Game } from "../../../../types";
+import { EventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
 import { hashEqual, copyRange } from "../../../../utils/arrays";
 import { addConnection, ISpaceEvent } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
-import { prepAsm } from "../../../prepAsm";
-import { assemble } from "mips-assembler";
 
 // Represents the "event" where the player decides between two paths.
 // This won't be an actual event when exposed to the user.
@@ -13,6 +11,10 @@ export const ChainSplit3: IEvent = {
   name: "",
   activationType: EventActivationType.WALKOVER,
   executionType: EventExecutionType.PROCESS,
+  parameters: [
+    { name: "spaceIndexArgs", type: EventParameterType.NumberArray, },
+    { name: "chainArgs", type: EventParameterType.NumberArray, }
+  ],
   fakeEvent: true,
   supportedGames: [
     Game.MP3_USA,
@@ -56,14 +58,17 @@ export const ChainSplit3: IEvent = {
       `;
     }
 
-    const asm = `
+    const spaceIndexArgs = event.parameterValues!["spaceIndexArgs"] as number[];
+    const chainArgs = event.parameterValues!["chainArgs"] as number[];
+
+    return `
     chainSplit3Main:
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
-      lui   A0, hi(${info.argsAddr!})
-      addiu A0, A0, lo(${info.argsAddr!})
-      lui   A1, hi(${info.argsAddr! + 0x14})
-      addiu A1, A1, lo(${info.argsAddr! + 0x14})
+      lui   A0, hi(space_index_args)
+      addiu A0, A0, lo(space_index_args)
+      lui   A1, hi(chain_args)
+      addiu A1, A1, lo(chain_args)
       lui   A2, hi(ai_logic)
       jal   chain_split_helper
        addiu A2, A2, lo(ai_logic)
@@ -309,14 +314,18 @@ export const ChainSplit3: IEvent = {
       memval5:
         .word 0
 
+      space_index_args:
+        .halfword ${spaceIndexArgs.join(", ")}
+
+      chain_args:
+        .halfword ${chainArgs.join(", ")}
+
       ; Choose randomly
       ai_logic:
+        .word ai_random_choice, ai_random_choice, ai_random_choice
+      ai_random_choice:
         .word 0x00000000, 0x00000000, 0x064C9932
     `;
-
-    const bytes = assemble(prepAsm(asm, ChainSplit3, event, info)) as ArrayBuffer;
-    copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-    return [info.offset!, bytes.byteLength];
   }
 }
 addEventToLibrary(ChainSplit3);

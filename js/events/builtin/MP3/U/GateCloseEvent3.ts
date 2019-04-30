@@ -1,9 +1,7 @@
 import { ISpaceEvent } from "../../../../boards";
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
 import { EventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
-import { getFunctionLength, makeInst, REG } from "../../../../utils/MIPS";
-import { copyRange } from "../../../../utils/arrays";
-import { EventCache } from "../../../EventCache";
+import { getFunctionLength } from "../../../../utils/MIPS";
 
 export const GateClose3: IEvent = {
   id: "GATECLOSE3",
@@ -31,34 +29,18 @@ export const GateClose3: IEvent = {
     if (dataView.getUint32(info.offset + 8) !== gateCloseJALs[info.boardIndex])
       return false;
 
-    let cacheEntry = EventCache.get(GateClose3.id);
-    if (!cacheEntry)
-      cacheEntry = {};
-    if (!cacheEntry[info.game])
-      cacheEntry[info.game] = {};
-    if (!cacheEntry[info.game][info.boardIndex])
-      cacheEntry[info.game][info.boardIndex] = {};
-    if (!cacheEntry[info.game][info.boardIndex].asm)
-      cacheEntry[info.game][info.boardIndex].asm = dataView.buffer.slice(info.offset, info.offset + fnLen);
-
-    EventCache.set(GateClose3.id, cacheEntry);
-
     return true;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    // Strightforward write, but we need to update the A0 set at 0xC.
-    // I think it is set to the gate index.
-
-    let cacheEntry = EventCache.get(GateClose3.id);
-    if (!cacheEntry || !cacheEntry[info.game] || !cacheEntry[info.game][info.boardIndex])
-      throw `Cannot write ${GateClose3.id}, missing cache entry.`;
-
-    let asm = cacheEntry[info.game][info.boardIndex].asm;
-    copyRange(dataView, asm, 0, 0, asm.byteLength);
-
     const gateIndex = event.parameterValues!.gateIndex as number;
-    dataView.setUint32(0x0C, makeInst("ADDIU", REG.A0, REG.R0, gateIndex));
-
-    return [info.offset, asm.byteLength];
+    return `
+      addiu SP, SP, -0x18
+      sw    RA, 0x10(SP)
+      jal   0x80108AE8 ; gate_spaces_event
+       li    A0, ${gateIndex}
+      lw    RA, 0x10(SP)
+      jr    RA
+       addiu SP, SP, 0x18
+    `;
   }
 };

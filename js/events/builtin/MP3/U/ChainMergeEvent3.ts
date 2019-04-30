@@ -2,8 +2,6 @@ import { IEvent, IEventWriteInfo, IEventParseInfo } from "../../../events";
 import { EventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
 import { hashEqual, copyRange } from "../../../../utils/arrays";
 import { addConnection, ISpaceEvent } from "../../../../boards";
-import { prepAsm } from "../../../prepAsm";
-import { assemble } from "mips-assembler";
 import { $$hex } from "../../../../utils/debug";
 import { addEventToLibrary } from "../../../EventLibrary";
 
@@ -68,11 +66,12 @@ export const ChainMerge3: IEvent = {
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
     let staticHelperJal = 0;
     if (info.boardIndex === 0)
-      staticHelperJal = 0x80108C1C;
+      staticHelperJal = 0x80108C1C; // TODO: Include this code here too.
     else
       throw `ChainMerge3 for ${info.boardIndex} needs work`;
 
-    const asm = prepAsm(`
+    // TODO: Could just use "prevSpace" etc below, the definelabels should work...
+    return `
       ADDIU SP, SP, -0x18
       SW    RA, 0x10(SP)
       ADDIU A0, R0, ${event.parameterValues!.prevSpace}
@@ -82,10 +81,7 @@ export const ChainMerge3: IEvent = {
       LW    RA, 0x10(SP)
       JR    RA
       ADDIU SP, SP, 0x18
-    `, ChainMerge3, event, info);
-    const bytes = assemble(asm) as ArrayBuffer;
-    copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-    return [info.offset!, bytes.byteLength];
+    `;
   },
 }
 addEventToLibrary(ChainMerge3);

@@ -857,7 +857,7 @@ function _eraseLines(x: number, y: number) {
         else i++;
       }
       if (endLinks.length === 1)
-        endLinks = endLinks[0];
+        links[startIdx] = endLinks = endLinks[0];
       else if (!endLinks.length)
         delete links[startIdx];
     }

@@ -265,6 +265,63 @@ function decompress05(src: DataView, dst: DataView, decompressedSize: number) {
   return srcPlace; // Return the size of the compressed data.
 }
 
+function compress05(src: DataView) {
+// TODO: Consider implementing:
+//   int CompressRLE(char *input, int uncomp_len, FILE *fp, int offset)
+//   {
+//     int output_pos = 0;
+//     int input_pos = 0;
+//     int i;
+//     int copy_len = 0;
+//     int curr_byte;
+//     int next_byte;
+//     while (input_pos < uncomp_len)
+//     {
+//         curr_byte = input[input_pos];
+//         next_byte = input[input_pos + 1];
+//         if (curr_byte == next_byte)
+//         {
+//             copy_len = 0;
+//             for (i = 0; i < 127; i++)
+//             {
+//                 curr_byte = input[input_pos+i];
+//                 next_byte = input[input_pos+i+1];
+//                 if (curr_byte != next_byte || (input_pos + i) >= uncomp_len)
+//                 {
+//                     copy_len++;
+//                     break;
+//                 }
+//                 copy_len++;
+//             }
+//             WriteFileU8(fp, offset + output_pos, copy_len);
+//             WriteFileU8(fp, offset + output_pos+1, input[input_pos]);
+//             output_pos += 2;
+//             input_pos += copy_len;
+//         }
+//         else
+//         {
+//             copy_len = 0;
+//             for (i = 0; i < 127; i++)
+//             {
+//                 curr_byte = input[input_pos + i];
+//                 next_byte = input[input_pos + i + 1];
+//                 if (curr_byte == next_byte|| (input_pos + i) >= uncomp_len)
+//                 {
+//                     break;
+//                 }
+//                 copy_len++;
+//             }
+//             WriteFileU8(fp, offset + output_pos, 0x80|copy_len);
+//             WriteFileArray(fp, &input[input_pos], offset + output_pos + 1, copy_len);
+//             output_pos += copy_len;
+//             output_pos += 1;
+//             input_pos += copy_len;
+//         }
+//     }
+//     return output_pos;
+//   }
+}
+
 // Returns a new buffer with the decompressed data.
 // The compressed size is attached as a property to the buffer object.
 export function decompress(type: number, srcDataView: DataView, decompressedSize: number) {

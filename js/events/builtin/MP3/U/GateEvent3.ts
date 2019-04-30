@@ -62,8 +62,13 @@ export const Gate3: IEvent = {
     } = (event.parameterValues as any as GateParameterNames)!;
 
     // Since we attach this twice for each gate, we want to be careful with curGate.
-    if (info.curSpaceIndex !== gateEntryIndex)
-      return [0x0031F648, 0];
+    if (info.curSpaceIndex !== gateEntryIndex) {
+      return `
+        J 0x80109AD8
+        NOP
+      `;
+      // return [0x0031F648, 0];
+    }
 
     let curGate = temp.curGate = temp.curGate || 1;
     //$$log(`curGate ${curGate}`);
@@ -141,7 +146,10 @@ export const Gate3: IEvent = {
       }
 
       // Just point to the event because we left it alone.
-      return [0x0031F648, 0];
+      return `
+        J 0x80109AD8
+        NOP
+      `;
     }
 
     throw "Can't write Gate to board index " + info.boardIndex;

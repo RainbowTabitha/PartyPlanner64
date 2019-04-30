@@ -579,8 +579,9 @@ export abstract class AdapterBase {
           });
         }
         else {
-          const chainSplitEvent = this.gameVersion === 2 ? ChainSplit2 : ChainSplit3;
-          event = createSpaceEvent(chainSplitEvent, {
+          if (this.gameVersion !== 2)
+            throw new Error("Unexpected code path for MP3");
+          event = createSpaceEvent(ChainSplit2, {
             inlineArgs: links.concat(0xFFFF),
             parameterValues: {
               chains: endpoints,
@@ -721,13 +722,16 @@ export abstract class AdapterBase {
   // Write out all of the events ASM.
   _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
     if (boardInfo.mainfsEventFile) {
-      if (this.gameVersion === 1) {
+      if (this.gameVersion !== 2) { // If events use non-string old write format
         this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms);
       }
       else {
         this._writeEventsNew(board, boardInfo, boardIndex, chains);
       }
-      return;
+
+      if (this.gameVersion !== 1) { // If doesn't have custom overlay yet
+        this._writeEventAsmHook(boardInfo, boardIndex);
+      }
     }
   }
 
@@ -842,9 +846,6 @@ export abstract class AdapterBase {
     mainfs.write(mainFsDir, mainFsFile, eventBuffer);
 
     //saveAs(new Blob([eventBuffer]), "eventBuffer");
-
-    // Write the hook
-    this._writeEventAsmHook(boardInfo, boardIndex);
   }
 
   _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
@@ -908,7 +909,14 @@ export abstract class AdapterBase {
 
     $$log(asm);
 
-    const buffer = assemble(asm) as ArrayBuffer;
+    let buffer: ArrayBuffer;
+    try {
+      buffer = assemble(asm) as ArrayBuffer;
+    }
+    catch (e) {
+      const fullError = `Error during board assembly: ${e}\nContext: ${asm}`;
+      throw new Error(fullError);
+    }
     const bufferView = new DataView(buffer);
 
     if (buffer.byteLength > this.EVENT_MEM_SIZE) {

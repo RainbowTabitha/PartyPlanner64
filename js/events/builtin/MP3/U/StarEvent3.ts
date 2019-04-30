@@ -16,6 +16,9 @@ export const StarEvent3: Partial<IEvent> = {
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
     // Just point to the event because we left it alone.
-    return [0x00320024, 0];
+    return `
+      J 0x8010A4B4 ; star_space_event
+      NOP
+    `;
   },
 };

@@ -74,26 +74,10 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
   render() {
     if (this.state.error) {
       return (
-        <div className="errorDiv selectable">
-          <h2>Hey, it seeems like something's wrong in&nbsp;
-            <span className="errorStrikeoutText">Mushroom Village</span>&nbsp;
-            PartyPlanner64.</h2>
-          <p>Please &nbsp;
-            <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">
-              file an issue
-            </a>
-            &nbsp; with the following details, and refresh the page.
-          </p>
-          <pre>{this.state.error.toString()}</pre>
-          {this.state.error.stack ? <React.Fragment>
-              <div>Stack Error Details:</div>
-              <pre>{this.state.error.stack}</pre>
-            </React.Fragment>
-            : null
-          }
-          <div>Component Stack Error Details:</div>
-          <pre>{this.state.errorInfo!.componentStack}></pre>
-        </div>
+        <ErrorDisplay error={this.state.error} errorInfo={this.state.errorInfo}
+          onClearError={() => {
+            this.setState({ error: null, errorInfo: null });
+          }}/>
       );
     }
 
@@ -224,11 +208,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    this.setState({
-      error,
-      errorInfo,
-    });
-    console.error(error, errorInfo);
+    _onError(this, error, errorInfo);
   }
 
   componentDidMount() {
@@ -288,3 +268,52 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 
 const body = document.getElementById("body");
 (window as any)._PP64instance = ReactDOM.render(<PP64App /> as any, body);
+
+function _onError(app: PP64App, error: Error, errorInfo: React.ErrorInfo | null) {
+  app.setState({
+    error,
+    errorInfo,
+  });
+  console.error(error, errorInfo);
+}
+
+// Capture errors that don't happen during rendering.
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  if (error) {
+    _onError((window as any)._PP64instance, error, null);
+  }
+};
+
+interface IErrorDisplayProps {
+  error: Error,
+  errorInfo: React.ErrorInfo | null,
+  onClearError(): void;
+}
+
+function ErrorDisplay(props: IErrorDisplayProps) {
+  const componentStack = props.errorInfo && props.errorInfo.componentStack;
+  return (
+    <div className="errorDiv selectable">
+      <h2>Hey, it seeems like something's wrong in&nbsp;
+        <span className="errorStrikeoutText">Mushroom Village</span>&nbsp;
+        PartyPlanner64.</h2>
+      <p>Please &nbsp;
+        <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank">
+          file an issue
+        </a>
+        &nbsp; with the following details, and refresh the page. Or &nbsp;
+        <a href="#" onClick={props.onClearError}>click here</a>&nbsp;
+        to dismiss this error, but you may be in a bad state.
+      </p>
+      <pre>{props.error.toString()}</pre>
+      {props.error.stack ? <React.Fragment>
+          <div>Stack Error Details:</div>
+          <pre>{props.error.stack}</pre>
+        </React.Fragment>
+        : null
+      }
+      <div>Component Stack Error Details:</div>
+      <pre>{componentStack || "N/A"}</pre>
+    </div>
+  );
+}

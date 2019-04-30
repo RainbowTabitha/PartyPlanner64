@@ -67,7 +67,10 @@ export const ItemShopEvent3: Partial<IEvent> = {
       }
 
       // Just point to the event because we left it alone.
-      return [0x003211CC, 0];
+      return `
+        J 0x8010B65C ; item_shop_event
+        NOP
+      `;
     }
 
     throw "Can't write Item Shop to board index " + info.boardIndex;

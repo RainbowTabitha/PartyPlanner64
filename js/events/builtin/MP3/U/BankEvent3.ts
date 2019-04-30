@@ -60,7 +60,11 @@ export const BankEvent3: Partial<IEvent> = {
       }
 
       // Just point to the event because we left it alone.
-      return [0x003203D0, 0];
+      //return [0x003203D0, 0];
+      return `
+        J 0x8010A860 ; bank_space_event
+        NOP
+      `;
     }
 
     throw "Can't write Bank to board index " + info.boardIndex;

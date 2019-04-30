@@ -222,6 +222,10 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     // There is either a merge or a split at the end of each chain.
     for (let i = 0; i < chains.length; i++) {
       let chain = chains[i];
+      // if (chain.length < 2) {
+      //   throw new Error("MP3 onCreateChainEvents assertion failed: chain.length < 2");
+      // }
+
       let firstSpace = chain[0];
       let secondSpace = chain[1];
       let lastSpace = chain[chain.length - 1];
@@ -242,46 +246,48 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         // Create the args, which are more sophisticated / declarative in MP3 (yay)
         // The args consist of the space indices and chain indices of the two directions,
         // as well as a couple variations of each when they are used with reverse shroom.
-        let inlineArgs = [];
-        inlineArgs.push(endLinks[0]); // First two space indices
-        inlineArgs.push(endLinks[1]);
-        inlineArgs.push(0xFFFF);
+        let spaceIndexArgs = [];
+        spaceIndexArgs.push(endLinks[0]); // First two space indices
+        spaceIndexArgs.push(endLinks[1]);
+        spaceIndexArgs.push(0xFFFF);
 
-        inlineArgs.push(prevSpace); // As if returning from first link direction
-        inlineArgs.push(endLinks[1]);
-        inlineArgs.push(0xFFFF);
+        spaceIndexArgs.push(prevSpace); // As if returning from first link direction
+        spaceIndexArgs.push(endLinks[1]);
+        spaceIndexArgs.push(0xFFFF);
 
-        inlineArgs.push(prevSpace); // As if returning from 2nd link direction
-        inlineArgs.push(endLinks[0]);
-        inlineArgs.push(0xFFFF);
-        inlineArgs.push(0x0000);
+        spaceIndexArgs.push(prevSpace); // As if returning from 2nd link direction
+        spaceIndexArgs.push(endLinks[0]);
+        spaceIndexArgs.push(0xFFFF);
+        spaceIndexArgs.push(0x0000);
 
-        inlineArgs.push(chainIndices[0]); // Now the two chain indices and the "indices into the chains"
-        inlineArgs.push(0x0000); // We know these two are always 0 because of how we generate chains.
-        inlineArgs.push(0x0000); // mystery
-        inlineArgs.push(chainIndices[1]);
-        inlineArgs.push(0x0000);
-        inlineArgs.push(0x0000); // mystery
+        let chainArgs = [];
+        chainArgs.push(chainIndices[0]); // Now the two chain indices and the "indices into the chains"
+        chainArgs.push(0x0000); // We know these two are always 0 because of how we generate chains.
+        chainArgs.push(0x0000); // mystery
+        chainArgs.push(chainIndices[1]);
+        chainArgs.push(0x0000);
+        chainArgs.push(0x0000); // mystery
 
-        inlineArgs.push(i);
-        inlineArgs.push(chain.length - 2); // Return to _near_ end of entering chain
-        inlineArgs.push(0x0001); // mystery
-        inlineArgs.push(chainIndices[1]);  // ...yes they flip, for confusion
-        inlineArgs.push(0x0000);
-        inlineArgs.push(0x0000);
+        chainArgs.push(i);
+        chainArgs.push(chain.length - 2); // Return to _near_ end of entering chain
+        chainArgs.push(0x0001); // mystery
+        chainArgs.push(chainIndices[1]);  // ...yes they flip, for confusion
+        chainArgs.push(0x0000);
+        chainArgs.push(0x0000);
 
-        inlineArgs.push(i);
-        inlineArgs.push(chain.length - 2); // Return to _near_ end of entering chain
-        inlineArgs.push(0x0001);
-        inlineArgs.push(chainIndices[0]);
-        inlineArgs.push(0x0000);
-        inlineArgs.push(0x0000);
+        chainArgs.push(i);
+        chainArgs.push(chain.length - 2); // Return to _near_ end of entering chain
+        chainArgs.push(0x0001);
+        chainArgs.push(chainIndices[0]);
+        chainArgs.push(0x0000);
+        chainArgs.push(0x0000);
 
         let chainWithGate = _needsGateChainSplit(chainIndices);
         if (chainWithGate != null) {
           event = createSpaceEvent(GateChainSplit, {
-            inlineArgs,
             parameterValues: {
+              spaceIndexArgs,
+              chainArgs,
               prevSpace: chains[chainWithGate][0],
               altChain: [
                 chainIndices.find(i => i !== chainWithGate)!, // Chain index
@@ -292,7 +298,10 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         }
         else {
           event = createSpaceEvent(ChainSplit3, {
-            inlineArgs
+            parameterValues: {
+              spaceIndexArgs,
+              chainArgs,
+            },
           });
         }
         addEventByIndex(board, lastSpace, event, true);
@@ -325,44 +334,48 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
           // in some particular direction(s) for now.
 
           // The reverse args are basically the same, except the 1 bit is placed differently.
-          let inlineArgs = [];
-          inlineArgs.push(secondSpace);
-          inlineArgs.push(pointingSpaces[0]);
-          inlineArgs.push(0xFFFF);
+          let spaceIndexArgs = [];
+          spaceIndexArgs.push(secondSpace);
+          spaceIndexArgs.push(pointingSpaces[0]);
+          spaceIndexArgs.push(0xFFFF);
 
-          inlineArgs.push(pointingSpaces[1]); // Probably the only indices that matter
-          inlineArgs.push(pointingSpaces[0]);
-          inlineArgs.push(0xFFFF);
+          spaceIndexArgs.push(pointingSpaces[1]); // Probably the only indices that matter
+          spaceIndexArgs.push(pointingSpaces[0]);
+          spaceIndexArgs.push(0xFFFF);
 
-          inlineArgs.push(pointingSpaces[1]);
-          inlineArgs.push(secondSpace);
-          inlineArgs.push(0xFFFF);
-          inlineArgs.push(0x0000);
+          spaceIndexArgs.push(pointingSpaces[1]);
+          spaceIndexArgs.push(secondSpace);
+          spaceIndexArgs.push(0xFFFF);
+          spaceIndexArgs.push(0x0000);
 
           // Now the chain indices and the "indices into the chains"
-          inlineArgs.push(i);
-          inlineArgs.push(0x0001); // Second space index
-          inlineArgs.push(0x0000);
-          inlineArgs.push(chainIndices[0]);
-          inlineArgs.push(pointingChains[0].length - 1); // Return to end of entering chain
-          inlineArgs.push(0x0001);
+          let chainArgs = [];
+          chainArgs.push(i);
+          chainArgs.push(0x0001); // Second space index
+          chainArgs.push(0x0000);
+          chainArgs.push(chainIndices[0]);
+          chainArgs.push(pointingChains[0].length - 1); // Return to end of entering chain
+          chainArgs.push(0x0001);
 
-          inlineArgs.push(chainIndices[1]);
-          inlineArgs.push(pointingChains[1].length - 1);
-          inlineArgs.push(0x0001);
-          inlineArgs.push(chainIndices[0]);
-          inlineArgs.push(pointingChains[0].length - 1);
-          inlineArgs.push(0x0001);
+          chainArgs.push(chainIndices[1]);
+          chainArgs.push(pointingChains[1].length - 1);
+          chainArgs.push(0x0001);
+          chainArgs.push(chainIndices[0]);
+          chainArgs.push(pointingChains[0].length - 1);
+          chainArgs.push(0x0001);
 
-          inlineArgs.push(chainIndices[1]);
-          inlineArgs.push(pointingChains[1].length - 1);
-          inlineArgs.push(0x0001);
-          inlineArgs.push(i);
-          inlineArgs.push(0x0001); // Second space index
-          inlineArgs.push(0x0000);
+          chainArgs.push(chainIndices[1]);
+          chainArgs.push(pointingChains[1].length - 1);
+          chainArgs.push(0x0001);
+          chainArgs.push(i);
+          chainArgs.push(0x0001); // Second space index
+          chainArgs.push(0x0000);
 
           event = createSpaceEvent(ReverseChainSplit, {
-            inlineArgs,
+            parameterValues: {
+              spaceIndexArgs,
+              chainArgs,
+            },
           });
           addEventByIndex(board, firstSpace, event, true);
         }
