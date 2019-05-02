@@ -1,6 +1,6 @@
 import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
 import { EventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
-import { hashEqual, copyRange } from "../../../../utils/arrays";
+import { hashEqual } from "../../../../utils/arrays";
 import { addConnection, ISpaceEvent } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
 
@@ -13,7 +13,13 @@ export const ChainSplit3: IEvent = {
   executionType: EventExecutionType.PROCESS,
   parameters: [
     { name: "spaceIndexArgs", type: EventParameterType.NumberArray, },
-    { name: "chainArgs", type: EventParameterType.NumberArray, }
+    { name: "chainArgs", type: EventParameterType.NumberArray, },
+    // For ReverseChainSplit
+    { name: "reverse", type: EventParameterType.Boolean, },
+    // For GateChainSplit
+    { name: "hasgate", type: EventParameterType.Boolean, },
+    { name: "prevSpace", type: EventParameterType.Number, },
+    { name: "altChain", type: EventParameterType.NumberArray, },
   ],
   fakeEvent: true,
   supportedGames: [
@@ -50,34 +56,113 @@ export const ChainSplit3: IEvent = {
     return false;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    let endProcessCode = "";
-    if (!temp._reverse) {
-      endProcessCode = `
-        jal   EndProcess
-        move  A0, R0
-      `;
-    }
-
     const spaceIndexArgs = event.parameterValues!["spaceIndexArgs"] as number[];
     const chainArgs = event.parameterValues!["chainArgs"] as number[];
-
+    const altChain = event.parameterValues!.altChain as number[] || [];
     return `
-    chainSplit3Main:
+    .if reverse
+      revSplitMain:
+        addiu SP, SP, -0x18
+        sw    RA, 0x10(SP)
+        jal   GetPlayerStruct
+        li    A0, -1
+        lbu   V0, 0x17(V0)
+        andi  V0, V0, 0x80
+        beq   V0, R0, revSplitExit
+        NOP
+        lui   V0, hi(cur_player_spaces_remaining)
+        lw    V0, lo(cur_player_spaces_remaining)(V0)
+        beq   V0, R0, revSplitExit
+        NOP
+        jal   chain_split_3_main
+        NOP
+      revSplitExit:
+        lw    RA, 0x10(SP)
+        jr    RA
+        addiu SP, SP, 0x18
+    .endif
+
+    .if hasgate
+      addiu SP, SP, -0x18
+      sw    RA, 0x14(SP)
+      sw    S0, 0x10(SP)
+      jal   GetPlayerStruct
+      li    A0, -1
+      move  S0, V0
+      lbu   A0, 0x15(S0)
+      sll   A0, A0, 0x18
+      sra   A0, A0, 0x18
+      lbu   A1, 0x16(S0)
+      sll   A1, A1, 0x18
+      sra   A1, A1, 0x18
+      andi  A0, A0, 0xffff
+      jal   GetAbsSpaceIndexFromChainSpaceIndex
+      andi  A1, A1, 0xffff
+      sll   V0, V0, 0x10
+      sra   V0, V0, 0x10
+      ; Check for the previous space being the gate chain's first space.
+      li    V1, ${event.parameterValues!.prevSpace as number || 0}
+      bne   V0, V1, do_chain_split
+      NOP
+      lbu   V0, 0x17(S0)
+      andi  V0, V0, 0x80
+      bnez  V0, do_chain_split
+      ; Send player to other chain if coming from gate.
+      li    A1, ${altChain[0] || 0} ; Chain index
+      li    A0, -1
+      jal   SetNextChainAndSpace
+      li   A2, ${altChain[1] || 0} ; Index in chain
+      lbu   V0, 0x17(S0)
+      andi  V0, V0, 0xfe
+      j     exit_chain_split
+      sb    V0, 0x17(S0)
+
+    .else
+
+    chain_split_3_main:
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
+
+    .endif
+
+    do_chain_split:
       lui   A0, hi(space_index_args)
       addiu A0, A0, lo(space_index_args)
       lui   A1, hi(chain_args)
       addiu A1, A1, lo(chain_args)
       lui   A2, hi(ai_logic)
-      jal   chain_split_helper
+      jal   chain_split_3_helper
        addiu A2, A2, lo(ai_logic)
-      ${endProcessCode}
+    .if reverse
+    exit_chain_split:
+    .else
+    exit_chain_split:
+      jal   EndProcess
+       move  A0, R0
+    .endif
+    .if hasgate
+      lw    RA, 0x14(SP)
+      lw    S0, 0x10(SP)
+    .else
       lw    RA, 0x10(SP)
+    .endif
       jr    RA
        addiu SP, SP, 0x18
 
-    chain_split_helper:
+    space_index_args:
+      .halfword ${spaceIndexArgs.join(", ")}
+
+    chain_args:
+      .halfword ${chainArgs.join(", ")}
+
+    ; Choose randomly
+    ai_logic:
+      .word ai_random_choice, ai_random_choice, ai_random_choice
+    ai_random_choice:
+      .word 0x00000000, 0x00000000, 0x064C9932
+
+  .beginstatic
+    chain_split_3_helper:
       addiu SP, SP, -0x38
       sw    RA, 0x30(SP)
       sw    S5, 0x2c(SP)
@@ -95,7 +180,7 @@ export const ChainSplit3: IEvent = {
        li    A2, 2
       jal   SleepVProcess
        move  S1, R0
-      jal   setup_arrows
+      jal   chainsplit_setup_arrows
        NOP
       lui   A0, hi(current_player_index)
       jal   GetPlayerStruct
@@ -180,7 +265,7 @@ export const ChainSplit3: IEvent = {
       move  S0, V0
       jal   0x800D6CA0
        move  A0, S2
-      jal   hide_arrows
+      jal   chainsplit_hide_arrows
        NOP
       bnezl S0, L80116610
        addiu S3, S3, 6
@@ -220,7 +305,7 @@ export const ChainSplit3: IEvent = {
     .definelabel CORE_800CDD58,0x800CDD58
     .definelabel CORE_800D51F8,0x800D51F8
 
-    setup_arrows:
+    chainsplit_setup_arrows:
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
     L8010704C:
@@ -239,32 +324,32 @@ export const ChainSplit3: IEvent = {
       li    A1, 146
       jal   0x800E210C
        li    A2, 1
-      lui   AT, hi(memval1)
-      sw    V0, lo(memval1)(AT)
+      lui   AT, hi(chainsplit_arrow_memval1)
+      sw    V0, lo(chainsplit_arrow_memval1)(AT)
       li    A0, 1
       li    A1, 160
       jal   0x800E210C
        li    A2, 1
-      lui   AT, hi(memval2)
-      sw    V0, lo(memval2)(AT)
+      lui   AT, hi(chainsplit_arrow_memval2)
+      sw    V0, lo(chainsplit_arrow_memval2)(AT)
       li    A0, 13
       li    A1, 174
       jal   0x800E210C
        li    A2, 1
-      lui   AT, hi(memval3)
-      sw    V0, lo(memval3)(AT)
+      lui   AT, hi(chainsplit_arrow_memval3)
+      sw    V0, lo(chainsplit_arrow_memval3)(AT)
       li    A0, 3
       li    A1, 188
       jal   0x800E210C
        li    A2, 1
-      lui   AT, hi(memval4)
-      sw    V0, lo(memval4)(AT)
+      lui   AT, hi(chainsplit_arrow_memval4)
+      sw    V0, lo(chainsplit_arrow_memval4)(AT)
       li    A0, 11
       li    A1, 202
       jal   0x800E210C
        li    A2, 1
-      lui   AT, hi(memval5)
-      sw    V0, lo(memval5)(AT)
+      lui   AT, hi(chainsplit_arrow_memval5)
+      sw    V0, lo(chainsplit_arrow_memval5)(AT)
       jal   SleepProcess
        li    A0, 3
       li    V0, 1
@@ -276,55 +361,44 @@ export const ChainSplit3: IEvent = {
       jr    RA
        addiu SP, SP, 0x18
 
-    hide_arrows:
+    chainsplit_hide_arrows:
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
       lui   AT, hi(CORE_800CDD58)
       sh    R0, lo(CORE_800CDD58)(AT)
       lui   AT, hi(CORE_800D51F8)
       sh    R0, lo(CORE_800D51F8)(AT)
-      lui   A0, hi(memval1)
+      lui   A0, hi(chainsplit_arrow_memval1)
       jal   0x800E21F4
-       lw    A0, lo(memval1)(A0)
-      lui   A0, hi(memval2)
+       lw    A0, lo(chainsplit_arrow_memval1)(A0)
+      lui   A0, hi(chainsplit_arrow_memval2)
       jal   0x800E21F4
-       lw    A0, lo(memval2)(A0)
-      lui   A0, hi(memval3)
+       lw    A0, lo(chainsplit_arrow_memval2)(A0)
+      lui   A0, hi(chainsplit_arrow_memval3)
       jal   0x800E21F4
-       lw    A0, lo(memval3)(A0)
-      lui   A0, hi(memval4)
+       lw    A0, lo(chainsplit_arrow_memval3)(A0)
+      lui   A0, hi(chainsplit_arrow_memval4)
       jal   0x800E21F4
-       lw    A0, lo(memval4)(A0)
-      lui   A0, hi(memval5)
+       lw    A0, lo(chainsplit_arrow_memval4)(A0)
+      lui   A0, hi(chainsplit_arrow_memval5)
       jal   0x800E21F4
-       lw    A0, lo(memval5)(A0)
+       lw    A0, lo(chainsplit_arrow_memval5)(A0)
       lw    RA, 0x10(SP)
       jr    RA
        addiu SP, SP, 0x18
 
       .align 4
-      memval1:
+      chainsplit_arrow_memval1:
         .word 0
-      memval2:
+      chainsplit_arrow_memval2:
         .word 0
-      memval3:
+      chainsplit_arrow_memval3:
         .word 0
-      memval4:
+      chainsplit_arrow_memval4:
         .word 0
-      memval5:
+      chainsplit_arrow_memval5:
         .word 0
-
-      space_index_args:
-        .halfword ${spaceIndexArgs.join(", ")}
-
-      chain_args:
-        .halfword ${chainArgs.join(", ")}
-
-      ; Choose randomly
-      ai_logic:
-        .word ai_random_choice, ai_random_choice, ai_random_choice
-      ai_random_choice:
-        .word 0x00000000, 0x00000000, 0x064C9932
+  .endstatic
     `;
   }
 }

@@ -352,6 +352,8 @@ interface IHeaderState {
   overflow: any[];
 }
 
+let _headerMounted: boolean = false;
+
 export const Header = class Header extends React.Component<IHeaderProps, IHeaderState> {
   private actionsEl: HTMLElement | null = null;
 
@@ -417,6 +419,7 @@ export const Header = class Header extends React.Component<IHeaderProps, IHeader
   }
 
   componentDidMount() {
+    _headerMounted = true;
     window.addEventListener("resize", this.refresh.bind(this), false);
     setTimeout(() => {
       window.requestAnimationFrame(this.handleOverflow.bind(this));
@@ -430,10 +433,14 @@ export const Header = class Header extends React.Component<IHeaderProps, IHeader
   }
 
   componentWillUnmount() {
+    _headerMounted = false;
     $$log("Why did Header unmount?");
   }
 
   handleOverflow() {
+    if (!_headerMounted)
+      return;
+
     let actions = this.state.actions.slice();
     let hasOverflow = this.state.overflow.length;
     let overflow = this.state.overflow.slice();

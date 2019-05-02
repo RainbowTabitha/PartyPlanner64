@@ -1,6 +1,6 @@
 import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace, getConnections, addEventByIndex } from "../boards";
-import { Space, BoardType, SpaceSubtype, EventActivationType } from "../types";
+import { Space, BoardType, SpaceSubtype, EventActivationType, EventExecutionType } from "../types";
 import { $$log } from "../utils/debug";
 import { createSpaceEvent } from "../events/events";
 import { strings } from "../fs/strings";
@@ -284,10 +284,11 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
         let chainWithGate = _needsGateChainSplit(chainIndices);
         if (chainWithGate != null) {
-          event = createSpaceEvent(GateChainSplit, {
+          event = createSpaceEvent(ChainSplit3, {
             parameterValues: {
               spaceIndexArgs,
               chainArgs,
+              hasgate: true,
               prevSpace: chains[chainWithGate][0],
               altChain: [
                 chainIndices.find(i => i !== chainWithGate)!, // Chain index
@@ -371,11 +372,13 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
           chainArgs.push(0x0001); // Second space index
           chainArgs.push(0x0000);
 
-          event = createSpaceEvent(ReverseChainSplit, {
+          event = createSpaceEvent(ChainSplit3, {
             parameterValues: {
               spaceIndexArgs,
               chainArgs,
+              reverse: true,
             },
+            executionType: EventExecutionType.DIRECT, // Notable difference
           });
           addEventByIndex(board, firstSpace, event, true);
         }

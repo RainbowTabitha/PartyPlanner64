@@ -25,7 +25,7 @@ export interface IEventParameter {
   type: EventParameterType;
 }
 
-export type EventParameterValues = { [name: string]: number | number[] };
+export type EventParameterValues = { [name: string]: number | number[] | boolean };
 
 function _supportedGamesMatch(supportedGames: Game[], gameVersion: number) {
   for (let i = 0; i < supportedGames.length; i++) {

@@ -856,6 +856,7 @@ export abstract class AdapterBase {
     const eventLists: SpaceEventList[] = [];
     const eventAsms: string[] = [];
     const eventTemp: any = {};
+    const staticsWritten: { [eventName: string]: boolean } = {};
     for (let i = 0; i < board.spaces.length; i++) {
       let space = board.spaces[i];
       if (!space.events || !space.events.length)
@@ -886,7 +887,11 @@ export abstract class AdapterBase {
         }
 
         const event = getEvent(spaceEvent.id, board);
-        eventAsms.push(prepSingleEventAsm(eventAsm, event, spaceEvent, info, e));
+        eventAsms.push(
+          prepSingleEventAsm(eventAsm, event, spaceEvent, info, !staticsWritten[spaceEvent.id], e)
+        );
+
+        staticsWritten[spaceEvent.id] = true;
       }
       eventLists.push(eventList);
     }
