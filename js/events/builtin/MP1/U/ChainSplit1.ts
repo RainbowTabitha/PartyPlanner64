@@ -66,7 +66,7 @@ export const ChainSplit1: IEvent = {
 
         JAL SleepVProcess
         NOP
-        JAL setup_arrows
+        JAL chainsplit_1_setup_arrows
         NOP
         LUI S0 0x800F
         ADDIU S0 S0 0xD5DC ; 0x800ED5DC
@@ -107,7 +107,7 @@ export const ChainSplit1: IEvent = {
         ADDU S0 V0 R0
         JAL 0x8003B908
         ADDU A0 S2 R0
-        JAL hide_arrows
+        JAL chainsplit_1_hide_arrows
         NOP
         BNE S0 R0 set_chain_right
         ADDIU A0 R0 -1
@@ -127,87 +127,6 @@ export const ChainSplit1: IEvent = {
         JR RA
         ADDIU SP SP 0x28
 
-      .definelabel CORE_800EE320,0x800EE320
-
-      setup_arrows:
-        addiu SP, SP, -0x18
-        sw    RA, 0x10(SP)
-      setup_arrows_loop1:
-        jal 0x8004B850 ; waiting for this to signal
-        NOP
-        beq V0, R0, setup_arrows_loop1_exit
-        NOP
-        jal SleepVProcess
-        NOP
-        j setup_arrows_loop1
-        NOP
-      setup_arrows_loop1_exit:
-        jal SleepVProcess
-        NOP
-        addu  A0, R0, R0
-        addiu A1, R0, 146
-        jal   0x80045D84
-        addiu A2, R0, 1
-        lui   AT, hi(memval1)
-        sw    V0, lo(memval1)(AT)
-        addiu A0, R0, 1
-        addiu A1, R0, 160
-        jal   0x80045D84
-        addiu A2, R0, 1
-        lui   AT, hi(memval2)
-        sw    V0, lo(memval2)(AT)
-        addiu A0, R0, 3
-        addiu A1, R0, 174
-        jal   0x80045D84
-        addiu A2, R0, 1
-        lui   AT, hi(memval3)
-        sw    V0, lo(memval3)(AT)
-        addiu A0, R0, 11
-        addiu A1, R0, 188
-        jal   0x80045D84
-        addiu A2, R0, 1
-        lui   AT, hi(memval4)
-        sw    V0, lo(memval4)(AT)
-        jal   SleepProcess
-        addiu A0, R0, 3
-        addiu V0, R0, 1
-        lui   AT, hi(CORE_800EE320)
-        sh    V0, lo(CORE_800EE320)(AT)
-        lw    RA, 0x10(SP)
-        jr    RA
-        addiu SP, SP, 0x18
-
-      hide_arrows:
-        addiu SP, SP, -0x18
-        sw    RA, 0x10(SP)
-        lui   AT, hi(CORE_800EE320)
-        sh    R0, lo(CORE_800EE320)(AT)
-        lui   A0, hi(memval1)
-        jal   0x80045E6C
-        lw    A0, lo(memval1)(A0)
-        lui   A0, hi(memval2)
-        jal   0x80045E6C
-        lw    A0, lo(memval2)(A0)
-        lui   A0, hi(memval3)
-        jal   0x80045E6C
-        lw    A0, lo(memval3)(A0)
-        lui   A0, hi(memval4)
-        jal   0x80045E6C
-        lw    A0, lo(memval4)(A0)
-        lw    RA, 0x10(SP)
-        jr    RA
-        addiu SP, SP, 0x18
-
-      .align 4
-      memval1:
-        .word 0
-      memval2:
-        .word 0
-      memval3:
-        .word 0
-      memval4:
-        .word 0
-
       ; Choose randomly
       ai_logic:
         .word 0x00000000, 0x00000000, 0x00003232
@@ -217,6 +136,88 @@ export const ChainSplit1: IEvent = {
         .halfword right_space
         .halfword 0xFFFF
         .align 4
+
+    .beginstatic
+      .definelabel CORE_800EE320,0x800EE320
+
+      chainsplit_1_setup_arrows:
+        addiu SP, SP, -0x18
+        sw    RA, 0x10(SP)
+      @@setup_arrows_loop1:
+        jal 0x8004B850 ; waiting for this to signal
+        NOP
+        beq V0, R0, @@setup_arrows_loop1_exit
+        NOP
+        jal SleepVProcess
+        NOP
+        j @@setup_arrows_loop1
+        NOP
+      @@setup_arrows_loop1_exit:
+        jal SleepVProcess
+        NOP
+        addu  A0, R0, R0
+        addiu A1, R0, 146
+        jal   0x80045D84
+        addiu A2, R0, 1
+        lui   AT, hi(chainsplit_1_memval1)
+        sw    V0, lo(chainsplit_1_memval1)(AT)
+        addiu A0, R0, 1
+        addiu A1, R0, 160
+        jal   0x80045D84
+        addiu A2, R0, 1
+        lui   AT, hi(chainsplit_1_memval2)
+        sw    V0, lo(chainsplit_1_memval2)(AT)
+        addiu A0, R0, 3
+        addiu A1, R0, 174
+        jal   0x80045D84
+        addiu A2, R0, 1
+        lui   AT, hi(chainsplit_1_memval3)
+        sw    V0, lo(chainsplit_1_memval3)(AT)
+        addiu A0, R0, 11
+        addiu A1, R0, 188
+        jal   0x80045D84
+        addiu A2, R0, 1
+        lui   AT, hi(chainsplit_1_memval4)
+        sw    V0, lo(chainsplit_1_memval4)(AT)
+        jal   SleepProcess
+        addiu A0, R0, 3
+        addiu V0, R0, 1
+        lui   AT, hi(CORE_800EE320)
+        sh    V0, lo(CORE_800EE320)(AT)
+        lw    RA, 0x10(SP)
+        jr    RA
+        addiu SP, SP, 0x18
+
+      chainsplit_1_hide_arrows:
+        addiu SP, SP, -0x18
+        sw    RA, 0x10(SP)
+        lui   AT, hi(CORE_800EE320)
+        sh    R0, lo(CORE_800EE320)(AT)
+        lui   A0, hi(chainsplit_1_memval1)
+        jal   0x80045E6C
+        lw    A0, lo(chainsplit_1_memval1)(A0)
+        lui   A0, hi(chainsplit_1_memval2)
+        jal   0x80045E6C
+        lw    A0, lo(chainsplit_1_memval2)(A0)
+        lui   A0, hi(chainsplit_1_memval3)
+        jal   0x80045E6C
+        lw    A0, lo(chainsplit_1_memval3)(A0)
+        lui   A0, hi(chainsplit_1_memval4)
+        jal   0x80045E6C
+        lw    A0, lo(chainsplit_1_memval4)(A0)
+        lw    RA, 0x10(SP)
+        jr    RA
+        addiu SP, SP, 0x18
+
+      chainsplit_1_memval1:
+        .word 0
+      chainsplit_1_memval2:
+        .word 0
+      chainsplit_1_memval3:
+        .word 0
+      chainsplit_1_memval4:
+        .word 0
+    .endstatic
     `;
   }
 };

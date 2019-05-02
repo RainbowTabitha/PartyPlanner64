@@ -192,6 +192,10 @@ function removeStaticSections(lines: string[], keepingStatics: boolean): string[
     }
   }
 
+  if (withinStatic) {
+    throw new Error("Saw .beginstatic without .endstatic");
+  }
+
   return filteredLines;
 }
 
