@@ -16,21 +16,21 @@ export class ALWaveTable {
   public adpcmWave!: ALADPCMWaveInfo;
   public rawWave!: ALRAWWaveInfo;
 
-  constructor(B1view: DataView, waveOffset: number) {
-    this._extract(B1view, waveOffset);
+  constructor(view: DataView, waveOffset: number) {
+    this._extract(view, waveOffset);
   }
 
-  _extract(B1view: DataView, waveOffset: number) {
-    this.waveBase = B1view.getUint32(waveOffset); // Offset into TBL
-    this.waveLen = B1view.getUint32(waveOffset + 4);
-    this.type = B1view.getUint8(waveOffset + 8); // ALWaveType
-    this.flags = B1view.getUint8(waveOffset + 9);
+  _extract(view: DataView, waveOffset: number) {
+    this.waveBase = view.getUint32(waveOffset); // Offset into TBL
+    this.waveLen = view.getUint32(waveOffset + 4);
+    this.type = view.getUint8(waveOffset + 8); // ALWaveType
+    this.flags = view.getUint8(waveOffset + 9);
 
     if (this.type === ALWaveType.AL_ADPCM_WAVE) {
-      this.adpcmWave = new ALADPCMWaveInfo(B1view, waveOffset + 12); // not 10?
+      this.adpcmWave = new ALADPCMWaveInfo(view, waveOffset + 12); // not 10?
     }
     else if (this.type === ALWaveType.AL_RAW16_WAVE) {
-      this.rawWave = new ALRAWWaveInfo(B1view, waveOffset + 12);
+      this.rawWave = new ALRAWWaveInfo(view, waveOffset + 12);
     }
     else {
       throw new Error(`Unrecognized ALWaveTable type ${this.type}`);

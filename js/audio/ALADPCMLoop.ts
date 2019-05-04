@@ -6,17 +6,17 @@ export class ALADPCMLoop {
   public count!: number;
   public state!: ADPCM_STATE;
 
-  constructor(B1view: DataView, loopOffset: number) {
-    this._extract(B1view, loopOffset);
+  constructor(view: DataView, loopOffset: number) {
+    this._extract(view, loopOffset);
   }
 
-  _extract(B1view: DataView, loopOffset: number) {
-    this.start = B1view.getUint32(loopOffset);
-    this.end = B1view.getUint32(loopOffset + 4);
-    this.count = B1view.getUint32(loopOffset + 8);
+  _extract(view: DataView, loopOffset: number) {
+    this.start = view.getUint32(loopOffset);
+    this.end = view.getUint32(loopOffset + 4);
+    this.count = view.getUint32(loopOffset + 8);
     this.state = [];
     for (let i = 0; i < 0x10; i++) {
-      this.state[i] = B1view.getUint16(loopOffset + 12 + (i * 2));
+      this.state[i] = view.getUint16(loopOffset + 12 + (i * 2));
     }
   }
 }

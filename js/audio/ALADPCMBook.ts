@@ -5,18 +5,18 @@ export class ALADPCMBook {
   public npredictors!: number;
   public predictors!: number[];
 
-  constructor(B1view: DataView, offset: number) {
-    this._extract(B1view, offset);
+  constructor(view: DataView, offset: number) {
+    this._extract(view, offset);
   }
 
-  _extract(B1view: DataView, offset: number) {
-    this.order = B1view.getInt32(offset);
-    this.npredictors = B1view.getInt32(offset + 4);
+  _extract(view: DataView, offset: number) {
+    this.order = view.getInt32(offset);
+    this.npredictors = view.getInt32(offset + 4);
 
     const predictorCount = this.order * this.npredictors * 8;
     this.predictors = new Array(predictorCount);
     for (let i = 0; i < predictorCount; i++) {
-      this.predictors[i] = B1view.getInt16(offset + 8 + (i * 2));
+      this.predictors[i] = view.getInt16(offset + 8 + (i * 2));
     }
   }
 }

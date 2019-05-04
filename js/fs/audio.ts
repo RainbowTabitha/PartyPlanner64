@@ -6,6 +6,7 @@ import { scenes } from "./scenes";
 import { getRegSetAddress, getRegSetUpperAndLower } from "../utils/MIPS";
 import { S2 } from "../audio/S2";
 import { MBF0 } from "../audio/MBF0";
+import { SBF0 } from "../audio/SBF0";
 
 interface IOffsetInfo {
   upper: number;
@@ -14,7 +15,7 @@ interface IOffsetInfo {
 }
 
 interface IOffsetObj {
-  type?: "S2" | "MBF0";
+  type?: "S2" | "MBF0" | "SBF0";
   relative: number;
   offsets: IOffsetInfo[];
 }
@@ -100,14 +101,16 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   },
   // 0x190A090
   {
-    relative: 0x1B9C40, // SBF0
+    type: "SBF0",
+    relative: 0x1B9C40,
     offsets: [
       { upper: 0x0007A9FA, lower: 0x0007A9FE },
     ]
   },
   // 0x1CBF410
   {
-    relative: 0x56EFC0, // SBF0
+    type: "SBF0",
+    relative: 0x56EFC0,
     offsets: [
       { upper: 0x0001D34E, lower: 0x0001D352 },
       { upper: 0x0007AA1E, lower: 0x0007AA22 },
@@ -133,7 +136,8 @@ _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
   },
   // 0x1A56870
   {
-    relative: 0x1D4C30, // SBF0
+    type: "SBF0",
+    relative: 0x1D4C30,
     offsets: [
       { upper: 0x0000F276, lower: 0x0000F27A },
       { upper: 0x0004BEFE, lower: 0x0004BF02 },
@@ -240,7 +244,8 @@ export namespace audio {
   export function getSequenceTableCount(): number {
     let count = 0;
     for (let i = 0; i < _newCache!.length; i++) {
-      if (_newCache![i])
+      const cacheEntry = _newCache![i];
+      if (cacheEntry && "midis" in cacheEntry)
         count++;
     }
     return count;
@@ -252,18 +257,48 @@ export namespace audio {
 
     let curIndex = -1;
     for (let i = 0; i < _newCache.length; i++) {
-      if (_newCache[i])
+      const cacheEntry = _newCache[i];
+      if (cacheEntry && "midis" in cacheEntry) {
         curIndex++;
 
-      if (curIndex === index) {
-        return _newCache[index];
+        if (curIndex === index) {
+          return cacheEntry;
+        }
+      }
+    }
+    return null;
+  }
+
+  export function getSoundTableCount(): number {
+    let count = 0;
+    for (let i = 0; i < _newCache!.length; i++) {
+      const cacheEntry = _newCache![i];
+      if (cacheEntry && "sounds" in cacheEntry)
+        count++;
+    }
+    return count;
+  }
+
+  export function getSoundTable(index: number): SBF0 | null {
+    if (!_newCache)
+      return null;
+
+    let curIndex = -1;
+    for (let i = 0; i < _newCache.length; i++) {
+      const cacheEntry = _newCache[i];
+      if (cacheEntry && "sounds" in cacheEntry) {
+        curIndex++;
+
+        if (curIndex === index) {
+          return cacheEntry;
+        }
       }
     }
     return null;
   }
 
   let _audioCache: ArrayBuffer | null;
-  let _newCache: (S2 | MBF0 | null)[] | null;
+  let _newCache: (S2 | MBF0 | SBF0 | null)[] | null;
 
   export function clearCache() {
     _audioCache = null;
@@ -291,6 +326,10 @@ export namespace audio {
           const mbf0Offset = getROMOffset(i)!;
           _newCache.push(new MBF0(romhandler.getDataView(mbf0Offset)));
           break;
+
+        case "SBF0":
+          const sbf0Offset = getROMOffset(i)!;
+          _newCache.push(new SBF0(romhandler.getDataView(sbf0Offset)));
 
         default:
           _newCache.push(null);

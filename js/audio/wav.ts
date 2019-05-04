@@ -1,6 +1,7 @@
 import { ALBank } from "./ALBank";
 import { ALWaveType } from "./ALWaveTable";
 import { decodeVADPCM } from "./vadpcm";
+import { ISound } from "./ALSound";
 
 const RIFF_CHUNK_HEADER_SIZE = 0x8;
 const WAV_FMT_CHUNK_SIZE = 0x18;
@@ -27,9 +28,11 @@ export function extractWavSound(tbl: ArrayBuffer, bank: ALBank, instrumentIndex:
   }
 
   const sound = instrument.sounds[soundIndex];
-  const wave = sound.wave;
-  const samplingRate = bank.sampleRate;
+  return extractWavFromSound(tbl, sound, bank.sampleRate);
+}
 
+export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRate: number): ArrayBuffer {
+  const wave = sound.wave;
   const tblView = new DataView(tbl, wave.waveBase);
 
   if (wave.type === ALWaveType.AL_RAW16_WAVE) {
@@ -82,7 +85,10 @@ export function extractWavSound(tbl: ArrayBuffer, bank: ALBank, instrumentIndex:
     outView.setUint32(position, 0); // Sample Period
     position += 4;
 
-    const keyBase = sound.keymap.keyBase !== 0 ? sound.keymap.keyBase : 0x3C;
+    let keyBase: number = 0x3C;
+    if (sound.keymap && sound.keymap.keyBase !== 0) {
+      keyBase = sound.keymap.keyBase;
+    }
     outView.setUint32(position, keyBase, true); // MIDI Unity Note
     position += 4;
 
@@ -196,7 +202,10 @@ export function extractWavSound(tbl: ArrayBuffer, bank: ALBank, instrumentIndex:
     outView.setUint32(position, 0); // Sample Period
     position += 4;
 
-    const keyBase = sound.keymap.keyBase !== 0 ? sound.keymap.keyBase : 0x3C;
+    let keyBase: number = 0x3C;
+    if (sound.keymap && sound.keymap.keyBase !== 0) {
+      keyBase = sound.keymap.keyBase;
+    }
     outView.setUint32(position, keyBase, true); // MIDI Unity Note
     position += 4;
 

@@ -7,19 +7,19 @@ export class ALADPCMWaveInfo {
   public loop: ALADPCMLoop | null = null;
   public book: ALADPCMBook | null = null;
 
-  constructor(B1view: DataView, offset: number) {
-    this._extract(B1view, offset);
+  constructor(view: DataView, offset: number) {
+    this._extract(view, offset);
   }
 
-  _extract(B1view: DataView, offset: number) {
-    const loopOffset = B1view.getUint32(offset);
+  _extract(view: DataView, offset: number) {
+    const loopOffset = view.getUint32(offset);
     if (loopOffset !== 0) {
-      this.loop = new ALADPCMLoop(B1view, loopOffset);
+      this.loop = new ALADPCMLoop(view, loopOffset);
     }
 
-    const bookOffset = B1view.getUint32(offset + 4);
+    const bookOffset = view.getUint32(offset + 4);
     if (bookOffset !== 0) {
-      this.book = new ALADPCMBook(B1view, bookOffset);
+      this.book = new ALADPCMBook(view, bookOffset);
     }
   }
 }

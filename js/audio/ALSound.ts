@@ -2,7 +2,16 @@ import { ALEnvelope } from "./ALEnvelope";
 import { ALKeyMap } from "./ALKeyMap";
 import { ALWaveTable } from "./ALWaveTable";
 
-export class ALSound {
+export interface ISound {
+  env: ALEnvelope;
+  keymap?: ALKeyMap;
+  wave: ALWaveTable;
+  samplePan: number;
+  sampleVolume: number;
+  flags: number;
+}
+
+export class ALSound implements ISound {
   private __type: string = "ALSound";
 
   public env!: ALEnvelope;

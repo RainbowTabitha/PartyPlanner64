@@ -2,13 +2,16 @@ import React = require("react");
 import { romhandler } from "./romhandler";
 import { audio } from "./fs/audio";
 import { getAdapter } from "./adapter/adapters";
-import { playMidi, AudioPlayerController } from "./audio/player";
+import { playMidi } from "./audio/midiplayer";
 import { Button } from "./controls";
 import { parseGameMidi } from "./audio/midi";
+import { playSound } from "./audio/soundplayer";
+import { AudioPlayerController } from "./audio/playershared";
 
 interface IAudioViewerState {
   hasError: boolean;
   playbackController?: AudioPlayerController | null;
+  playingType: "none" | "midi" | "sound";
   playing: false | [number, number];
 }
 
@@ -17,6 +20,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     super(props);
 
     this.state = {
+      playingType: "none",
       hasError: false,
       playing: false,
     };
@@ -33,12 +37,11 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     const adapter = getAdapter(game)!;
     const names = adapter.getAudioMap();
 
-    let rows = [];
-
+    let sequenceRows = [];
     const sequenceTableCount = audio.getSequenceTableCount();
     for (let t = 0; t < sequenceTableCount; t++) {
       if (t > 0) {
-        rows.push(
+        sequenceRows.push(
           <tr key={t + "hr"}>
             <td colSpan={2}><hr /></td>
           </tr>
@@ -50,17 +53,51 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
         let isPlaying: boolean = false;
         let cannotPlay: boolean = false;
         if (this.state.playing) {
-          isPlaying = t === this.state.playing[0] && s === this.state.playing[1];
+          isPlaying = t === this.state.playing[0] && s === this.state.playing[1]
+            && this.state.playingType === "midi";
           cannotPlay = !isPlaying;
         }
 
-        rows.push(
+        sequenceRows.push(
           <AudioTrackRow key={t + "-" + s}
             table={t} index={s}
             isPlaying={isPlaying}
             cannotPlay={cannotPlay}
             trackName={names[s] || "(none)"}
-            onPlay={this.onPlay}
+            onPlay={this.onPlayMidi}
+            onStop={this.onStop} />
+        );
+      }
+    }
+
+    let soundRows = [];
+    const soundTableCount = audio.getSoundTableCount();
+    for (let t = 0; t < soundTableCount; t++) {
+      if (t > 0) {
+        soundRows.push(
+          <tr key={t + "-s-hr"}>
+            <td colSpan={2}><hr /></td>
+          </tr>
+        );
+      }
+
+      const table = audio.getSoundTable(t)!;
+      for (let s = 0; s < table.sounds.length; s++) {
+        let isPlaying: boolean = false;
+        let cannotPlay: boolean = false;
+        if (this.state.playing) {
+          isPlaying = t === this.state.playing[0] && s === this.state.playing[1]
+            && this.state.playingType === "sound";
+          cannotPlay = !isPlaying;
+        }
+
+        soundRows.push(
+          <AudioTrackRow key={t + "-s-" + s}
+            table={t} index={s}
+            isPlaying={isPlaying}
+            cannotPlay={cannotPlay}
+            trackName={`${s}, 0x${s.toString(16)}`}
+            onPlay={this.onPlaySound}
             onStop={this.onStop} />
         );
       }
@@ -70,7 +107,10 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
       <div className="audioViewContainer">
         <h2>Audio</h2>
         <p>This is an experimental audio player.</p>
-        <AudioEntryTable listing={rows} />
+        <h3>Sound Tracks</h3>
+        <AudioEntryTable listing={sequenceRows} />
+        <h3>Sound Effects</h3>
+        <AudioEntryTable listing={soundRows} />
       </div>
     );
   }
@@ -80,7 +120,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     console.error(error);
   }
 
-  onPlay = (table: number, index: number) => {
+  onPlayMidi = (table: number, index: number) => {
     const controller = playMidi(table, index);
     controller.addOnFinished(() => {
       this.setState({
@@ -90,6 +130,22 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     });
     this.setState({
       playbackController: controller,
+      playingType: "midi",
+      playing: [table, index],
+    });
+  }
+
+  onPlaySound = (table: number, index: number) => {
+    const controller = playSound(table, index);
+    controller.addOnFinished(() => {
+      this.setState({
+        playbackController: null,
+        playing: false,
+      });
+    });
+    this.setState({
+      playbackController: controller,
+      playingType: "sound",
       playing: [table, index],
     });
   }

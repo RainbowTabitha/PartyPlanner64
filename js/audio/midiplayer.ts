@@ -1,23 +1,16 @@
 import * as MidiPlayer from "midi-player-js";
 import { audio } from "../fs/audio";
-import { S2 } from "./S2";
 import { parseGameMidi } from "./midi";
 import { extractWavSound } from "./wav";
 import { ALKeyMap } from "./ALKeyMap";
 import { $$log } from "../utils/debug";
-import { romhandler } from "../romhandler";
-import { string } from "prop-types";
-
-let _audioContext: AudioContext;
-let _playing: boolean = false;
+import { getAudioContext, getIsPlaying, setIsPlaying, AudioPlayerController } from "./playershared";
 
 export function playMidi(table: number, index: number): AudioPlayerController {
-  if (_playing) {
-    throw new Error("Cannot play more than one MIDI at once.");
+  if (getIsPlaying()) {
+    throw new Error("Should not play more than one audio source at once.");
   }
-  if (!_audioContext) {
-    _audioContext = new AudioContext();
-  }
+  const audioContext = getAudioContext();
 
   const seqTable = audio.getSequenceTable(table)!;
   console.log(seqTable);
@@ -39,7 +32,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
       middt.push(null);
       const insertIndex = middt.length - 1;
       const instrumentVolume = instrument.volume;
-      const prom = _audioContext.decodeAudioData(wav).then(value => {
+      const prom = audioContext.decodeAudioData(wav).then(value => {
         middt[insertIndex] = {
           audioBuffer: value,
           keymap: sound.keymap,
@@ -166,7 +159,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
     }
   });
   player.on("endOfFile", function() {
-    _playing = false;
+    setIsPlaying(false);
   });
   player.loadArrayBuffer(midi);
 
@@ -176,32 +169,6 @@ export function playMidi(table: number, index: number): AudioPlayerController {
   });
 
   return new AudioPlayerController(player);
-}
-
-export class AudioPlayerController {
-  private _player: MidiPlayer.Player;
-  private _onFinishedCallbacks: Function[];
-
-  public constructor(player: MidiPlayer.Player) {
-    this._player = player;
-    this._onFinishedCallbacks = [];
-
-    this._player.on("endOfFile", () => {
-      this._onFinishedCallbacks.forEach(callback => callback());
-    });
-  }
-
-  stop() {
-    if (this._player) {
-      this._player.stop();
-      _playing = false;
-      this._onFinishedCallbacks.forEach(callback => callback());
-    }
-  }
-
-  addOnFinished(callback: () => void) {
-    this._onFinishedCallbacks.push(callback);
-  }
 }
 
 type SampleInfo = {
@@ -228,7 +195,8 @@ function createAudioNode(
   targetVelocity: number,
   channelVelocity: number
 ): AudioBufferSourceNode {
-  const node = _audioContext.createBufferSource();
+  const audioContext = getAudioContext();
+  const node = audioContext.createBufferSource();
   node.buffer = sampleInfo.audioBuffer;
   node.detune.value = sampleInfo.keymap.detune;
 
@@ -248,13 +216,13 @@ function createAudioNode(
   //   node.connect(psNode);
   // }
 
-  const gainNode = _audioContext.createGain()
+  const gainNode = audioContext.createGain()
   gainNode.gain.value = sampleInfo.instrumentVolume / VELOCITY_MAX;
   gainNode.gain.value *= (sampleInfo.soundVolume / VELOCITY_MAX);
   gainNode.gain.value *= (channelVelocity / VELOCITY_MAX);
   gainNode.gain.value *= (targetVelocity / VELOCITY_MAX);
 
-  gainNode.connect(_audioContext.destination);
+  gainNode.connect(audioContext.destination);
   node.connect(gainNode);
 
   return node;
