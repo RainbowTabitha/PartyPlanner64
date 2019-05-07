@@ -24,7 +24,7 @@ import { $$hex, $$log } from "../utils/debug";
 //   SBF0RawTableEntry[raw_count];
 //   TBL
 //   SBF0SfxTableEntryOffsets[soundfx_count]; (0x1EEA64C in MP3)
-//   SFB0SfxTableEntry entries follow
+//   SBF0SfxTableEntry entries follow
 // }
 
 // struct SBF0RawTableEntry {
@@ -37,15 +37,15 @@ import { $$hex, $$log } from "../utils/debug";
 //   u8 _zero;
 // }
 
-// struct SFB0SfxTableEntry {
+// struct SBF0SfxTableEntry {
 //   u8 num_infos;
 //   u8 unknown;
 //   u16 zeroes?;
 //   u32 zeroes?;
-//   SFB0SfxTableEntryInner[num_infos];
+//   SBF0SfxTableEntryInner[num_infos];
 // }
 
-// struct SFB0SfxTableEntryInner {
+// struct SBF0SfxTableEntryInner {
 //   u16 unknown;
 //   u16 unknown;
 //   u32 info_offset;

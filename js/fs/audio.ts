@@ -7,6 +7,8 @@ import { getRegSetAddress, getRegSetUpperAndLower } from "../utils/MIPS";
 import { S2 } from "../audio/S2";
 import { MBF0 } from "../audio/MBF0";
 import { SBF0 } from "../audio/SBF0";
+import { T3 } from "../audio/T3";
+import { FXD0 } from "../audio/FXD0";
 
 interface IOffsetInfo {
   upper: number;
@@ -15,7 +17,7 @@ interface IOffsetInfo {
 }
 
 interface IOffsetObj {
-  type?: "S2" | "MBF0" | "SBF0";
+  type?: "S2" | "T3" | "MBF0" | "SBF0" | "FXD0";
   relative: number;
   offsets: IOffsetInfo[];
 }
@@ -48,6 +50,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
 
   // 1832AE0
   {
+    type: "T3",
     relative: 0x2F9440,
     offsets: [
       { upper: 0x0001AF32, lower: 0x0001AF36 },
@@ -60,6 +63,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
 
   // 1BB8460
   {
+    type: "T3",
     relative: 0x67EDC0,
     offsets: [
       { upper: 0x0001AF0E, lower: 0x0001AF12 },
@@ -68,8 +72,9 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
     ]
   },
 
-  // 1CECC60, FXD0
+  // 1CECC60
   {
+    type: "FXD0",
     relative: 0x7B35C0,
     offsets: [
       { upper: 0x0001AF5A, lower: 0x0001AF5E },
@@ -118,7 +123,8 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   },
   // 0x1E2A560
   {
-    relative: 0x6DA110, // FXD0
+    type: "FXD0",
+    relative: 0x6DA110,
     offsets: [
       { upper: 0x0001D382, lower: 0x0001D386 },
     ]
@@ -145,7 +151,8 @@ _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
   },
   // 0x1EFD040
   {
-    relative: 0x67B400, // FXD0
+    type: "FXD0",
+    relative: 0x67B400,
     offsets: [
       { upper: 0x0000F29E, lower: 0x0000F2A2 },
     ]
@@ -279,7 +286,7 @@ export namespace audio {
     return count;
   }
 
-  export function getSoundTable(index: number): SBF0 | null {
+  export function getSoundTable(index: number): T3 | SBF0 | null {
     if (!_newCache)
       return null;
 
@@ -298,7 +305,7 @@ export namespace audio {
   }
 
   let _audioCache: ArrayBuffer | null;
-  let _newCache: (S2 | MBF0 | SBF0 | null)[] | null;
+  let _newCache: (S2 | T3 | MBF0 | SBF0 | FXD0 | null)[] | null;
 
   export function clearCache() {
     _audioCache = null;
@@ -322,6 +329,11 @@ export namespace audio {
           _newCache.push(new S2(romhandler.getDataView(s2Offset)));
           break;
 
+        case "T3":
+          const t3Offset = getROMOffset(i)!;
+          _newCache.push(new T3(romhandler.getDataView(t3Offset)));
+          break;
+
         case "MBF0":
           const mbf0Offset = getROMOffset(i)!;
           _newCache.push(new MBF0(romhandler.getDataView(mbf0Offset)));
@@ -330,6 +342,12 @@ export namespace audio {
         case "SBF0":
           const sbf0Offset = getROMOffset(i)!;
           _newCache.push(new SBF0(romhandler.getDataView(sbf0Offset)));
+          break;
+
+        case "FXD0":
+          const fxd0Offset = getROMOffset(i)!;
+          _newCache.push(new FXD0(romhandler.getDataView(fxd0Offset)));
+          break;
 
         default:
           _newCache.push(null);

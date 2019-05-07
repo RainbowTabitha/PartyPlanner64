@@ -36,7 +36,12 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
   const tblView = new DataView(tbl, wave.waveBase);
 
   if (wave.type === ALWaveType.AL_RAW16_WAVE) {
-    const wavFileSize = 0x28 + (wave.waveLen - 2) + 0x44;
+    const wavFileSize = RIFF_CHUNK_HEADER_SIZE
+      + 4 // "WAVE"
+      + WAV_FMT_CHUNK_SIZE
+      + WAV_DATA_CHUNK_HEADER_SIZE
+      + (wave.waveLen - 2)
+      + WAV_SMPL_CHUNK_SIZE;
     const outBuffer = new ArrayBuffer(wavFileSize);
     const outView = new DataView(outBuffer);
 
