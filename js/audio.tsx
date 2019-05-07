@@ -7,6 +7,7 @@ import { Button } from "./controls";
 import { parseGameMidi } from "./audio/midi";
 import { playSound } from "./audio/soundplayer";
 import { AudioPlayerController } from "./audio/playershared";
+import { extractWavFromSound } from "./audio/wav";
 
 interface IAudioViewerState {
   hasError: boolean;
@@ -58,14 +59,22 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
           cannotPlay = !isPlaying;
         }
 
+        const name = names[s] || "(none)";
         sequenceRows.push(
           <AudioTrackRow key={t + "-" + s}
             table={t} index={s}
             isPlaying={isPlaying}
             cannotPlay={cannotPlay}
-            trackName={names[s] || "(none)"}
+            trackName={name}
             onPlay={this.onPlayMidi}
-            onStop={this.onStop} />
+            onStop={this.onStop}
+            exportButton={
+              <Button onClick={() => _exportMidi(t, s, name)}
+                css="btnAudioExport">
+                <img src="img/audio/export.png" height="16" width="16" />
+                midi
+              </Button>
+            } />
         );
       }
     }
@@ -96,9 +105,16 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
             table={t} index={s}
             isPlaying={isPlaying}
             cannotPlay={cannotPlay}
-            trackName={`${s}, 0x${s.toString(16)}`}
+            trackName={<span title={`0x${s.toString(16).toUpperCase()}`}>{`${s}, 0x${s.toString(16).toUpperCase()}`}</span>}
             onPlay={this.onPlaySound}
-            onStop={this.onStop} />
+            onStop={this.onStop}
+            exportButton={
+              <Button onClick={() => _exportWav(t, s, name)}
+                css="btnAudioExport">
+                <img src="img/audio/export.png" height="16" width="16" />
+                wav
+              </Button>
+            } />
         );
       }
     }
@@ -160,9 +176,10 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
 interface IAudioTrackRowProps {
   table: number;
   index: number;
-  trackName: string;
+  trackName: any;
   isPlaying: boolean;
   cannotPlay: boolean;
+  exportButton?: any;
   onPlay(table: number, index: number): void;
   onStop(table: number, index: number): void;
 }
@@ -216,13 +233,9 @@ class AudioTrackRow extends React.Component<IAudioTrackRowProps> {
     return (
       <tr className="audioTableRow">
         <td>{this.props.trackName}</td>
-        <td>
-          <Button onClick={() => _exportMidi(this.props.table, this.props.index, this.props.trackName)}
-            css="btnAudioExport">
-            <img src="img/audio/export.png" height="16" width="16" />
-            midi
-          </Button>
-        </td>
+        {this.props.exportButton && <td>
+          {this.props.exportButton}
+        </td>}
         {playbackControls}
       </tr>
     );
@@ -235,4 +248,12 @@ function _exportMidi(table: number, index: number, name?: string): void {
   const gameMidiBuffer = seqTable.midis[index].buffer;
   const midi = parseGameMidi(new DataView(gameMidiBuffer), gameMidiBuffer.byteLength);
   saveAs(new Blob([midi]), `${name}.midi`);
+}
+
+function _exportWav(table: number, index: number, name?: string): void {
+  name = name || "sound";
+  const soundTable = audio.getSoundTable(table)!;
+  const sound = soundTable.sounds[index];
+  const wav = extractWavFromSound(soundTable.tbl, sound, sound.sampleRate);
+  saveAs(new Blob([wav]), `${name}.wav`);
 }

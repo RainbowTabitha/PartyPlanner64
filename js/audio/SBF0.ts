@@ -1,4 +1,5 @@
 import { ALSoundSimple } from "./ALSoundSimple";
+import { $$hex, $$log } from "../utils/debug";
 
 /**
  * SBF0 - Custom Sound Effects Format
@@ -6,7 +7,7 @@ import { ALSoundSimple } from "./ALSoundSimple";
 
 // struct SBF0Header {
 //   u32 magic; "SBF0"
-//   u32 midi_count;
+//   u32 soundfx_count;
 //   u32 zeroes;
 //   u32 zeroes;
 //   u16 mystery;
@@ -15,18 +16,18 @@ import { ALSoundSimple } from "./ALSoundSimple";
 //   u16 mystery;
 //   u16 mystery;
 //   ... more fields
-//   0x44: u32 sound_count;
+//   0x44: u32 raw_count;
 //   0x54: u32 tbl_offset;
 //   0x58: u32 tbl_length;
 //   ... more fields
 //   0x70: u32 ?;
-//   SBF0TableEntry[sound_count];
+//   SBF0RawTableEntry[raw_count];
 //   TBL
-
-// TODO: There is more, for example at 0x1EEA64C another table starts.
+//   SBF0SfxTableEntryOffsets[soundfx_count]; (0x1EEA64C in MP3)
+//   SFB0SfxTableEntry entries follow
 // }
 
-// struct SBF0TableEntry {
+// struct SBF0RawTableEntry {
 //   u32 env_offset;
 //   u32 sample_rate;
 //   u32 wave_offset
@@ -34,6 +35,20 @@ import { ALSoundSimple } from "./ALSoundSimple";
 //   u8 sample_volume;
 //   u8 flags;
 //   u8 _zero;
+// }
+
+// struct SFB0SfxTableEntry {
+//   u8 num_infos;
+//   u8 unknown;
+//   u16 zeroes?;
+//   u32 zeroes?;
+//   SFB0SfxTableEntryInner[num_infos];
+// }
+
+// struct SFB0SfxTableEntryInner {
+//   u16 unknown;
+//   u16 unknown;
+//   u32 info_offset;
 // }
 
 export class SBF0 {
@@ -68,5 +83,45 @@ export class SBF0 {
 
     // Extract tbl buffer
     this.tbl = view.buffer.slice(view.byteOffset + tblOffsetStart, view.byteOffset + tblOffsetEnd);
+
+    // Extract the sound effects list.
+    // This list count is higher than the actual raw sound count,
+    // presumably because some entries use the same raw data.
+    if ($$debug) {
+      let details = ""; // This is just a temporary info extraction thing...
+      const soundFxCount = view.getUint32(4);
+      const soundFxListOffset = tblOffsetEnd;
+      for (let i = 0; i < soundFxCount; i++) {
+        const offset = view.getUint32(soundFxListOffset + (i * 4));
+
+        const subcount = view.getUint8(soundFxListOffset + offset);
+        const substructstart = soundFxListOffset + offset + 8;
+        for (let s = 0; s < subcount; s++) {
+          const soundFxInfoOffset = view.getUint32(substructstart + (s * 8) + 4);
+
+          let rawSoundIndex: number;
+          const soundFxInfoType = view.getUint8(soundFxListOffset + soundFxInfoOffset);
+          switch (soundFxInfoType) {
+            case 0x92:
+            case 0x93:
+              rawSoundIndex = view.getUint16(soundFxListOffset + soundFxInfoOffset + 1);
+              break;
+            case 0x12:
+            case 0x13:
+              rawSoundIndex = view.getUint16(soundFxListOffset + soundFxInfoOffset + 2);
+              break;
+            case 0x01:
+            case 0xA0:
+              continue;
+              break;
+            default:
+              throw new Error("Unrecongized soundFxInfoType " + $$hex(soundFxInfoType)
+                + " at " + $$hex(view.byteOffset + soundFxListOffset + soundFxInfoOffset));
+          }
+          details += `\n${$$hex(i)}: ${$$hex(rawSoundIndex)}`;
+        }
+      }
+      $$log(details);
+    }
   }
 }
