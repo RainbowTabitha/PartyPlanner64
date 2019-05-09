@@ -47,10 +47,10 @@ export class NewBoard extends React.Component<INewBoardProps> {
     return (
       <div className="newBoardContainer">
         <NewBoardVersionSelect onVersionChange={this.onVersionChange} />
-        {this.state.version === 3 ?
+        {/* {this.state.version === 3 ?
           <NewBoardTypeSelect type={this.state.type}
             onTypeChange={this.onTypeChange} />
-          : null }
+          : null } */}
         <NewBoardThemeSelect onThemeChange={this.onThemeChange} />
         <Button onClick={this.submit} css="nbCreate">Create</Button>
       </div>
