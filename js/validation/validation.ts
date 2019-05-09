@@ -12,8 +12,6 @@ import { IBoardInfo } from "../adapter/boardinfobase";
 function _overwriteAvailable(boardInfo: IBoardInfo) {
   if (boardInfo.canOverwrite)
     return true;
-  if (get($setting.uiSkipValidation))
-    return true;
   return false;
 }
 

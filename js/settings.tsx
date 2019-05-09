@@ -38,7 +38,7 @@ const _settings: ISetting[] = [
   { id: "ui.debug", type: "checkbox", "default": $$debug, name: "Debug features", advanced: true,
     desc: "Enables debug output and UI that may aid development." },
   { id: "ui.skipvalidation", type: "checkbox", "default": false, name: "Skip Overwrite Validation", advanced: true,
-    desc: "Allow all boards to be written regardless of warnings." },
+    desc: "Allow boards to be written regardless of warnings." },
   { id: "ui.showromboards", type: "checkbox", "default": false, name: "Show ROM Boards", advanced: true,
     desc: "Show boards parsed from the ROM in the editor." },
   { id: "ui.allowallroms", type: "checkbox", "default": false, name: "Allow All ROMs", advanced: true,
