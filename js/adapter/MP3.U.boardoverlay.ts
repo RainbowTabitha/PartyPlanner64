@@ -67,6 +67,7 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
     }
     bestBankForBankSpaces.push(bestBankIdx);
   });
+  if (!bankSpaces.length) bankSpaces.push(board._deadSpace!);
   for (let i = 0; i < 2; i++) { // Ensure at least 2
     if (bankEventSpaces.length < 2) bankEventSpaces.push(board._deadSpace!);
   }
@@ -93,6 +94,7 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
     }
     bestShopForShopEventSpaces.push(bestShopIdx);
   });
+  if (!itemShopSpaces.length) itemShopSpaces.push(board._deadSpace!);
   for (let i = 0; i < 2; i++) { // Ensure at least 2
     if (itemShopEventSpaces.length < 2) itemShopEventSpaces.push(board._deadSpace!);
   }
@@ -104,6 +106,17 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
   // spaces - only the ones that are the "entry" data.
   const _spacesWithGateEvents = getSpacesWithEvent(Gate.id, board);
   const gateEventInfos: GateParameterNames[] = [];
+
+  function _alreadyAddedGateEventInfo(gateSpaceIndex: number): boolean {
+    let found = false;
+    gateEventInfos.forEach(info => {
+      if (info.gateSpaceIndex === gateSpaceIndex) {
+        found = true;
+      }
+    });
+    return found;
+  }
+
   _spacesWithGateEvents.forEach(spaceIndex => {
     const gateEventSpace = board.spaces[spaceIndex];
     forEachEvent(board, (event, space) => {
@@ -113,8 +126,8 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
       if (space !== gateEventSpace) {
         return;
       }
-      const gateEntryIndex = event.parameterValues!.gateEntryIndex;
-      if (gateEntryIndex === spaceIndex) {
+      const gateSpaceIndex = event.parameterValues!.gateSpaceIndex as number;
+      if (!_alreadyAddedGateEventInfo(gateSpaceIndex)) {
         const {
           gateEntryIndex,
           gateSpaceIndex,
@@ -3001,6 +3014,7 @@ lui   V0, hi(CORE_800CD059)
 lb    V0, lo(CORE_800CD059)(V0) ; getting board index?
 sll   V1, V0, 1
 sll   V0, V0, 2
+;li    V0, 0 ; TODO: Hard code board index to 0, so we always use the same gate animation/sound/file.
 lui   A0, hi(D_8011D421)
 addu  A0, A0, V1
 lbu   A0, lo(D_8011D421)(A0)

@@ -156,6 +156,8 @@ export abstract class AdapterBase {
     let boarddef = createBoardDef(boardCopy, chains);
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
+    this._createGateEvents(boardCopy, boardInfo, chains);
+
     let eventSyms: string = "";
     if (this.writeFullOverlay) {
       eventSyms = this._writeNewBoardOverlay(boardCopy, boardInfo);
@@ -180,7 +182,6 @@ export abstract class AdapterBase {
     // Write out the board events to ROM.
     this.onCreateChainEvents(boardCopy, chains);
     this._createStarEvents(boardCopy);
-    this._createGateEvents(boardCopy, boardInfo, chains);
     if (boardInfo.onWriteEvents)
       boardInfo.onWriteEvents(boardCopy);
     if (this.onWriteEvents)

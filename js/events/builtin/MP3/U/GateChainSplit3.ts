@@ -26,6 +26,9 @@ export const GateChainSplit: IEvent = {
     if (!hashEqual([dataView.buffer, info.offset, 0x44], hashes.GATE_FILTER))
       return false;
 
+    // TODO: This crashes when parsing something in Spiny, not important so nop-ing for now.
+    return false;
+
     // We need to parse the chain split I suppose, can't really reuse code
     // right now but it's the same idea, only different offsets.
     let upperAddr = dataView.getUint16(info.offset + 0x7E) << 16;

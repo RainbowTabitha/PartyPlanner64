@@ -67,37 +67,45 @@ const MP3_CHILLY = createBoardInfo("MP3_CHILLY", {
   onLoad: function(board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
   },
-
-  onAfterOverwrite: function(board: IBoard) {
-    const sceneView = scenes.getDataView(72);
-    // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
-    // Since we don't use any default events, we can overwrite it.
-    //sceneView.setUint32(0x26C0, 0); // 0x0031DBD0
-    //sceneView.setUint32(0x26C4, 0); // 0x0031DBD4
-    //sceneView.setUint32(0x26C8, 0); // 0x0031DBD8 // Could also try to set this to 2484B960, and bump up eventASMStart past 8011A8D8
-    // This current approach only works because of another patch in onAfterSave
-  }
 });
 
 // Deep Bloober Sea - (U) ROM
-const MP3_BLOOBER = createBoardInfo("MP3_BLOOBER");
-MP3_BLOOBER.name = "Deep Bloober Sea";
-MP3_BLOOBER.boardDefFile = 571;
-MP3_BLOOBER.bgDir = 6;
-MP3_BLOOBER.str = {
-  boardSelect: [
-    [21, 31],
-    [26, 18],
-  ],
-};
-MP3_BLOOBER.img = {
-  boardSelectImg: 73,
-  splashLogoImg: 23,
-  splashLogoTextImg: 29,
-  gateImg: 359, // dir 19
-};
+const MP3_BLOOBER = createBoardInfo("MP3_BLOOBER", {
+  name: "Deep Bloober Sea",
+  canOverwrite: true,
+  boardDefFile: 571,
+  bgDir: 6,
+  pauseBgDir: 8,
+  str: {
+    boardSelect: [
+      [21, 31],
+      [26, 18],
+    ],
+    boardGreeting: [24, 13],
+    boardGreetingDuel: [24, 2],
+    boardNames: [
+      [49, 40],
+      [83, 44],
+      // [93, 24], This is the songs list, so we can leave it
+    ],
+  },
+  img: {
+    boardSelectImg: 73,
+    splashLogoImg: 23,
+    splashLogoTextImg: 29,
+    pauseLogoImg: 126,
+    gateImg: 359, // dir 19
+  },
+  sceneIndex: 0x49,
+  mainfsEventFile: [19, 620],
+  mainfsBoardFile: [19, 621],
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP3_BLOOBER.bgDir + 1).src;
+  },
+});
 // Works, but needs other values to parse right:
-// MP3_BLOOBER.spaceEventTables = [
+// spaceEventTables = [
 //   { upper: 0x003377C0, lower: 0x003377C8 }, // 0x80107B80, 0x80107B88, table 0x8011D688
 //   { upper: 0x003377CC, lower: 0x003377D4 }, // 0x80107B8C, 0x80107B94, table 0x8011D9CC
 //   // 0x800F8D48 call in between
@@ -106,74 +114,152 @@ MP3_BLOOBER.img = {
 // ];
 
 // Spiny Desert - (U) ROM
-const MP3_SPINY = createBoardInfo("MP3_SPINY");
-MP3_SPINY.name = "Spiny Desert";
-MP3_SPINY.boardDefFile = 572;
-MP3_SPINY.bgDir = 9;
-MP3_SPINY.str = {
-  boardSelect: [
-    [21, 32],
-    [26, 19],
-  ],
-};
-MP3_SPINY.img = {
-  boardSelectImg: 74,
-  splashLogoImg: 24,
-  splashLogoTextImg: 30,
-  gateImg: 366, // dir 19
-};
+const MP3_SPINY = createBoardInfo("MP3_SPINY", {
+  name: "Spiny Desert",
+  canOverwrite: true,
+  boardDefFile: 572,
+  bgDir: 9,
+  pauseBgDir: 11,
+  str: {
+    boardSelect: [
+      [21, 32],
+      [26, 19],
+    ],
+    boardGreeting: [24, 14],
+    boardGreetingDuel: [24, 4],
+    boardNames: [
+      [49, 41],
+      [83, 45],
+      // [93, 25], This is the songs list, so we can leave it
+    ],
+  },
+  img: {
+    boardSelectImg: 74,
+    splashLogoImg: 24,
+    splashLogoTextImg: 30,
+    pauseLogoImg: 127,
+    gateImg: 366, // dir 19
+  },
+
+  sceneIndex: 0x4A,
+  mainfsEventFile: [19, 622],
+  mainfsBoardFile: [19, 623],
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP3_SPINY.bgDir + 1).src;
+  },
+});
 
 // Woody Woods - (U) ROM
-const MP3_WOODY = createBoardInfo("MP3_WOODY");
-MP3_WOODY.name = "Woody Woods";
-MP3_WOODY.boardDefFile = 573;
-MP3_WOODY.bgDir = 12;
-MP3_WOODY.str = {
-  boardSelect: [
-    [21, 33],
-    [26, 20],
-  ],
-};
-MP3_WOODY.img = {
-  boardSelectImg: 75,
-  splashLogoImg: 25,
-  splashLogoTextImg: 31,
-  gateImg: 373, // dir 19
-};
+const MP3_WOODY = createBoardInfo("MP3_WOODY", {
+  name: "Woody Woods",
+  canOverwrite: true,
+  boardDefFile: 573,
+  bgDir: 12,
+  pauseBgDir: 14,
+  str: {
+    boardSelect: [
+      [21, 33],
+      [26, 20],
+    ],
+    boardGreeting: [24, 15],
+    boardGreetingDuel: [24, 6],
+    boardNames: [
+      [49, 42],
+      [83, 46],
+      // [93, 26], This is the songs list, so we can leave it
+    ],
+  },
+  img: {
+    boardSelectImg: 75,
+    splashLogoImg: 25,
+    splashLogoTextImg: 31,
+    pauseLogoImg: 128,
+    gateImg: 373, // dir 19
+  },
+
+  sceneIndex: 0x4B,
+  mainfsEventFile: [19, 624],
+  mainfsBoardFile: [19, 625],
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP3_WOODY.bgDir + 1).src;
+  },
+});
 
 // Creepy Cavern - (U) ROM
-const MP3_CAVERN = createBoardInfo("MP3_CAVERN");
-MP3_CAVERN.name = "Creepy Cavern";
-MP3_CAVERN.boardDefFile = 574;
-MP3_CAVERN.bgDir = 15;
-MP3_CAVERN.str = {
-  boardSelect: [
-    [21, 34],
-    [26, 21],
-  ],
-};
-MP3_CAVERN.img = {
-  boardSelectImg: 76,
-  splashLogoImg: 26,
-  splashLogoTextImg: 32,
-};
+const MP3_CAVERN = createBoardInfo("MP3_CAVERN", {
+  name: "Creepy Cavern",
+  canOverwrite: true,
+  boardDefFile: 574,
+  bgDir: 15,
+  pauseBgDir: 17,
+  str: {
+    boardSelect: [
+      [21, 34],
+      [26, 21],
+    ],
+    boardGreeting: [24, 16],
+    boardGreetingDuel: [24, 8],
+    boardNames: [
+      [49, 43],
+      [83, 47],
+      // [93, 27], This is the songs list, so we can leave it
+    ],
+  },
+  img: {
+    boardSelectImg: 76,
+    splashLogoImg: 26,
+    splashLogoTextImg: 32,
+    pauseLogoImg: 129,
+    gateImg: 383, // dir 19
+  },
+
+  sceneIndex: 0x4C,
+  mainfsEventFile: [19, 626],
+  mainfsBoardFile: [19, 627],
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP3_CAVERN.bgDir + 1).src;
+  },
+});
 
 // Waluigi's Land - (U) ROM
-const MP3_WALUIGI = createBoardInfo("MP3_WALUIGI");
-MP3_WALUIGI.name = "Waluigi's Land";
-MP3_WALUIGI.boardDefFile = 575;
-MP3_WALUIGI.bgDir = 18;
-MP3_WALUIGI.str = {
-  boardSelect: [
-    [21, 35],
-    [26, 22],
-  ],
-};
-MP3_WALUIGI.img = {
-  boardSelectImg: 77,
-  splashLogoImg: 27,
-  splashLogoTextImg: 33,
-};
+const MP3_WALUIGI = createBoardInfo("MP3_WALUIGI", {
+  name: "Waluigi's Land",
+  canOverwrite: true,
+  boardDefFile: 575,
+  bgDir: 18,
+  pauseBgDir: 20,
+  str: {
+    boardSelect: [
+      [21, 35],
+      [26, 22],
+    ],
+    boardGreeting: [24, 17],
+    boardGreetingDuel: [24, 10],
+    boardNames: [
+      [49, 44],
+      [83, 48],
+      // [93, 28], This is the songs list, so we can leave it
+    ],
+  },
+  img: {
+    boardSelectImg: 77,
+    splashLogoImg: 27,
+    splashLogoTextImg: 33,
+    pauseLogoImg: 130,
+    gateImg: 387, // dir 19
+  },
+
+  sceneIndex: 0x4D,
+  mainfsEventFile: [19, 628],
+  mainfsBoardFile: [19, 629],
+
+  onLoad: function(board: IBoard) {
+    board.otherbg.largescene = hvqfs.readBackground(MP3_WALUIGI.bgDir + 1).src;
+  },
+});
 
 // Gate Guy - (U) ROM
 const MP3U_GATEGUY = createBoardInfo("MP3U_GATEGUY");
