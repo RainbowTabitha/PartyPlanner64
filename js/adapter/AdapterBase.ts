@@ -677,16 +677,16 @@ export abstract class AdapterBase {
       }));
 
       // There is also a listing of the entry/exit spaces, probably used by the gate animation.
-      if (boardInfo.gateNeighborsOffset) {
-        const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
-        for (let gateAddrIndex = 0; gateAddrIndex < boardInfo.gateNeighborsOffset.length; gateAddrIndex++) {
-          let gateAddr = boardInfo.gateNeighborsOffset[gateAddrIndex];
-          gateAddr += (gateIndex * 4);
+      // if (boardInfo.gateNeighborsOffset) {
+      //   const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
+      //   for (let gateAddrIndex = 0; gateAddrIndex < boardInfo.gateNeighborsOffset.length; gateAddrIndex++) {
+      //     let gateAddr = boardInfo.gateNeighborsOffset[gateAddrIndex];
+      //     gateAddr += (gateIndex * 4);
 
-          sceneView.setUint16(gateAddr, entrySpaceIndex);
-          sceneView.setUint16(gateAddr + 2, exitSpaceIndex);
-        }
-      }
+      //     sceneView.setUint16(gateAddr, entrySpaceIndex);
+      //     sceneView.setUint16(gateAddr + 2, exitSpaceIndex);
+      //   }
+      // }
 
       gateIndex++;
     }
@@ -729,7 +729,7 @@ export abstract class AdapterBase {
         this._writeEventsNew(board, boardInfo, boardIndex, chains);
       }
 
-      if (this.gameVersion !== 1) { // If doesn't have custom overlay yet
+      if (!this.writeFullOverlay) {
         this._writeEventAsmHook(boardInfo, boardIndex);
       }
     }
@@ -1313,6 +1313,7 @@ export abstract class AdapterBase {
     }
   }
 
+  // Unused, unless MP2 goes old school.
   _writeGates(board: IBoard, boardInfo: IBoardInfo) {
     if (!boardInfo.gateCount || !boardInfo.sceneIndex)
       return;
@@ -1333,40 +1334,6 @@ export abstract class AdapterBase {
         curGateSpaceIndexOffset += 2;
       }
     }
-  }
-
-  _writeArrowRotations(board: IBoard, boardInfo: IBoardInfo) {
-    const { arrowRotStartOffset, arrowRotEndOffset, sceneIndex } = boardInfo;
-    if (!arrowRotStartOffset || !arrowRotEndOffset || !sceneIndex)
-      return;
-
-    const sceneView = scenes.getDataView(sceneIndex);
-    // Clear the original board's instructions.
-    for (let offset = arrowRotStartOffset; offset < arrowRotEndOffset; offset += 4) {
-      sceneView.setUint32(offset, 0);
-    }
-
-    const rotations = [];
-    for (let i = 0; i < board.spaces.length; i++) {
-      if (board.spaces[i].type === Space.ARROW) {
-        rotations.push(board.spaces[i].rotation || 0);
-      }
-    }
-
-    const game = romhandler.getROMGame()!;
-    const addArrowAngleAddr = getSymbol(game, "AddArrowAngle");
-
-    const totalArrowsToWrite = getArrowRotationLimit(boardInfo);
-
-    let insts = [`.orga ${arrowRotStartOffset}`];
-    const loopLimit = Math.min(totalArrowsToWrite, rotations.length);
-    for (let i = 0; i < loopLimit; i++) {
-      insts.push(`LUI A0 hi(${$$hex(getRawFloat32Format(rotations[i]))})`);
-      insts.push(`JAL ${addArrowAngleAddr}`);
-      insts.push("MTC1 A0 F12");
-    }
-
-    assemble(insts, { buffer: sceneView.buffer });
   }
 
   _writeBackground(bgIndex: number, src: string, width: number, height: number) {

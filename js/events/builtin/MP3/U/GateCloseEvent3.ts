@@ -32,11 +32,12 @@ export const GateClose3: IEvent = {
     return true;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
+    // Most of the code still lives in the overlay.
     const gateIndex = event.parameterValues!.gateIndex as number;
     return `
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
-      jal   0x80108AE8 ; gate_spaces_event
+      jal   __PP64_INTERNAL_GATE_CLOSE_EVENT
        li    A0, ${gateIndex}
       lw    RA, 0x10(SP)
       jr    RA

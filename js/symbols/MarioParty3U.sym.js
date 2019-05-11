@@ -1889,6 +1889,11 @@ exports["default"] = [
       name: "GetChainSpaceIndexFromAbsSpaceIndex",
       desc: "A0=abs_space_index" },
 {
+      addr: 2148448240, // 0x800EB7F0
+      type: "code",
+      name: "SetSpaceType",
+      desc: "A0=space_index" },
+{
       addr: 2148448864, // 0x800EBA60
       type: "code",
       name: "EventTableHydrate",
@@ -1979,6 +1984,11 @@ exports["default"] = [
       addr: 2148490564, // 0x800F5D44
       type: "code",
       name: "AdjustPlayerCoinsGradual",
+      desc: "A0=player_index" },
+{
+      addr: 2148492272, // 0x800F63F0
+      type: "code",
+      name: "RefreshHUD",
       desc: "A0=player_index" },
 {
       addr: 2148553232, // 0x80105210

@@ -1,9 +1,6 @@
 import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
 import { getFunctionLength } from "../../../../utils/MIPS";
-import { ISpaceEvent, getSpacesOfSubType } from "../../../../boards";
-import { scenes } from "../../../../fs/scenes";
-import { distance } from "../../../../utils/number";
-import { SpaceSubtype } from "../../../../types";
+import { ISpaceEvent } from "../../../../boards";
 
 export const BooEvent3: Partial<IEvent> = {
   parse(dataView: DataView, info: IEventParseInfo) {
@@ -28,37 +25,10 @@ export const BooEvent3: Partial<IEvent> = {
     return true;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    // Just point to the event because we left it there.
-    if (info.boardIndex === 0) {
-      const sceneView = scenes.getDataView(72);
-      sceneView.setUint16(0x859A, info.curSpaceIndex); // 0x8010DF3A, 0x003239EC + 0xBE
-
-      // Find the closest (probably only) boo space nearby.
-      let booSpaces = getSpacesOfSubType(SpaceSubtype.BOO, info.board);
-      let eventSpace = info.curSpace;
-      let bestDistance = Number.MAX_VALUE;
-      let bestBooIdx = info.board._deadSpace!;
-      for (let b = 0; b < booSpaces.length; b++) {
-        let booIdx = booSpaces[b];
-        let booSpace = info.board.spaces[booIdx];
-        let dist = distance(eventSpace.x, eventSpace.y, booSpace.x, booSpace.y);
-        if (dist < bestDistance) {
-          bestDistance = dist;
-          bestBooIdx = booIdx;
-        }
-      }
-
-      sceneView.setUint16(0x861A, bestBooIdx); // 0x003239EC + 0x13E
-      sceneView.setUint16(0x8626, bestBooIdx); // 0x003239EC + 0x14A
-
-      return `
-        J 0x8010DE7C ; boo_event
-        NOP
-      `;
-
-      // return [0x003239EC, 0];
-    }
-
-    throw "Can't write Boo to board index " + info.boardIndex;
+    // Code still lives in the board overlay.
+    return `
+      J __PP64_INTERNAL_BOO_SPACE_EVENT
+      NOP
+    `;
   }
 };

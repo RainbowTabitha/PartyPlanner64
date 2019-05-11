@@ -16,10 +16,9 @@ import { scenes } from "../fs/scenes";
 import { IBoardInfo } from "./boardinfobase";
 import { ChainSplit3 } from "../events/builtin/MP3/U/ChainSplit3";
 import { ChainMerge3 } from "../events/builtin/MP3/U/ChainMergeEvent3";
-import { GateChainSplit } from "../events/builtin/MP3/U/GateChainSplit3";
-import { ReverseChainSplit } from "../events/builtin/MP3/U/ReverseChainSplit3";
 import { ChainMerge } from "../events/builtin/ChainMergeEvent";
 import { BankEvent } from "../events/builtin/events.common";
+import { createBoardOverlay } from "./MP3.U.boardoverlay";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -34,7 +33,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   public SCENE_TABLE_ROM: number = 0x00096EF4;
 
-  public writeFullOverlay: boolean = false;
+  public writeFullOverlay: boolean = true;
 
   constructor() {
     super();
@@ -47,12 +46,11 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     }
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
-    this._writeBanks(board, boardInfo);
-    this._writeItemShops(board, boardInfo);
-    this._writeGates(board, boardInfo);
-    this._writeArrowRotations(board, boardInfo);
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
+    return createBoardOverlay(board, boardInfo);
+  }
 
+  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
     // Patch game to use all 8MB.
     romView.setUint16(0x360EE, 0x8040); // Main heap now starts at 0x80400000
     romView.setUint16(0x360F6, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space
@@ -68,7 +66,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     // This generally fixes duels on happening spaces.
     // gamemasterplc: try making 0x00111F04 in ROM 0x10800009 for a temporary fix for question space duels until we figure out events better
     const boardPlayScene = scenes.getDataView(128);
-    boardPlayScene.setUint32(0x27774, 0x10800009); // 800FE2E4
+    //boardPlayScene.setUint32(0x27774, 0x10800009); // 800FE2E4
 
     // The game will soft hang on the first player's turn when the number of plain spaces
     // (red/blue) is less than a certain lowish number.

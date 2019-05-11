@@ -311,7 +311,7 @@ function _removeAssociations(spaceIdx: number, board: IBoard) {
   });
 }
 
-function _forEachEvent(board: IBoard, fn: (event: ISpaceEvent, space: ISpace) => void) {
+export function forEachEvent(board: IBoard, fn: (event: ISpaceEvent, space: ISpace, spaceIndex: number) => void) {
   const spaces = board.spaces;
   if (spaces && spaces.length) {
     for (let s = 0; s < spaces.length; s++) {
@@ -320,7 +320,7 @@ function _forEachEvent(board: IBoard, fn: (event: ISpaceEvent, space: ISpace) =>
         // Reverse to allow deletion in callback.
         for (let i = space.events.length - 1; i >= 0; i--) {
           const event = space.events[i];
-          fn(event, space);
+          fn(event, space, s);
         }
       }
     }
@@ -328,7 +328,7 @@ function _forEachEvent(board: IBoard, fn: (event: ISpaceEvent, space: ISpace) =>
 }
 
 export function forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: ISpaceEvent, space: ISpace) => void) {
-  _forEachEvent(board, (spaceEvent: ISpaceEvent, space: ISpace) => {
+  forEachEvent(board, (spaceEvent: ISpaceEvent, space: ISpace) => {
     const event = getEvent(spaceEvent.id, board);
     if (event.parameters) {
       for (let p = 0; p < event.parameters.length; p++) {
@@ -403,7 +403,7 @@ export function removeEventFromBoard(board: IBoard, eventId: string): void {
     delete board.events[eventId];
   }
 
-  _forEachEvent(board, (event, space) => {
+  forEachEvent(board, (event, space) => {
     if (event.id === eventId) {
       removeEventFromSpace(space, event);
     }
@@ -592,7 +592,7 @@ function _fixPotentiallyOldBoard(board: IBoard) {
 }
 
 function _migrateOldCustomEvents(board: IBoard) {
-  _forEachEvent(board, (spaceEvent: ISpaceEvent) => {
+  forEachEvent(board, (spaceEvent: ISpaceEvent) => {
     // Unnecessary properties of space events.
     if ("parameters" in spaceEvent) {
       delete (spaceEvent as any).parameters;
@@ -781,7 +781,7 @@ export function getStartSpaceIndex(board: IBoard) {
   return -1;
 }
 
-export function getSpacesOfType(type: Space, board: IBoard = getCurrentBoard()) {
+export function getSpacesOfType(type: Space, board: IBoard = getCurrentBoard()): number[] {
   let spaces = board.spaces;
   let typeSpaces = [];
   for (let i = 0; i < spaces.length; i++) {
@@ -793,7 +793,7 @@ export function getSpacesOfType(type: Space, board: IBoard = getCurrentBoard()) 
   return typeSpaces;
 }
 
-export function getSpacesOfSubType(subtype: SpaceSubtype, board: IBoard = getCurrentBoard()) {
+export function getSpacesOfSubType(subtype: SpaceSubtype, board: IBoard = getCurrentBoard()): number[] {
   let spaces = board.spaces;
   let subtypeSpaces = [];
   for (let i = 0; i < spaces.length; i++) {
@@ -803,6 +803,18 @@ export function getSpacesOfSubType(subtype: SpaceSubtype, board: IBoard = getCur
       subtypeSpaces.push(i);
   }
   return subtypeSpaces;
+}
+
+/** Returns array of space indices of spaces with a given event. */
+export function getSpacesWithEvent(eventName: string, board: IBoard = getCurrentBoard()): number[] {
+  let spaces = board.spaces;
+  const eventSpaces: number[] = [];
+  forEachEvent(board, (event, space, spaceIndex) => {
+    if (event.id === eventName) {
+      eventSpaces.push(spaceIndex);
+    }
+  });
+  return eventSpaces;
 }
 
   // Returns array of space indices connected to from a space.

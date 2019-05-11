@@ -64,23 +64,56 @@ export const ChainMerge3: IEvent = {
     return false;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    let staticHelperJal = 0;
-    if (info.boardIndex === 0)
-      staticHelperJal = 0x80108C1C; // TODO: Include this code here too.
-    else
-      throw `ChainMerge3 for ${info.boardIndex} needs work`;
-
     // TODO: Could just use "prevSpace" etc below, the definelabels should work...
     return `
       ADDIU SP, SP, -0x18
       SW    RA, 0x10(SP)
       ADDIU A0, R0, ${event.parameterValues!.prevSpace}
       ADDIU A1, R0, ${event.parameterValues!.chain || 0}
-      JAL   ${$$hex(staticHelperJal)}
+      JAL   func_80108C1C
       ADDIU A2, R0, ${event.parameterValues!.spaceIndex || 0}
       LW    RA, 0x10(SP)
       JR    RA
       ADDIU SP, SP, 0x18
+
+  .beginstatic
+    func_80108C1C:
+      addiu SP, SP, -0x20
+      sw    RA, 0x1c(SP)
+      sw    S2, 0x18(SP)
+      sw    S1, 0x14(SP)
+      sw    S0, 0x10(SP)
+      move  S0, A0
+      move  S1, A1
+      move  S2, A2
+      jal   GetPlayerStruct
+        li    A0, -1
+      lbu   A0, 0x15(V0)
+      sll   A0, A0, 0x18
+      sra   A0, A0, 0x18
+      lbu   A1, 0x16(V0)
+      sll   A1, A1, 0x18
+      sra   A1, A1, 0x18
+      andi  A0, A0, 0xffff
+      jal   GetAbsSpaceIndexFromChainSpaceIndex
+        andi  A1, A1, 0xffff
+      sll   V0, V0, 0x10
+      sra   V0, V0, 0x10
+      bne   V0, S0, func_80108C1C_exit
+        sll   A1, S1, 0x10
+      sll   A2, S2, 0x10
+      li    A0, -1
+      sra   A1, A1, 0x10
+      jal   SetNextChainAndSpace
+        sra   A2, A2, 0x10
+      func_80108C1C_exit:
+      lw    RA, 0x1c(SP)
+      lw    S2, 0x18(SP)
+      lw    S1, 0x14(SP)
+      lw    S0, 0x10(SP)
+      jr    RA
+        addiu SP, SP, 0x20
+  .endstatic
     `;
   },
 }

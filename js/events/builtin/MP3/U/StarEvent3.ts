@@ -15,9 +15,9 @@ export const StarEvent3: Partial<IEvent> = {
     return false;
   },
   write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
-    // Just point to the event because we left it alone.
+    // Most of the code lives in the overlay.
     return `
-      J 0x8010A4B4 ; star_space_event
+      J __PP64_INTERNAL_STAR_SPACE_EVENT ; star_space_event
       NOP
     `;
   },

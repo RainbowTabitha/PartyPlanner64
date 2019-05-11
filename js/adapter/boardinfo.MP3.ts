@@ -10,6 +10,7 @@ const MP3_CHILLY = createBoardInfo("MP3_CHILLY", {
   canOverwrite: true,
   boardDefFile: 570,
   bgDir: 3,
+  pauseBgDir: 5,
   str: {
     boardSelect: [
       [21, 30],
@@ -61,7 +62,7 @@ const MP3_CHILLY = createBoardInfo("MP3_CHILLY", {
   gateCount: 2,
   arrowRotStartOffset: 0x2398, // 0x0031D8A8 // 0x80107D38
   arrowRotEndOffset: 0x2440, // 0x0031D950 // 0x80107DDC
-  audioIndexOffset: 0x2682, // 0x0031DB92
+  audioIndexOffset: 0x2682, // 0x0031DB92 // 0x80108022
 
   onLoad: function(board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
@@ -71,24 +72,10 @@ const MP3_CHILLY = createBoardInfo("MP3_CHILLY", {
     const sceneView = scenes.getDataView(72);
     // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
     // Since we don't use any default events, we can overwrite it.
-    sceneView.setUint32(0x26C0, 0); // 0x0031DBD0
-    sceneView.setUint32(0x26C4, 0); // 0x0031DBD4
-    sceneView.setUint32(0x26C8, 0); // 0x0031DBD8 // Could also try to set this to 2484B960, and bump up eventASMStart past 8011A8D8
+    //sceneView.setUint32(0x26C0, 0); // 0x0031DBD0
+    //sceneView.setUint32(0x26C4, 0); // 0x0031DBD4
+    //sceneView.setUint32(0x26C8, 0); // 0x0031DBD8 // Could also try to set this to 2484B960, and bump up eventASMStart past 8011A8D8
     // This current approach only works because of another patch in onAfterSave
-
-    // Board specific calls
-    //romView.setUint32(0x0031DB0C, 0); // Millenium star?
-    //romView.setUint32(0x0031DB14, 0); // Something else important?
-    //romView.setUint32(0x0031DB1C, 0);
-    //romView.setUint32(0x0031DB24, 0);
-    //romView.setUint32(0x0031DB2C, 0); // Skeleton key doors drawing. (I have a note about 0x80107FC4, YMMV)
-    //romView.setUint32(0x0031DB34, 0); // Bank resources
-    //romView.setUint32(0x0031DB3C, 0); // Item shop assets, draws toad on Z board overview
-    //romView.setUint32(0x0031DB44, 0);
-
-    // Banish the snowman assets to the dead space.
-    sceneView.setUint16(0x1321E, (board as any)._deadSpace); // 0x0032E72E
-    sceneView.setUint16(0x1323E, (board as any)._deadSpace); // 0x0032E74E
   }
 });
 

@@ -161,9 +161,11 @@ export const scenes = new class Scenes {
     }
 
     for (let i = index + 1; i < this._sceneInfo!.length; i++) {
-      const info = this._sceneInfo![i];
-      info.rom_start += diff;
-      info.rom_end += diff;
+      const otherInfo = this._sceneInfo![i];
+      if (info.rom_start < otherInfo.rom_start) {
+        otherInfo.rom_start += diff;
+        otherInfo.rom_end += diff;
+      }
     }
 
     $$log(`Replaced overlay ${$$hex(index)} with new buffer of length ${buffer.byteLength}`, newInfoValues);

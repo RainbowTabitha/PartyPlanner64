@@ -25,15 +25,6 @@ export function getBoardInfoByIndex(gameID: Game, index: number): IBoardInfo {
 }
 
 export function getArrowRotationLimit(boardInfo: any) {
-  const { arrowRotStartOffset, arrowRotEndOffset } = boardInfo;
-  if (!arrowRotStartOffset)
-    return 0;
-
   // 8 arrows is the imposed restriction by the game.
-  // We may be further restricted by the space available.
-  // We can write 1 rotation angle with 3 instructions.
-  const bytesAvailable = arrowRotEndOffset - arrowRotStartOffset;
-  const instructionsAvailable = Math.floor(bytesAvailable / 4);
-  const numArrowBlocks = Math.floor(instructionsAvailable / 3);
-  return Math.min(8, numArrowBlocks);
+  return 8;
 }
