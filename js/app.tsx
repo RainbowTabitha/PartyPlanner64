@@ -276,6 +276,19 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
   }
 };
 
+// Capture errors that don't happen during rendering.
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  const app = (window as any)._PP64instance;
+  if (error) {
+    if (app) {
+      _onError(app, error, null);
+    }
+    else { // Occurred during ReactDOM.render?
+      alert(error);
+    }
+  }
+};
+
 const body = document.getElementById("body");
 (window as any)._PP64instance = ReactDOM.render(<PP64App /> as any, body);
 
@@ -286,13 +299,6 @@ function _onError(app: PP64App, error: Error, errorInfo: React.ErrorInfo | null)
   });
   console.error(error, errorInfo);
 }
-
-// Capture errors that don't happen during rendering.
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-  if (error) {
-    _onError((window as any)._PP64instance, error, null);
-  }
-};
 
 interface IErrorDisplayProps {
   error: Error,
