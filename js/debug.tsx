@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Button } from "./controls";
 import { openFile } from "./utils/input";
+import { print as printBuffer } from "./utils/arrays";
 import { blockUI } from "./appControl";
 import { romhandler } from "./romhandler";
 import {
@@ -34,6 +35,7 @@ interface IDebugViewState {
   printStringDir: string;
   printStringIndex: string;
   findStringValue: string;
+  printStringRaw: boolean;
 }
 
 export const DebugView = class DebugView extends React.Component<{}, IDebugViewState> {
@@ -53,6 +55,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
     printStringDir: "",
     printStringIndex: "",
     findStringValue: "",
+    printStringRaw: false,
   }
 
   render() {
@@ -83,6 +86,9 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
             onChange={e => this.setState({ printStringIndex: e.target.value })}
           />
           <Button onClick={this.onPrintStringClick}>Print string (console)</Button>
+          <input type="checkbox" checked={this.state.printStringRaw}
+            onChange={e => this.setState({ printStringRaw: e.target.checked })} />
+            Raw?
           <br />
           <input type="text" placeholder="Search string" className="dbInputShort"
             value={this.state.findStringValue}
@@ -154,6 +160,8 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
       return;
     }
 
+    let result;
+    const raw = this.state.printStringRaw;
     const isMP3 = romhandler.getGameVersion() === 3;
     let dirIndex: number;
     if (isMP3) {
@@ -162,11 +170,18 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
         return;
       }
 
-      console.log(strings3.read("en", dirIndex, strIndex));
-      return;
+      result = strings3.read("en", dirIndex, strIndex, raw);
+    }
+    else {
+      result = strings.read(strIndex, raw);
     }
 
-    console.log(strings.read(strIndex));
+    if (result instanceof ArrayBuffer) {
+      printBuffer(result);
+    }
+    else {
+      console.log(result);
+    }
   }
 
   onFindStringClick = () => {

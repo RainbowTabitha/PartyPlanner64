@@ -8,6 +8,7 @@ import { parseGameMidi } from "./audio/midi";
 import { playSound } from "./audio/soundplayer";
 import { AudioPlayerController } from "./audio/playershared";
 import { extractWavFromSound } from "./audio/wav";
+import { $setting, get } from "./settings";
 
 interface IAudioViewerState {
   hasError: boolean;
@@ -36,7 +37,9 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
 
     const game = romhandler.getGameVersion()!;
     const adapter = getAdapter(game)!;
-    const names = adapter.getAudioMap();
+    const trackNames = adapter.getAudioMap();
+
+    const advancedSetting = get($setting.uiAdvanced);
 
     let sequenceRows = [];
     const sequenceTableCount = audio.getSequenceTableCount();
@@ -59,7 +62,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
           cannotPlay = !isPlaying;
         }
 
-        const name = names[s] || "(none)";
+        const name = trackNames[s] || "(none)";
         sequenceRows.push(
           <AudioTrackRow key={t + "-" + s}
             table={t} index={s}
@@ -91,6 +94,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
       }
 
       const table = audio.getSoundTable(t)!;
+      const soundEffectNames = adapter.getSoundEffectMap(t);
       for (let s = 0; s < table.sounds.length; s++) {
         let isPlaying: boolean = false;
         let cannotPlay: boolean = false;
@@ -100,12 +104,29 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
           cannotPlay = !isPlaying;
         }
 
+        let trackName;
+        const effectName = soundEffectNames[s];
+        const index = `${s}, 0x${s.toString(16).toUpperCase()}`;
+        if (effectName) {
+          trackName = <span title={index}>
+            {effectName}
+            {advancedSetting &&
+              <span className="audioIndexBesideName">{` (${index})`}</span>
+            }
+          </span>;
+        }
+        else {
+          trackName = <span title={index}>
+            {index}
+          </span>;
+        }
+
         soundRows.push(
           <AudioTrackRow key={t + "-s-" + s}
             table={t} index={s}
             isPlaying={isPlaying}
             cannotPlay={cannotPlay}
-            trackName={<span title={`0x${s.toString(16).toUpperCase()}`}>{`${s}, 0x${s.toString(16).toUpperCase()}`}</span>}
+            trackName={trackName}
             onPlay={this.onPlaySound}
             onStop={this.onStop}
             exportButton={

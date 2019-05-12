@@ -1462,6 +1462,7 @@ lw    RA, 0x10(SP)
 jr    RA
  addiu SP, SP, 0x18
 
+; Helper for choosing an item from the item shop message box
 func_80107174:
 addiu SP, SP, -0x48
 sw    RA, 0x40(SP)
@@ -1644,6 +1645,7 @@ lw    S0, 0x28(SP)
 jr    RA
  addiu SP, SP, 0x48
 
+; Helper for choosing an item from the item shop message box
 func_80107408:
 addiu SP, SP, -0x48
 sw    RA, 0x40(SP)
@@ -3429,7 +3431,7 @@ L80109C34:
 jal   0x800EC628
  li    A1, 0x4103 ; "Hi I'm the Skeleton Key! Shall I use my skills..."
 li    A0, 2
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  move  A1, R0
 jal   0x800EC6C8
  move  S0, V0
@@ -3594,10 +3596,11 @@ lw    S0, 0x10(SP)
 jr    RA
  addiu SP, SP, 0x28
 
-; helper used when selecting between textbox options
-; A0: pointer to AI choice data, or ?
-; A1: int (default choice?)
-func_8010A134:
+; Helper used when prompted between textbox options.
+; If A0 is a pointer to AI data, the AI logic is ran to pick for CPUs.
+; If A0 is 0 or 1, the 0th or 1st option is chosen by CPUs.
+; If A0 is 2, then the value of A1 is the CPUs option index choice.
+__PP64_INTERNAL_BASIC_MESSAGE_CHOICE:
 addiu SP, SP, -0x48
 sw    RA, 0x40(SP)
 sw    S5, 0x3c(SP)
@@ -3617,29 +3620,31 @@ swl   V0, 0x20(SP)
 swr   V0, 0x23(SP)
 move  S1, R0
 addiu S4, SP, 0x18
+; begin looping over each player
 L8010A180:
 lui   V0, hi(current_player_index)
 lb    V0, lo(current_player_index)(V0)
-bne   S1, V0, L8010A290
+bne   S1, V0, L8010A290 ; if S1 != current player index
  sll   V0, S1, 3
+; procesing when S1 == current player
 subu  V0, V0, S1
 sll   V0, V0, 3
 lui   AT, hi(CORE_800D110C)
 addu  AT, AT, V0
 lbu   V0, lo(CORE_800D110C)(AT)
 andi  V0, V0, 1
-beqz  V0, L8010A240
+beqz  V0, L8010A240 ; if (value at 800D110C & 0x01) == 0
  li    V0, 1
-beq   S3, V0, L8010A1F0
+beq   S3, V0, L8010A1F0 ; Is A0 == 1?
  slti  V0, S3, 2
-beql  V0, R0, L8010A1D0
+beql  V0, R0, L8010A1D0 ; Is A0 >= 2?
  li    V0, 2
-beqz  S3, L8010A1E0
+beqz  S3, L8010A1E0 ; Is A0 == 0?
        NOP
 j     L8010A200
        NOP
 L8010A1D0:
-beq   S3, V0, L8010A214
+beq   S3, V0, L8010A214 ; Is A0 == 2?
  addiu S2, S5, 1
 j     L8010A200
        NOP
@@ -3700,7 +3705,7 @@ addu  AT, AT, V0
 lbu   V0, lo(p1_controller)(AT)
 sll   V0, V0, 1
 addu  V0, V0, S4
-sh    R0, 0(V0)
+sh    R0, 0(V0) ; mutate a player's controller index?
 L8010A2B0:
 addiu S1, S1, 1
 L8010A2B4:
@@ -3957,7 +3962,7 @@ addiu A2, A2, 0x1c00
 jal   0x800EC8EC ; ShowMessage: "You made it! So you want to trade coins for a star?"
  move  A3, R0
 li    A0, 2
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  move  A1, R0
 jal   0x800EC6C8
  move  S0, V0
@@ -4326,13 +4331,13 @@ L8010ABCC:
 sw    R0, 0x14(SP)
 sw    R0, 0x18(SP)
 li    A0, -1
-li    A1, 14877
+li    A1, 0x3A1D ; "Would you like to use your Koopa Kard at this bank?"
 move  A2, R0
 jal   0x800EC8EC ; ShowMessage
  move  A3, R0
 lui   A0, hi(D_8011E058)
 addiu A0, A0, lo(D_8011E058)
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  move  A1, R0
 jal   0x800EC6C8
  move  S0, V0
@@ -11085,7 +11090,7 @@ jal   0x800EC8EC ; ShowMessage
  move  A3, R0
 lui   A0, hi(D_8011E3D4)
 addiu A0, A0, lo(D_8011E3D4)
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  move  A1, R0
 jal   0x800EC6C8
  move  S2, V0
@@ -11235,6 +11240,7 @@ lw    S0, 0x20(SP)
 jr    RA
  addiu SP, SP, 0x38
 
+; Item that calls bowser
 D_801112D8:
 addiu SP, SP, -0x30
 sw    RA, 0x2c(SP)
@@ -11335,7 +11341,7 @@ li    A0, 4
 lw    A2, 0(A2)
 lw    A3, 0(A3)
 jal   0x800EC8EC ; ShowMessage
- li    A1, 14858
+ li    A1, 0x3A0A ; "Hello? Yeah, this is Bowser. Who are you???"
 lb    V1, 0xf(S2)
 sll   V0, V1, 3
 subu  V0, V0, V1
@@ -11351,7 +11357,7 @@ L80111488:
 li    A0, 2
 lb    A1, 0xf(S2)
 L80111490:
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
        NOP
 jal   0x800EC6C8
  move  S0, V0
@@ -12360,7 +12366,7 @@ jal   0x800EC8EC ; ShowMessage
  move  A3, R0
 lui   A0, hi(D_8011E454)
 addiu A0, A0, lo(D_8011E454)
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  move  A1, R0
 jal   0x800EC6C8
  move  S0, V0
@@ -15192,7 +15198,7 @@ addiu A2, A2, 0x1c00
 jal   0x800EC8EC ; ShowMessage
  addiu A3, A3, 0x1c00
 move  A0, R0
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  move  A1, R0
 jal   0x800EC6C8
  move  S2, V0
@@ -17384,7 +17390,7 @@ jal   0x800EC8EC ; ShowMessage ; "Who's your opponent?"
  addiu A3, A3, 0x1c00
 lui   A1, hi(D_8011FBBC)
 lw    A1, lo(D_8011FBBC)(A1)
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  li    A0, 2
 jal   0x800EC6C8
  move  S0, V0
@@ -17961,7 +17967,7 @@ jal   0x800EC8EC ; ShowMessage: "Who's your opponent?"
  addiu A3, A3, 0x1c00
 lui   A1, hi(D_8011FBB8)
 lw    A1, lo(D_8011FBB8)(A1)
-jal   func_8010A134
+jal   __PP64_INTERNAL_BASIC_MESSAGE_CHOICE
  li    A0, 2
 jal   0x800EC6C8
  move  S0, V0
@@ -19849,6 +19855,7 @@ item_shop_model_space_indices:
 .halfword ${itemShopSpaces.join(",")}
 .align 4
 
+; Koopa Kard usage AI
 D_8011E058:
 .word 0x04000000 0x00F50014 0x0B541E1E
 .word 0x00000000 0x00000000 0x1B541E1E
@@ -20884,8 +20891,10 @@ D_8011FBA8:
 .word 0
 .word 0
 
+; Player index of player that is in the lead (or something)?
 D_8011FBB8: .word 0
 
+; Player index of player that is in the lead (or something)?
 D_8011FBBC: .word 0
 
 .align 16

@@ -19,6 +19,7 @@ import { ChainMerge3 } from "../events/builtin/MP3/U/ChainMergeEvent3";
 import { ChainMerge } from "../events/builtin/ChainMergeEvent";
 import { BankEvent } from "../events/builtin/events.common";
 import { createBoardOverlay } from "./MP3.U.boardoverlay";
+import { getSoundEffectMapMP3 } from "./MP3.U.soundeffects";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -874,6 +875,10 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       "", // "Medium fanfare" // 0x72
       "", // "Fanfare" // 0x73
     ];
+  }
+
+  getSoundEffectMap(table: number): string[] {
+    return getSoundEffectMapMP3(table);
   }
 
   // Mostly a MP1 copy for now.

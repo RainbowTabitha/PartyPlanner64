@@ -205,8 +205,9 @@ export abstract class AdapterBase {
 
   private _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
     const overlayAsm = this.onCreateBoardOverlay(board, boardInfo);
+    const game = romhandler.getROMGame()!;
     const asm = `
-        ${makeGameSymbolLabels(romhandler.getROMGame()!).join("\n")}
+        ${makeGameSymbolLabels(game, true).join("\n")}
 
         ${overlayAsm}
       `;
@@ -853,6 +854,7 @@ export abstract class AdapterBase {
     if (!boardInfo.mainfsEventFile)
       throw `No MainFS file specified to place board ASM for board ${boardIndex}.`;
 
+    const game = romhandler.getROMGame()!;
     const eventTable = new SpaceEventTable();
     const eventLists: SpaceEventList[] = [];
     const eventAsms: string[] = [];
@@ -876,7 +878,7 @@ export abstract class AdapterBase {
           curSpaceIndex: i,
           curSpace: space,
           chains,
-          game: romhandler.getROMGame()!,
+          game,
           gameVersion: this.gameVersion,
         };
 
@@ -904,9 +906,9 @@ export abstract class AdapterBase {
       .word 0 // Populated with buffer size later
       .align 16
 
-      ${makeGameSymbolLabels(romhandler.getROMGame()!).join("\n")}
-
       ${eventSyms}
+
+      ${makeGameSymbolLabels(game, false).join("\n")}
 
       ${eventTable.getAssembly()}
       ${eventLists.map(eventList => eventList.getAssembly()).join("\n")}
@@ -1521,6 +1523,11 @@ export abstract class AdapterBase {
 
   getAudioMap(): string[] {
     $$log("Adapter does not implement getAudioMap");
+    return [];
+  }
+
+  getSoundEffectMap(table: number): string[] {
+    $$log("Adapter does not implement getSoundEffectMap");
     return [];
   }
 

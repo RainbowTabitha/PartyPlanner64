@@ -95,12 +95,7 @@ export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
     const spaceToggleTypes = _getSpaceTypeToggles(gameVersion, boardType);
     const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion, boardType);
 
-    let gameVersionHeading;
-    if (true) {
-      gameVersionHeading = <span className="propertySectionTitle">Events
-        &nbsp;<img src="img/editor/event.png" height="9" width="9" />
-      </span>;
-    }
+    let eventsHeading = <SectionHeading text="Events" />;
 
     let currentType: Space | undefined = curSpace.type;
     let currentSubtype = curSpace.subtype;
@@ -134,7 +129,7 @@ export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
             indeterminate={hostsStarIndeterminate}
             onStarCheckChanged={this.onStarCheckChanged} /> : null }
         </div>
-        {!multipleSelections ? gameVersionHeading : null }
+        {!multipleSelections ? eventsHeading : null }
         {!multipleSelections ? (
         <div className="propertiesPadded">
           <SpaceEventsList events={curSpace.events}
@@ -148,6 +143,18 @@ export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
     );
   }
 };
+
+interface ISectionHeadingProps {
+  text: string;
+}
+
+function SectionHeading(props: ISectionHeadingProps) {
+  return (
+    <span className="propertySectionTitle">
+      {props.text}
+    </span>
+  );
+}
 
 interface ISpaceCoordsProps {
   space: ISpace;

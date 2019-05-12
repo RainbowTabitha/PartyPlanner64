@@ -4,14 +4,13 @@ import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
 import { Game, EventParameterType } from "../types";
 import { $$hex } from "../utils/debug";
 import { ISpaceEvent } from "../boards";
-import { ParametricBufferGeometry } from "three";
 
 /**
  * Takes event asm, and makes it assemble (in isolation)
  */
 export function prepAsm(asm: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo) {
   const orgDirective = `.org ${$$hex(info.addr!)}`;
-  const syms = makeGameSymbolLabels(info.game);
+  const syms = makeGameSymbolLabels(info.game, true);
   const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
   return [
     orgDirective,
@@ -35,11 +34,31 @@ export function prepSingleEventAsm(
   `, keepStatic);
 }
 
-export function makeGameSymbolLabels(game: Game) {
+/** These are symbols we need to stub if we aren't doing the full overlay assembly. */
+// function _getStubInternalSymbols(game: Game): string[] {
+//   const syms: string[] = [];
+//   switch (game) {
+//     case Game.MP3_USA:
+//       syms.push(".definelabel __PP64_INTERNAL_BASIC_MESSAGE_CHOICE,0");
+//       break;
+//   }
+//   return syms;
+// }
+
+export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): string[] {
   const symbols = getSymbols(game);
   const syms = symbols.map(symbol => {
     return `.definelabel ${symbol.name},0x${symbol.addr.toString(16)}`;
   });
+
+  // Add symbols that are aliased from the board overlay.
+  switch (game) {
+    case Game.MP3_USA:
+      syms.push(`.definelabel GetBasicPromptSelection,${needOverlayStubs
+        ? "0" : "__PP64_INTERNAL_BASIC_MESSAGE_CHOICE"}`);
+      break;
+  }
+
   return syms;
 }
 
