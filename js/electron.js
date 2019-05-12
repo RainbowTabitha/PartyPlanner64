@@ -10,7 +10,10 @@ let win;
 function createWindow() {
   win = new BrowserWindow({
     width: 1024,
-    height: 864
+    height: 864,
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
   win.setMenu(null);
   win.maximize();

@@ -213,16 +213,26 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 
   componentDidMount() {
     if (isElectron) {
-      const ipcRenderer = (window as any).require("electron").ipcRenderer;
-      ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
-      ipcRenderer.send("update-check-start");
+      try {
+        const ipcRenderer = (window as any).require("electron").ipcRenderer;
+        ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+        ipcRenderer.send("update-check-start");
+      }
+      catch (e) {
+        console.error("Auto update failed in componentDidMount: ", e);
+      }
     }
   }
 
   componentWillUnmount() {
     if (isElectron) {
-      const ipcRenderer = (window as any).require("electron").ipcRenderer;
-      ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+      try {
+        const ipcRenderer = (window as any).require("electron").ipcRenderer;
+        ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
+      }
+      catch (e) {
+        console.error("Auto update failed in componentWillUnmount: ", e);
+      }
     }
   }
 
