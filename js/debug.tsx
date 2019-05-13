@@ -88,7 +88,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
           <Button onClick={this.onPrintStringClick}>Print string (console)</Button>
           <input type="checkbox" checked={this.state.printStringRaw}
             onChange={e => this.setState({ printStringRaw: e.target.checked })} />
-            Raw?
+            {" "}<label>Raw?</label>
           <br />
           <input type="text" placeholder="Search string" className="dbInputShort"
             value={this.state.findStringValue}

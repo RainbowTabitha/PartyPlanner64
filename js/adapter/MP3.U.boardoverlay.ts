@@ -8186,7 +8186,7 @@ sw    R0, 0x10(SP)
 sw    R0, 0x14(SP)
 sw    R0, 0x18(SP)
 li    A0, 7
-li    A1, 25088
+li    A1, 0x6200 ; "Ooo, hoo, hoo! Which shall I steal? ..."
 addiu A2, SP, 0x20
 jal   0x800EC8EC ; ShowMessage
  addiu A3, SP, 0x30
@@ -8702,7 +8702,7 @@ jal   SleepProcess
  li    A0, 30
 li    A0, 7
 jal   0x800EC590
- li    A1, 25109
+ li    A1, 0x6215 ; "There was weird gas all over the place! I feel awful!"
 j     L8010ECE0
        NOP
 L8010EC88:
@@ -8710,7 +8710,7 @@ jal   func_8010C9B4
  lw    A0, 0x8c(SP)
 li    A0, 7
 jal   0x800EC590
- li    A1, 25091
+ li    A1, 0x6203 ; "What are you thinking? I can't believe it! Ooo, hoo, hoo!"
 j     L8010ECE0
        NOP
 L8010ECA4:
