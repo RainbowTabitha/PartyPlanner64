@@ -571,7 +571,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       "", // "Mario Bandstand",
       "The Stolen Star",
       "Bowser's Chance Game", // 0x30
-      "", // "Waterfall?",
+      "Mini-Game Stadium",
       "", // "Mini-Game Finished",
       "", // "Mini-Game Finished",
       "", // "Mini-Game Abysmal Finish",

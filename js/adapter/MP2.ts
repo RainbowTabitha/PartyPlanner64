@@ -677,30 +677,30 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       "Battle Start",
       "Mini-Game Stadium",
       "", // Two Beeps
-      "", //"Music from Tree land?",
+      "Coaster",
       "", //"Anticipatory dingles",
       "The Way to Play",
       "The Star Appears",
       "Bowser Appears",
       "I Can Do It!",
-      //"Bowser Beat",
-      //"Finale song",
-      // "Story Two", // 0x40
-      // "Story Three",
-      // "Drumroll", // From results
-      //"Drumroll Short", // From results
-      // "Success Mini-Game Result",
-      // "Failure Mini-Game Result",
-      // "", // Two Beeps
-      // "Cringy squeaky song",
-      //"Anticipatory flutters/dingdong",
-      //"Bells up up upup upupd dodowndowndowndown", These are probably the mini-game mine themes
-      //"Same as above but muted",
-      //"Same above but jazz and kongos",
-      //"Same beat but jazz flute solo",
-      //"More of the beat in a remix",
-      //"Big chords beat continues",
-      //"More of the same thing"
+      "Bowser's Parade",
+      "Ending", //"Finale song",
+      "Story Intro 2", // 0x40
+      "Story Intro 3",
+      "Mini-Game Coaster Results",
+      "Drum Roll",
+      "Win (One Winner)",
+      "Lose",
+      "", // Two Beeps
+      "Know What I Mean",
+      "Instant Replay",
+      "Coaster (Double Mix)",
+      "Coaster (Single Mix)",
+      "Coaster (Hip Hip Mix)",
+      "Coaster (Duo Mix)",
+      "Coaster (Hermit Mix)",
+      "Coaster (Speed Mix)",
+      "Coaster (Survival Mix)"
       //"", 0x50 Two Beeps
       // "Success Mini-Game Result",
       // "Success Mini-Game Result",

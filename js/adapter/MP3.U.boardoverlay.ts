@@ -219,7 +219,7 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
 .definelabel CORE_8010197C,0x8010197C
 .definelabel CORE_80101980,0x80101980
 .definelabel CORE_801019C4,0x801019C4
-.definelabel CORE_80105702,0x80105702
+.definelabel CORE_80105702_window_id,0x80105702
 .definelabel CORE_8010570C,0x8010570C
 
 ; Item constants
@@ -1518,8 +1518,8 @@ lui   V0, hi(p1_controller)
 addu  V0, V0, S0
 lbu   V0, lo(p1_controller)(V0)
 addu  V0, SP, V0
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 lbu   A1, 0x20(V0)
 jal   0x8005FE54
  addiu S1, S1, 1
@@ -1547,8 +1547,8 @@ bnez  V0, L801071C4
        NOP
 beqz  S2, L80107354
  li    A1, 2
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8005B63C
  li    A2, 2
 move  S0, R0
@@ -1606,8 +1606,8 @@ lbu   V0, 0(V0)
 bnezl V0, L80107394
  addiu S1, S1, 1
 sll   A1, S1, 0x10
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8006010C
  sra   A1, A1, 0x10
 addiu S1, S1, 1
@@ -1619,8 +1619,8 @@ move  S1, R0
 li    S0, -1
 sll   A1, S1, 0x10
 L801073AC:
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 sra   A1, A1, 0x10
 jal   0x8005E1D8
  move  A2, R0
@@ -1696,8 +1696,8 @@ lui   V0, hi(p1_controller)
 addu  V0, V0, S0
 lbu   V0, lo(p1_controller)(V0)
 addu  V0, S4, V0
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 lbu   A1, 0(V0)
 jal   0x8005FE54
  addiu S1, S1, 1
@@ -1725,8 +1725,8 @@ bnez  V0, L80107454
        NOP
 beqz  S2, L801075D4
  li    A1, 2
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8005B63C
  li    A2, 2
 move  S0, R0
@@ -1777,8 +1777,8 @@ lh    A2, 0x1c(SP)
 jal   0x8005F744
  lh    A3, 0x1e(SP)
 L801075E8:
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 move  A1, R0
 jal   0x8005E1D8
  li    A2, 1
@@ -2063,8 +2063,8 @@ lui   V0, hi(p1_controller)
 addu  V0, V0, S0
 lbu   V0, lo(p1_controller)(V0)
 addu  V0, SP, V0
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 lbu   A1, 0x20(V0)
 jal   0x8005FE54
  addiu S1, S1, 1
@@ -2093,8 +2093,8 @@ bnez  V0, L8010793C
        NOP
 beqz  S2, L80107AF4
  li    A1, 2
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8005B63C
  li    A2, 2
 move  S0, R0
@@ -2152,8 +2152,8 @@ lbu   V0, 0(V0)
 bnezl V0, L80107B34
  addiu S1, S1, 1
 sll   A1, S1, 0x10
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8006010C
  sra   A1, A1, 0x10
 addiu S1, S1, 1
@@ -2165,8 +2165,8 @@ move  S1, R0
 li    S0, -1
 sll   A1, S1, 0x10
 L80107B4C:
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 sra   A1, A1, 0x10
 jal   0x8005E1D8
  move  A2, S4
@@ -3684,8 +3684,8 @@ lui   V0, hi(p1_controller)
 addu  V0, V0, S0
 lbu   V0, lo(p1_controller)(V0)
 addu  V0, SP, V0
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 lbu   A1, 0x20(V0)
 jal   0x8005FE54
  addiu S1, S1, 1
@@ -3714,8 +3714,8 @@ bnez  V0, L8010A180
        NOP
 beqz  S2, L8010A36C
  li    A1, 2
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8005B63C
  li    A2, 2
 move  S0, R0
@@ -3766,8 +3766,8 @@ lh    A2, 0x1c(SP)
 jal   0x8005F744
  lh    A3, 0x1e(SP)
 L8010A380:
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 move  A1, R0
 jal   0x8005E1D8
  li    A2, 1
@@ -3803,8 +3803,8 @@ addiu A1, SP, 0x10
 jal   0x800EBFE8
  sra   A2, S1, 0x10
 move  S0, V0
-lui   AT, hi(CORE_80105702)
-sh    S0, lo(CORE_80105702)(AT)
+lui   AT, hi(CORE_80105702_window_id)
+sh    S0, lo(CORE_80105702_window_id)(AT)
 sll   S0, S0, 0x10
 sra   S0, S0, 0x10
 move  A0, S0
@@ -13481,8 +13481,8 @@ lui   V0, hi(p1_controller)
 addu  V0, V0, S0
 lbu   V0, lo(p1_controller)(V0)
 addu  V0, SP, V0
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 lbu   A1, 0x20(V0)
 jal   0x8005FE54
  addiu S1, S1, 1
@@ -13511,8 +13511,8 @@ bnez  V0, L801133B0
        NOP
 beqz  S2, L80113558
  li    A1, 2
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8005B63C
  li    A2, 2
 move  S0, R0
@@ -13570,8 +13570,8 @@ lbu   V0, 0(V0)
 bnezl V0, L80113598
  addiu S1, S1, 1
 sll   A1, S1, 0x10
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 jal   0x8006010C
  sra   A1, A1, 0x10
 addiu S1, S1, 1
@@ -13582,8 +13582,8 @@ bnez  V0, L80113574
 move  S1, R0
 sll   A1, S1, 0x10
 L801135AC:
-lui   A0, hi(CORE_80105702)
-lh    A0, lo(CORE_80105702)(A0)
+lui   A0, hi(CORE_80105702_window_id)
+lh    A0, lo(CORE_80105702_window_id)(A0)
 sra   A1, A1, 0x10
 jal   0x8005E1D8
  li    A2, 1
