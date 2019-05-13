@@ -34,17 +34,6 @@ export function prepSingleEventAsm(
   `, keepStatic);
 }
 
-/** These are symbols we need to stub if we aren't doing the full overlay assembly. */
-// function _getStubInternalSymbols(game: Game): string[] {
-//   const syms: string[] = [];
-//   switch (game) {
-//     case Game.MP3_USA:
-//       syms.push(".definelabel __PP64_INTERNAL_BASIC_MESSAGE_CHOICE,0");
-//       break;
-//   }
-//   return syms;
-// }
-
 export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): string[] {
   const symbols = getSymbols(game);
   const syms = symbols.map(symbol => {
@@ -54,8 +43,14 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
   // Add symbols that are aliased from the board overlay.
   switch (game) {
     case Game.MP3_USA:
-      syms.push(`.definelabel GetBasicPromptSelection,${needOverlayStubs
-        ? "0" : "__PP64_INTERNAL_BASIC_MESSAGE_CHOICE"}`);
+      if (needOverlayStubs) {
+        syms.push(".definelabel GetBasicPromptSelection,0");
+        syms.push(".definelabel ViewBoardMap,0");
+      }
+      else {
+        syms.push(".definelabel GetBasicPromptSelection,__PP64_INTERNAL_BASIC_MESSAGE_CHOICE");
+        syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
+      }
       break;
   }
 

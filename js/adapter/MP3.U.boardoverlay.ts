@@ -1400,7 +1400,7 @@ jr    RA
  addiu SP, SP, 0x20
 
 ; View map handling?
-func_80106F60:
+__PP64_INTERNAL_VIEW_MAP:
 addiu SP, SP, -0x18
 sw    RA, 0x14(SP)
 sw    S0, 0x10(SP)
@@ -3515,7 +3515,7 @@ jal   0x800EC590
 j     L80109D80
        NOP
 L80109D70:
-jal   func_80106F60 ; view map?
+jal   __PP64_INTERNAL_VIEW_MAP
        NOP
 j     L80109C34
  li    A0, 56
@@ -4050,7 +4050,7 @@ jal   0x800EC590
 j     L8010A808
        NOP
 L8010A7A8:
-jal   func_80106F60
+jal   __PP64_INTERNAL_VIEW_MAP
        NOP
 j     L8010A624
        NOP
@@ -4353,7 +4353,7 @@ L8010AC20:
 j     L8010AC38
  li    S5, 1
 L8010AC28:
-jal   func_80106F60
+jal   __PP64_INTERNAL_VIEW_MAP
        NOP
 j     L8010ABCC
  sw    R0, 0x10(SP)
@@ -6124,7 +6124,7 @@ jal   0x80049FB8
 j     L8010BC1C
  sll   V0, S6, 2
 L8010C674:
-jal   func_80106F60
+jal   __PP64_INTERNAL_VIEW_MAP
        NOP
 j     L8010BC1C
  sll   V0, S6, 2
@@ -8315,7 +8315,7 @@ jal   0x80049FB8
 j     L8010E594
  addiu S3, SP, 0x60
 L8010E708:
-jal   func_80106F60
+jal   __PP64_INTERNAL_VIEW_MAP
  move  S0, R0
 j     L8010E590
  move  S1, R0
@@ -8726,7 +8726,7 @@ jal   0x80049FB8
 j     L8010E3A8
        NOP
 L8010ECD0:
-jal   func_80106F60
+jal   __PP64_INTERNAL_VIEW_MAP
  move  S0, R0
 j     L8010E3A8
        NOP
