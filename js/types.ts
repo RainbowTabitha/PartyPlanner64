@@ -142,12 +142,22 @@ export function getGameName(id: string): string | null {
   return null;
 }
 
+/** What conditions the event code is executed. */
 export enum EventActivationType {
   "WALKOVER" = 1,
   //"MYSTERY" = 2,
   "LANDON" = 3,
+  //"MYSTERY" = 4,
+  /**
+   * Used with the special negative space indices:
+   * 0xFFFB: Before each player's dice roll.
+   * 0xFFFC:
+   * 0xFFFD:
+   * 0xFFFE:
+   */
   //"PERTURN" = 7,
   "BEGINORWALKOVER" = 8,
+  //"MYSTERY" = 9,
 }
 
 export enum EventExecutionType {
