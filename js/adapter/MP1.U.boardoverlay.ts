@@ -879,7 +879,7 @@ overlaycall2:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
   jal   0x80060128
-   addiu A0, R0, ${board.audioIndex}
+   addiu A0, R0, ${board.audioIndex || 0}
   jal   0x8001D240
    addiu A0, R0, 2
   jal   setup_routine

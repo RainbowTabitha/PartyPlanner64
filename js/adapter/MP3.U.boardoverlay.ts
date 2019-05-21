@@ -2451,7 +2451,7 @@ overlaycall2:
 addiu SP, SP, -0x18
 sw    RA, 0x10(SP)
 jal   0x8004A520
- li    A0, ${board.audioIndex}
+ li    A0, ${board.audioIndex || 0}
 li    V0, 24 ; TODO: Are these also the audio index?
 lui   AT, hi(CORE_800CE198)
 sh    V0, lo(CORE_800CE198)(AT)
@@ -11805,7 +11805,7 @@ jal   SleepProcess
  li    A0, 30
 li    A0, 60
 jal   0x800EC590
- li    A1, 14895
+ li    A1, 0x3A2F ; "What do you want? I'm the Mushroom Jeanie who lives in the Lucky Lamp..."
 jal   EndProcess
  move  A0, S4
 li    S0, 1
