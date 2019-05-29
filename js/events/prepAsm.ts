@@ -111,11 +111,11 @@ export function scopeLabelsStaticByDefault(asm: string, keepStatic: boolean): st
   const lines = asm.split("\n").map(line => line.trim())
 
   // We always find labels to scope without static sections...
-  const asmWithoutStaticSections = removeStaticSections(lines, keepStatic).join("\n");
-  const labels = findLabelsToScope(asmWithoutStaticSections);
+  const linesWithoutStaticSections = removeStaticSections(lines, keepStatic);
+  const labels = findLabelsToScope(linesWithoutStaticSections);
 
   // But only keep the static section when replacing the first time.
-  asm = keepStatic ? replaceStaticRegionDirectives(lines) : asmWithoutStaticSections;
+  asm = keepStatic ? replaceStaticRegionDirectives(lines) : linesWithoutStaticSections.join("\n");
 
   const labelCharRegex = /[@\w\!\?]/;
   labels.forEach(label => {
@@ -149,34 +149,40 @@ export function scopeLabelsStaticByDefault(asm: string, keepStatic: boolean): st
   return asm;
 }
 
-function findLabelsToScope(asm: string): string[] {
-  const defineLabelRegex = /\.definelabel\s+([^,]+)/gi;
-  const labelRegex = /([@\w\!\?]+):/gi;
-  let labels = getAllMatches(defineLabelRegex, asm).concat(getAllMatches(labelRegex, asm));
-  labels = labels.filter(label => {
-    if (label.indexOf("__PP64_INTERNAL") >= 0) {
-      return false; // Don't scope internal labels.
-    }
-    if (label[0] === "@") {
-      return false; // Don't scope already somewhat-scoped labels.
+/**
+ * Obtains an array of all the labels within the given lines of assembly.
+ * Only gets labels that should be scoped for event assembly.
+ */
+function findLabelsToScope(lines: string[]): string[] {
+  const defineLabelRegex = /^\.definelabel\s+([^,]+)/i;
+  const labelRegex = /^([@\w\!\?]+):/i;
+
+  let foundLabels: string[] = [];
+  lines.forEach(line => {
+    let match = defineLabelRegex.exec(line);
+    if (match) {
+      foundLabels.push(match[1]);
+      return;
     }
 
-    return true;
+    while (match = labelRegex.exec(line)) {
+      foundLabels.push(match[1]);
+      line = line.substr(match[0].length);
+    }
   });
-
-  return labels;
+  foundLabels = foundLabels.filter(labelShouldBeScoped);
+  return foundLabels;
 }
 
-function getAllMatches(regex: RegExp, str: string): string[] {
-  const matches = [];
-  let match;
-  do {
-    match = regex.exec(str);
-    if (match) {
-      matches.push(match[1]);
-    }
-  } while (match);
-  return matches;
+function labelShouldBeScoped(label: string): boolean {
+  if (label.indexOf("__PP64_INTERNAL") >= 0) {
+    return false; // Don't scope internal labels.
+  }
+  if (label[0] === "@") {
+    return false; // Don't scope already somewhat-scoped labels.
+  }
+
+  return true;
 }
 
 function removeStaticSections(lines: string[], keepingStatics: boolean): string[] {
