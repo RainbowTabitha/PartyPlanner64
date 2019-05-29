@@ -5,6 +5,8 @@ export interface IToolWindowProps {
   name: string;
   position?: string;
   visible?: boolean;
+  canClose?: boolean;
+  onCloseClick?: () => void;
 }
 
 export interface IToolWindowState {
@@ -30,7 +32,12 @@ export class ToolWindow extends React.Component<IToolWindowProps, IToolWindowSta
     };
     return (
       <div className="toolWindow" style={style}>
-        <div className="toolWindowName" onMouseDown={this.mouseDown}>{this.props.name}</div>
+        <div className="toolWindowName" onMouseDown={this.mouseDown}>
+          {this.props.name}
+          {this.props.canClose &&
+            <div className="toolWindowCloseBtn" aria-label="Close"
+              onClick={this.props.onCloseClick}>×</div>}
+        </div>
         {this.props.children}
       </div>
     );

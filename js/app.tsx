@@ -41,6 +41,7 @@ interface IPP64AppState {
   romLoaded: boolean,
   currentAction: Action,
   selectedSpaces: ISpace[] | null,
+  showingAIToolbox: boolean;
   blocked: boolean,
   message: string,
   messageHTML: string,
@@ -61,6 +62,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     romLoaded: false,
     currentAction: Action.MOVE,
     selectedSpaces: null,
+    showingAIToolbox: false,
     blocked: false,
     message: "",
     messageHTML: "",
@@ -198,6 +200,13 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
                 visible={this.state.currentView === View.EDITOR}>
                 <BoardProperties currentBoard={this.state.currentBoard} />
               </ToolWindow>
+              {this.state.showingAIToolbox &&
+                <ToolWindow name="AI Decision Tree" position="TopLeft"
+                  visible={this.state.currentView === View.EDITOR}
+                  canClose onCloseClick={() => this.setState({ showingAIToolbox: false })}>
+                  Contents here
+                </ToolWindow>
+              }
             </div>
             <div id="dragZone"></div>
           </div>

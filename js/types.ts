@@ -133,6 +133,8 @@ export enum Game {
   MP3_PAL = "NMVP",
 }
 
+export type GameVersion = 1 | 2 | 3;
+
 export function getGameName(id: string): string | null {
   for (let key in Game) {
     const value = Game[key];

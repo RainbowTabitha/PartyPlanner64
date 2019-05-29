@@ -19,3 +19,18 @@
     cursor: move;
   }
 }
+
+.toolWindowCloseBtn {
+  height: 16px;
+  width: 16px;
+  color: #958883;
+  float: right;
+  font-size: 16px;
+  text-align: center;
+  border-radius: 2px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #afa29d;
+  }
+}
