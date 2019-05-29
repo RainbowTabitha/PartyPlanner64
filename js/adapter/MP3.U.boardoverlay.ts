@@ -775,7 +775,7 @@ jal   0x800E5DD4
  move  A1, R0
 move  S1, V0
 jal   0x8004A520
- li    A0, 18
+ li    A0, 18 ; Here's the Star audio track
 lw    A0, 0(S1)
 li    A1, 2
 lui   A3, hi(tumble_face_tex_grin)
@@ -1288,7 +1288,7 @@ j     L80106DC4
        NOP
 L80106DBC:
 jal   0x8004A520
- li    A0, 111
+ li    A0, 111 ; Fanfare audio track
 L80106DC4:
 lui   A0, hi(current_player_index)
 addiu A0, A0, lo(current_player_index)
@@ -11488,6 +11488,7 @@ lw    S0, 0x20(SP)
 jr    RA
  addiu SP, SP, 0x30
 
+ ; Jeanie?
 D_80111678:
 addiu SP, SP, -0x160
 sw    RA, 0x134(SP)
@@ -11772,7 +11773,7 @@ c.lt.s F0, F20
 bc1f  L80111AEC
  swc1  F20, 0x24(S3)
 jal   0x8004A520
- li    A0, 61
+ li    A0, 61 ; Jeanie's Theme
 j     func_80111AFC
        NOP
 L80111AD4:

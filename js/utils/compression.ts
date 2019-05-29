@@ -265,66 +265,63 @@ function decompress05(src: DataView, dst: DataView, decompressedSize: number) {
   return srcPlace; // Return the size of the compressed data.
 }
 
+/**
+ * Run length encoding compression.
+ * Implementation provided by @gamemasterplc
+ */
 function compress05(src: DataView) {
-// TODO: Consider implementing:
-//   int CompressRLE(char *input, int uncomp_len, FILE *fp, int offset)
-//   {
-//     int output_pos = 0;
-//     int input_pos = 0;
-//     int i;
-//     int copy_len = 0;
-//     int curr_byte;
-//     int next_byte;
-//     while (input_pos < uncomp_len)
-//     {
-//         curr_byte = input[input_pos];
-//         next_byte = input[input_pos + 1];
-//         if (curr_byte == next_byte)
-//         {
-//             copy_len = 0;
-//             for (i = 0; i < 127; i++)
-//             {
-//                 curr_byte = input[input_pos+i];
-//                 next_byte = input[input_pos+i+1];
-//                 if (curr_byte != next_byte || (input_pos + i) >= uncomp_len)
-//                 {
-//                     copy_len++;
-//                     break;
-//                 }
-//                 copy_len++;
-//             }
-//             WriteFileU8(fp, offset + output_pos, copy_len);
-//             WriteFileU8(fp, offset + output_pos+1, input[input_pos]);
-//             output_pos += 2;
-//             input_pos += copy_len;
-//         }
-//         else
-//         {
-//             copy_len = 0;
-//             for (i = 0; i < 127; i++)
-//             {
-//                 curr_byte = input[input_pos + i];
-//                 next_byte = input[input_pos + i + 1];
-//                 if (curr_byte == next_byte|| (input_pos + i) >= uncomp_len)
-//                 {
-//                     break;
-//                 }
-//                 copy_len++;
-//             }
-//             WriteFileU8(fp, offset + output_pos, 0x80|copy_len);
-//             WriteFileArray(fp, &input[input_pos], offset + output_pos + 1, copy_len);
-//             output_pos += copy_len;
-//             output_pos += 1;
-//             input_pos += copy_len;
-//         }
-//     }
-//     return output_pos;
-//   }
+  const output = new ArrayBuffer(src.byteLength * 3); // Rough upper bound.
+  const outView = new DataView(output);
+  let output_pos: number = 0;
+  let input_pos = 0;
+  let copy_len = 0;
+  let curr_byte: number;
+  let next_byte: number;
+  while (input_pos < src.byteLength) {
+    curr_byte = src.getUint8(input_pos);
+    next_byte = src.getUint8(input_pos + 1);
+    if (curr_byte === next_byte) {
+      copy_len = 0;
+      for (let i = 0; i < 127; i++) {
+        curr_byte = src.getUint8(input_pos + i);
+        next_byte = src.getUint8(input_pos + i + 1);
+        if (curr_byte !== next_byte || (input_pos + i) >= src.byteLength) {
+          copy_len++;
+          break;
+        }
+        copy_len++;
+      }
+      outView.setUint8(output_pos, copy_len);
+      outView.setUint8(output_pos + 1, src.getUint8(input_pos));
+      output_pos += 2;
+      input_pos += copy_len;
+    }
+    else {
+      copy_len = 0;
+      for (let i = 0; i < 127; i++) {
+        curr_byte = src.getUint8(input_pos + i);
+        next_byte = src.getUint8(input_pos + i + 1);
+        if (curr_byte === next_byte|| (input_pos + i) >= src.byteLength) {
+          break;
+        }
+        copy_len++;
+      }
+      outView.setUint8(output_pos, 0x80|copy_len);
+      output_pos += 1;
+      for (let i = 0; i < copy_len; i++) {
+        outView.setUint8(output_pos, src.getUint8(input_pos + i));
+        output_pos += 1;
+        input_pos += 1;
+      }
+    }
+  }
+
+  return output.slice(0, output_pos);
 }
 
 // Returns a new buffer with the decompressed data.
 // The compressed size is attached as a property to the buffer object.
-export function decompress(type: number, srcDataView: DataView, decompressedSize: number) {
+export function decompress(type: number, srcDataView: DataView, decompressedSize: number): ArrayBuffer {
   let dstBuffer = new ArrayBuffer(decompressedSize);
   let dstView = new DataView(dstBuffer);
   let compressedSize;
@@ -355,19 +352,21 @@ export function decompress(type: number, srcDataView: DataView, decompressedSize
   return dstBuffer;
 }
 
-export function compress(type: number, srcDataView: DataView) {
+export function compress(type: number, srcDataView: DataView): ArrayBuffer {
   switch (type) {
     case 1:
       return compress01(srcDataView);
+
+    // TODO: Are all these really the same, particularly 4?
     case 2:
     case 3:
-      return compress02(srcDataView);
     case 4:
+      return compress02(srcDataView);
+
     case 5:
-      console.log(`compress ${type} not implemented.`);
-      /* falls through */
+      return compress05(srcDataView);
+
     case 0:
-      /* falls through */
     default:
       // Just directly copy uncompressed data.
       return srcDataView.buffer.slice(0);
