@@ -1,5 +1,5 @@
 import * as ReactDOM from "react-dom";
-import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter } from "./boards";
+import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter, ISpaceEvent } from "./boards";
 import { BoardType, Space, SpaceSubtype } from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
@@ -57,11 +57,18 @@ function _renderAssociations(
     return;
 
   // Draw associated spaces in event params.
+  let lastEvent: ISpaceEvent;
   let associationNum = 0;
   forEachEventParameter(board, (parameter, event, space) => {
     if (parameter.type === "Space") {
       if (selectedSpaces[0] !== space)
         return; // Only draw associations for the selected space.
+
+      // Reset coloring for each event.
+      if (lastEvent !== event) {
+        associationNum = 0;
+      }
+      lastEvent = event;
 
       const associatedSpaceIndex =
         event.parameterValues && event.parameterValues[parameter.name];
