@@ -105,6 +105,11 @@ $propertySectionHeight: 14px;
   align-items: center;
 }
 
+.eventsList {
+  max-height: 300px;
+  overflow: auto;
+}
+
 .eventAddSelectEntry {
   font-size: 10pt;
   margin-top: 3px;
