@@ -62,17 +62,33 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
           cannotPlay = !isPlaying;
         }
 
-        const name = trackNames[s] || "(none)";
+        let trackName;
+        const soundName = trackNames[s];
+        const index = `${s}, 0x${s.toString(16).toUpperCase()}`;
+        if (soundName) {
+          trackName = <span title={index}>
+            {soundName}
+            {advancedSetting &&
+              <span className="audioIndexBesideName">{` (${index})`}</span>
+            }
+          </span>;
+        }
+        else {
+          trackName = <span title={index}>
+            {index}
+          </span>;
+        }
+
         sequenceRows.push(
           <AudioTrackRow key={t + "-" + s}
             table={t} index={s}
             isPlaying={isPlaying}
             cannotPlay={cannotPlay}
-            trackName={name}
+            trackName={trackName}
             onPlay={this.onPlayMidi}
             onStop={this.onStop}
             exportButton={
-              <Button onClick={() => _exportMidi(t, s, name)}
+              <Button onClick={() => _exportMidi(t, s, soundName || "Unknown")}
                 css="btnAudioExport">
                 <img src="img/audio/export.png" height="16" width="16" />
                 midi

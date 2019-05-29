@@ -54,7 +54,7 @@ const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
   itemShopCount: 1,
   booArrOffset: [0xF268], // [0x002A6D38], // 0x80111A68
   booCount: 2,
-  audioIndexOffset: 0x33AA, // 0x0029AE7A; // 0x80105BA4
+  audioIndexOffset: 0x33AA, // 0x0029AE7A; // 0x80105BAA
 
   onLoad: function(board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP2_WESTERN.bgDir + 2).src;
