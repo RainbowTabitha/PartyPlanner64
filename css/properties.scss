@@ -138,6 +138,7 @@ $propertySectionHeight: 14px;
 
   > img {
     margin-right: 3px;
+    flex-shrink: 0;
   }
 
   &:hover {
@@ -176,11 +177,28 @@ $propertySectionHeight: 14px;
 
 .eventEntryItemParameterName {
   font-family: "Courier New", Courier, monospace;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .eventEntryItemParameterUnset {
   color: #841617;
   font-style: italic;
+}
+
+.eventEntryItemParameterSpaceSetWrapper {
+  white-space: nowrap;
+}
+
+.eventEntryItemParameterColorSwatch {
+  height: 8px;
+  width: 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-left: 2px;
+  margin-top: -2px;
+  vertical-align: middle;
+  border: 1px solid rgba(0, 0, 0, 0.75);
 }
 
 .eventAddSelect {

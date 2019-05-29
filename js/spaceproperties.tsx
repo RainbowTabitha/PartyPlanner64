@@ -10,6 +10,7 @@ import { getImage } from "./images";
 import { render, renderConnections, renderSpaces } from "./renderer";
 import { showMessage } from "./appControl";
 import { createCustomEvent } from "./events/customevents";
+import { getDistinctColor } from "./utils/colors";
 
 interface ISpacePropertiesProps {
   boardType: BoardType;
@@ -563,6 +564,7 @@ class SpaceEventEntry extends React.Component<ISpaceEventEntryProps> {
       return null;
     let name = event.name || spaceEvent.id;
 
+    let currentSpaceParameterIndex = 0;
     let parameterButtons;
     if (event.parameters) {
       parameterButtons = event.parameters.map((parameter: IEventParameter) => {
@@ -591,6 +593,7 @@ class SpaceEventEntry extends React.Component<ISpaceEventEntryProps> {
             return (
               <SpaceEventSpaceParameterButton key={parameter.name}
                 parameter={parameter}
+                spaceParameterIndex={currentSpaceParameterIndex++}
                 parameterValue={parameterValue}
                 onEventParameterSet={this.onEventParameterSet} />
             );
@@ -744,6 +747,7 @@ class SpaceEventBooleanParameterButton extends React.Component<ISpaceEventBoolea
 
 interface ISpaceEventSpaceParameterButtonProps {
   parameter: any;
+  spaceParameterIndex: number;
   parameterValue: any;
   positiveOnly?: boolean;
   onEventParameterSet(name: string, value: number): any;
@@ -755,6 +759,8 @@ class SpaceEventSpaceParameterButton extends React.Component<ISpaceEventSpacePar
     const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
     const tooltip = `(Space) ${this.props.parameter.name}: ${valueHasBeenSet ? "set" : "null"}`
       + "\nDrag to a space to associate it";
+    const color = getDistinctColor(this.props.spaceParameterIndex);
+    const colorStyle = { backgroundColor: `rgb(${color.join(", ")})` };
     return (
       <div className="eventEntryItem eventEntryItemDraggable" title={tooltip}
         draggable={true}
@@ -764,7 +770,9 @@ class SpaceEventSpaceParameterButton extends React.Component<ISpaceEventSpacePar
         <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
         &nbsp;
         {valueHasBeenSet ?
-          <span>set</span>
+          <span className="eventEntryItemParameterSpaceSetWrapper">set
+            <span style={colorStyle} className="eventEntryItemParameterColorSwatch"></span>
+          </span>
           : <span className="eventEntryItemParameterUnset">null</span>
         }
       </div>

@@ -9,6 +9,7 @@ import * as React from "react";
 import { RightClickMenu } from "./rightclick";
 import { attachToCanvas, detachFromCanvas } from "./interaction";
 import { getEvent } from "./events/events";
+import { getDistinctColor } from "./utils/colors";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
@@ -56,6 +57,7 @@ function _renderAssociations(
     return;
 
   // Draw associated spaces in event params.
+  let associationNum = 0;
   forEachEventParameter(board, (parameter, event, space) => {
     if (parameter.type === "Space") {
       if (selectedSpaces[0] !== space)
@@ -67,8 +69,11 @@ function _renderAssociations(
         const associatedSpace = board.spaces[associatedSpaceIndex];
         if (!associatedSpace)
           return; // I guess maybe this could happen?
-        drawAssociation(context, space.x, space.y, associatedSpace.x, associatedSpace.y);
+
+        const dotsColor = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.5)`;
+        drawAssociation(context, space.x, space.y, associatedSpace.x, associatedSpace.y, dotsColor);
       }
+      associationNum++;
     }
   });
 }
@@ -379,7 +384,10 @@ function _drawConnection(lineCtx: CanvasContext, x1: number, y1: number, x2: num
   lineCtx.restore();
 }
 
-function drawAssociation(lineCtx: CanvasContext, x1: number, y1: number, x2: number, y2: number) {
+function drawAssociation(lineCtx: CanvasContext,
+  x1: number, y1: number, x2: number, y2: number,
+  dotsColor: string
+) {
   lineCtx.save();
   lineCtx.beginPath();
   lineCtx.strokeStyle = "rgba(0, 0, 0, 0.5)";
@@ -393,7 +401,7 @@ function drawAssociation(lineCtx: CanvasContext, x1: number, y1: number, x2: num
 
   lineCtx.save();
   lineCtx.beginPath();
-  lineCtx.strokeStyle = "rgba(240, 240, 240, 0.5)";
+  lineCtx.strokeStyle = dotsColor;
   lineCtx.setLineDash([1, 8]);
   lineCtx.lineCap = "round";
   lineCtx.lineWidth = 4;
