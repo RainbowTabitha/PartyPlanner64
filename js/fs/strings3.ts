@@ -144,7 +144,7 @@ export namespace strings3 {
       for (let d = 0; d < dirCount; d++) {
         byteLen += 4; // Decompressed size
         byteLen += 4; // Compression type
-        byteLen += this.dirs[d].getByteLength(true);
+        byteLen += this.dirs[d].getByteLength();
         byteLen = makeDivisibleBy(byteLen, 2);
       }
 
@@ -164,7 +164,7 @@ export namespace strings3 {
         curDirIndexOffset += 4;
         view.setUint32(curDirWriteOffset, this.dirs[d].getByteLength()); // Decompressed size
         curDirWriteOffset += 4;
-        view.setUint32(curDirWriteOffset, 1); // Compression type
+        view.setUint32(curDirWriteOffset, 0); // Compression type
         curDirWriteOffset += 4;
         curDirWriteOffset = this._packDir(d, view, curDirWriteOffset);
         curDirWriteOffset = makeDivisibleBy(curDirWriteOffset, 2);
@@ -174,16 +174,11 @@ export namespace strings3 {
     }
 
     _packDir(d: number, view: DataView, offset: number) {
-      let decompressedBuffer = new ArrayBuffer(this.dirs[d].getByteLength());
+      const decompressedSize = this.dirs[d].getByteLength();
+      let decompressedBuffer = new ArrayBuffer(decompressedSize);
       this.dirs[d].pack(decompressedBuffer, 0);
-      let compressedBuffer = compress(1, new DataView(decompressedBuffer));
-      copyRange(view, compressedBuffer, offset, 0, compressedBuffer.byteLength);
-      let compressedSize = this.dirs[d].getByteLength(true);
-      if ($$debug) {
-        if (compressedBuffer.byteLength > compressedSize)
-          throw `Upper bound guess is wrong _packDir`;
-      }
-      return offset + compressedSize;
+      copyRange(view, decompressedBuffer, offset, 0, decompressedSize);
+      return offset + decompressedSize;
     }
   }
 
