@@ -97,6 +97,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
       this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
       this._writeBackground(bgIndex + 2, board.bg.src, 320, 240), // Overview map
+      this._writeAdditionalBackgrounds(board),
       this.onWriteBoardSelectImg(board, boardInfo),
       this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
       this.onWriteBoardLogoTextImg(board, boardInfo),

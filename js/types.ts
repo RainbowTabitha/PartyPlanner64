@@ -13,6 +13,7 @@ export enum View {
   CREATEEVENT = 8,
   DEBUG = 9,
   AUDIO = 10,
+  ADDITIONAL_BGS = 11,
 }
 
 export enum Space {
@@ -80,6 +81,8 @@ export enum Action {
   EVENT_LOAD = 13.9,
   SET_BG = 14,
   SCREENSHOT = 14.1,
+  SAVE_ADDITIONALBG = 14.2,
+  ADDITIONALBG_BACK = 14.3,
   ROM_SAVE = 15,
   SETTINGS = 15.1,
   ABOUT = 15.2,

@@ -38,7 +38,9 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
         <BackgroundList list="additionalbg" board={board}
           title="Additional Backgrounds"
           onAddBackground={this.onAddAdditionalBG}
-          onRemoveBackground={this.onRemoveAdditionalBG} />
+          onRemoveBackground={this.onRemoveAdditionalBG}>
+          <AdditionalBackgroundConfigButton />
+        </BackgroundList>
       );
     }
 
@@ -341,7 +343,7 @@ class AnimationPlayButton extends React.Component<IAnimationPlayButtonProps, IAn
 
     let icon = this.state.playing ? "▮▮" : "►";
     return (
-      <div className="animPlayBtn" onClick={this.onClick}>{icon}</div>
+      <div className="bgListActionButton" onClick={this.onClick}>{icon}</div>
     );
   }
 
@@ -359,10 +361,18 @@ class AnimationPlayButton extends React.Component<IAnimationPlayButtonProps, IAn
   }
 };
 
-interface IFindSpaceProps {
+
+function AdditionalBackgroundConfigButton() {
+  const icon = "\u2699" // Gear
+  return (
+    <div className="bgListActionButton"
+      onClick={() => changeView(View.ADDITIONAL_BGS)}>
+      {icon}
+    </div>
+  );
 }
 
-class FindSpace extends React.Component<IFindSpaceProps> {
+class FindSpace extends React.Component<{}> {
   state = { }
 
   onFindSpace() {

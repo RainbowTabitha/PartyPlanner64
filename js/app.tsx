@@ -31,6 +31,7 @@ import { showMessage } from "./appControl";
 import "file-saver";
 import { DebugView } from "./views/debug";
 import { AudioViewer } from "./views/audio";
+import { AdditionalBgView } from "./views/additionalbgview";
 
 interface IPP64AppState {
   currentView: View,
@@ -118,6 +119,9 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         break;
       case View.AUDIO:
         mainView = <AudioViewer />;
+        break;
+      case View.ADDITIONAL_BGS:
+        mainView = <AdditionalBgView board={this.state.currentBoard} />;
         break;
     }
 

@@ -20,6 +20,7 @@ import { saveEvent, createEventPromptExit } from "./views/createevent";
 import { changeView, blockUI, boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
+import { saveAdditionalBgCode, additionalBgViewPromptExit } from "./views/additionalbgview";
 
 interface IHeaderActionItem {
   name: string;
@@ -114,6 +115,11 @@ const actions_createevent: IHeaderActionItem[] = [
   { "name": "Save", "icon": "img/header/save.png", "type": Action.SAVE_EVENT, "details": "Save the event" },
 ];
 
+const actions_additionalbg: IHeaderActionItem[] = [
+  { "name": "Back to editor", "icon": "img/header/back.png", "type": Action.ADDITIONALBG_BACK, "details": "Return to the board editor" },
+  { "name": "Save", "icon": "img/header/save.png", "type": Action.SAVE_ADDITIONALBG, "details": "Save the code" },
+];
+
 //const action_overflow = { "name": "", "icon": "img/header/more.png", "type": "MORE", "details": "More options" };
 const action_overflow: IHeaderActionItem = { "name": "", "icon": "", "type": "MORE" as any, "details": "More options" };
 
@@ -197,6 +203,14 @@ function _handleAction(action: Action) {
       break;
     case Action.SET_BG:
       openFile("image/*", bgSelected);
+      break;
+    case Action.SAVE_ADDITIONALBG:
+      saveAdditionalBgCode();
+      break;
+    case Action.ADDITIONALBG_BACK:
+      if (additionalBgViewPromptExit()) {
+        changeView(View.EDITOR);
+      }
       break;
     default:
       break;
@@ -296,6 +310,8 @@ function getActions(view: View, board: IBoard, romLoaded: boolean) {
       actions = actions_events;
     else if (view === View.CREATEEVENT)
       actions = actions_createevent;
+    else if (view === View.ADDITIONAL_BGS)
+      actions = actions_additionalbg;
     else
       actions = actions_back;
   }

@@ -43,6 +43,7 @@ const CSS = [
   "css/models.css",
   "css/events.css",
   "css/createevent.css",
+  "css/additionalbg.css",
   "css/strings.css",
   "css/audio.css",
   "css/patches.css",

@@ -1,0 +1,19 @@
+.additionalBgViewContainer {
+  margin: 0 auto;
+  margin-top: 1em;
+  max-width: 775px;
+  height: calc(100% - 40px);
+
+  h2 {
+    color: white;
+  }
+}
+
+.additionalbgcodemirror {
+  width: 640px;
+  height: calc(100% - 100px);
+
+  .CodeMirror {
+    height: 100%;
+  }
+}

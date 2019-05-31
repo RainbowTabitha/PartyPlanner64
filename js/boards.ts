@@ -19,6 +19,7 @@ export interface IBoard {
   otherbg: any;
   animbg?: string[];
   additionalbg?: string[];
+  additionalbgcode?: string;
   audioIndex: number;
   _rom?: boolean;
   _deadSpace?: number;

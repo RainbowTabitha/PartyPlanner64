@@ -7,6 +7,9 @@ import { BankEvent, BooEvent, ItemShopEvent, Gate } from "../events/builtin/even
 import { GateParameterNames } from "../events/builtin/MP3/U/GateEvent3";
 import { getArrowRotationLimit } from "./boardinfo";
 import { $$hex } from "../utils/debug";
+import { hvqfs } from "../fs/hvqfs";
+import { defaultAdditionalBgAsm } from "../events/additionalbg";
+import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
 
 export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
@@ -170,6 +173,15 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
     arrowRotationInstructions.push(`JAL ${addArrowAngleAddr}`);
     arrowRotationInstructions.push("MTC1 A0 F12");
   }
+
+  const additionalbgcode = board.additionalbgcode || defaultAdditionalBgAsm;
+
+  // This runs before we've written the additional bgs, but we can predict the directories.
+  const additionalBgIndices = board.additionalbg && board.additionalbg.map((bg, i) => {
+    return hvqfs.getDirectoryCount() + i
+  });
+
+  const preppedAdditionalBgCode = prepAdditionalBgAsm(additionalbgcode, boardInfo.bgDir, additionalBgIndices);
 
   return `
 .org 0x801059A0
@@ -2292,7 +2304,9 @@ li    A1, 200
 li    A2, 200
 jal   0x80019514
  li    A3, 200
-li    A0, ${boardInfo.bgDir}
+JAL   __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
+ NOP
+move  A0, V0 ; Determined by user-customizable hook
 li    A1, ${boardInfo.boardDefFile}
 li    A2, ${boardInfo.pauseBgDir!}
 jal   0x800F89D0 ; setup board?
@@ -2446,6 +2460,8 @@ lw    S0, 0x20(SP)
 ldc1  F20, 0x30(SP)
 jr    RA
  addiu SP, SP, 0x38
+
+${preppedAdditionalBgCode}
 
 overlaycall2:
 addiu SP, SP, -0x18

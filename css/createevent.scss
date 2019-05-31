@@ -11,10 +11,12 @@
   }
 }
 
-.eventcodemirror {
+.createeventcodemirror {
   width: 640px;
   height: 100%;
+}
 
+.eventcodemirror {
   border: 1px solid rgb(51, 43, 39);
   border-radius: 3px;
   overflow: hidden;
@@ -36,7 +38,7 @@
 }
 
 @media (max-width: 965px) {
-  .eventcodemirror {
+  .createeventcodemirror {
     height: 500px;
 
     .CodeMirror {

@@ -71,7 +71,7 @@ export class CreateEventView extends React.Component<{}, ICreateEventViewState> 
     return (
       <div className="createEventViewContainer">
         <CodeMirrorWrapper ref={(cm) => { this._codemirror = cm; }}
-          className="eventcodemirror"
+          className="eventcodemirror createeventcodemirror"
           value={this.state.asm}
           onChange={this.onAsmChange} />
         <EventDetailsForm name={this.state.eventName}

@@ -1,5 +1,5 @@
 import { romhandler } from "../romhandler";
-import { getBoardInfos, getBoardInfoByIndex, getArrowRotationLimit } from "./boardinfo";
+import { getBoardInfos, getBoardInfoByIndex } from "./boardinfo";
 import { hvqfs } from "../fs/hvqfs";
 import { mainfs } from "../fs/mainfs";
 import { audio } from "../fs/audio";
@@ -27,12 +27,10 @@ import { get, $setting } from "../views/settings";
 import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
 import THREE = require("three");
 import { IBoardInfo } from "./boardinfobase";
-import { createCustomEvent } from "../events/customevents";
 import { ChainSplit1 } from "../events/builtin/MP1/U/ChainSplit1";
 import { ChainMerge } from "../events/builtin/ChainMergeEvent";
 import { StarEvent, Gate, GateClose } from "../events/builtin/events.common";
 import { ChainSplit2 } from "../events/builtin/MP2/U/ChainSplit2";
-import { ChainSplit3 } from "../events/builtin/MP3/U/ChainSplit3";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -1360,6 +1358,49 @@ export abstract class AdapterBase {
         resolve();
       };
       srcImage.src = src;
+    });
+  }
+
+  _writeAdditionalBackgrounds(board: IBoard) {
+    const additionalBgs = board.additionalbg;
+    const { width, height } = board.bg;
+    return new Promise(function(resolve, reject) {
+      if (!additionalBgs || !additionalBgs.length) {
+        resolve();
+        return;
+      }
+
+      let failTimer = setTimeout(() => reject(`Failed to write additional backgrounds`), 45000);
+
+      let bgImgData = new Array(additionalBgs.length);
+
+      let bgPromises = [];
+      for (let i = 0; i < additionalBgs.length; i++) {
+        let bgPromise = new Promise((resolve) => {
+          let canvasCtx = createContext(width, height);
+          let srcImage = new Image();
+          srcImage.onload = function(this: { index: number }) {
+            canvasCtx.drawImage(srcImage, 0, 0, width, height);
+            bgImgData[this.index] = canvasCtx.getImageData(0, 0, width, height);
+            resolve();
+          }.bind({ index: i });
+          srcImage.src = additionalBgs[i];
+        });
+        bgPromises.push(bgPromise);
+      }
+
+      Promise.all(bgPromises).then(value => {
+        for (let i = 0; i < bgImgData.length; i++) {
+          // Append each one to the end of the hvq fs.
+          hvqfs.writeBackground(hvqfs.getDirectoryCount(), bgImgData[i], width, height);
+        }
+        $$log("Wrote additional backgrounds");
+        clearTimeout(failTimer);
+        resolve();
+      }, reason => {
+        $$log(`Error writing additional backgrounds: ${reason}`);
+        reject();
+      });
     });
   }
 

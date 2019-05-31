@@ -9,13 +9,24 @@ import { ISpaceEvent } from "../boards";
  * Takes event asm, and makes it assemble (in isolation)
  */
 export function prepAsm(asm: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo) {
-  const orgDirective = `.org ${$$hex(info.addr!)}`;
-  const syms = makeGameSymbolLabels(info.game, true);
   const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
+  const asmWithParamSyms = [
+    ...parameterSymbols,
+    asm,
+  ].join("\n");
+
+  return prepGenericAsm(asmWithParamSyms, info.addr!, info.game);
+}
+
+/**
+ * Takes asm, and makes it assemble (in isolation)
+ */
+export function prepGenericAsm(asm: string, addr: number, game: Game) {
+  const orgDirective = `.org ${$$hex(addr)}`;
+  const syms = makeGameSymbolLabels(game, true);
   return [
     orgDirective,
     ...syms,
-    ...parameterSymbols,
     asm,
     ".align 4", // it better!
   ].join("\n");
