@@ -1,9 +1,9 @@
-import { romSupportsCheats } from "./patches/gameshark/hook";
-import { join, copyRange } from "./utils/arrays";
+import { romSupportsCheats } from "../patches/gameshark/hook";
+import { join, copyRange } from "../utils/arrays";
 import * as React from "react";
-import { Parser } from "./patches/gameshark/parser";
-import { Compiler } from "./patches/gameshark/compiler";
-import { showMessage } from "./appControl";
+import { Parser } from "../patches/gameshark/parser";
+import { Compiler } from "../patches/gameshark/compiler";
+import { showMessage } from "../appControl";
 
 export let currentCheats: ArrayBuffer[] = [];
 

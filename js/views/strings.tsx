@@ -1,9 +1,9 @@
 import * as React from "react";
-import { romhandler } from "./romhandler";
-import { strings } from "./fs/strings";
-import { strings3 } from "./fs/strings3";
-import { arrayToArrayBuffer } from "./utils/arrays";
-import { MPEditor, MPEditorDisplayMode, MPEditorToolbarPlacement } from "./texteditor";
+import { romhandler } from "../romhandler";
+import { strings } from "../fs/strings";
+import { strings3 } from "../fs/strings3";
+import { arrayToArrayBuffer } from "../utils/arrays";
+import { MPEditor, MPEditorDisplayMode, MPEditorToolbarPlacement } from "../texteditor";
 
 interface IStringsViewerState {
   hasError: boolean;

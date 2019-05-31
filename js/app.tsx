@@ -6,14 +6,14 @@ import * as React from "react";
 import { IEvent } from "./events/events";
 import { updateWindowTitle } from "./utils/browser";
 import { Editor } from "./renderer";
-import { Details } from "./details";
-import { Settings } from "./settings";
-import { About } from "./about";
-import { ModelViewer } from "./models";
-import { EventsView } from "./eventsview";
-import { CreateEventView } from "./createevent";
-import { StringsViewer } from "./strings";
-import { GamesharkView } from "./gameshark";
+import { Details } from "./views/details";
+import { Settings } from "./views/settings";
+import { About } from "./views/about";
+import { ModelViewer } from "./views/models";
+import { EventsView } from "./views/eventsview";
+import { CreateEventView } from "./views/createevent";
+import { StringsViewer } from "./views/strings";
+import { GamesharkView } from "./views/gameshark";
 import { BoardMenu } from "./boardmenu";
 import { Notification, NotificationBar, NotificationButton, NotificationColor } from "./components/notifications";
 import { Header } from "./header";
@@ -29,8 +29,8 @@ import "./events/builtin/MP2/events.MP2";
 import "./events/builtin/MP3/events.MP3";
 import { showMessage } from "./appControl";
 import "file-saver";
-import { DebugView } from "./debug";
-import { AudioViewer } from "./audio";
+import { DebugView } from "./views/debug";
+import { AudioViewer } from "./views/audio";
 
 interface IPP64AppState {
   currentView: View,

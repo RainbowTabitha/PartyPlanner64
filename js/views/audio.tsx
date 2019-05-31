@@ -1,13 +1,13 @@
 import React = require("react");
-import { romhandler } from "./romhandler";
-import { audio } from "./fs/audio";
-import { getAdapter } from "./adapter/adapters";
-import { playMidi } from "./audio/midiplayer";
-import { Button } from "./controls";
-import { parseGameMidi } from "./audio/midi";
-import { playSound } from "./audio/soundplayer";
-import { AudioPlayerController } from "./audio/playershared";
-import { extractWavFromSound } from "./audio/wav";
+import { romhandler } from "../romhandler";
+import { audio } from "../fs/audio";
+import { getAdapter } from "../adapter/adapters";
+import { playMidi } from "../audio/midiplayer";
+import { Button } from "../controls";
+import { parseGameMidi } from "../audio/midi";
+import { playSound } from "../audio/soundplayer";
+import { AudioPlayerController } from "../audio/playershared";
+import { extractWavFromSound } from "../audio/wav";
 import { $setting, get } from "./settings";
 
 interface IAudioViewerState {

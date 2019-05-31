@@ -4,7 +4,7 @@ import { romhandler } from "../romhandler";
 import { getValidationRulesForBoard as getValidationRulesForMP1 } from "./validation.MP1";
 import { getValidationRulesForBoard as getValidationRulesForMP2 } from "./validation.MP2";
 import { getValidationRulesForBoard as getValidationRulesForMP3 } from "./validation.MP3";
-import { get, $setting } from "../settings";
+import { get, $setting } from "../views/settings";
 import { getRule, IValidationRule } from "./validationrules";
 import { getBoardInfos } from "../adapter/boardinfo";
 import { IBoardInfo } from "../adapter/boardinfobase";

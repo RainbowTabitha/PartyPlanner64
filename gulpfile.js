@@ -203,7 +203,7 @@ gulp.task("version", function(callback) {
           + "<a target='_blank' href='https://github.com/PartyPlanner64/PartyPlanner64/commit/"
           + matchResult[3] + "'>" + matchResult[3] + "</a>)";
       }
-      gulp.src(["./dist/js/about.js", "./dist/js/app.min.js"])
+      gulp.src(["./dist/js/views/about.js", "./dist/js/app.min.js"])
         .pipe(replace("####VERSION####", versionNum))
         .pipe(gulp.dest(DST_JS))
         .on("end", callback);

@@ -1,7 +1,7 @@
 import { HookBase } from "./HookBase";
 import { parse } from "mips-inst";
 import { mainfs } from "../../fs/mainfs";
-import { getCheatRoutineBuffer } from "../../gameshark";
+import { getCheatRoutineBuffer } from "../../views/gameshark";
 
 // Example
 // Double Walk Speed (plc)

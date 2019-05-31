@@ -1,12 +1,12 @@
 import * as React from "react";
-import { Game, EventExecutionType, getExecutionTypeName, getGameName, EventParameterType } from "./types";
-import { ICustomEvent, CustomAsmHelper, createCustomEvent } from "./events/customevents";
-import { CodeMirrorWrapper } from "./components/codemirrorwrapper";
-import { IEventParameter } from "./events/events";
-import { ToggleGroup, Button } from "./controls";
-import { getCurrentEvent, showMessage, getCurrentEventIsBoardEvent } from "./appControl";
-import { getCurrentBoard, addEventToBoard } from "./boards";
-import { getEventFromLibrary, addEventToLibrary } from "./events/EventLibrary";
+import { Game, EventExecutionType, getExecutionTypeName, getGameName, EventParameterType } from "../types";
+import { ICustomEvent, CustomAsmHelper, createCustomEvent } from "../events/customevents";
+import { CodeMirrorWrapper } from "../components/codemirrorwrapper";
+import { IEventParameter } from "../events/events";
+import { ToggleGroup, Button } from "../controls";
+import { getCurrentEvent, showMessage, getCurrentEventIsBoardEvent } from "../appControl";
+import { getCurrentBoard, addEventToBoard } from "../boards";
+import { getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 
 let _createEventViewInstance: CreateEventView | null = null;
 

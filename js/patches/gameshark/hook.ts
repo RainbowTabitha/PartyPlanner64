@@ -4,7 +4,7 @@ import { MP2UHook } from "./hook.MP2.U";
 import { MP3UHook } from "./hook.MP3.U";
 import { Game } from "../../types";
 import { romhandler } from "../../romhandler";
-import { currentCheats } from "../../gameshark";
+import { currentCheats } from "../../views/gameshark";
 
 export function applyHook(romBuffer: ArrayBuffer) {
   const cheatCount = currentCheats.length;

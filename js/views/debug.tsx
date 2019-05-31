@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Button } from "./controls";
-import { openFile } from "./utils/input";
-import { print as printBuffer } from "./utils/arrays";
-import { blockUI } from "./appControl";
-import { romhandler } from "./romhandler";
+import { Button } from "../controls";
+import { openFile } from "../utils/input";
+import { print as printBuffer } from "../utils/arrays";
+import { blockUI } from "../appControl";
+import { romhandler } from "../romhandler";
 import {
   images, load as loadDump,
   create as createDump,
@@ -13,11 +13,11 @@ import {
   printSceneAsm,
   findStrings,
   findStrings3
-} from "./utils/dump";
-import { scenes, ISceneInfo } from "./fs/scenes";
-import { $$hex } from "./utils/debug";
-import { strings3 } from "./fs/strings3";
-import { strings } from "./fs/strings";
+} from "../utils/dump";
+import { scenes, ISceneInfo } from "../fs/scenes";
+import { $$hex } from "../utils/debug";
+import { strings3 } from "../fs/strings3";
+import { strings } from "../fs/strings";
 
 interface IDebugViewState {
   sceneIndex: string;

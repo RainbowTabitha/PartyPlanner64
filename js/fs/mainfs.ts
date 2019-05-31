@@ -4,7 +4,7 @@ import { arrayBuffersEqual, copyRange } from "../utils/arrays";
 import { makeDivisibleBy } from "../utils/number";
 import { Game } from "../types";
 import { romhandler } from "../romhandler";
-import { $setting, get } from "../settings";
+import { $setting, get } from "../views/settings";
 import { getRegSetUpperAndLower, getRegSetAddress } from "../utils/MIPS";
 
 interface IOffsetInfo {

@@ -1,15 +1,15 @@
-import { FORM } from "./models/FORM";
+import { FORM } from "../models/FORM";
 import { glTFAssetFromTHREE, exportGLB, exportGLTFZip } from "gltf-js-utils";
 import { get, $setting } from "./settings";
-import { $$log, $$hex } from "./utils/debug";
-import { FormToThreeJs } from "./models/FormToThreeJs";
-import { mainfs } from "./fs/mainfs";
-import { Button, ToggleButton } from "./controls";
+import { $$log, $$hex } from "../utils/debug";
+import { FormToThreeJs } from "../models/FormToThreeJs";
+import { mainfs } from "../fs/mainfs";
+import { Button, ToggleButton } from "../controls";
 import * as React from "react";
-import { MTNX } from "./models/MTNX";
+import { MTNX } from "../models/MTNX";
 import * as THREE from "three";
-import { MtnxToThreeJs } from "./models/MtnxToThreeJs";
-import { pad } from "./utils/string";
+import { MtnxToThreeJs } from "../models/MtnxToThreeJs";
+import { pad } from "../utils/string";
 import * as JSZip from "jszip";
 import "three-orbitcontrols";
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BoardType, SpaceSubtype, Space, EventActivationType, EventParameterType } from "./types";
 import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard, ISpaceEvent, IBoard } from "./boards";
-import { $setting, get } from "./settings";
+import { $setting, get } from "./views/settings";
 import { makeKeyClick } from "./utils/react";
 import { IEvent, getAvailableEvents, IEventParameter, createSpaceEvent, getEvent } from "./events/events";
 import { setEventParamDropHandler } from "./utils/drag";

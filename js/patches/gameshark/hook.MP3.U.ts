@@ -1,7 +1,7 @@
 import { HookBase } from "./HookBase";
 import { parse } from "mips-inst";
 import { mainfs } from "../../fs/mainfs";
-import { getCheatRoutineBuffer } from "../../gameshark";
+import { getCheatRoutineBuffer } from "../../views/gameshark";
 
 // Installs a Gameshark hook for MP3 (U)
 export const MP3UHook = new class MP3UHook extends HookBase {

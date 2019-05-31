@@ -1,13 +1,13 @@
-import { BoardType } from "./types";
-import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM } from "./boards";
+import { BoardType } from "../types";
+import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM } from "../boards";
 import * as React from "react";
-import { make8Bit } from "./utils/img/RGBA32";
-import { MPEditor, MPEditorDisplayMode } from "./texteditor";
-import { openFile } from "./utils/input";
-import { createContext } from "./utils/canvas";
-import { arrayBufferToDataURL } from "./utils/arrays";
-import { getAdapter } from "./adapter/adapters";
-import { refresh, showMessage } from "./appControl";
+import { make8Bit } from "../utils/img/RGBA32";
+import { MPEditor, MPEditorDisplayMode } from "../texteditor";
+import { openFile } from "../utils/input";
+import { createContext } from "../utils/canvas";
+import { arrayBufferToDataURL } from "../utils/arrays";
+import { getAdapter } from "../adapter/adapters";
+import { refresh, showMessage } from "../appControl";
 
 interface IDetailsItemBase {
   type: string;

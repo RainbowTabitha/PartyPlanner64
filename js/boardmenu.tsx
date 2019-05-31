@@ -1,4 +1,4 @@
-import { get, $setting } from "./settings";
+import { get, $setting } from "./views/settings";
 import { getROMBoards, IBoard, boardIsROM, setCurrentBoard, deleteBoard, copyCurrentBoard, getCurrentBoard } from "./boards";
 import * as React from "react";
 import { showDragZone, setDropHandler, hideDragZone } from "./utils/drag";

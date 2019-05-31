@@ -2,7 +2,7 @@ import * as React from "react";
 import { ISpace, getCurrentBoard } from "./boards";
 import { Space, SpaceSubtype, BoardType } from "./types";
 import { render, updateRightClickMenu } from "./renderer";
-import { $setting, get } from "./settings";
+import { $setting, get } from "./views/settings";
 
 let _globalHandler: any;
 

@@ -23,7 +23,7 @@ import { toArrayBuffer } from "../utils/image";
 import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
 import { arrayBufferToDataURL } from "../utils/arrays";
-import { get, $setting } from "../settings";
+import { get, $setting } from "../views/settings";
 import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
 import THREE = require("three");
 import { IBoardInfo } from "./boardinfobase";

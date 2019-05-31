@@ -1,7 +1,7 @@
 import * as React from "react";
 import { makeKeyClick } from "./utils/react";
 import { Action, BoardType } from "./types";
-import { $setting, get } from "./settings";
+import { $setting, get } from "./views/settings";
 import { currentBoardIsROM } from "./boards";
 import { changeCurrentAction } from "./appControl";
 

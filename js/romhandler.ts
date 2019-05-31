@@ -13,8 +13,8 @@ import { fixChecksum } from "./utils/CIC";
 import { $$log } from "./utils/debug";
 import { getROMAdapter } from "./adapter/adapters";
 import { showMessage } from "./appControl";
-import { reset } from "./gameshark";
-import { get, $setting } from "./settings";
+import { reset } from "./views/gameshark";
+import { get, $setting } from "./views/settings";
 
 // The ROM Handler handles the ROM... it holds the ROM buffer reference and
 // orchestrates ROM loading and saving via adapter code.
