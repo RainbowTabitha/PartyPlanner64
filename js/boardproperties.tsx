@@ -1,6 +1,9 @@
-import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces } from "./renderer";
 import * as React from "react";
-import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds, currentBoardIsROM } from "./boards";
+import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces } from "./renderer";
+import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
+  supportsAnimationBackgrounds, supportsAdditionalBackgrounds,
+  addAdditionalBG, removeAdditionalBG, boardIsROM
+} from "./boards";
 import { openFile } from "./utils/input";
 import { BoardType, View } from "./types";
 import { $$log } from "./utils/debug";
@@ -14,37 +17,61 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
   state = { }
 
   render() {
-    let gameVersion = this.props.currentBoard.game;
-    let romBoard = currentBoardIsROM();
+    const board = this.props.currentBoard;
+    const romBoard = boardIsROM(board);
 
     let animationBGList;
-    if (gameVersion === 2) {
+    if (supportsAnimationBackgrounds(board)) {
       animationBGList = (
-        <AnimationBGList board={this.props.currentBoard} />
-      )
-    }
-
-    let deadEndCheck;
-    if (!romBoard) {
-      deadEndCheck = (
-        <CheckDeadEnds board={this.props.currentBoard} />
+        <BackgroundList list="animbg" board={board}
+          title="Animation Backgrounds"
+          onAddBackground={this.onAddAnimBG}
+          onRemoveBackground={this.onRemoveAnimBG}>
+          <AnimationPlayButton board={board} />
+        </BackgroundList>
       );
     }
 
-    let findSpace;
-    if ($$debug) {
-      findSpace = <FindSpace />
+    let additionalBGList;
+    if (supportsAdditionalBackgrounds(board)) {
+      additionalBGList = (
+        <BackgroundList list="additionalbg" board={board}
+          title="Additional Backgrounds"
+          onAddBackground={this.onAddAdditionalBG}
+          onRemoveBackground={this.onRemoveAdditionalBG} />
+      );
     }
 
     return (
       <div className="properties">
-        {findSpace}
+        {$$debug && <FindSpace />}
         <EditDetails romBoard={romBoard} />
-        <BGSelect gameVersion={gameVersion} boardType={this.props.currentBoard.type} />
-        {deadEndCheck}
+        {!romBoard && <BGSelect gameVersion={board.game} boardType={board.type} />}
+        {!romBoard && <CheckDeadEnds board={this.props.currentBoard} />}
         {animationBGList}
+        {additionalBGList}
       </div>
     );
+  }
+
+  onAddAnimBG = (bg: string) => {
+    addAnimBG(bg, this.props.currentBoard)
+    this.forceUpdate();
+  }
+
+  onRemoveAnimBG = (index: number) => {
+    removeAnimBG(index, this.props.currentBoard)
+    this.forceUpdate();
+  }
+
+  onAddAdditionalBG = (bg: string) => {
+    addAdditionalBG(bg, this.props.currentBoard)
+    this.forceUpdate();
+  }
+
+  onRemoveAdditionalBG = (index: number) => {
+    removeAdditionalBG(index, this.props.currentBoard)
+    this.forceUpdate();
   }
 };
 
@@ -171,56 +198,60 @@ class CheckDeadEnds extends React.Component<ICheckDeadEndsProps> {
   }
 };
 
-interface IAnimationBGListProps {
+interface IBackgroundListProps {
   board: IBoard;
+  list: keyof IBoard;
+  title: string;
+  onAddBackground(bg: string): void;
+  onRemoveBackground(index: number): void;
 }
 
-const AnimationBGList = class AnimationBGList extends React.Component<IAnimationBGListProps> {
+class BackgroundList extends React.Component<IBackgroundListProps> {
   state = { }
 
-  onAnimBgsChanged = () => {
-    this.forceUpdate();
-  }
-
   render() {
-    let bgs = this.props.board.animbg || [];
+    let bgs = this.props.board[this.props.list] || [];
     let i = 0;
     let entries = bgs.map((bg: string) => {
       i++;
       return (
-        <AnimationBGEntry bg={bg} text={"Frame " + i} key={i} index={i-1}
-          onAnimBgsChanged={this.onAnimBgsChanged} />
+        <BackgroundListEntry bg={bg} text={"Background " + i} key={i} index={i-1}
+          onRemoveBackground={this.props.onRemoveBackground} />
       );
     });
 
-    let playButton;
-    if (bgs.length) {
-      playButton = (
-        <AnimationPlayButton />
-      );
+    const romBoard = boardIsROM(this.props.board);
+
+    let addButton;
+    if (!romBoard) {
+      addButton = <AddBackgroundButton onAddBackground={this.props.onAddBackground} />;
+    }
+
+    if (!addButton && !entries.length) {
+      return null;
     }
 
     return (
       <div className="propertiesAnimationBGList">
         <span className="propertySectionTitle">
-          Animation Backgrounds
-          {playButton}
+          {this.props.title}
+          {this.props.children}
         </span>
         {entries}
-        <AnimationBGAddButton onAnimBgsChanged={this.onAnimBgsChanged} />
+        {addButton}
       </div>
     );
   }
 };
 
-interface IAnimationBGEntryProps {
+interface IBackgroundListEntryProps {
   bg: string;
   index: number;
   text: string;
-  onAnimBgsChanged(): any;
+  onRemoveBackground(index: number): void;
 }
 
-class AnimationBGEntry extends React.Component<IAnimationBGEntryProps> {
+class BackgroundListEntry extends React.Component<IBackgroundListEntryProps> {
   state = { }
 
   onMouseDown = () => {
@@ -234,27 +265,30 @@ class AnimationBGEntry extends React.Component<IAnimationBGEntryProps> {
   }
 
   onRemove = () => {
-    removeAnimBG(this.props.index);
-    this.props.onAnimBgsChanged();
+    this.props.onRemoveBackground(this.props.index);
   }
 
   render() {
     return (
-      <div className="propertiesActionButton" onMouseDown={this.onMouseDown} onMouseUp={this.restoreMainBG} onMouseOut={this.restoreMainBG}>
+      <div className="propertiesActionButton"
+        onMouseDown={this.onMouseDown}
+        onMouseUp={this.restoreMainBG}
+        onMouseOut={this.restoreMainBG}>
         <img src={this.props.bg} className="propertiesActionButtonImg" width="24" height="24" />
         <span className="propertiesActionButtonSpan">{this.props.text}</span>
-        <div role="button" className="animBGEntryDelete" onClick={this.onRemove}
-          title="Remove this animation frame">✖</div>
+        <div role="button" className="animBGEntryDelete"
+          onClick={this.onRemove}
+          title="Remove this background">✖</div>
       </div>
     );
   }
 };
 
-interface IAnimationBGAddButtonProps {
-  onAnimBgsChanged(): any;
+interface IAddBackgroundButtonProps {
+  onAddBackground(bg: string): void;
 }
 
-class AnimationBGAddButton extends React.Component<IAnimationBGAddButtonProps> {
+class AddBackgroundButton extends React.Component<IAddBackgroundButtonProps> {
   state = { }
 
   onAddAnimBg = () => {
@@ -268,8 +302,7 @@ class AnimationBGAddButton extends React.Component<IAnimationBGAddButtonProps> {
 
     let reader = new FileReader();
     reader.onload = error => {
-      addAnimBG(reader.result);
-      this.props.onAnimBgsChanged();
+      this.props.onAddBackground(reader.result as string);
     };
     reader.readAsDataURL(file);
   }
@@ -284,12 +317,16 @@ class AnimationBGAddButton extends React.Component<IAnimationBGAddButtonProps> {
   }
 };
 
+interface IAnimationPlayButtonProps {
+  board: IBoard;
+}
+
 interface IAnimationPlayButtonState {
   playing: boolean;
 }
 
-const AnimationPlayButton = class AnimationPlayButton extends React.Component<{}, IAnimationPlayButtonState> {
-  constructor(props: {}) {
+class AnimationPlayButton extends React.Component<IAnimationPlayButtonProps, IAnimationPlayButtonState> {
+  constructor(props: IAnimationPlayButtonProps) {
     super(props);
 
     this.state = {
@@ -298,6 +335,10 @@ const AnimationPlayButton = class AnimationPlayButton extends React.Component<{}
   }
 
   render() {
+    if (!this.props.board.animbg || !this.props.board.animbg.length) {
+      return null;
+    }
+
     let icon = this.state.playing ? "▮▮" : "►";
     return (
       <div className="animPlayBtn" onClick={this.onClick}>{icon}</div>

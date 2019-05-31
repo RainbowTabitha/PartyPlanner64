@@ -63,7 +63,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     let bgIndex = boardInfo.bgDir;
     let bgPromises = [
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
-      this._writeAnimationBackgrounds(boardInfo.animBgSet!, board.bg.src, board.animbg, board.bg.width, board.bg.height),
+      this._writeAnimationBackgrounds(boardInfo.animBgSet!, board.bg.width, board.bg.height, board.bg.src, board.animbg),
       this._writeBackground(bgIndex + 2, board.otherbg.largescene, 320, 240), // Game start, end
       this._writeOverviewBackground(bgIndex + 6, board.bg.src), // Overview map
       this.onWriteBoardSelectImg(board, boardInfo), // The board select image
@@ -310,7 +310,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       board.animbg = animBgs;
   }
 
-  _writeAnimationBackgrounds(setIndex: number, mainBgSrc: string, animSources: string[], width: number, height: number) {
+  _writeAnimationBackgrounds(setIndex: number, width: number, height: number, mainBgSrc: string, animSources?: string[]) {
     return new Promise(function(resolve, reject) {
       if (isNaN(setIndex) || !animSources || !animSources.length) {
         resolve();

@@ -17,17 +17,20 @@ export interface IBoard {
   events: { [name: string]: string };
   bg: IBoardBgDetails;
   otherbg: any;
-  animbg?: any;
+  animbg?: string[];
+  additionalbg?: string[];
   audioIndex: number;
   _rom?: boolean;
   _deadSpace?: number;
 }
 
-interface IBoardBgDetails {
+interface IBoardImage {
   width: number;
   height: number;
   src: string; // sometimes boolean inside this file.
+}
 
+interface IBoardBgDetails extends IBoardImage {
   fov: number;
   scaleFactor: number;
   cameraEyePosX: number;
@@ -647,6 +650,26 @@ export function removeAnimBG(index: number, board = getCurrentBoard()) {
     return;
 
   board.animbg.splice(index, 1);
+}
+
+export function supportsAnimationBackgrounds(board: IBoard): boolean {
+  return board.game === 2;
+}
+
+export function addAdditionalBG(bg: any, board = getCurrentBoard()) {
+  board.additionalbg = board.additionalbg || [];
+  board.additionalbg.push(bg);
+}
+
+export function removeAdditionalBG(index: number, board = getCurrentBoard()) {
+  if (!board.additionalbg || board.additionalbg.length <= index || index < 0)
+    return;
+
+  board.additionalbg.splice(index, 1);
+}
+
+export function supportsAdditionalBackgrounds(board: IBoard): boolean {
+  return board.game === 3;
 }
 
 export function deleteBoard(boardIdx: number) {
