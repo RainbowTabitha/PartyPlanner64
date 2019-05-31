@@ -59,26 +59,26 @@ export function parseDecisionTree(view: DataView, offset: number, base: number, 
 }
 
 function parseDecisionTreeResult(res: number, gameVersion: GameVersion): IDecisionTreeResult {
-  if (gameVersion > 1) {
+  if (gameVersion === 3) {
     // Decision, Super Hard, Hard, Normal, Easy
     // DDDD SSSS SSSH HHHH HHNN NNNN NEEE EEEE
     return {
       value: ((res & 0xF0000000) >>> 28) as (1 | 0),
       probability: [
-        (res & 0x0FE00000) >>> 21,
-        (res & 0x001FC000) >>> 14,
+        (res & 0x0000007F),
         (res & 0x00003F80) >>> 7,
-        (res & 0x0000007F)
-      ]
+        (res & 0x001FC000) >>> 14,
+        (res & 0x0FE00000) >>> 21,
+      ],
     };
   }
   else {
     return {
       value: ((res & 0xFFFF0000) >>> 16) as (1 | 0),
       probability: [
+        (res & 0x000000FF),
         (res & 0x0000FF00) >>> 8,
-        (res & 0x000000FF)
-      ]
+      ],
     };
   }
 }

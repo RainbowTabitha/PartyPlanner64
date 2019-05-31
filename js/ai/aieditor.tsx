@@ -103,21 +103,48 @@ interface IDecisionTreeResultProps {
 
 function DecisionTreeResult(props: IDecisionTreeResultProps) {
   const result = props.node.decision as IDecisionTreeResult;
+
+  let secondProbability;
+  if (result.probability.length === 2) {
+    secondProbability =
+      <DecisionTreeResultDifficulty probability={result.probability[1]}
+        difficultyLong="Normal / Hard" difficultyShort="N/H" />;
+  }
+  else {
+    secondProbability =
+      <DecisionTreeResultDifficulty probability={result.probability[1]}
+        difficultyLong="Normal" difficultyShort="N" />;
+  }
+
   return (
     <div>
-      <span>{result.value}</span>
-      <span title="Probability on Easy difficulty">E: </span>
-      <span>{result.probability[0]}</span>
-      <span title="Probability on Normal difficulty">N: </span>
-      <span>{result.probability[1]}</span>
-      <span title="Probability on Hard difficulty">H: </span>
-      <span>{result.probability[2]}</span>
-      {result.probability.length > 3 &&
+      <DecisionTreeResultDifficulty probability={result.probability[0]}
+        difficultyLong="Easy" difficultyShort="E" />
+      {secondProbability}
+      {result.probability.length > 2 &&
         <>
-          <span title="Probability on Super Hard difficulty">SH: </span>
-          <span>{result.probability[3]}</span>
+          <DecisionTreeResultDifficulty probability={result.probability[2]}
+            difficultyLong="Hard" difficultyShort="H" />
+          <DecisionTreeResultDifficulty probability={result.probability[3]}
+            difficultyLong="Super Hard" difficultyShort="SH" />
         </>
       }
     </div>
   );
+}
+
+interface IDecisionTreeResultDifficultyProps {
+  difficultyLong: string;
+  difficultyShort: string;
+  probability: number;
+}
+
+function DecisionTreeResultDifficulty(props: IDecisionTreeResultDifficultyProps) {
+  return <>
+    <span title={`Probability on ${props.difficultyLong} difficulty`}>
+      {props.difficultyShort}:
+    </span>
+    {" "}
+    <span>{props.probability}</span>
+  </>;
 }
