@@ -1392,7 +1392,7 @@ export abstract class AdapterBase {
       Promise.all(bgPromises).then(value => {
         for (let i = 0; i < bgImgData.length; i++) {
           // Append each one to the end of the hvq fs.
-          hvqfs.writeBackground(hvqfs.getDirectoryCount(), bgImgData[i], width, height);
+          hvqfs.writeBackground(hvqfs.getDirectoryCount(), bgImgData[i], width, height, board.bg);
         }
         $$log("Wrote additional backgrounds");
         clearTimeout(failTimer);

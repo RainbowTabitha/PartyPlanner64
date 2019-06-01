@@ -523,7 +523,7 @@ export namespace hvqfs {
     _setMetadata(dir, metadata);
   }
 
-  export function readBackgroundImgData(dir: number) {
+  export function readBackgroundImgData(dir: number): ImageData {
     let tileCount = _hvqCache![dir].length - 1;
 
     const metadata = getMetadata(dir);
@@ -587,7 +587,9 @@ export namespace hvqfs {
     });
   }
 
-  export function writeBackground(dir: number, imgData: ImageData, width: number, height: number) {
+  export function writeBackground(dir: number, imgData: ImageData,
+    width: number, height: number, metadata?: Partial<IHVQMetadata>
+  ) {
     let tileXCount = width / 64;
     let tileYCount = height / 48;
     let tileCount = tileXCount * tileYCount;
@@ -609,7 +611,32 @@ export namespace hvqfs {
       }
     }
 
-    let game = romhandler.getGameVersion();
+    const game = romhandler.getGameVersion()!;
+
+    if (!_hvqCache![dir]) {
+      if (!metadata) {
+        throw new Error("Cannot write a new HVQ background without metadata");
+      }
+
+      _hvqCache![dir] = [];
+
+      // TODO: Hard coding these seems bad.
+      if (game > 1) {
+        _hvqCache![dir][0] = _hvqCache![3][0];
+
+        // Well... we probably need HVQ-MPS, but for now it doesn't matter which.
+        _hvqCache![dir][1] = _hvqCache![3][1];
+      }
+      else {
+        _hvqCache![dir][0] = _hvqCache![0][0];
+      }
+      _readMetadata(dir);
+    }
+
+    if (metadata) {
+      updateMetadata(dir, metadata);
+    }
+
     if (game === 1) {
       for (let i = 1; i <= tileCount; i++) {
         _hvqCache![dir][i] = orderedHVQTiles[i - 1];
