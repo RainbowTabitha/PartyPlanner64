@@ -9,6 +9,7 @@ const commonRules = [
   getRule("TOOMANYKOOPAS", { limit: 0 }),
   getRule("GATESETUP"),
   getRule("OVERRECOMMENDEDSPACES", { max: 128 }),
+  getRule("ADDITIONALBGCODEISSUE"),
 ];
 
 export function getValidationRulesForBoard(gameID: Game, boardIndex: number) {

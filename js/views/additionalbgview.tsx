@@ -7,7 +7,7 @@ import { prepGenericAsm } from "../events/prepAsm";
 import { Game, getGameName } from "../types";
 import { assemble } from "mips-assembler";
 import { $$log } from "../utils/debug";
-import { defaultAdditionalBgAsm } from "../events/additionalbg";
+import { defaultAdditionalBgAsm, makeFakeBgSyms } from "../events/additionalbg";
 
 let _viewInstance: AdditionalBgView | null = null;
 
@@ -121,14 +121,6 @@ export function additionalBgViewPromptExit() {
   if (_viewInstance) {
     return _viewInstance.promptExit();
   }
-}
-
-function makeFakeBgSyms(board: IBoard): number[] {
-  if (!board.additionalbg)
-    return [];
-
-  let i = 0;
-  return board.additionalbg.map(bg => ++i);
 }
 
 function getGameVersionsToTestCompile(board: IBoard): Game[] {

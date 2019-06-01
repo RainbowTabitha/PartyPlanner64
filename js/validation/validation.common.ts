@@ -4,6 +4,10 @@ import { romhandler } from "../romhandler";
 import { CustomAsmHelper, ICustomEvent, createCustomEvent } from "../events/customevents";
 import { getEvent, isUnsupported, IEventParameter } from "../events/events";
 import { createRule } from "./validationrules";
+import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
+import { makeFakeBgSyms } from "../events/additionalbg";
+import { assemble } from "mips-assembler";
+import { prepGenericAsm } from "../events/prepAsm";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
 HasStart.fails = function(board: IBoard, args: any) {
@@ -391,6 +395,26 @@ GateSetup.fails = function(board: IBoard, args: any = {}) {
       });
     }
     return pointingIndices;
+  }
+
+  return false;
+};
+
+const AdditionalBackgroundCodeIssue = createRule("ADDITIONALBGCODEISSUE", "Additional background code issue", ValidationLevel.ERROR);
+AdditionalBackgroundCodeIssue.fails = function(board: IBoard, args: any = {}) {
+  if (!board.additionalbgcode) {
+    return false;
+  }
+
+  const asmWithBgSyms = prepAdditionalBgAsm(board.additionalbgcode, 0, makeFakeBgSyms(board));
+  const game = romhandler.getROMGame()!;
+  const preppedAsm = prepGenericAsm(asmWithBgSyms, 0x80000000, game);
+  try {
+    assemble(preppedAsm);
+  }
+  catch (e) {
+    console.error(e);
+    return `The additional background code failed a test assembly.`;
   }
 
   return false;
