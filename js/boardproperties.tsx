@@ -8,6 +8,7 @@ import { openFile } from "./utils/input";
 import { BoardType, View } from "./types";
 import { $$log } from "./utils/debug";
 import { changeView } from "./appControl";
+import { $setting, get } from "./views/settings";
 
 interface IBoardPropertiesProps {
   currentBoard: IBoard;
@@ -34,7 +35,10 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
 
     let additionalBGList;
     if (supportsAdditionalBackgrounds(board)) {
-      additionalBGList = (
+      const advanced = get($setting.uiAdvanced);
+      const hasBgs = board.additionalbg && board.additionalbg.length;
+      const hasBgCode = !!board.additionalbgcode;
+      additionalBGList = (advanced || hasBgs || hasBgCode) && (
         <BackgroundList list="additionalbg" board={board}
           title="Additional Backgrounds"
           onAddBackground={this.onAddAdditionalBG}
