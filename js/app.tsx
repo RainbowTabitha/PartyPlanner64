@@ -166,6 +166,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
       }
       blocked = (
         <div className="loading">
+          <div className="loadingEscapeBackDoor" onClick={() => this.setState({ blocked: false })}></div>
           <img className="loadingLogo" src="img/logoloading.png" alt="Loading" />
           <br />
           {content}
