@@ -79,7 +79,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
       return (
         <ErrorDisplay error={this.state.error} errorInfo={this.state.errorInfo}
           onClearError={() => {
-            this.setState({ error: null, errorInfo: null });
+            this.setState({ error: null, errorInfo: null, blocked: false });
           }}/>
       );
     }
