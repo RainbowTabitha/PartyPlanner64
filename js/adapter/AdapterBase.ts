@@ -916,13 +916,17 @@ export abstract class AdapterBase {
     $$log(asm);
 
     let buffer: ArrayBuffer;
+    const symbolMap = Object.create(null);
     try {
-      buffer = assemble(asm) as ArrayBuffer;
+      buffer = assemble(asm, { symbolOutputMap: symbolMap }) as ArrayBuffer;
     }
     catch (e) {
       const fullError = `Error during board assembly: ${e}\nContext: ${asm}`;
       throw new Error(fullError);
     }
+
+    $$log("Overlay symbols: ", symbolMap);
+
     const bufferView = new DataView(buffer);
 
     if (buffer.byteLength > this.EVENT_MEM_SIZE) {
