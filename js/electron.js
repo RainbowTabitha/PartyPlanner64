@@ -3,7 +3,7 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { autoUpdater } = require("electron-updater");
 
-require("electron-debug")({ enabled: true, showDevTools: false });
+require("electron-debug")({ isEnabled: true, showDevTools: false });
 
 let win;
 

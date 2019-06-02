@@ -184,7 +184,7 @@ export namespace strings {
     let [curIdx, len] = [0, str.length];
     while (curIdx < len) {
       let lastMatchLen = 0;
-      let lastMatch;
+      let lastMatch: string | number;
       for (let byte in map) {
         if (!map.hasOwnProperty(byte))
           continue;
@@ -203,7 +203,7 @@ export namespace strings {
         lastMatch = str.charCodeAt(curIdx);
       }
 
-      if (typeof lastMatch === "string")
+      if (typeof lastMatch! === "string")
         lastMatch = parseInt(lastMatch);
 
       result.push(lastMatch!);
