@@ -370,6 +370,7 @@ function AdditionalBackgroundConfigButton() {
   const icon = "\u2699" // Gear
   return (
     <div className="bgListActionButton"
+      title="Configure additional background usage"
       onClick={() => changeView(View.ADDITIONAL_BGS)}>
       {icon}
     </div>
