@@ -120,6 +120,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       this._brandBootSplashscreen(),
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
       this._writeBackground(boardInfo.pauseBgDir!, board.bg.src, 320, 240), // Overview map
+      this._writeAdditionalBackgrounds(board),
     ];
 
     switch (boardIndex) {

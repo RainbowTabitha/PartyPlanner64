@@ -3,6 +3,7 @@ import "./validation.common";
 
 const commonRules = [
   getRule("TOOMANYGATES", { limit: 0 }),
+  getRule("ADDITIONALBGCODEISSUE"),
 ];
 
 export function getValidationRulesForBoard() {

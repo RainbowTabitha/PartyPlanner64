@@ -70,6 +70,11 @@ exports["default"] = [
       name: "FreeTemp",
       desc: "A0=addr" },
 {
+      addr: 2147764224, // 0x80044800
+      type: "code",
+      name: "RunDecisionTree",
+      desc: "A0=decision_tree_pointer" },
+{
       addr: 2147797556, // 0x8004CA34
       type: "code",
       name: "ShowPlayerCoinChange",
@@ -142,6 +147,14 @@ exports["default"] = [
       type: "code",
       name: "Free",
       desc: "A0=allocated heap pointer" },
+{
+      addr: 2147967168, // 0x800760C0
+      type: "code",
+      name: "InitObjSys" },
+{
+      addr: 2147970660, // 0x80076E64
+      type: "code",
+      name: "InitProcess" },
 {
       addr: 2147998176, // 0x8007D9E0
       type: "code",

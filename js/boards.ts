@@ -670,7 +670,7 @@ export function removeAdditionalBG(index: number, board = getCurrentBoard()) {
 }
 
 export function supportsAdditionalBackgrounds(board: IBoard): boolean {
-  return board.game === 3;
+  return board.game !== 2;
 }
 
 export function deleteBoard(boardIdx: number) {

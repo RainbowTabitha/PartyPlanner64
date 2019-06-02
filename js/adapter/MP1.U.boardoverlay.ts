@@ -3,6 +3,9 @@ import { SpaceSubtype, Game } from "../types";
 import { distance } from "../utils/number";
 import { IBoardInfo } from "./boardinfobase";
 import { getSymbol } from "../symbols/symbols";
+import { defaultAdditionalBgAsm } from "../events/additionalbg";
+import { hvqfs } from "../fs/hvqfs";
+import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
 
 export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
@@ -40,6 +43,15 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
     }
     toadIndices.push(bestToadIdx);
   }
+
+  const additionalbgcode = board.additionalbgcode || defaultAdditionalBgAsm;
+
+  // This runs before we've written the additional bgs, but we can predict the directories.
+  const additionalBgIndices = board.additionalbg && board.additionalbg.map((bg, i) => {
+    return hvqfs.getDirectoryCount() + i
+  });
+
+  const preppedAdditionalBgCode = prepAdditionalBgAsm(additionalbgcode, boardInfo.bgDir, additionalBgIndices);
 
 return `
 .org 0x800F65E0
@@ -805,7 +817,9 @@ setup_routine:
   jal   0x80023504
    addiu    A0, R0, 1
 
-  addiu  A0, R0, ${boardInfo.bgDir}
+  JAL   __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
+   NOP
+  move  A0, V0 ; Determined by user-customizable hook
   addiu  A1, R0, ${boardInfo.boardDefFile}
   addiu  A2, R0, ${boardInfo.pauseBgDir!}
   jal   0x80056A08 ; setup board?
@@ -874,6 +888,8 @@ L800F717C:
   lw    S0, 0x10(SP)
   jr    RA
    addiu SP, SP, 0x20
+
+${preppedAdditionalBgCode}
 
 overlaycall2:
   addiu SP, SP, -0x18

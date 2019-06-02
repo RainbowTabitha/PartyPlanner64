@@ -145,6 +145,11 @@ exports["default"] = [
       name: "DirectionPrompt",
       desc: "Prompts player to choose path at branch" },
 {
+      addr: 2147740080, // 0x8003E9B0
+      type: "code",
+      name: "RunDecisionTree",
+      desc: "A0=decision_tree_pointer" },
+{
       addr: 2147768184, // 0x80045778
       type: "code",
       name: "ShowPlayerCoinChange",
@@ -1945,14 +1950,14 @@ exports["default"] = [
       name: "max_objects",
       desc: "set from InitObjectSystem" },
 {
-      addr: 2148455878, // 0x800ED5C6
-      type: "u16",
+      addr: 2148455879, // 0x800ED5C7
+      type: "u8",
       name: "total_turns",
       desc: "Total game turns" },
 {
-      addr: 2148455880, // 0x800ED5C8
-      type: "u16",
-      name: "elapsed_turns",
+      addr: 2148455881, // 0x800ED5C9
+      type: "u8",
+      name: "current_turn",
       desc: "Elapsed turns" },
 {
       addr: 2148455900, // 0x800ED5DC

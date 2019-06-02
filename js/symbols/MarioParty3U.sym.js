@@ -121,6 +121,11 @@ exports["default"] = [
       type: "code",
       name: "ImgPackParse" },
 {
+      addr: 2147877132, // 0x8006010C
+      type: "code",
+      name: "DisablePromptOption",
+      desc: "A0=window_id" },
+{
       addr: 2147885032, // 0x80061FE8
       type: "code",
       name: "InitFadeIn",
@@ -1843,6 +1848,11 @@ exports["default"] = [
       addr: 2148352448, // 0x800D41C0
       type: "u32",
       name: "cur_player_spaces_remaining" },
+{
+      addr: 2148376976, // 0x800DA190
+      type: "code",
+      name: "RunDecisionTree",
+      desc: "A0=decision_tree_pointer" },
 {
       addr: 2148409160, // 0x800E1F48
       type: "code",
