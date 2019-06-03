@@ -49,6 +49,7 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
   // ROM boards cannot be edited, so create a copy right now and switch to it.
   if (currentBoardIsROM() && spaceWasClicked) {
     changeCurrentAction(Action.MOVE); // Avoid destructive actions like delete.
+    _clearSelectedSpaces();
     const insertionIndex = copyCurrentBoard();
     setCurrentBoard(insertionIndex);
   }
@@ -716,7 +717,11 @@ function _getSelectedSpaces() {
   const selectedSpaces = [];
   for (let index in selectedSpaceIndices) {
     let space = curBoard.spaces[index];
-    selectedSpaces.push(space);
+
+    // TODO: There can be bad indices in the set when switching between boards.
+    if (space) {
+      selectedSpaces.push(space);
+    }
   }
   return selectedSpaces;
 }

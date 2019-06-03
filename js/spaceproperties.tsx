@@ -105,6 +105,8 @@ export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
     if (multipleSelections) {
       // Only show a type as selected if all spaces are the same.
       for (const space of spaces) {
+        if (!space)
+          continue;
         if (space.type !== currentType)
           currentType = undefined;
         if (space.subtype !== currentSubtype)
