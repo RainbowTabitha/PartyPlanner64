@@ -1,15 +1,16 @@
-import { BoardType, Space, SpaceSubtype, Game, EventActivationType, EventExecutionType } from "./types";
+import { BoardType, Space, SpaceSubtype, Game, EventActivationType, EventExecutionType, GameVersion } from "./types";
 import { getSavedBoards } from "./utils/localstorage";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
 import { getEvent, IEvent, IEventParameter, EventParameterValues } from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
 import { getAppInstance, boardsChanged, currentBoardChanged } from "./appControl";
+import { IDecisionTreeNode } from "./ai/aitrees";
 
 export interface IBoard {
   name: string;
   description: string;
-  game: 1 | 2 | 3;
+  game: GameVersion;
   type: BoardType;
   difficulty: number;
   spaces: ISpace[];
@@ -51,6 +52,7 @@ export interface ISpace {
   subtype?: SpaceSubtype;
   events?: ISpaceEvent[];
   star?: boolean;
+  aiTree?: IDecisionTreeNode[];
 }
 
 /** The subset of an IEvent that is kept on a space in the board. */
@@ -671,6 +673,10 @@ export function removeAdditionalBG(index: number, board = getCurrentBoard()) {
 
 export function supportsAdditionalBackgrounds(board: IBoard): boolean {
   return board.game !== 2;
+}
+
+export function addDecisionTree(board: IBoard, spaceIndex: number, tree: IDecisionTreeNode[]): void {
+  board.spaces[spaceIndex].aiTree = tree;
 }
 
 export function deleteBoard(boardIdx: number) {

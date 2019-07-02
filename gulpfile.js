@@ -48,6 +48,7 @@ const CSS = [
   "css/audio.css",
   "css/patches.css",
   "css/debug.css",
+  "css/aieditor.css",
   // css/fonts.css is not included in prod
 ];
 function MAKE_CSS_ORDER(css) {

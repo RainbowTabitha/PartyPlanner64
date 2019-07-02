@@ -32,6 +32,8 @@ import "file-saver";
 import { DebugView } from "./views/debug";
 import { AudioViewer } from "./views/audio";
 import { AdditionalBgView } from "./views/additionalbgview";
+import { IDecisionTreeNode } from "./ai/aitrees";
+import { DecisionTreeEditor } from "./ai/aieditor";
 
 interface IPP64AppState {
   currentView: View,
@@ -42,7 +44,7 @@ interface IPP64AppState {
   romLoaded: boolean,
   currentAction: Action,
   selectedSpaces: ISpace[] | null,
-  showingAIToolbox: boolean;
+  aiTree: IDecisionTreeNode[] | null;
   blocked: boolean,
   message: string,
   messageHTML: string,
@@ -63,7 +65,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     romLoaded: false,
     currentAction: Action.MOVE,
     selectedSpaces: null,
-    showingAIToolbox: false,
+    aiTree: null,
     blocked: false,
     message: "",
     messageHTML: "",
@@ -205,11 +207,11 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
                 visible={this.state.currentView === View.EDITOR}>
                 <BoardProperties currentBoard={this.state.currentBoard} />
               </ToolWindow>
-              {this.state.showingAIToolbox &&
+              {this.state.aiTree &&
                 <ToolWindow name="AI Decision Tree" position="TopLeft"
                   visible={this.state.currentView === View.EDITOR}
-                  canClose onCloseClick={() => this.setState({ showingAIToolbox: false })}>
-                  Contents here
+                  canClose onCloseClick={() => this.setState({ aiTree: null })}>
+                  <DecisionTreeEditor root={this.state.aiTree} />
                 </ToolWindow>
               }
             </div>

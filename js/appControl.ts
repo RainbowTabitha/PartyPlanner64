@@ -3,6 +3,7 @@ import { IBoard, ISpace } from "./boards";
 import { View, Action } from "./types";
 import { IEvent } from "./events/events";
 import { Notification } from "./components/notifications";
+import { IDecisionTreeNode } from "./ai/aitrees";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
@@ -14,14 +15,15 @@ export function changeView(view: View) {
 
 export function currentBoardChanged(currentBoard: IBoard) {
   getAppInstance().setState({
-    currentBoard: currentBoard, // getCurrentBoard(),
+    currentBoard: currentBoard,
     selectedSpaces: null,
-    currentAction: Action.MOVE
+    currentAction: Action.MOVE,
+    aiTree: null,
   });
 }
 
 export function boardsChanged(boards: IBoard[]) {
-  getAppInstance().setState({ boards }); // : getBoards()
+  getAppInstance().setState({ boards, aiTree: null }); // : getBoards()
 }
 
 export function romLoadedChanged() {
@@ -37,7 +39,7 @@ export function getCurrentAction() {
 }
 
 export function changeSelectedSpaces(selectedSpaces: ISpace[]) {
-  getAppInstance().setState({ selectedSpaces });
+  getAppInstance().setState({ selectedSpaces, aiTree: null });
 }
 
 export function getSelectedSpaces() {
@@ -86,4 +88,8 @@ export function removeNotification(notification: React.ReactElement<Notification
   const index = notifications.indexOf(notification);
   notifications.splice(index, 1);
   getAppInstance().setState({ notifications });
+}
+
+export function changeDecisionTree(tree: IDecisionTreeNode[] | null): void {
+  getAppInstance().setState({ aiTree: tree });
 }

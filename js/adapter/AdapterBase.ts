@@ -158,7 +158,7 @@ export abstract class AdapterBase {
 
     let eventSyms: string = "";
     if (this.writeFullOverlay) {
-      eventSyms = this._writeNewBoardOverlay(boardCopy, boardInfo);
+      eventSyms = this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex);
     }
     else {
       // Wipe out the event ASM from those events.
@@ -201,8 +201,8 @@ export abstract class AdapterBase {
     return this.onOverwritePromises(board, boardInfo, boardIndex);
   }
 
-  private _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
-    const overlayAsm = this.onCreateBoardOverlay(board, boardInfo);
+  private _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
+    const overlayAsm = this.onCreateBoardOverlay(board, boardInfo, boardIndex);
     const game = romhandler.getROMGame()!;
     const asm = `
         ${makeGameSymbolLabels(game, true).join("\n")}
@@ -232,7 +232,7 @@ export abstract class AdapterBase {
     return eventSyms;
   }
 
-  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
     throw new Error("Adapter does not implement onCreateBoardOverlay");
   }
 

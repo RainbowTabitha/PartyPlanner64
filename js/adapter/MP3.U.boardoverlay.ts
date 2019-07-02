@@ -11,7 +11,7 @@ import { hvqfs } from "../fs/hvqfs";
 import { defaultAdditionalBgAsm } from "../events/additionalbg";
 import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
 
-export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string {
+export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): string {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
@@ -173,6 +173,8 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string
     arrowRotationInstructions.push(`JAL ${addArrowAngleAddr}`);
     arrowRotationInstructions.push("MTC1 A0 F12");
   }
+
+  const mirageStarEnabled = false; // Hard code to false for now.
 
   const additionalbgcode = board.additionalbgcode || defaultAdditionalBgAsm;
 
@@ -833,20 +835,16 @@ jal   0x80035F98
  li    A0, 4
 bnez  V0, L801066D8
        NOP
-lb    V0, 1(S2)
-xori  V0, V0, 2
-sltiu V0, V0, 1
+li    V0, ${mirageStarEnabled ? 1 : 0}
 subu  V0, R0, V0
 andi  V0, V0, 0x5e09
 j     L801066F0
  ori   A1, V0, 0x5e00
 L801066D8:
-lb    V0, 1(S2)
-xori  V0, V0, 2
-sltiu V0, V0, 1
+li    V0, ${mirageStarEnabled ? 1 : 0}
 subu  V0, R0, V0
-andi  V0, V0, 0x5e09
-ori   A1, V0, 0x5e01
+andi  V0, V0, 0x5e09 ; I'll show you where the first star your after is. Theres another star here! One is a mirage.
+ori   A1, V0, 0x5e01 ; OK! The next star youre after is over this way!
 L801066F0:
 lh    A0, 8(S1)
 li    A2, -1
@@ -859,7 +857,7 @@ jal   PlaySound
  li    A0, 679
 lh    A0, 8(S1)
 jal   0x800EE2C0
- li    S0, 2
+ li    S0, 2        ; TODO: Is this Spiny Desert's index, or just coincidence?
 sw    S0, 0x10(SP)
 lw    A0, 0(S1)
 li    A1, -1
@@ -874,8 +872,8 @@ lw    V0, 0x3c(V0)
 lw    V0, 0x40(V0)
 jal   0x8001FDE8
  lh    A0, 0(V0)
-lb    V0, 1(S2)
-bne   V0, S0, L80106778
+li    V0, ${mirageStarEnabled ? 1 : 0}
+beqz  V0, L80106778
        NOP
 jal   GetRandomByte
        NOP
@@ -928,9 +926,8 @@ lw    A0, 0(S1)
 li    A1, -1
 jal   0x800D9CE8
  li    A2, 2
-lb    V1, 1(S2)
-li    V0, 2
-beq   V1, V0, L80106860
+li    V0, ${mirageStarEnabled ? 1 : 0}
+bnez   V0, L80106860
  move  A2, R0
 lui   A0, hi(func_80106154)
 addiu A0, A0, lo(func_80106154)
@@ -2230,8 +2227,10 @@ jr    RA
 overlaycall0:
 addiu SP, SP, -0x18
 sw    RA, 0x10(SP)
+; Declare which board index this is.
+li    V0, ${boardIndex}
 lui   AT, hi(CORE_800CD059)
-sb    R0, lo(CORE_800CD059)(AT)
+sb    V0, lo(CORE_800CD059)(AT)
 li    A0, 10
 jal   InitObjSys
  move  A1, R0

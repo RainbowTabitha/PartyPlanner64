@@ -110,6 +110,25 @@ export function findCalls(dataView: DataView, jalAddr: number) {
   return calls;
 }
 
+/**
+ * Finds JALs to a given address within the given function.
+ * @returns Array of offsets of the JALs.
+ */
+export function findCallsInFunction(dataView: DataView, startOffset: number, jalAddr: number) {
+  const jalInst = parse(`JAL ${jalAddr}`);
+  const calls = [];
+  for (let i = startOffset; i < dataView.byteLength; i += 4) {
+    const inst = dataView.getUint32(i);
+    if (inst === 0x03E00008) {
+      break;
+    }
+    if (inst === jalInst) {
+      calls.push(i);
+    }
+  }
+  return calls;
+}
+
 function _addiu(dst: number, reg: number, imm: number) {
   let base = 0x24000000;
   base = base | reg << 21;

@@ -56,8 +56,8 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     }
   }
 
-  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo) {
-    return createBoardOverlay(board, boardInfo);
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
+    return createBoardOverlay(board, boardInfo, boardIndex);
   }
 
   onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {

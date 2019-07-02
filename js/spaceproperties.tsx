@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BoardType, SpaceSubtype, Space, EventActivationType, EventParameterType } from "./types";
+import { BoardType, SpaceSubtype, Space, EventActivationType, EventParameterType, GameVersion } from "./types";
 import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard, ISpaceEvent, IBoard } from "./boards";
 import { $setting, get } from "./views/settings";
 import { makeKeyClick } from "./utils/react";
@@ -8,13 +8,15 @@ import { setEventParamDropHandler } from "./utils/drag";
 import { copyObject } from "./utils/obj";
 import { getImage } from "./images";
 import { render, renderConnections, renderSpaces } from "./renderer";
-import { showMessage } from "./appControl";
+import { showMessage, changeDecisionTree } from "./appControl";
 import { createCustomEvent } from "./events/customevents";
 import { getDistinctColor } from "./utils/colors";
+import { Button } from "./controls";
+import { $$log } from "./utils/debug";
 
 interface ISpacePropertiesProps {
   boardType: BoardType;
-  gameVersion: 1 | 2 | 3;
+  gameVersion: GameVersion;
   selectedSpaces: ISpace[] | null;
 }
 
@@ -131,6 +133,7 @@ export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
           {!isDuel ? <SpaceStarCheckbox checked={hostsStarChecked}
             indeterminate={hostsStarIndeterminate}
             onStarCheckChanged={this.onStarCheckChanged} /> : null }
+          <SpaceDecisionTreeButton space={curSpace} />
         </div>
         {!multipleSelections ? eventsHeading : null }
         {!multipleSelections ? (
@@ -498,6 +501,25 @@ class SpaceStarCheckbox extends React.Component<ISpaceStarCheckboxProps> {
     }
   }
 };
+
+interface ISpaceDecisionTreeButtonProps {
+  space: ISpace;
+}
+
+function SpaceDecisionTreeButton(props: ISpaceDecisionTreeButtonProps) {
+  if (!props.space.aiTree) {
+    return null;
+  }
+
+  return (
+    <Button css="propertiesAiTreeButton" onClick={() => {
+      $$log("Showing decision tree", props.space.aiTree);
+      changeDecisionTree(props.space.aiTree!);
+    }}>
+      AI Decision Tree
+    </Button>
+  );
+}
 
 interface ISpaceEventsListProps {
   events?: ISpaceEvent[];

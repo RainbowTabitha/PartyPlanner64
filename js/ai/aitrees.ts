@@ -35,14 +35,14 @@ export function parseDecisionTree(view: DataView, offset: number, base: number, 
 
   let type: number;
   do {
-    type = view.getUint32(offset);
+    type = view.getUint8(offset);
     let data = view.getUint32(offset + 4);
     let decision = view.getUint32(offset + 8);
     if (decision & 0x80000000) {
       nodes.push({
         type,
         data,
-        decision: parseDecisionTree(view, decision - base, base, game)
+        decision: parseDecisionTree(view, (decision & 0x7FFFFFFF) - base, base, game)
       });
     }
     else {
@@ -52,6 +52,7 @@ export function parseDecisionTree(view: DataView, offset: number, base: number, 
         decision: parseDecisionTreeResult(decision, game)
       });
     }
+    offset += 12;
   }
   while(type !== DecisionTreeNodeType.leaf);
 

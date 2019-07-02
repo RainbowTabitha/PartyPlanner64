@@ -1,8 +1,13 @@
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
 import { EventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
-import { addConnection, ISpaceEvent } from "../../../../boards";
+import { addConnection, ISpaceEvent, addDecisionTree } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
+import { print } from "mips-inst";
+import { getSymbol } from "../../../../symbols/symbols";
+import { findCallsInFunction, getRegSetAddress } from "../../../../utils/MIPS";
+import { $$hex } from "../../../../utils/debug";
+import { parseDecisionTree } from "../../../../ai/aitrees";
 
 // Represents the "event" where the player decides between two paths.
 // This won't be an actual event when exposed to the user.
@@ -43,6 +48,22 @@ export const ChainSplit1: IEvent = {
 
       addConnection(info.curSpace, leftSpace, info.board);
       addConnection(info.curSpace, rightSpace, info.board);
+
+      // Locate the AI decision tree.
+      const aiSymbol = getSymbol(info.game, "RunDecisionTree");
+      const treeCalls = findCallsInFunction(dataView, info.offset, aiSymbol);
+      if (treeCalls.length) {
+        const callOffset = treeCalls[0];
+        const treeDataUpper = dataView.getUint16(callOffset - 6);
+        const treeDataLower = dataView.getUint16(callOffset - 2);
+        const treeDataAddr = getRegSetAddress(treeDataUpper, treeDataLower);
+        const noPrefixAddr = (info.addr & 0x7FFFFFFF);
+        const addrDiff = treeDataAddr - noPrefixAddr;
+        const treeDataOffset = info.offset + addrDiff;
+        const addrBase = noPrefixAddr - info.offset;
+        const tree = parseDecisionTree(dataView, treeDataOffset, addrBase, info.gameVersion);
+        addDecisionTree(info.board, info.curSpaceIndex, tree);
+      }
 
       return true;
     }

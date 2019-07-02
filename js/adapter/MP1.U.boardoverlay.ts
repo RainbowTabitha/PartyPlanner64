@@ -7,7 +7,7 @@ import { defaultAdditionalBgAsm } from "../events/additionalbg";
 import { hvqfs } from "../fs/hvqfs";
 import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
 
-export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo): string {
+export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): string {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
