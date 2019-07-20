@@ -1,6 +1,6 @@
 {
   "name": "PartyPlanner64",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "Mario Party board editor",
   "private": true,
   "main": "js/electron.js",
