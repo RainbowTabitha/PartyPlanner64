@@ -84,6 +84,11 @@ exports["default"] = [
       name: "LoadOverlay",
       desc: "A0=num" },
 {
+      addr: 2147788064, // 0x8004A520
+      type: "code",
+      name: "PlayMusic",
+      desc: "A0=index" },
+{
       addr: 2147789448, // 0x8004AA88
       type: "code",
       name: "PlaySound",
@@ -1570,6 +1575,10 @@ exports["default"] = [
       name: "debug_font_color",
       desc: "Used with DrawDebugText" },
 {
+      addr: 2148320485, // 0x800CC4E5
+      type: "u8",
+      name: "hidden_block_item_space_index" },
+{
       addr: 2148323418, // 0x800CD05A
       type: "u8",
       name: "total_turns" },
@@ -1583,10 +1592,24 @@ exports["default"] = [
       name: "current_player_index",
       desc: "Player who's turn is active" },
 {
+      addr: 2148323497, // 0x800CD0A9
+      type: "u8",
+      name: "cur_player_used_item",
+      desc: "0=Player can use item" },
+{
+      addr: 2148323503, // 0x800CD0AF
+      type: "u8",
+      name: "slow_dice_flags",
+      desc: "bit0 is P1" },
+{
       addr: 2148323508, // 0x800CD0B4
       type: "u16",
       name: "bank_coin_total",
       desc: "Number of coins in bank" },
+{
+      addr: 2148327877, // 0x800CE1C5
+      type: "u8",
+      name: "hidden_block_coins_space_index" },
 {
       addr: 2148327938, // 0x800CE202
       type: "u16",
@@ -1845,6 +1868,10 @@ exports["default"] = [
       name: "p4_item3",
       desc: "Player 4 third item" },
 {
+      addr: 2148340303, // 0x800D124F
+      type: "u8",
+      name: "hidden_block_star_space_index" },
+{
       addr: 2148352448, // 0x800D41C0
       type: "u32",
       name: "cur_player_spaces_remaining" },
@@ -1909,6 +1936,11 @@ exports["default"] = [
       name: "EventTableHydrate",
       desc: "Moves event table data into the space data" },
 {
+      addr: 2148449468, // 0x800EBCBC
+      type: "code",
+      name: "SetCurrentSpaceIndex",
+      desc: "A0=space_index" },
+{
       addr: 2148449480, // 0x800EBCC8
       type: "code",
       name: "GetCurrentSpaceIndex" },
@@ -1962,6 +1994,11 @@ exports["default"] = [
       name: "SetPrevChainAndSpace",
       desc: "A0=player_index" },
 {
+      addr: 2148460992, // 0x800EE9C0
+      type: "code",
+      name: "GetPlayerPlacement",
+      desc: "A0=player_index" },
+{
       addr: 2148475184, // 0x800F2130
       type: "code",
       name: "GetCurrentPlayerIndex" },
@@ -1989,6 +2026,11 @@ exports["default"] = [
       addr: 2148475440, // 0x800F2230
       type: "code",
       name: "PlayerHasCoins",
+      desc: "A0=player_index" },
+{
+      addr: 2148475652, // 0x800F2304
+      type: "code",
+      name: "SetBoardPlayerAnimation",
       desc: "A0=player_index" },
 {
       addr: 2148490564, // 0x800F5D44
