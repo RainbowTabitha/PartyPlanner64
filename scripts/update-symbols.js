@@ -7,15 +7,17 @@ const exec = require("child_process").exec;
 const fs = require("fs");
 const path = require("path");
 
+const SYMBOLS_DIR = "symbols";
+
 exec("git submodule update --remote", (err, stdout, stderr) => {
   if (err || stderr) {
     process.stderr.write("Error updating symbols repository! " + err + ", " + stderr);
   }
   else {
-    process.stdout.write("Updated symbols repository, " + err + ", " + stdout + ", " + stderr);
+    console.log("Updating symbols repository...");
   }
 
-  fs.readdir("symbols", (err, files) => {
+  fs.readdir(SYMBOLS_DIR, (err, files) => {
     if (err) {
       console.error("Could not read the symbols directory");
       process.exit(1);
@@ -26,7 +28,8 @@ exec("git submodule update --remote", (err, stdout, stderr) => {
         return;
       }
 
-      fs.readFile(file, "utf8", (err, contents) => {
+      const inputfile = path.join(SYMBOLS_DIR, file);
+      fs.readFile(inputfile, "utf8", (err, contents) => {
         if (err) {
           console.error("Could not read symbol file: " + file);
           process.exit(1);
@@ -37,9 +40,11 @@ exec("git submodule update --remote", (err, stdout, stderr) => {
         console.log("Writing " + filename + "...");
 
         const outputfile = path.join("src/symbols/", filename + ".js");
-        fs.writeFile(outputfile, (err) => {
-          console.error("Could not write symbol file: " + file);
-          process.exit(1);
+        fs.writeFile(outputfile, symModule, (err) => {
+          if (err) {
+            console.error("Could not write symbol file: " + file + ": " + err);
+            process.exit(1);
+          }
         });
       });
     });
@@ -83,7 +88,7 @@ function convertSymbols(text) {
   });
 
   output += objs.join(",\n");
-  output += "\n];";
+  output += "\n];\n";
 
   return output;
 };

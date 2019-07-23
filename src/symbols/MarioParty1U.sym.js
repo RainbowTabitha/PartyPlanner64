@@ -1,5 +1,4 @@
-export default [
-{
+export default [{
       addr: 2147484416, // 0x80000300
       type: "u32",
       name: "osTvType",
