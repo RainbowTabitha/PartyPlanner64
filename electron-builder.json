@@ -1,7 +1,7 @@
 {
   "appId": "org.partyplanner64",
   "directories": {
-    "app": "dist",
+    "app": "build",
     "output": "electron/dist",
     "buildResources": "electron/build"
   },

@@ -221,9 +221,7 @@ const convertSymbols = function (text, options) {
 
   // Create an AMD module by hand. (Not .ts file because it will slow .ts type checks)
   const lines = text.split(/\r?\n/);
-  let output = `define(["require", "exports"], function (require, exports) {
-exports["default"] = [
-`;
+  let output = `export default [`;
 
   const objs = [];
   lines.forEach(function (line) {
@@ -257,7 +255,6 @@ exports["default"] = [
 
   output += objs.join(",\n");
   output += "\n];";
-  output += "\n});";
 
   return output;
 };

@@ -11,15 +11,27 @@
     "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"
   },
   "scripts": {
-    "webpack": "webpack --config webpack.dev.config.js",
-    "webpackprod": "webpack --config webpack.prod.config.js",
-    "devserver": "webpack-dev-server --open --config webpack.dev.config.js",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+
+    "update-symbols": "node scripts/update-symbols.js",
+
     "electron": "electron-builder build -wl",
     "electron-publish": "electron-builder build -wl --publish always"
   },
   "dependencies": {
+    "@types/codemirror": "^0.0.76",
+    "@types/draft-js": "^0.10.34",
+    "@types/file-saver": "^2.0.1",
+    "@types/jest": "24.0.15",
+    "@types/jszip": "^3.1.6",
+    "@types/node": "12.6.8",
+    "@types/react": "16.8.23",
+    "@types/react-dom": "16.8.4",
     "basiccontext": "^3.5.1",
-    "codemirror": "^5.47.0",
+    "codemirror": "^5.48.2",
     "cookies-js": "^1.2.2",
     "draft-js": "^0.10.5",
     "electron-debug": "^3.0.0",
@@ -27,22 +39,19 @@
     "file-saver": "^2.0.2",
     "gltf-js-utils": "^2.0.2",
     "immutable": "^3.8.1",
-    "jszip": "^3.2.1",
+    "jszip": "^3.2.2",
     "midi-player-js": "^2.0.5",
     "mips-assembler": "^1.4.3",
     "mips-inst": "^2.2.4",
+    "node-sass": "^4.12.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-scripts": "3.0.1",
     "three": "^0.105.1",
-    "three-orbitcontrols": "^2.102.1"
+    "three-orbitcontrols": "^2.102.1",
+    "typescript": "3.5.3"
   },
   "devDependencies": {
-    "@types/codemirror": "^0.0.74",
-    "@types/draft-js": "^0.10.32",
-    "@types/file-saver": "^2.0.1",
-    "@types/jszip": "^3.1.6",
-    "@types/react": "^16.8.13",
-    "@types/react-dom": "^16.8.4",
     "del": "^3.0.0",
     "dotenv": "^8.0.0",
     "electron-builder": "^20.41.0",
@@ -54,17 +63,26 @@
     "gulp-preprocess": "^3.0.2",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^1.0.0",
-    "gulp-sass": "^4.0.1",
     "gulp-text-simple": "^0.4.2",
     "gulp-typescript": "^5.0.1",
     "gulp-uglify": "^3.0.2",
     "gulp-watch": "^5.0.1",
     "gulp-zip": "^4.0.0",
-    "run-sequence": "^2.2.1",
-    "ts-loader": "^6.0.2",
-    "typescript": "^3.5.1",
-    "webpack": "^4.32.2",
-    "webpack-cli": "^3.3.2",
-    "webpack-dev-server": "^3.5.1"
+    "run-sequence": "^2.2.1"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
