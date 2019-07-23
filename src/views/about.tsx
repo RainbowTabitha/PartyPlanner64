@@ -7,6 +7,8 @@ import btcImage from "../img/about/btc.png";
 
 /* eslint-disable no-script-url, jsx-a11y/anchor-is-valid */
 
+const verRegex = /^(.+)-(\d*)-g([a-z0-9]+)$/;
+
 export const About = class About extends React.Component {
   state = {
     updateCheckInProgress: false,
@@ -14,9 +16,18 @@ export const About = class About extends React.Component {
   }
 
   render() {
-    let versionNum = "####VERSION####"; // Replaced during build.
-    if (versionNum === "####VERS ION####".replace(" ", "")) // Tricky!
+    let versionNum = process.env.REACT_APP_PP64_VERSION; // Provided by build system.
+    if (versionNum) {
+      const matchResult = verRegex.exec(versionNum);
+      if (matchResult && matchResult[0]) {
+        versionNum = matchResult[1] + " (+" + matchResult[2] + " "
+          + "<a target='_blank' href='https://github.com/PartyPlanner64/PartyPlanner64/commit/"
+          + matchResult[3] + "'>" + matchResult[3] + "</a>)";
+      }
+    }
+    else {
       versionNum = "unknown";
+    }
 
     let mplText;
     if (document.location!.href.indexOf("mariopartylegacy") >= 0)

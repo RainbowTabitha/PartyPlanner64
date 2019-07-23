@@ -11,7 +11,7 @@
     "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node scripts/start.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -19,7 +19,9 @@
     "update-symbols": "node scripts/update-symbols.js",
 
     "electron": "electron-builder build -wl",
-    "electron-publish": "electron-builder build -wl --publish always"
+    "electron-publish": "electron-builder build -wl --publish always",
+
+    "react-start": "react-scripts start"
   },
   "dependencies": {
     "@types/codemirror": "^0.0.76",
