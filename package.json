@@ -58,23 +58,8 @@
     "typescript": "3.5.3"
   },
   "devDependencies": {
-    "del": "^3.0.0",
     "dotenv": "^8.0.0",
-    "electron-builder": "^20.41.0",
-    "gulp": "^3.9.1",
-    "gulp-cached": "^1.1.0",
-    "gulp-clean-css": "^3.4.2",
-    "gulp-concat": "^2.6.0",
-    "gulp-order": "^1.1.1",
-    "gulp-preprocess": "^3.0.2",
-    "gulp-rename": "^1.2.2",
-    "gulp-replace": "^1.0.0",
-    "gulp-text-simple": "^0.4.2",
-    "gulp-typescript": "^5.0.1",
-    "gulp-uglify": "^3.0.2",
-    "gulp-watch": "^5.0.1",
-    "gulp-zip": "^4.0.0",
-    "run-sequence": "^2.2.1"
+    "electron-builder": "^20.41.0"
   },
   "eslintConfig": {
     "extends": "react-app"
