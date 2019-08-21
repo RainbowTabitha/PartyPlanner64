@@ -3,7 +3,7 @@
   "version": "0.5.8",
   "description": "Mario Party board editor",
   "private": true,
-  "main": "js/electron.js",
+  "main": "electron.js",
   "author": "PartyPlanner64",
   "license": "Public Domain",
   "repository": {
@@ -19,11 +19,13 @@
 
     "update-symbols": "node scripts/update-symbols.js",
 
-    "electron": "electron-builder build -wl",
-    "electron-publish": "electron-builder build -wl --publish always",
+    "electron": "node scripts/electron.js",
+    "electron-publish": "node scripts/electron.js --publish",
 
     "react-start": "react-scripts start",
-    "react-build": "react-scripts build"
+    "react-build": "react-scripts build",
+    "electron-builder-build": "electron-builder build -wl",
+    "electron-builder-build-publish": "electron-builder build -wl --publish always"
   },
   "dependencies": {
     "@types/codemirror": "^0.0.76",
