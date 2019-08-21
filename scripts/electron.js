@@ -5,6 +5,8 @@
 const fs = require("fs");
 const spawn = require("child_process").spawn;
 
+require("dotenv").config();
+
 const args = process.argv.slice(2);
 const doPublish = args[0] === "--publish";
 
