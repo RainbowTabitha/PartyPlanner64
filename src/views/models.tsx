@@ -305,7 +305,6 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     if (container)
       container.innerHTML = "";
 
-    (renderer as any).context = undefined;
     (renderer as any).domElement = undefined;
     renderer = null;
   }

@@ -7447,10 +7447,10 @@ minizlib@^1.1.1:
   dependencies:
     minipass "^2.2.1"
 
-mips-assembler@^1.4.3:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/mips-assembler/-/mips-assembler-1.4.3.tgz#59b57910730a7e7b951c35adc254de6c007392a1"
-  integrity sha512-3+XK5+DEePxPni2YbjvKQXTBsjfnaLtY2p+XiPNXo06wABJVJt6btYSJI0Nu80rBYTEUEcrllYzn2qRwrx5pPw==
+mips-assembler@^1.4.4:
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/mips-assembler/-/mips-assembler-1.4.4.tgz#fd878ae2ed99508eb0f70284b4058f80f6657439"
+  integrity sha512-oLPBHJmIKOsoUqE/K5ieBU3KtPWlLDiPPRKtOaMb/O+kfTYGysAYpf8IvIAS3QjqsJ1l4VCJqMLWCAMLdABXOw==
   dependencies:
     mips-inst "^2.2.4"
 

@@ -44,7 +44,7 @@
     "immutable": "^3.8.1",
     "jszip": "^3.2.2",
     "midi-player-js": "^2.0.5",
-    "mips-assembler": "^1.4.3",
+    "mips-assembler": "^1.4.4",
     "mips-inst": "^2.2.4",
     "node-sass": "^4.12.0",
     "react": "^16.9.0",
