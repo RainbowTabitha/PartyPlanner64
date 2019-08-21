@@ -48,23 +48,14 @@ To host a local copy of PartyPlanner64 clone the repository and do the following
 
       or
     * `yarn install`
-* `gulp` to copy the site in `dist/`.
-    * `gulp prod` will build a minified production copy. The production build uses CDN assets when possible.
-* Open `index.html` from `dist/` to use the editor.
-
-With Chrome, you may need to run the `chrome` executable with the `--allow-file-access-from-files` flag to avoid cross domain permission issues related to working with local image files and Data URIs.
-
-### File Watching
-
-Before making changes, you can start `gulp watch` to monitor for file changes.
-
-    gulp watch
+* `npm run start` will build a development version and run a local web server.
+* `npm run build` will build a production version and copy it into `build/`.
 
 ### Electron Builds
 
 After setting up a local dev environment, run the following to create the various Electron builds.
 
-    gulp electron-package
+    npm run electron
 
 ## Contributors
 
