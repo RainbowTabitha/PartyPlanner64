@@ -74,10 +74,3 @@ gulp.task("electron-build-publish", function(callback) {
     callback();
   });
 });
-
-gulp.task("publish", function(callback) {
-  exec("git subtree push --prefix dist origin gh-pages", function(err, stdout, stderr) {
-    // process.stdout.write("describe done, " + err + ", " + stdout + ", " + stderr);
-    callback();
-  });
-});
