@@ -175,6 +175,12 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     );
   }
 
+  componentWillUnmount() {
+    if (this.state.playbackController) {
+      this.state.playbackController.stop();
+    }
+  }
+
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     this.setState({ hasError: true });
     console.error(error);
