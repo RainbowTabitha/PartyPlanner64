@@ -5,6 +5,8 @@
 const getVersion = require("./version").getVersion;
 const spawn = require("child_process").spawn;
 
+process.env.GENERATE_SOURCEMAP = "false";
+
 getVersion(version => {
   process.env.REACT_APP_PP64_VERSION = version;
 
