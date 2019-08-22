@@ -452,12 +452,12 @@ export function saveEvent() {
   }
 
   try {
+    const event = createCustomEvent(asm, true);
     if (getCurrentEventIsBoardEvent()) {
       // A little sketch, but we can assume current board is target.
       addEventToBoard(getCurrentBoard(), eventName, asm);
     }
     else {
-      const event = createCustomEvent(asm, true);
       addEventToLibrary(event); // Add globally.
     }
   }

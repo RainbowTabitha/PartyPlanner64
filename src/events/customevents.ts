@@ -125,12 +125,12 @@ export function createCustomEvent(asm: string, validate?: boolean) {
 
   const executionType = CustomAsmHelper.readExecutionType(asm);
   if (!executionType) {
-    throw new Error("Custom even must have execution type");
+    throw new Error("Custom event must have execution type");
   }
 
   const supportedGames = CustomAsmHelper.readSupportedGames(asm);
   if (!supportedGames) {
-    throw new Error("Custom even must have supported games list");
+    throw new Error("Custom event must have supported games list");
   }
 
   const parameters = CustomAsmHelper.readParameters(asm);
