@@ -72,7 +72,7 @@ export const About = class About extends React.Component {
             <li><a href="https://github.com/PartyPlanner64/PartyPlanner64" target="_blank" rel="noopener noreferrer">Contribute</a> to development on Github.</li>
             <li>Write or view <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank" rel="noopener noreferrer">bugs and enhancement requests</a>.</li>
             <li>Read the <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board" target="_blank" rel="noopener noreferrer">usage tutorial</a>
-             or <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki" rel="noopener noreferrer">documentation</a>.</li>
+            {" "}or <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki" rel="noopener noreferrer">documentation</a>.</li>
           </ul>
         </div>
         <br />
