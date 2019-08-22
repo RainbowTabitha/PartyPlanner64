@@ -6,15 +6,17 @@
   "main": "electron.js",
   "author": "PartyPlanner64",
   "license": "Public Domain",
+  "homepage": "https://partyplanner64.github.io/PartyPlanner64",
   "repository": {
     "type": "git",
     "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "publish": "git subtree push --prefix build origin gh-pages",
     "test": "react-scripts test",
+    "build": "node scripts/build.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "serve-build": "~/.yarn/bin/serve -s build",
     "update-symbols": "node scripts/update-symbols.js",
     "electron": "node scripts/electron.js",
@@ -40,6 +42,7 @@
     "electron-debug": "^3.0.1",
     "electron-updater": "^4.1.2",
     "file-saver": "^2.0.2",
+    "gh-pages": "^2.1.1",
     "gltf-js-utils": "^2.0.2",
     "immutable": "^3.8.1",
     "jszip": "^3.2.2",
