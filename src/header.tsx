@@ -49,6 +49,8 @@ import saveImage from "./img/header/save.png";
 import boardwarningImage from "./img/header/boardwarning.png";
 import boarderrorImage from "./img/header/boarderror.png";
 
+import "./css/header.scss";
+
 interface IHeaderActionItem {
   name: string;
   icon: string;

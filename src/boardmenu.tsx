@@ -12,6 +12,8 @@ import { $$log } from "./utils/debug";
 import cartImage from "./img/boardmenu/cart.png";
 import optionsImage from "./img/boardmenu/options.png";
 
+import "./css/boardmenu.scss";
+
 interface IBoardMenuProps {
   boards: IBoard[];
 }

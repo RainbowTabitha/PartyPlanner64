@@ -15,6 +15,8 @@ import exportImage from "../img/audio/export.png";
 import stopImage from "../img/audio/stop.png";
 import playImage from "../img/audio/play.png";
 
+import "../css/audio.scss";
+
 interface IAudioViewerState {
   hasError: boolean;
   playbackController?: AudioPlayerController | null;

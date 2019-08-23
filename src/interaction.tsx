@@ -681,7 +681,7 @@ function onEditorKeyDown(event: KeyboardEvent) {
       changeSelectedSpaces(selectedSpaces);
     }
     else {
-      changeSelectedSpaces([]);
+      _clearSelectedSpaces();
     }
   }
 }

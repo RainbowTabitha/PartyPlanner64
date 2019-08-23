@@ -9,6 +9,8 @@ import { assemble } from "mips-assembler";
 import { $$log } from "../utils/debug";
 import { defaultAdditionalBgAsm, makeFakeBgSyms } from "../events/additionalbg";
 
+import "../css/additionalbg.scss";
+
 let _viewInstance: AdditionalBgView | null = null;
 
 interface IAdditionalBgViewProps {

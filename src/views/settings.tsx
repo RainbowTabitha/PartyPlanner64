@@ -2,6 +2,8 @@ import * as React from "react";
 import * as Cookies from "cookies-js";
 import { setDebug, isDebug } from "../debug";
 
+import "../css/settings.scss";
+
 export enum $setting {
   "uiAdvanced" = "ui.advanced",
   "uiDebug" = "ui.debug",

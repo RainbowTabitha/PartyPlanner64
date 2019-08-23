@@ -5,6 +5,8 @@ import { Button } from "./controls";
 import { external } from "./renderer";
 import { setDebug, isDebug } from "./debug";
 
+import "./css/screenshot.scss";
+
 interface ITakeScreenyOpts {
   renderConnections?: boolean;
   renderCharacters?: boolean;

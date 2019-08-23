@@ -5,6 +5,8 @@ import { strings3 } from "../fs/strings3";
 import { arrayToArrayBuffer } from "../utils/arrays";
 import { MPEditor, MPEditorDisplayMode, MPEditorToolbarPlacement } from "../texteditor";
 
+import "../css/strings.scss";
+
 interface IStringsViewerState {
   hasError: boolean;
 }

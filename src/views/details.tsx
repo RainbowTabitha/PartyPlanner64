@@ -9,6 +9,8 @@ import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
 import { refresh, showMessage } from "../appControl";
 
+import "../css/details.scss";
+
 interface IDetailsItemBase {
   type: string;
   id?: string;

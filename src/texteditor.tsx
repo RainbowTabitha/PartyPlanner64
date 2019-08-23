@@ -28,6 +28,8 @@ import darklightImage from "./img/richtext/darklight.png";
 
 import divotImage from "./img/richtext/divot.png";
 
+import "./css/texteditor.scss";
+
 // Rich text editor for strings in Mario Party.
 const {Editor, EditorState, ContentState, SelectionState, Modifier, RichUtils, CompositeDecorator} = Draft;
 

@@ -10,6 +10,8 @@ import { getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 
 import deleteImage from "../img/events/delete.png";
 
+import "../css/createevent.scss";
+
 let _createEventViewInstance: CreateEventView | null = null;
 
 const _defaultEventAsm = `; NAME:

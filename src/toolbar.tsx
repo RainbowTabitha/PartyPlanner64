@@ -58,6 +58,8 @@ import powerupImage from "./img/toolbar/powerup.png";
 import startblueImage from "./img/toolbar/startblue.png";
 import startredImage from "./img/toolbar/startred.png";
 
+import "./css/toolbar.scss";
+
 // This used to be a toolbar... now it is the toolbox contents.
 
 interface IToolbarItem {

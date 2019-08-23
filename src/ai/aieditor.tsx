@@ -2,6 +2,8 @@ import * as React from "react";
 import { IDecisionTreeNode, DecisionTreeNodeType, IDecisionTreeResult } from "./aitrees";
 import { $$hex } from "../utils/debug";
 
+import "../css/aieditor.scss";
+
 interface IDecisionTreeEditorProps {
   root: IDecisionTreeNode[];
 }

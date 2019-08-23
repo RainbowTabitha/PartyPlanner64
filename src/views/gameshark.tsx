@@ -5,6 +5,8 @@ import { Parser } from "../patches/gameshark/parser";
 import { Compiler } from "../patches/gameshark/compiler";
 import { showMessage } from "../appControl";
 
+import "../css/patches.scss";
+
 export let currentCheats: ArrayBuffer[] = [];
 
 export function reset() {

@@ -17,6 +17,8 @@ import { isDebug } from "../debug";
 
 import exportImage from "../img/model/export.png";
 
+import "../css/models.scss";
+
 const JSZip = JSZipMod.default;
 
 interface IModelViewerProps {

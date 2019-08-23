@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
+import "./css/toolwindow.scss";
+
 export interface IToolWindowProps {
   name: string;
   position?: string;

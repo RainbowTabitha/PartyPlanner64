@@ -17,6 +17,8 @@ import copytolibrary_destructiveImage from "../img/events/copytolibrary_destruct
 import copytoboardImage from "../img/events/copytoboard.png";
 import copytoboard_destructiveImage from "../img/events/copytoboard_destructive.png";
 
+import "../css/events.scss";
+
 let _eventsViewInstance: EventsView | null;
 
 interface IEventsViewProps {

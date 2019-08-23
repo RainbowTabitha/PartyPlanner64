@@ -5,6 +5,8 @@ import logoloadingImage from "../img/logoloading.png";
 import mpllogoImage from "../img/mpllogo.png";
 import btcImage from "../img/about/btc.png";
 
+import "../css/about.scss";
+
 /* eslint-disable no-script-url, jsx-a11y/anchor-is-valid */
 
 const verRegex = /^(.+)-(\d*)-g([a-z0-9]+)$/;

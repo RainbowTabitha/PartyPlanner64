@@ -20,6 +20,8 @@ import { strings3 } from "../fs/strings3";
 import { strings } from "../fs/strings";
 import { saveAs } from "file-saver";
 
+import "../css/debug.scss";
+
 interface IDebugViewState {
   sceneIndex: string;
   sceneRamStartAddr: string;
