@@ -69,6 +69,7 @@ export function showMessage(message?: string) {
   getAppInstance().setState({
     blocked: !!message,
     prompt: false,
+    confirm: false,
     message: message || "",
     messageHTML: "",
     onBlockerFinished: undefined,
@@ -79,6 +80,7 @@ export function showMessageHTML(html: string) {
   getAppInstance().setState({
     blocked: !!html,
     prompt: false,
+    confirm: false,
     message: "",
     messageHTML: html || "",
     onBlockerFinished: undefined,
