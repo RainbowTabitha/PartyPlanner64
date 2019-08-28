@@ -534,7 +534,7 @@ const HeaderButton = class HeaderButton extends React.Component<IHeaderButtonPro
       <div className="headerButton" title={this.props.action.details}
         role="button" tabIndex={0}
         onClick={this.handleClick}
-        onKeyDown={makeKeyClick(this.handleClick, this)}>
+        onKeyDown={makeKeyClick(this.handleClick)}>
         {iconImg}
         <span className="headerButtonText">{this.props.action.name}</span>
       </div>

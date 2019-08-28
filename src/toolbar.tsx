@@ -317,11 +317,11 @@ class ToolbarButton extends React.Component<IToolbarButtonProps> {
     let btnClass = "toolbarButton";
     if (this.props.current)
       btnClass += " selected";
-    let onKeyDown = makeKeyClick(this.handleClick, this);
     return (
       <div className={btnClass} title={this.props.action.name}
         role="button" tabIndex={0}
-        onClick={this.handleClick} onKeyDown={onKeyDown}
+        onClick={this.handleClick}
+        onKeyDown={makeKeyClick(this.handleClick)}
         draggable={this.props.action.draggable} onDragStart={this.onDragStart}>
         <img className="toolbarIcon" src={this.props.action.icon} alt=""></img>
       </div>

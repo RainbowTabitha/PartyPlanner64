@@ -27,7 +27,6 @@ import "./events/builtin/events.common";
 import "./events/builtin/MP1/events.MP1";
 import "./events/builtin/MP2/events.MP2";
 import "./events/builtin/MP3/events.MP3";
-import { showMessage } from "./appControl";
 import "file-saver";
 import { DebugView } from "./views/debug";
 import { AudioViewer } from "./views/audio";
@@ -35,30 +34,31 @@ import { AdditionalBgView } from "./views/additionalbgview";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
-
-import pencilImage from "./img/pencil.png";
-import logoloadingImage from "./img/logoloading.png";
+import { showMessage } from "./appControl";
+import { Blocker } from "./components/blocker";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
 interface IPP64AppState {
-  currentView: View,
-  boards: IBoard[],
-  currentBoard: IBoard,
-  currentEvent: IEvent | null,
-  currentEventIsBoardEvent: boolean,
-  romLoaded: boolean,
-  currentAction: Action,
-  selectedSpaces: ISpace[] | null,
+  currentView: View;
+  boards: IBoard[];
+  currentBoard: IBoard;
+  currentEvent: IEvent | null;
+  currentEventIsBoardEvent: boolean;
+  romLoaded: boolean;
+  currentAction: Action;
+  selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  blocked: boolean,
-  message: string,
-  messageHTML: string,
-  updateExists: boolean,
-  updateHideNotification: boolean,
-  notifications: React.ReactElement<Notification>[],
-  error: Error | null,
-  errorInfo: React.ErrorInfo | null,
+  blocked: boolean;
+  prompt: boolean;
+  message: string;
+  messageHTML: string;
+  onBlockerFinished?(value?: string): void;
+  updateExists: boolean;
+  updateHideNotification: boolean;
+  notifications: React.ReactElement<Notification>[];
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
 export class PP64App extends React.Component<{}, IPP64AppState> {
@@ -73,6 +73,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     selectedSpaces: null,
     aiTree: null,
     blocked: false,
+    prompt: false,
     message: "",
     messageHTML: "",
     updateExists: false,
@@ -149,37 +150,23 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 
     let blocked;
     if (this.state.blocked) {
-      let content;
-      if (this.state.message || this.state.messageHTML) {
-        let messageSpan;
-        if (this.state.message) {
-          messageSpan = <span className="loadingMsgTxt selectable">{this.state.message}</span>
-        }
-        else { // messageHTML
-          messageSpan = <span className="loadingMsgTxt selectable" dangerouslySetInnerHTML={{ __html: this.state.messageHTML }}></span>
-        }
-
-        content = (
-          <div className="loadingMsg">
-            {messageSpan}
-            <br /><br />
-            <button onClick={() => { showMessage(); }}>OK</button>
-          </div>
-        );
-      }
-      else {
-        content = (
-          <img className="loadingGif swing" src={pencilImage} alt="Loading" />
-        );
-      }
-      blocked = (
-        <div className="loading">
-          <div className="loadingEscapeBackDoor" onClick={() => this.setState({ blocked: false })}></div>
-          <img className="loadingLogo" src={logoloadingImage} alt="Loading" />
-          <br />
-          {content}
-        </div>
-      );
+      blocked = <Blocker
+        message={this.state.message}
+        messageHTML={this.state.messageHTML}
+        prompt={this.state.prompt}
+        onAccept={(value?: string) => {
+          showMessage();
+          if (this.state.onBlockerFinished) {
+            this.state.onBlockerFinished(value);
+          }
+        }}
+        onCancel={() => {
+          showMessage();
+          if (this.state.onBlockerFinished) {
+            this.state.onBlockerFinished();
+          }
+        }}
+        onForceClose={() => this.setState({ blocked: false })} />
     }
 
     let bodyClass = "body";

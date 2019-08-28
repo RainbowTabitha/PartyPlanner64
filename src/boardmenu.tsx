@@ -120,7 +120,7 @@ const Board = class Board extends React.Component<IBoardProps> {
 
     const boardName = this.props.board.name;
     const isROM = boardIsROM(this.props.board);
-    const onKeyDown = makeKeyClick(this.handleClick, this);
+    const onKeyDown = makeKeyClick(this.handleClick);
     return (
       <div className={className} title={tooltip}
       role="option" tabIndex={0} aria-selected={isCurrent}

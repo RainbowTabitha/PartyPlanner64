@@ -66,11 +66,40 @@ export function blockUI(blocked: boolean) {
 }
 
 export function showMessage(message?: string) {
-  getAppInstance().setState({ blocked: !!message, message: message || "", messageHTML: "" });
+  getAppInstance().setState({
+    blocked: !!message,
+    prompt: false,
+    message: message || "",
+    messageHTML: ""
+  });
 }
 
 export function showMessageHTML(html: string) {
-  getAppInstance().setState({ blocked: !!html, message: "", messageHTML: html || "" });
+  getAppInstance().setState({
+    blocked: !!html,
+    prompt: false,
+    message: "",
+    messageHTML: html || ""
+  });
+}
+
+/**
+ * Displays a "modal" prompt to collect a value from the user.
+ * Promise resolves to undefined if the user cancels.
+ */
+export function promptUser(message?: string): Promise<string | undefined> {
+  let resolveFunction: (value?: string) => void;
+  const promise = new Promise<string | undefined>((resolve) => {
+    resolveFunction = resolve;
+  })
+  getAppInstance().setState({
+    blocked: !!message,
+    prompt: true,
+    message: message || "",
+    messageHTML: "",
+    onBlockerFinished: resolveFunction!,
+  });
+  return promise;
 }
 
 export function refresh() {

@@ -7,7 +7,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View } from "./types";
 import { $$log } from "./utils/debug";
-import { changeView } from "./appControl";
+import { changeView, promptUser } from "./appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 
@@ -388,8 +388,8 @@ function AdditionalBackgroundConfigButton() {
 class FindSpace extends React.Component<{}> {
   state = { }
 
-  onFindSpace() {
-    const value = prompt("Enter a space index");
+  async onFindSpace() {
+    const value = await promptUser("Enter a space index:");
     if (value) {
       const spaceIndex = parseInt(value);
       if (!isNaN(spaceIndex)) {

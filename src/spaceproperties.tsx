@@ -8,7 +8,7 @@ import { setEventParamDropHandler } from "./utils/drag";
 import { copyObject } from "./utils/obj";
 import { getImage } from "./images";
 import { render, renderConnections, renderSpaces } from "./renderer";
-import { showMessage, changeDecisionTree } from "./appControl";
+import { showMessage, promptUser, changeDecisionTree } from "./appControl";
 import { createCustomEvent } from "./events/customevents";
 import { getDistinctColor } from "./utils/colors";
 import { Button } from "./controls";
@@ -504,11 +504,11 @@ class SpaceTypeToggleBtn extends React.Component<ISpaceTypeToggleBtnProps> {
     let btnClass = "spaceToggleButton";
     if (this.props.selected)
       btnClass += " selected";
-    let size = this.props.subtype !== undefined ? 25 : 20;
-    let onKeyDown = makeKeyClick(this.onTypeChanged, this);
+    const size = this.props.subtype !== undefined ? 25 : 20;
     return (
       <div className={btnClass} title={this.props.title} tabIndex={0}
-        onClick={this.onTypeChanged} onKeyDown={onKeyDown}>
+        onClick={this.onTypeChanged}
+        onKeyDown={makeKeyClick(this.onTypeChanged)}>
         <img src={this.props.icon} height={size} width={size} alt="" />
       </div>
     );
@@ -765,12 +765,13 @@ class SpaceEventNumberParameterButton extends React.Component<ISpaceEventNumberP
     );
   }
 
-  onParameterClicked = () => {
+  onParameterClicked = async () => {
     const name = this.props.parameter.name;
     const positiveOnly = this.props.positiveOnly;
     // Prompt the user for a value.
-    const userValue =
-      window.prompt(`Enter a${positiveOnly ? " positive " : " "}numeric value for the ${name} parameter`);
+    const userValue = await promptUser(
+      `Enter a${positiveOnly ? " positive " : " "}numeric value for the ${name} parameter:`
+    );
     if (!userValue) {
       return; // Enter nothing, ignore response.
     }

@@ -22,7 +22,7 @@ export const Button = class Button extends React.Component<IButtonProps> {
     return (
       <div className={css} title={this.props.title} tabIndex={0}
         onClick={this.onClick}
-        onKeyDown={makeKeyClick(this.onClick, this)}>
+        onKeyDown={makeKeyClick(this.onClick)}>
         {this.props.children}
       </div>
     );
@@ -54,7 +54,7 @@ export const ToggleButton = class ToggleButton extends React.Component<IToggleBu
     return (
       <div className={css} title={this.props.title} tabIndex={0}
         onClick={this.onClick}
-        onKeyDown={makeKeyClick(this.onClick, this)}>
+        onKeyDown={makeKeyClick(this.onClick)}>
         {this.props.children}
       </div>
     );
