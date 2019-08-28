@@ -11,6 +11,7 @@ interface IBlockerProps {
   message: string;
   messageHTML: string;
   prompt: boolean;
+  confirm?: boolean;
   onAccept(value?: string): void;
   onCancel(): void;
   onForceClose(): void;
@@ -57,11 +58,11 @@ export const Blocker: React.FC<IBlockerProps> = (props: IBlockerProps) => {
         </>}
         <button autoFocus={!props.prompt}
           onClick={() => props.onAccept(promptValue)}>
-          OK
+          {props.confirm ? "Yes" : "OK"}
         </button>
-        {props.prompt
+        {(props.prompt || props.confirm)
           && <button onClick={() => props.onCancel()}>
-            Cancel
+            {props.confirm ? "No" : "Cancel"}
           </button>}
       </div>
     );

@@ -36,6 +36,7 @@ import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
 import { showMessage } from "./appControl";
 import { Blocker } from "./components/blocker";
+import { killEvent } from "./utils/react";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -51,6 +52,7 @@ interface IPP64AppState {
   aiTree: IDecisionTreeNode[] | null;
   blocked: boolean;
   prompt: boolean;
+  confirm: boolean;
   message: string;
   messageHTML: string;
   onBlockerFinished?(value?: string): void;
@@ -74,6 +76,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     aiTree: null,
     blocked: false,
     prompt: false,
+    confirm: false,
     message: "",
     messageHTML: "",
     updateExists: false,
@@ -154,6 +157,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         message={this.state.message}
         messageHTML={this.state.messageHTML}
         prompt={this.state.prompt}
+        confirm={this.state.confirm}
         onAccept={(value?: string) => {
           showMessage();
           if (this.state.onBlockerFinished) {
@@ -179,7 +183,8 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
           {this.getNotifications()}
         </NotificationBar>
         <Header view={this.state.currentView} romLoaded={this.state.romLoaded} board={this.state.currentBoard} />
-        <div className="content">
+        <div className="content"
+          onKeyDownCapture={blocked ? killEvent : undefined}>
           {sidebar}
           <div className="main">
             {mainView}

@@ -70,7 +70,8 @@ export function showMessage(message?: string) {
     blocked: !!message,
     prompt: false,
     message: message || "",
-    messageHTML: ""
+    messageHTML: "",
+    onBlockerFinished: undefined,
   });
 }
 
@@ -79,22 +80,42 @@ export function showMessageHTML(html: string) {
     blocked: !!html,
     prompt: false,
     message: "",
-    messageHTML: html || ""
+    messageHTML: html || "",
+    onBlockerFinished: undefined,
   });
+}
+
+export function confirmFromUser(message: string): Promise<boolean> {
+  let resolveFunction: (value: boolean) => void;
+  const promise = new Promise<boolean>((resolve) => {
+    resolveFunction = resolve;
+  });
+  getAppInstance().setState({
+    blocked: true,
+    prompt: false,
+    confirm: true,
+    message: message || "",
+    messageHTML: "",
+    onBlockerFinished: (value?: string) => {
+      resolveFunction(value !== undefined);
+    },
+  });
+  return promise;
 }
 
 /**
  * Displays a "modal" prompt to collect a value from the user.
  * Promise resolves to undefined if the user cancels.
  */
-export function promptUser(message?: string): Promise<string | undefined> {
+export function promptUser(message: string): Promise<string | undefined> {
   let resolveFunction: (value?: string) => void;
   const promise = new Promise<string | undefined>((resolve) => {
     resolveFunction = resolve;
-  })
+  });
   getAppInstance().setState({
-    blocked: !!message,
+    blocked: true,
     prompt: true,
+    confirm: false,
     message: message || "",
     messageHTML: "",
     onBlockerFinished: resolveFunction!,

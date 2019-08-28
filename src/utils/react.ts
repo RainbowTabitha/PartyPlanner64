@@ -26,3 +26,8 @@ export function makeKeyClick(fn: IKeyEventHandler, opts?: IKeyClickOpts) {
     }
   };
 }
+
+export function killEvent(event: any) {
+  event.stopPropagation();
+  event.preventDefault();
+}

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { CodeMirrorWrapper } from "../components/codemirrorwrapper";
-import { showMessage } from "../appControl";
+import { showMessage, confirmFromUser } from "../appControl";
 import { IBoard } from "../boards";
 import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
 import { prepGenericAsm } from "../events/prepAsm";
@@ -70,11 +70,11 @@ export class AdditionalBgView extends React.Component<IAdditionalBgViewProps, IA
     return this.props.board;
   }
 
-  promptExit = () => {
+  promptExit = async () => {
     const asm = this.state.asm;
     const oldAsm = this.props.board.additionalbgcode;
     if (oldAsm !== asm || (!oldAsm && asm === defaultAdditionalBgAsm)) {
-      return !!window.confirm("Are you sure you want to exit without saving your code?");
+      return await confirmFromUser("Are you sure you want to exit without saving your code?");
     }
     return true;
   }
@@ -119,10 +119,11 @@ ${e.toString()}
   }
 }
 
-export function additionalBgViewPromptExit() {
+export function additionalBgViewPromptExit(): Promise<boolean> {
   if (_viewInstance) {
     return _viewInstance.promptExit();
   }
+  return Promise.resolve(true);
 }
 
 function getGameVersionsToTestCompile(board: IBoard): Game[] {

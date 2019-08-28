@@ -154,7 +154,7 @@ const action_overflow: IHeaderActionItem = { "name": "", "icon": "", "type": "MO
 
 let _emulatorNotice: React.ReactElement<Notification> | null = null;
 
-function _handleAction(action: Action) {
+async function _handleAction(action: Action) {
   switch(action) {
     case Action.ROM_LOAD:
       openFile(".z64,.v64,.rom,.n64", romSelected);
@@ -204,7 +204,7 @@ function _handleAction(action: Action) {
       changeView(View.EVENTS);
       break;
     case Action.BACK_TO_EVENTS:
-      if (createEventPromptExit()) {
+      if (await createEventPromptExit()) {
         changeCurrentEvent(null);
         changeView(View.EVENTS);
       }
@@ -237,7 +237,7 @@ function _handleAction(action: Action) {
       saveAdditionalBgCode();
       break;
     case Action.ADDITIONALBG_BACK:
-      if (additionalBgViewPromptExit()) {
+      if (await additionalBgViewPromptExit()) {
         changeView(View.EDITOR);
       }
       break;
@@ -247,7 +247,7 @@ function _handleAction(action: Action) {
 }
 
 function romSelected(event: any) {
-  let file = event.target.files[0];
+  const file = event.target.files[0];
   if (!file)
     return;
 
@@ -277,7 +277,7 @@ function romSelected(event: any) {
 }
 
 function boardSelected(event: any) {
-  let file = event.target.files[0];
+  const file = event.target.files[0];
   if (!file)
     return;
 
@@ -287,7 +287,7 @@ function boardSelected(event: any) {
     try {
       board = JSON.parse(reader.result as string);
     } catch (e) {
-      alert("Board could not be parsed.");
+      showMessage("Board could not be parsed.");
       return;
     }
     let boardIndex = addBoard(board);
@@ -297,7 +297,7 @@ function boardSelected(event: any) {
 }
 
 function bgSelected(event: any) {
-  let file = event.target.files[0];
+  const file = event.target.files[0];
   if (!file)
     return;
 

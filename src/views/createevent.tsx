@@ -4,7 +4,7 @@ import { ICustomEvent, CustomAsmHelper, createCustomEvent } from "../events/cust
 import { CodeMirrorWrapper } from "../components/codemirrorwrapper";
 import { IEventParameter } from "../events/events";
 import { ToggleGroup, Button } from "../controls";
-import { getCurrentEvent, showMessage, getCurrentEventIsBoardEvent } from "../appControl";
+import { getCurrentEvent, showMessage, getCurrentEventIsBoardEvent, confirmFromUser } from "../appControl";
 import { getCurrentBoard, addEventToBoard } from "../boards";
 import { getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 
@@ -239,11 +239,11 @@ export class CreateEventView extends React.Component<{}, ICreateEventViewState> 
     return CustomAsmHelper.readDiscreteProperty(asm, propName);
   }
 
-  promptExit = () => {
+  promptExit = async () => {
     const asm = this.state.asm;
     const oldAsm = this.state.originalAsm;
     if (!oldAsm || oldAsm !== asm) {
-      return !!window.confirm("Are you sure you want to exit without saving the event?");
+      return await confirmFromUser("Are you sure you want to exit without saving the event?");
     }
     return true;
   }
@@ -428,7 +428,7 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
   }
 }
 
-export function saveEvent() {
+export function saveEvent(): void {
   const eventName = _createEventViewInstance!.getEventName();
   const supportedGames = _createEventViewInstance!.getSupportedGames();
   const asm = _createEventViewInstance!.getEventAsm();
@@ -473,16 +473,17 @@ export function saveEvent() {
   }
 }
 
-export function createEventPromptExit() {
+export function createEventPromptExit(): Promise<boolean> {
   if (_createEventViewInstance) {
     return _createEventViewInstance.promptExit();
   }
+  return Promise.resolve(true);
 }
 
 /**
  * Get the supported games for the event currently being edited.
  */
-export function getActiveEditorSupportedGames() {
+export function getActiveEditorSupportedGames(): Game[] {
   if (_createEventViewInstance) {
     return _createEventViewInstance.getSupportedGames();
   }

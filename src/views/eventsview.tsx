@@ -2,7 +2,7 @@ import { View } from "../types";
 import * as React from "react";
 import { getCustomEvents, IEvent } from "../events/events";
 import { ICustomEvent, createCustomEvent } from "../events/customevents";
-import { changeCurrentEvent, changeView } from "../appControl";
+import { changeCurrentEvent, changeView, confirmFromUser } from "../appControl";
 import { IBoard, removeEventFromBoard, addEventToBoard } from "../boards";
 import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { saveAs } from "file-saver";
@@ -123,24 +123,24 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
     changeView(View.CREATEEVENT);
   }
 
-  onDeleteEvent = (event: IEvent) => {
-    if (window.confirm(`Are you sure you want to delete ${event.name}?`)) {
+  onDeleteEvent = async (event: IEvent) => {
+    if (await confirmFromUser(`Are you sure you want to delete ${event.name}?`)) {
       removeEventFromLibrary(event.id);
       this.forceUpdate();
     }
   }
 
-  onDeleteBoardEvent = (event: IEvent) => {
-    if (window.confirm(`Are you sure you want to delete ${event.name}?`)) {
+  onDeleteBoardEvent = async (event: IEvent) => {
+    if (await confirmFromUser(`Are you sure you want to delete ${event.name}?`)) {
       removeEventFromBoard(this.props.board, event.id);
       this.forceUpdate();
     }
   }
 
-  onCopyToBoard = (event: ICustomEvent, isDestructiveCopy: boolean) => {
+  onCopyToBoard = async (event: ICustomEvent, isDestructiveCopy: boolean) => {
     let proceed = true;
     if (isDestructiveCopy) {
-      proceed = window.confirm(`Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`);
+      proceed = await confirmFromUser(`Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`);
     }
     if (proceed) {
       addEventToBoard(this.props.board, event.id, event.asm);
@@ -148,10 +148,10 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
     }
   }
 
-  onCopyToLibrary = (event: ICustomEvent, isDestructiveCopy: boolean) => {
+  onCopyToLibrary = async (event: ICustomEvent, isDestructiveCopy: boolean) => {
     let proceed = true;
     if (isDestructiveCopy) {
-      proceed = window.confirm(`Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`);
+      proceed = await confirmFromUser(`Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`);
     }
     if (proceed) {
       addEventToLibrary(event);
