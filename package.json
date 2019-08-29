@@ -6,7 +6,7 @@
   "main": "electron.js",
   "author": "PartyPlanner64",
   "license": "Public Domain",
-  "homepage": "https://partyplanner64.github.io/PartyPlanner64",
+  "homepage": "./",
   "repository": {
     "type": "git",
     "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"

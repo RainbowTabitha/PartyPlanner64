@@ -1,4 +1,5 @@
 {
+  "extends": null,
   "appId": "org.partyplanner64",
   "directories": {
     "app": "build",
