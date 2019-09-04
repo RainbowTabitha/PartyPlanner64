@@ -1,4 +1,5 @@
 import { createContext } from "./canvas";
+import resizeImageData from "resize-image-data";
 
 // Cuts an image from a bigger image at x,y coordinates.
 // A mystery: why didn't I use canvas?
@@ -20,10 +21,25 @@ export function cutFromWhole(srcBuffer: ArrayBuffer, srcWidth: number, srcHeight
   return outBuffer;
 }
 
+/**
+ * Retrieves the RGBA32 data for an Image element.
+ * The Image must have already been loaded.
+ * @param image Image element
+ * @param width Desired width
+ * @param height Desired height
+ */
 export function toArrayBuffer(image: HTMLImageElement, width: number, height: number) {
-  let canvasCtx = createContext(width, height);
-  canvasCtx.drawImage(image, 0, 0, width, height);
-  return canvasCtx.getImageData(0, 0, width, height).data.buffer;
+  const imgWidth = image.width;
+  const imgHeight = image.height;
+  const canvasCtx = createContext(imgWidth, imgHeight);
+  canvasCtx.drawImage(image, 0, 0, imgWidth, imgHeight);
+
+  let imgData = canvasCtx.getImageData(0, 0, imgWidth, imgHeight);
+  if (width !== imgWidth || height !== imgHeight) {
+    imgData = resizeImageData(imgData, width, height);
+  }
+
+  return imgData.data.buffer;
 }
 
 export function invertColor(hex: number) {

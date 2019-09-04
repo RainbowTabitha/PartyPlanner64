@@ -4,12 +4,12 @@ import * as React from "react";
 import { make8Bit } from "../utils/img/RGBA32";
 import { MPEditor, MPEditorDisplayMode } from "../texteditor";
 import { openFile } from "../utils/input";
-import { createContext } from "../utils/canvas";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
 import { refresh, showMessage } from "../appControl";
 
 import "../css/details.scss";
+import { getImageData } from "../utils/img/getImageData";
 
 interface IDetailsItemBase {
   type: string;
@@ -378,25 +378,23 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
     if (!file)
       return;
 
-    let reader = new FileReader();
-    reader.onload = e => {
-      let onImageSelected = this.props.onImageSelected;
-      let id = this.props.id;
-      let detailImg = document.getElementById(id) as HTMLImageElement;
-      let img = new Image();
-      img.onload = () => { // Extra level of indirection so we can manipulate the image sometimes.
-        let width = this.props.width;
-        let height = this.props.height;
-        let ctx = createContext(width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        let rgba32 = ctx.getImageData(0, 0, width, height).data.buffer;
-        rgba32 = _processImage(id, rgba32);
+    const reader = new FileReader();
+    reader.onload = async e => {
+      const onImageSelected = this.props.onImageSelected;
+      const id = this.props.id;
+      const detailImg = document.getElementById(id) as HTMLImageElement;
+      const width = this.props.width;
+      const height = this.props.height;
 
-        let newSrc = arrayBufferToDataURL(rgba32, width, height);
-        detailImg.src = newSrc;
-        onImageSelected(id, newSrc);
-      };
-      img.src = reader.result as string;
+      const imgData = await getImageData(reader.result as string, width, height);
+      let rgba32 = imgData.data.buffer;
+
+      // Extra level of indirection so we can manipulate the image sometimes.
+      rgba32 = _processImage(id, rgba32);
+
+      const newSrc = arrayBufferToDataURL(rgba32, width, height);
+      detailImg.src = newSrc;
+      onImageSelected(id, newSrc);
     };
     reader.readAsDataURL(file);
   }

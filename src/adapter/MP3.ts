@@ -9,7 +9,6 @@ import { strings3 } from "../fs/strings3";
 import { toArrayBuffer } from "../utils/image";
 import { mainfs } from "../fs/mainfs";
 import { toPack } from "../utils/img/ImgPack";
-import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { FORM } from "../models/FORM";
 import { scenes } from "../fs/scenes";
@@ -22,6 +21,7 @@ import { createBoardOverlay } from "./MP3.U.boardoverlay";
 import { getSoundEffectMapMP3 } from "./MP3.U.soundeffects";
 
 import genericgateImage from "../img/assets/genericgate.png";
+import { getImageData } from "../utils/img/getImageData";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -735,41 +735,34 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   }
 
   // Create generic skeleton key gate.
-  _onWriteGateImg(board: IBoard, boardInfo: IBoardInfo) {
-    return new Promise(function(resolve, reject) {
-      let gateIndex = boardInfo.img && boardInfo.img.gateImg;
-      if (!gateIndex) {
-        resolve();
-        return;
-      }
+  async _onWriteGateImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
+    let gateIndex = boardInfo.img && boardInfo.img.gateImg;
+    if (!gateIndex) {
+      return;
+    }
 
-      // We need to write the image onto a canvas to get the RGBA32 values.
-      let [width, height] = [64, 64];
-      let canvasCtx = createContext(width, height);
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write gate image for ${boardInfo.name}`), 45000);
-      srcImage.onload = () => {
-        canvasCtx.drawImage(srcImage, 0, 0, width, height);
-        let imgData = canvasCtx.getImageData(0, 0, width, height);
+    // We need to write the image onto a canvas to get the RGBA32 values.
+    let [width, height] = [64, 64];
+    let failTimer = setTimeout(() => {
+      throw new Error(`Failed to write gate image for ${boardInfo.name}`);
+    }, 45000);
 
-        // First create a BMP
-        let gateBmp = BMPfromRGBA(imgData.data.buffer, 32, 8);
+    const imgData = await getImageData(genericgateImage, width, height);
 
-        // Now write the BMP back into the FORM.
-        let gateFORM = mainfs.get(19, 366); // Always use gate 3 as a base.
-        let gateUnpacked = FORM.unpack(gateFORM)!;
-        FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
+    // First create a BMP
+    let gateBmp = BMPfromRGBA(imgData.data.buffer, 32, 8);
 
-        // Now write the FORM.
-        let gatePacked = FORM.pack(gateUnpacked);
-        //saveAs(new Blob([gatePacked]), "gatePacked");
-        mainfs.write(19, gateIndex!, gatePacked);
+    // Now write the BMP back into the FORM.
+    let gateFORM = mainfs.get(19, 366); // Always use gate 3 as a base.
+    let gateUnpacked = FORM.unpack(gateFORM)!;
+    FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
 
-        clearTimeout(failTimer);
-        resolve();
-      };
-      srcImage.src = genericgateImage;
-    });
+    // Now write the FORM.
+    let gatePacked = FORM.pack(gateUnpacked);
+    //saveAs(new Blob([gatePacked]), "gatePacked");
+    mainfs.write(19, gateIndex!, gatePacked);
+
+    clearTimeout(failTimer);
   }
 
   onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {

@@ -34,6 +34,7 @@ import { ChainSplit2 } from "../events/builtin/MP2/U/ChainSplit2";
 import { isDebug } from "../debug";
 
 import bootsplashImage from "../img/bootsplash.png";
+import { getImageData } from "../utils/img/getImageData";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -1342,71 +1343,38 @@ export abstract class AdapterBase {
     }
   }
 
-  _writeBackground(bgIndex: number, src: string, width: number, height: number) {
-    return new Promise((resolve, reject) => {
-      // We need to write the image onto a canvas to get the RGBA32 values.
-      let canvasCtx = createContext(width, height);
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write bg ${bgIndex}`), 45000);
-      srcImage.onload = () => {
-        canvasCtx.drawImage(srcImage, 0, 0, width, height);
-
-        // if (isDebug()) {
-        //   canvasCtx.fillStyle = "red";
-        //   canvasCtx.font = "bold 16px Arial";
-        //   canvasCtx.fillText(bgIndex.toString(), 10, 20);
-        // }
-
-        let imgData = canvasCtx.getImageData(0, 0, width, height);
-        hvqfs.writeBackground(bgIndex, imgData, width, height);
-        clearTimeout(failTimer);
-        resolve();
-      };
-      srcImage.src = src;
-    });
+  async _writeBackground(bgIndex: number, src: string, width: number, height: number): Promise<void> {
+    const imgData = await getImageData(src, width, height);
+    hvqfs.writeBackground(bgIndex, imgData, width, height);
   }
 
-  _writeAdditionalBackgrounds(board: IBoard) {
+  async _writeAdditionalBackgrounds(board: IBoard): Promise<void> {
     const additionalBgs = board.additionalbg;
+    if (!additionalBgs || !additionalBgs.length) {
+      return;
+    }
+
     const { width, height } = board.bg;
-    return new Promise(function(resolve, reject) {
-      if (!additionalBgs || !additionalBgs.length) {
-        resolve();
-        return;
-      }
+    const bgImgData = new Array(additionalBgs.length);
 
-      let failTimer = setTimeout(() => reject(`Failed to write additional backgrounds`), 45000);
-
-      let bgImgData = new Array(additionalBgs.length);
-
-      let bgPromises = [];
-      for (let i = 0; i < additionalBgs.length; i++) {
-        let bgPromise = new Promise((resolve) => {
-          let canvasCtx = createContext(width, height);
-          let srcImage = new Image();
-          srcImage.onload = function(this: { index: number }) {
-            canvasCtx.drawImage(srcImage, 0, 0, width, height);
-            bgImgData[this.index] = canvasCtx.getImageData(0, 0, width, height);
-            resolve();
-          }.bind({ index: i });
-          srcImage.src = additionalBgs[i];
+    const bgPromises = [];
+    for (let i = 0; i < additionalBgs.length; i++) {
+      const bgPromise = new Promise((resolve) => {
+        const index = i;
+        getImageData(additionalBgs[i], width, height).then(imgData => {
+          bgImgData[index] = imgData;
+          resolve();
         });
-        bgPromises.push(bgPromise);
-      }
-
-      Promise.all(bgPromises).then(value => {
-        for (let i = 0; i < bgImgData.length; i++) {
-          // Append each one to the end of the hvq fs.
-          hvqfs.writeBackground(hvqfs.getDirectoryCount(), bgImgData[i], width, height, board.bg);
-        }
-        $$log("Wrote additional backgrounds");
-        clearTimeout(failTimer);
-        resolve();
-      }, reason => {
-        $$log(`Error writing additional backgrounds: ${reason}`);
-        reject();
       });
-    });
+      bgPromises.push(bgPromise);
+    }
+
+    await Promise.all(bgPromises);
+
+    for (const imgData of bgImgData) {
+      // Append each one to the end of the hvq fs.
+      hvqfs.writeBackground(hvqfs.getDirectoryCount(), imgData, width, height, board.bg);
+    }
   }
 
   onParseBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {

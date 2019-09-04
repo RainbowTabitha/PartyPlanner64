@@ -15,6 +15,7 @@ import { IBoardInfo } from "./boardinfobase";
 import { BankEvent } from "../events/builtin/events.common";
 
 import mp2boardselectblank1Image from "../img/details/mp2boardselectblank1.png";
+import { getImageData } from "../utils/img/getImageData";
 
 export const MP2 = new class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
@@ -308,57 +309,44 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       board.animbg = animBgs;
   }
 
-  _writeAnimationBackgrounds(setIndex: number, width: number, height: number, mainBgSrc: string, animSources?: string[]) {
-    return new Promise(function(resolve, reject) {
-      if (isNaN(setIndex) || !animSources || !animSources.length) {
+  async _writeAnimationBackgrounds(setIndex: number, width: number, height: number, mainBgSrc: string, animSources?: string[]): Promise<void> {
+    if (isNaN(setIndex) || !animSources || !animSources.length) {
+      return;
+    }
+
+    const failTimer = setTimeout(() => {
+      throw new Error(`Failed to write animations`);
+    }, 45000);
+
+    let mainBgImgData: ImageData;
+    let animImgData = new Array(animSources.length);
+
+    const mainBgPromise = new Promise((resolve) => {
+      getImageData(mainBgSrc, width, height).then(imgData => {
+        mainBgImgData = imgData;
         resolve();
-        return;
-      }
-
-      let failTimer = setTimeout(() => reject(`Failed to write animations`), 45000);
-
-      let mainBgImgData: ImageData;
-      let animImgData = new Array(animSources.length);
-
-      let mainBgPromise = new Promise(function(resolve, reject) {
-        let canvasCtx = createContext(width, height);
-        let srcImage = new Image();
-        srcImage.onload = function() {
-          canvasCtx.drawImage(srcImage, 0, 0, width, height);
-          mainBgImgData = canvasCtx.getImageData(0, 0, width, height);
-          resolve();
-        };
-        srcImage.src = mainBgSrc;
-      });
-
-      let animPromises = [mainBgPromise];
-
-      for (let i = 0; i < animSources.length; i++) {
-        let animPromise = new Promise((resolve) => {
-          let canvasCtx = createContext(width, height);
-          let srcImage = new Image();
-          srcImage.onload = function(this: { index: number }) {
-            canvasCtx.drawImage(srcImage, 0, 0, width, height);
-            animImgData[this.index] = canvasCtx.getImageData(0, 0, width, height);
-            resolve();
-          }.bind({ index: i });
-          srcImage.src = animSources[i];
-        });
-        animPromises.push(animPromise);
-      }
-
-      Promise.all(animPromises).then(value => {
-        for (let i = 0; i < animImgData.length; i++) {
-          animationfs.writeAnimationBackground(setIndex, i, mainBgImgData, animImgData[i], width, height);
-        }
-        $$log("Wrote animations");
-        clearTimeout(failTimer);
-        resolve();
-      }, reason => {
-        $$log(`Error writing animations: ${reason}`);
-        reject();
       });
     });
+
+    const animPromises = [mainBgPromise];
+    for (let i = 0; i < animSources.length; i++) {
+      const animPromise = new Promise((resolve) => {
+        const index = i;
+        getImageData(animSources[i], width, height).then(imgData => {
+          animImgData[index] = imgData;
+          resolve();
+        });
+      });
+      animPromises.push(animPromise);
+    }
+
+    await Promise.all(animPromises);
+
+    for (let i = 0; i < animImgData.length; i++) {
+      animationfs.writeAnimationBackground(setIndex, i, mainBgImgData!, animImgData[i], width, height);
+    }
+    $$log("Wrote animations");
+    clearTimeout(failTimer);
   }
 
   onParseBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
@@ -599,21 +587,19 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   // Same as _writeBackground essentially, but for some reason MP2 overview background
   // doesn't line up when just shrinking the background naively.
   // If we shift it up by 1 tile's worth of height, it lines up better.
-  _writeOverviewBackground(bgIndex: number, src: string) {
-    return new Promise((resolve, reject) => {
-      let canvasCtx = createContext(320, 240);
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write bg ${bgIndex}`), 45000);
-      srcImage.onload = () => {
-        canvasCtx.drawImage(srcImage, 0, -10, 320, 240);
+  async _writeOverviewBackground(bgIndex: number, src: string): Promise<void> {
+    const imgData = await getImageData(src, 320, 240);
 
-        const imgData = canvasCtx.getImageData(0, 0, 320, 240);
-        hvqfs.writeBackground(bgIndex, imgData, 320, 240);
-        clearTimeout(failTimer);
-        resolve();
-      };
-      srcImage.src = src;
-    });
+    const failTimer = setTimeout(() => {
+      throw new Error(`Failed to write bg ${bgIndex}`);
+    }, 45000);
+
+    const canvasCtx = createContext(320, 240);
+    canvasCtx.putImageData(imgData, 0, -10);
+
+    const imgDataShifted = canvasCtx.getImageData(0, 0, 320, 240);
+    hvqfs.writeBackground(bgIndex, imgDataShifted, 320, 240);
+    clearTimeout(failTimer);
   }
 
   // Writes to 0x800CD524, break 0x80079390

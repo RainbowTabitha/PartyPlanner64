@@ -8,7 +8,6 @@ import { arrayToArrayBuffer, arrayBufferToDataURL } from "../utils/arrays";
 import { fromTiles, toTiles } from "../utils/img/tiler";
 import { FORM } from "../models/FORM";
 import { mainfs } from "../fs/mainfs";
-import { createContext } from "../utils/canvas";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { toArrayBuffer } from "../utils/image";
 import { toPack } from "../utils/img/ImgPack";
@@ -18,6 +17,7 @@ import { createBoardOverlay } from "./MP1.U.boardoverlay";
 import { IBoardInfo } from "./boardinfobase";
 import { ChanceTime } from "../events/builtin/MP1/U/ChanceTimeEvent1";
 import { StarChanceEvent } from "../events/builtin/MP1/U/StarChanceEvent1";
+import { getImageData } from "../utils/img/getImageData";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -383,53 +383,40 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     // $$log(board.otherbg.boardselect);
   }
 
-  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
-    return new Promise(function(resolve, reject) {
-      let boardSelectIndex = boardInfo.img.boardSelectImg;
-      if (!boardSelectIndex) {
-        resolve();
-        return;
-      }
+  async onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
+    let boardSelectIndex = boardInfo.img.boardSelectImg;
+    if (!boardSelectIndex) {
+      return;
+    }
 
-      // We need to write the image onto a canvas to get the RGBA32 values.
-      let [width, height] = [128, 64];
-      let canvasCtx = createContext(width, height);
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write boardselect for ${boardInfo.name}`), 45000);
-      srcImage.onload = () => {
-        canvasCtx.drawImage(srcImage, 0, 0, width, height);
-        let imgData = canvasCtx.getImageData(0, 0, width, height);
+    // We need to write the image onto a canvas to get the RGBA32 values.
+    let [width, height] = [128, 64];
+    const imgData = await getImageData(board.otherbg.boardselect, width, height);
 
-        // First, turn the image back into 4 BMP tiles
-        let boardSelectImgTiles = toTiles(imgData.data, 2, 2, (width / 2) * 4, height / 2);
-        let boardSelectBmps = boardSelectImgTiles.map(tile => {
-          return BMPfromRGBA(tile, 32, 8);
-        });
-
-        // Now write the BMPs back into the FORM.
-        let boardSelectFORM = mainfs.get(9, boardSelectIndex!);
-        let boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
-        for (let i = 0; i < 4; i++) {
-          let palette = boardSelectBmps[i][1];
-
-          // FIXME: This is padding the palette count a bit.
-          // For some reason, the images get corrupt with very low palette count.
-          while (palette.colors.length < 17) {
-            palette.colors.push(0x00000000);
-          }
-          FORM.replaceBMP(boardSelectUnpacked, i, boardSelectBmps[i][0], palette);
-        }
-
-        // Now write the FORM.
-        let boardSelectPacked = FORM.pack(boardSelectUnpacked);
-        //saveAs(new Blob([boardSelectPacked]), "formPacked");
-        mainfs.write(9, boardSelectIndex!, boardSelectPacked);
-
-        clearTimeout(failTimer);
-        resolve();
-      };
-      srcImage.src = board.otherbg.boardselect;
+    // First, turn the image back into 4 BMP tiles
+    let boardSelectImgTiles = toTiles(imgData.data, 2, 2, (width / 2) * 4, height / 2);
+    let boardSelectBmps = boardSelectImgTiles.map(tile => {
+      return BMPfromRGBA(tile, 32, 8);
     });
+
+    // Now write the BMPs back into the FORM.
+    let boardSelectFORM = mainfs.get(9, boardSelectIndex!);
+    let boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
+    for (let i = 0; i < 4; i++) {
+      let palette = boardSelectBmps[i][1];
+
+      // FIXME: This is padding the palette count a bit.
+      // For some reason, the images get corrupt with very low palette count.
+      while (palette.colors.length < 17) {
+        palette.colors.push(0x00000000);
+      }
+      FORM.replaceBMP(boardSelectUnpacked, i, boardSelectBmps[i][0], palette);
+    }
+
+    // Now write the FORM.
+    let boardSelectPacked = FORM.pack(boardSelectUnpacked);
+    //saveAs(new Blob([boardSelectPacked]), "formPacked");
+    mainfs.write(9, boardSelectIndex!, boardSelectPacked);
   }
 
   onParseBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
