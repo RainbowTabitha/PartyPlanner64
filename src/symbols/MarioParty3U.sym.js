@@ -1573,9 +1573,114 @@ export default [{
       name: "debug_font_color",
       desc: "Used with DrawDebugText" },
 {
+      addr: 2148320244, // 0x800CC3F4
+      type: "u8",
+      name: "p1_buttonpress",
+      desc: "0x80 (A)" },
+{
+      addr: 2148320245, // 0x800CC3F5
+      type: "u8",
+      name: "p1_buttonpress2",
+      desc: "0x1 (Right C)" },
+{
+      addr: 2148320246, // 0x800CC3F6
+      type: "u8",
+      name: "p1_analog_x_axis" },
+{
+      addr: 2148320247, // 0x800CC3F7
+      type: "u8",
+      name: "p1_analog_y_axis" },
+{
+      addr: 2148320252, // 0x800CC3FC
+      type: "u8",
+      name: "p2_buttonpress",
+      desc: "0x80 (A)" },
+{
+      addr: 2148320253, // 0x800CC3FD
+      type: "u8",
+      name: "p2_buttonpress2",
+      desc: "0x1 (Right C)" },
+{
+      addr: 2148320254, // 0x800CC3FE
+      type: "u8",
+      name: "p2_analog_x_axis" },
+{
+      addr: 2148320255, // 0x800CC3FF
+      type: "u8",
+      name: "p2_analog_y_axis" },
+{
+      addr: 2148320260, // 0x800CC404
+      type: "u8",
+      name: "p3_buttonpress",
+      desc: "0x80 (A)" },
+{
+      addr: 2148320261, // 0x800CC405
+      type: "u8",
+      name: "p3_buttonpress2",
+      desc: "0x1 (Right C)" },
+{
+      addr: 2148320262, // 0x800CC406
+      type: "u8",
+      name: "p3_analog_x_axis" },
+{
+      addr: 2148320263, // 0x800CC407
+      type: "u8",
+      name: "p3_analog_y_axis" },
+{
+      addr: 2148320268, // 0x800CC40C
+      type: "u8",
+      name: "p4_buttonpress",
+      desc: "0x80 (A)" },
+{
+      addr: 2148320269, // 0x800CC40D
+      type: "u8",
+      name: "p4_buttonpress2",
+      desc: "0x1 (Right C)" },
+{
+      addr: 2148320270, // 0x800CC40E
+      type: "u8",
+      name: "p4_analog_x_axis" },
+{
+      addr: 2148320271, // 0x800CC40F
+      type: "u8",
+      name: "p4_analog_y_axis" },
+{
       addr: 2148320485, // 0x800CC4E5
       type: "u8",
       name: "hidden_block_item_space_index" },
+{
+      addr: 2148323196, // 0x800CCF7C
+      type: "u8",
+      name: "p1_buttonpress3",
+      desc: "see above" },
+{
+      addr: 2148323197, // 0x800CCF7D
+      type: "u8",
+      name: "p1_buttonpress4" },
+{
+      addr: 2148323198, // 0x800CCF7E
+      type: "u8",
+      name: "p2_buttonpress3" },
+{
+      addr: 2148323199, // 0x800CCF7F
+      type: "u8",
+      name: "p2_buttonpress4" },
+{
+      addr: 2148323200, // 0x800CCF80
+      type: "u8",
+      name: "p3_buttonpress3" },
+{
+      addr: 2148323201, // 0x800CCF81
+      type: "u8",
+      name: "p3_buttonpress4" },
+{
+      addr: 2148323202, // 0x800CCF82
+      type: "u8",
+      name: "p4_buttonpress3" },
+{
+      addr: 2148323203, // 0x800CCF83
+      type: "u8",
+      name: "p4_buttonpress4" },
 {
       addr: 2148323418, // 0x800CD05A
       type: "u8",
@@ -1660,6 +1765,16 @@ export default [{
       name: "p1_next_space_index",
       desc: "Player 1 next space index" },
 {
+      addr: 2148339997, // 0x800D111D
+      type: "u8",
+      name: "p1_prev_chain_index",
+      desc: "Player 1 previous chain index" },
+{
+      addr: 2148339998, // 0x800D111E
+      type: "u8",
+      name: "p1_prev_space_index",
+      desc: "Player 1 previous space index" },
+{
       addr: 2148339999, // 0x800D111F
       type: "u8",
       name: "p1_status_flags",
@@ -1679,6 +1794,55 @@ export default [{
       type: "u8",
       name: "p1_item3",
       desc: "Player 1 third item" },
+{
+      addr: 2148340003, // 0x800D1123
+      type: "u8",
+      name: "p1_bowser_suit_flag",
+      desc: "1 = suit is on" },
+{
+      addr: 2148340016, // 0x800D1130
+      type: "u16",
+      name: "p1_minigame_star" },
+{
+      addr: 2148340018, // 0x800D1132
+      type: "u16",
+      name: "p1_coin_star" },
+{
+      addr: 2148340020, // 0x800D1134
+      type: "s8",
+      name: "p1_happening_space_count" },
+{
+      addr: 2148340021, // 0x800D1135
+      type: "u8",
+      name: "p1_red_space_count" },
+{
+      addr: 2148340022, // 0x800D1136
+      type: "u8",
+      name: "p1_blue_space_count" },
+{
+      addr: 2148340023, // 0x800D1137
+      type: "u8",
+      name: "p1_chance_space_count" },
+{
+      addr: 2148340024, // 0x800D1138
+      type: "u8",
+      name: "p1_bowser_space_count" },
+{
+      addr: 2148340025, // 0x800D1139
+      type: "u8",
+      name: "p1_battle_space_count" },
+{
+      addr: 2148340026, // 0x800D113A
+      type: "u8",
+      name: "p1_item_space_count" },
+{
+      addr: 2148340027, // 0x800D113B
+      type: "u8",
+      name: "p1_bank_space_count" },
+{
+      addr: 2148340028, // 0x800D113C
+      type: "u8",
+      name: "p1_game_guy_space_count" },
 {
       addr: 2148340033, // 0x800D1141
       type: "u8",
@@ -1722,6 +1886,16 @@ export default [{
       name: "p2_next_space_index",
       desc: "Player 2 next space index" },
 {
+      addr: 2148340053, // 0x800D1155
+      type: "u8",
+      name: "p2_prev_chain_index",
+      desc: "Player 2 previous chain index" },
+{
+      addr: 2148340054, // 0x800D1156
+      type: "u8",
+      name: "p2_prev_space_index",
+      desc: "Player 2 previous space index" },
+{
       addr: 2148340055, // 0x800D1157
       type: "u8",
       name: "p2_status_flags",
@@ -1741,6 +1915,55 @@ export default [{
       type: "u8",
       name: "p2_item3",
       desc: "Player 2 third item" },
+{
+      addr: 2148340059, // 0x800D115B
+      type: "u8",
+      name: "p2_bowser_suit_flag",
+      desc: "1 = suit is on" },
+{
+      addr: 2148340072, // 0x800D1168
+      type: "u16",
+      name: "p2_minigame_star" },
+{
+      addr: 2148340074, // 0x800D116A
+      type: "u16",
+      name: "p2_coin_star" },
+{
+      addr: 2148340076, // 0x800D116C
+      type: "s8",
+      name: "p2_happening_space_count" },
+{
+      addr: 2148340077, // 0x800D116D
+      type: "u8",
+      name: "p2_red_space_count" },
+{
+      addr: 2148340078, // 0x800D116E
+      type: "u8",
+      name: "p2_blue_space_count" },
+{
+      addr: 2148340079, // 0x800D116F
+      type: "u8",
+      name: "p2_chance_space_count" },
+{
+      addr: 2148340080, // 0x800D1170
+      type: "u8",
+      name: "p2_bowser_space_count" },
+{
+      addr: 2148340081, // 0x800D1171
+      type: "u8",
+      name: "p2_battle_space_count" },
+{
+      addr: 2148340082, // 0x800D1172
+      type: "u8",
+      name: "p2_item_space_count" },
+{
+      addr: 2148340083, // 0x800D1173
+      type: "u8",
+      name: "p2_bank_space_count" },
+{
+      addr: 2148340084, // 0x800D1174
+      type: "u8",
+      name: "p2_game_guy_space_count" },
 {
       addr: 2148340089, // 0x800D1179
       type: "u8",
@@ -1784,6 +2007,16 @@ export default [{
       name: "p3_next_space_index",
       desc: "Player 3 next space index" },
 {
+      addr: 2148340109, // 0x800D118D
+      type: "u8",
+      name: "p3_prev_chain_index",
+      desc: "Player 3 previous chain index" },
+{
+      addr: 2148340110, // 0x800D118E
+      type: "u8",
+      name: "p3_prev_space_index",
+      desc: "Player 3 previous space index" },
+{
       addr: 2148340111, // 0x800D118F
       type: "u8",
       name: "p3_status_flags",
@@ -1803,6 +2036,55 @@ export default [{
       type: "u8",
       name: "p3_item3",
       desc: "Player 3 third item" },
+{
+      addr: 2148340115, // 0x800D1193
+      type: "u8",
+      name: "p3_bowser_suit_flag",
+      desc: "1 = suit is on" },
+{
+      addr: 2148340128, // 0x800D11A0
+      type: "u16",
+      name: "p3_minigame_star" },
+{
+      addr: 2148340130, // 0x800D11A2
+      type: "u16",
+      name: "p3_coin_star" },
+{
+      addr: 2148340132, // 0x800D11A4
+      type: "s8",
+      name: "p3_happening_space_count" },
+{
+      addr: 2148340133, // 0x800D11A5
+      type: "u8",
+      name: "p3_red_space_count" },
+{
+      addr: 2148340134, // 0x800D11A6
+      type: "u8",
+      name: "p3_blue_space_count" },
+{
+      addr: 2148340135, // 0x800D11A7
+      type: "u8",
+      name: "p3_chance_space_count" },
+{
+      addr: 2148340136, // 0x800D11A8
+      type: "u8",
+      name: "p3_bowser_space_count" },
+{
+      addr: 2148340137, // 0x800D11A9
+      type: "u8",
+      name: "p3_battle_space_count" },
+{
+      addr: 2148340138, // 0x800D11AA
+      type: "u8",
+      name: "p3_item_space_count" },
+{
+      addr: 2148340139, // 0x800D11AB
+      type: "u8",
+      name: "p3_bank_space_count" },
+{
+      addr: 2148340140, // 0x800D11AC
+      type: "u8",
+      name: "p3_game_guy_space_count" },
 {
       addr: 2148340145, // 0x800D11B1
       type: "u8",
@@ -1846,6 +2128,16 @@ export default [{
       name: "p4_next_space_index",
       desc: "Player 4 next space index" },
 {
+      addr: 2148340165, // 0x800D11C5
+      type: "u8",
+      name: "p4_prev_chain_index",
+      desc: "Player 4 previous chain index" },
+{
+      addr: 2148340166, // 0x800D11C6
+      type: "u8",
+      name: "p4_prev_space_index",
+      desc: "Player 4 previous space index" },
+{
       addr: 2148340167, // 0x800D11C7
       type: "u8",
       name: "p4_status_flags",
@@ -1865,6 +2157,55 @@ export default [{
       type: "u8",
       name: "p4_item3",
       desc: "Player 4 third item" },
+{
+      addr: 2148340171, // 0x800D11CB
+      type: "u8",
+      name: "p4_bowser_suit_flag",
+      desc: "1 = suit is on" },
+{
+      addr: 2148340184, // 0x800D11D8
+      type: "u16",
+      name: "p4_minigame_star" },
+{
+      addr: 2148340186, // 0x800D11DA
+      type: "u16",
+      name: "p4_coin_star" },
+{
+      addr: 2148340188, // 0x800D11DC
+      type: "s8",
+      name: "p4_happening_space_count" },
+{
+      addr: 2148340189, // 0x800D11DD
+      type: "u8",
+      name: "p4_red_space_count" },
+{
+      addr: 2148340190, // 0x800D11DE
+      type: "u8",
+      name: "p4_blue_space_count" },
+{
+      addr: 2148340191, // 0x800D11DF
+      type: "u8",
+      name: "p4_chance_space_count" },
+{
+      addr: 2148340192, // 0x800D11E0
+      type: "u8",
+      name: "p4_bowser_space_count" },
+{
+      addr: 2148340193, // 0x800D11E1
+      type: "u8",
+      name: "p4_battle_space_count" },
+{
+      addr: 2148340194, // 0x800D11E2
+      type: "u8",
+      name: "p4_item_space_count" },
+{
+      addr: 2148340195, // 0x800D11E3
+      type: "u8",
+      name: "p4_bank_space_count" },
+{
+      addr: 2148340196, // 0x800D11E4
+      type: "u8",
+      name: "p4_game_guy_space_count" },
 {
       addr: 2148340303, // 0x800D124F
       type: "u8",
