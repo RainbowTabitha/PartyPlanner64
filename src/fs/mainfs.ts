@@ -318,4 +318,14 @@ export class mainfs {
 
     return byteLen;
   }
+
+  /** Returns the current compressed size of a file. */
+  public static getCompressedSize(dir: number, file: number): number {
+    if (_mainfsCache && _mainfsCache[dir][file]) {
+      if (_mainfsCache[dir][file].compressed) {
+        return _mainfsCache[dir][file].compressed!.byteLength;
+      }
+    }
+    return 0;
+  }
 }

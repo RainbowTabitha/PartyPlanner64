@@ -21,6 +21,7 @@ import { strings } from "../fs/strings";
 import { saveAs } from "file-saver";
 
 import "../css/debug.scss";
+import { mainfs } from "../fs/mainfs";
 
 interface IDebugViewState {
   sceneIndex: string;
@@ -207,7 +208,13 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
           const diff = num - info.rom_start;
           result = `RAM: ${$$hex(info.ram_start + diff, "")}\n`;
           result += `Overlay ${i} (${$$hex(i)}) offset +${diff} (+${$$hex(diff)})`;
+          break;
         }
+      }
+
+      // Attempt to find an offset into a MainFS file.
+      if (!result) {
+        result = this.findInMainFS(num);
       }
 
       if (!result) {
@@ -222,6 +229,29 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
     else {
       this.setState({ romToRamResult: "Unknown" });
     }
+  }
+
+  private findInMainFS(num: number): string {
+    const mainfsOffset = mainfs.getROMOffset()!;
+    const mainfsSize = mainfs.getByteLength();
+    if (num > mainfsOffset && num < (mainfsOffset + mainfsSize)) {
+      let currentOffset = mainfsOffset;
+      const dirCount = mainfs.getDirectoryCount();
+      for (let d = 0; d < dirCount; d++) {
+        const fileCount = mainfs.getFileCount(d);
+        for (let f = 0; f < fileCount; f++) {
+          const compressedSize = mainfs.getCompressedSize(d, f);
+          currentOffset += compressedSize;
+          if (currentOffset > num) {
+            const diff = num - (currentOffset - compressedSize);
+            let result = `RAM: N/A\n`;
+            result += `MainFS ${d}/${f} (${$$hex(d)}/${$$hex(f)}) offset +${diff} (+${$$hex(diff)})`;
+            return result;
+          }
+        }
+      }
+    }
+    return "";
   }
 
   onSceneIndexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
