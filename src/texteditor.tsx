@@ -276,7 +276,7 @@ export class MPEditor extends React.Component<IMPEditorProps, IMPEditorState> {
   }
 };
 
-function imageStrategy(contentBlock: Draft.ContentBlock, callback: any) {
+function imageStrategy(contentBlock: Draft.ContentBlock, callback: any, contentState: unknown) {
   const text = contentBlock.getText();
   for (let i = 0; i < text.length; i++) {
     if (_ToolbarCharToKey[text.charAt(i)])
@@ -296,6 +296,7 @@ const MPImageComponent = (props: any) => {
   delete outerSpanProps.decoratedText;
   delete outerSpanProps.entityKey;
   delete outerSpanProps.offsetKey;
+  delete outerSpanProps.blockKey;
 
   return (
     <span {...outerSpanProps} className={className}>

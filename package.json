@@ -38,7 +38,7 @@
     "basiccontext": "^3.5.1",
     "codemirror": "^5.48.4",
     "cookies-js": "^1.2.2",
-    "draft-js": "^0.10.5",
+    "draft-js": "^0.11.0",
     "electron-debug": "^3.0.1",
     "electron-updater": "^4.1.2",
     "file-saver": "^2.0.2",
@@ -54,8 +54,8 @@
     "react-dom": "^16.9.0",
     "react-scripts": "3.1.1",
     "resize-image-data": "^0.2.0",
-    "three": "^0.107.0",
-    "typescript": "3.5.3"
+    "three": "^0.108.0",
+    "typescript": "3.6.3"
   },
   "devDependencies": {
     "dotenv": "^8.1.0",

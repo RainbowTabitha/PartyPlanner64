@@ -139,8 +139,8 @@ export enum Game {
 export type GameVersion = 1 | 2 | 3;
 
 export function getGameName(id: string): string | null {
-  for (let key in Game) {
-    const value = Game[key];
+  for (const key in Game) {
+    const value = (Game as any)[key];
     if (value === id)
       return key;
   }
