@@ -222,7 +222,7 @@ const RCSpaceTypeToggleTypes_2: IRCMenuItem[] = [
   { name: "Change to star space", icon: starImage, type: Space.STAR, advanced: true },
   { name: "Change to black star space", icon: blackstarImage, type: Space.BLACKSTAR, advanced: true },
   { name: "Change to start space", icon: startImage, type: Space.START, advanced: true },
-  { name: "Change to arrow space", icon: arrowImage, type: Space.ARROW, advanced: true },
+  { name: "Change to arrow space", icon: arrowImage, type: Space.ARROW },
 ];
 const RCSpaceTypeToggleSubTypes_2: IRCMenuItem[] = [
   { name: "Show Toad", icon: toadImage, subtype: SpaceSubtype.TOAD },
@@ -245,7 +245,7 @@ const RCSpaceTypeToggleTypes_3: IRCMenuItem[] = [
   { name: "Change to invisible space", icon: otherImage, type: Space.OTHER },
   { name: "Change to star space", icon: starImage, type: Space.STAR, advanced: true },
   { name: "Change to start space", icon: startImage, type: Space.START, advanced: true },
-  { name: "Change to arrow space", icon: arrowImage, type: Space.ARROW, advanced: true },
+  { name: "Change to arrow space", icon: arrowImage, type: Space.ARROW },
 ];
 const RCSpaceTypeToggleSubTypes_3: IRCMenuItem[] = [
   { name: "Show Millenium Star", icon: mstarImage, subtype: SpaceSubtype.TOAD },
