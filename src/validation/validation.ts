@@ -1,9 +1,12 @@
 import { IBoard, getROMBoards, getCurrentBoard } from "../boards";
 import { ValidationLevel, Game, BoardType } from "../types";
 import { romhandler } from "../romhandler";
-import { getValidationRulesForBoard as getValidationRulesForMP1 } from "./validation.MP1";
-import { getValidationRulesForBoard as getValidationRulesForMP2 } from "./validation.MP2";
-import { getValidationRulesForBoard as getValidationRulesForMP3 } from "./validation.MP3";
+import { getValidationRules as getValidationRulesForMP1 } from "./validation.MP1";
+import {
+  getValidationRules as getValidationRulesForMP2,
+  getValidationRulesForBoard as getBoardValidationRulesForMP2
+} from "./validation.MP2";
+import { getValidationRules as getValidationRulesForMP3 } from "./validation.MP3";
 import { get, $setting } from "../views/settings";
 import { getRule, IValidationRule } from "./validationrules";
 import { getBoardInfos } from "../adapter/boardinfo";
@@ -23,7 +26,11 @@ function _dontShowInUI(romBoard: IBoard, boardType: BoardType) {
   return romBoard.type !== boardType;
 }
 
-function _getRulesForBoard(gameID: Game, boardIndex: number): IValidationRule[] {
+/**
+ * Returns validation rules that apply for a specific game,
+ * regardless of the ROM board being overwritten.
+ */
+function _getRulesForGame(gameID: Game): IValidationRule[] {
   let rules = [
     getRule("HASSTART"),
     getRule("GAMEVERSION"),
@@ -38,32 +45,47 @@ function _getRulesForBoard(gameID: Game, boardIndex: number): IValidationRule[] 
     getRule("SPLITATNONINVISIBLESPACE"),
   ];
 
-  switch(gameID) {
+  switch (gameID) {
     case Game.MP1_USA:
     case Game.MP1_JPN:
-      rules = rules.concat(getValidationRulesForMP1());
+      rules = rules.concat(getValidationRulesForMP1(gameID));
       break;
     case Game.MP2_USA:
     case Game.MP2_JPN:
-      rules = rules.concat(getValidationRulesForMP2(gameID, boardIndex));
+      rules = rules.concat(getValidationRulesForMP2(gameID));
       break;
     case Game.MP3_USA:
     case Game.MP3_JPN:
-      rules = rules.concat(getValidationRulesForMP3(gameID, boardIndex));
+      rules = rules.concat(getValidationRulesForMP3(gameID));
       break;
   }
 
   return rules;
 }
 
-interface IValidationResult {
-  name: string;
-  unavailable: boolean;
+/** Returns any validation rules specific to a particular game + board. */
+function _getRulesForBoard(gameID: Game, boardIndex: number): IValidationRule[] {
+  let rules: IValidationRule[] = [];
+
+  switch (gameID) {
+    case Game.MP2_USA:
+    case Game.MP2_JPN:
+      rules = rules.concat(getBoardValidationRulesForMP2(gameID, boardIndex));
+      break;
+  }
+
+  return rules;
+}
+
+export interface IValidationResult {
+  name?: string;
+  unavailable?: boolean;
+  forcedDisabled?: boolean;
   errors: string[];
   warnings: string[];
 }
 
-export function validateCurrentBoardForOverwrite() {
+export function validateCurrentBoardForOverwrite(): IValidationResult[] | null {
   let gameID = romhandler.getROMGame()!;
   if (!gameID)
     return null;
@@ -71,6 +93,31 @@ export function validateCurrentBoardForOverwrite() {
   let results: IValidationResult[] = [];
   let romBoards = getROMBoards();
   let currentBoard = getCurrentBoard();
+  const skipValidation = get($setting.uiSkipValidation);
+
+  // Evaluate rules common to all boards.
+  let gameLevelErrors: string[] = [];
+  let gameLevelWarnings: string[] = [];
+  if (!skipValidation) {
+    _getRulesForGame(gameID).forEach(rule => {
+      const failureResult = rule.fails(currentBoard);
+      if (failureResult) {
+        if (rule.level === ValidationLevel.ERROR)
+          gameLevelErrors.push(failureResult);
+        else if (rule.level === ValidationLevel.WARNING)
+          gameLevelWarnings.push(failureResult);
+      }
+    });
+  }
+  results.push({
+    errors: gameLevelErrors,
+    warnings: gameLevelWarnings,
+  });
+
+  const forcedDisabled = !skipValidation && gameLevelErrors.length > 0;
+
+  // Evaluate any rules specific to certain ROM board targets.
+  // As we switch to common overlays, these cases are dwindling.
   const boardInfos = getBoardInfos(gameID);
   romBoards.forEach((board, boardIndex) => {
     if (_dontShowInUI(board, currentBoard.type))
@@ -79,21 +126,17 @@ export function validateCurrentBoardForOverwrite() {
     const boardInfo = boardInfos[boardIndex];
     let unavailable = !_overwriteAvailable(boardInfo);
 
-    let errors: string[] = [];
-    let warnings: string[] = [];
+    let boardLevelErrors: string[] = [];
+    let boardLevelWarnings: string[] = [];
     if (!unavailable && !get($setting.uiSkipValidation)) {
       let rules = _getRulesForBoard(gameID, boardIndex);
       rules.forEach(rule => {
-        let args;
-        if (Array.isArray(rule)) {
-          [rule, args] = rule;
-        }
-        let failureResult = rule.fails(currentBoard, args);
+        let failureResult = rule.fails(currentBoard);
         if (failureResult) {
           if (rule.level === ValidationLevel.ERROR)
-            errors.push(failureResult);
+            boardLevelErrors.push(failureResult);
           else if (rule.level === ValidationLevel.WARNING)
-            warnings.push(failureResult);
+            boardLevelWarnings.push(failureResult);
         }
       });
     }
@@ -101,8 +144,9 @@ export function validateCurrentBoardForOverwrite() {
     results.push({
       name: board.name,
       unavailable,
-      errors,
-      warnings,
+      forcedDisabled,
+      errors: boardLevelErrors,
+      warnings: boardLevelWarnings,
     });
   });
 

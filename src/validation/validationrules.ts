@@ -7,7 +7,7 @@ export interface IValidationRule {
   id: string;
   name: string;
   level: ValidationLevel;
-  fails(board: IBoard, args: any): false | string;
+  fails(board: IBoard, args?: any): false | string;
 }
 
 const ValidationRuleBase: IValidationRule = {

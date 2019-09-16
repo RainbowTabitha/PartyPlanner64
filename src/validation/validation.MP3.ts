@@ -1,8 +1,8 @@
 import { getRule } from "./validationrules";
-import { getBoardInfoByIndex, getArrowRotationLimit } from "../adapter/boardinfo";
-import { Game } from "../types";
+import { getArrowRotationLimit } from "../adapter/boardinfo";
 import "./validation.common";
 import { BankEvent, ItemShopEvent, BooEvent } from "../events/builtin/events.common";
+import { Game } from "../types";
 
 const commonRules = [
   getRule("TOOMANYBOWSERS", { limit: 0 }),
@@ -12,11 +12,10 @@ const commonRules = [
   getRule("ADDITIONALBGCODEISSUE"),
 ];
 
-export function getValidationRulesForBoard(gameID: Game, boardIndex: number) {
+export function getValidationRules(gameID: Game) {
   const rules = commonRules.slice(0);
-  const boardInfo = getBoardInfoByIndex(gameID, boardIndex);
 
-  const totalArrowsToWrite = getArrowRotationLimit(boardInfo);
+  const totalArrowsToWrite = getArrowRotationLimit();
   rules.push(getRule("TOOMANYARROWROTATIONS", { limit: totalArrowsToWrite }));
 
   rules.push(getRule("TOOMANYOFEVENT", { event: BankEvent, high: 2 }));

@@ -6,7 +6,7 @@ import { setCurrentBoard, addBoard, clearBoardsFromROM, getCurrentBoard, loadBoa
 import { recordEvent } from "./utils/analytics";
 import { $$log } from "./utils/debug";
 import { getROMAdapter } from "./adapter/adapters";
-import { validateCurrentBoardForOverwrite } from "./validation/validation";
+import { validateCurrentBoardForOverwrite, IValidationResult } from "./validation/validation";
 import { makeKeyClick } from "./utils/react";
 import * as ReactDOM from "react-dom";
 import { equal } from "./utils/arrays";
@@ -631,42 +631,49 @@ const HeaderDropdown = class HeaderDropdown extends React.Component<IHeaderDropd
 };
 
 function overwriteDropdown(closeFn: any) {
-  let validationResults = validateCurrentBoardForOverwrite();
+  const validationResults = validateCurrentBoardForOverwrite();
   if (!validationResults)
     return null;
 
-  return validationResults.map(function(result: any, index: number) {
+  return validationResults.map(function(result: IValidationResult, index: number) {
     return (
       <HeaderOverwriteBoardDropdownEntry
         name={result.name}
         errors={result.errors}
         warnings={result.warnings}
         unavailable={result.unavailable}
+        forcedDisabled={result.forcedDisabled}
         closeCallback={closeFn}
         key={index}
-        boardIndex={index} />
+        boardIndex={index - 1} />
     );
   });
 }
 
 interface IHeaderOverwriteBoardDropdownEntryProps {
-  unavailable: boolean;
+  name?: string;
+  unavailable?: boolean;
+  forcedDisabled?: boolean;
   boardIndex: number;
   closeCallback: Function;
-  name: string;
   errors: string[];
   warnings: string[];
 }
 
 const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntry extends React.Component<IHeaderOverwriteBoardDropdownEntryProps> {
   boardClicked = (event: any) => {
+    // The general validation entry cannot be clicked.
+    if (!this.props.name) {
+      return;
+    }
+
     // Links inside the errors messages should not cause overwrites from warnings.
     if (event.target && event.target.tagName.toUpperCase() === "A") {
       event.stopPropagation();
       return;
     }
 
-    if (!this.hasErrors() && !this.props.unavailable) {
+    if (!this.hasErrors() && !this.props.unavailable && !this.props.forcedDisabled) {
       this.props.closeCallback();
 
       let adapter = getROMAdapter();
@@ -708,8 +715,12 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
   }
 
   render() {
-    let ddClass = "overwriteBoardEntry";
-    let tooltip = `Overwrite ${this.props.name} with the current board.`;
+    let ddClass = "overwriteEntry";
+    let tooltip: string = "";
+    if (this.props.name) {
+      ddClass += " overwriteBoardEntry";
+      tooltip = `Overwrite ${this.props.name} with the current board.`;
+    }
 
     let failNodes: any = [];
     if (this.props.unavailable) {
@@ -719,6 +730,13 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       );
     }
     else {
+      if (this.props.forcedDisabled) {
+        ddClass += " unavailable";
+        failNodes.push(
+          <div className="overwriteBoardMessage" key="unavailable">Current issues must be resolved.</div>
+        );
+      }
+
       if (this.hasErrors()) {
         ddClass += " failed";
         failNodes = failNodes.concat(this.props.errors.map((fail, idx) => {
@@ -746,11 +764,20 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       tooltip = "Issues with the current board.";
       return (
         <div className={ddClass} onClick={this.boardClicked} title={tooltip}>
-          <span className="overwriteBoardName">{this.props.name}</span>
-          <br />
+          {this.props.name && <>
+            <span className="overwriteBoardName">{this.props.name}</span>
+            <br />
+          </>
+          }
           {failNodes}
         </div>
       );
+    }
+
+    if (!this.props.name) {
+      // This was the "general" validation result, which shows nothing
+      // if we don't have errors.
+      return null;
     }
 
     return (

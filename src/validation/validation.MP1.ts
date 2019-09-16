@@ -1,16 +1,16 @@
 import { getRule } from "./validationrules";
 import "./validation.common";
+import { Game } from "../types";
 
 const commonRules = [
   getRule("TOOMANYGATES", { limit: 0 }),
   getRule("ADDITIONALBGCODEISSUE"),
+  getRule("TOOMANYBOOS", { limit: 2 }),
+  getRule("TOOMANYBOWSERS", { limit: 1 }),
+  getRule("TOOMANYKOOPAS", { limit: 1 }),
+  getRule("BADSTARCOUNT", { low: 7, high: 7 }),
 ];
 
-export function getValidationRulesForBoard() {
-  let rules = commonRules.slice(0);
-  rules.push(getRule("TOOMANYBOOS", { limit: 2 }));
-  rules.push(getRule("TOOMANYBOWSERS", { limit: 1 }));
-  rules.push(getRule("TOOMANYKOOPAS", { limit: 1 }));
-  rules.push(getRule("BADSTARCOUNT", { low: 7, high: 7 }));
-  return rules;
+export function getValidationRules(gameID: Game) {
+  return commonRules.slice(0);
 }

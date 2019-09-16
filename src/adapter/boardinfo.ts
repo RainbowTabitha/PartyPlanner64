@@ -24,7 +24,7 @@ export function getBoardInfoByIndex(gameID: Game, index: number): IBoardInfo {
   return getBoardInfos(gameID)[index];
 }
 
-export function getArrowRotationLimit(boardInfo: any) {
+export function getArrowRotationLimit() {
   // 8 arrows is the imposed restriction by the game.
   return 8;
 }

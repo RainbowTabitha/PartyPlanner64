@@ -165,7 +165,7 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIn
     }
   }
   const addArrowAngleAddr = getSymbol(Game.MP3_USA, "AddArrowAngle");
-  const totalArrowsToWrite = getArrowRotationLimit(boardInfo);
+  const totalArrowsToWrite = getArrowRotationLimit();
   let arrowRotationInstructions = [];
   const loopLimit = Math.min(totalArrowsToWrite, rotations.length);
   for (let i = 0; i < loopLimit; i++) {

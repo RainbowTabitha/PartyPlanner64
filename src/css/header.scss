@@ -89,25 +89,10 @@ $header-logo-width: 215px;
   display: block;
 }
 
-.overwriteBoardEntry {
-  min-height: 35px;
+.overwriteEntry {
   width: calc(100% - 4px);
   padding: 4px 2px;
   white-space: normal;
-
-  &.unavailable {
-    color: rgba(0, 0, 0, 0.7);
-  }
-
-  &:not(.failed):not(.unavailable):hover {
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-
-  .overwriteBoardName {
-    font-size: 11pt;
-    white-space: nowrap;
-    vertical-align: middle;
-  }
 
   .overwriteBoardIssueIcon {
     display: inline-block;
@@ -122,6 +107,24 @@ $header-logo-width: 215px;
     a {
       color: #001281;
     }
+  }
+}
+
+.overwriteBoardEntry {
+  min-height: 35px;
+
+  &.unavailable {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  &:not(.failed):not(.unavailable):hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .overwriteBoardName {
+    font-size: 11pt;
+    white-space: nowrap;
+    vertical-align: middle;
   }
 }
 
