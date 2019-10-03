@@ -18,6 +18,7 @@ import { IBoardInfo } from "./boardinfobase";
 import { ChanceTime } from "../events/builtin/MP1/U/ChanceTimeEvent1";
 import { StarChanceEvent } from "../events/builtin/MP1/U/StarChanceEvent1";
 import { getImageData } from "../utils/img/getImageData";
+import { getSoundEffectMapMP1 } from "./MP1.U.soundeffects";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 1;
@@ -588,6 +589,10 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       "", // "Two Beeps",
       "", // "Two Beeps", // 0x50
     ];
+  }
+
+  getSoundEffectMap(table: number): string[] {
+    return getSoundEffectMapMP1(table);
   }
 
   getCharacterMap(): { [num: number]: string } {

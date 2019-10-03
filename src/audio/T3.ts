@@ -100,37 +100,8 @@ export class T3 {
     // presumably because some entries use the same raw data.
     // if (isDebug()) {
     //   let details = ""; // This is just a temporary info extraction thing...
-    //   const soundFxCount = view.getUint32(4);
-    //   const soundFxListOffset = tblOffsetEnd;
-    //   for (let i = 0; i < soundFxCount; i++) {
-    //     const offset = view.getUint32(soundFxListOffset + (i * 4));
-
-    //     const subcount = view.getUint8(soundFxListOffset + offset);
-    //     const substructstart = soundFxListOffset + offset + 8;
-    //     for (let s = 0; s < subcount; s++) {
-    //       const soundFxInfoOffset = view.getUint32(substructstart + (s * 8) + 4);
-
-    //       let rawSoundIndex: number;
-    //       const soundFxInfoType = view.getUint8(soundFxListOffset + soundFxInfoOffset);
-    //       switch (soundFxInfoType) {
-    //         case 0x92:
-    //         case 0x93:
-    //           rawSoundIndex = view.getUint16(soundFxListOffset + soundFxInfoOffset + 1);
-    //           break;
-    //         case 0x12:
-    //         case 0x13:
-    //           rawSoundIndex = view.getUint16(soundFxListOffset + soundFxInfoOffset + 2);
-    //           break;
-    //         case 0x01:
-    //         case 0xA0:
-    //           continue;
-    //           break;
-    //         default:
-    //           throw new Error("Unrecongized soundFxInfoType " + $$hex(soundFxInfoType)
-    //             + " at " + $$hex(view.byteOffset + soundFxListOffset + soundFxInfoOffset));
-    //       }
-    //       details += `\n${$$hex(i)}: ${$$hex(rawSoundIndex)}`;
-    //     }
+    //   for (let i = 0; i < soundEffectMetadata.length; i++) {
+    //     details += `\n${$$hex(i)}: ${$$hex(soundEffectMetadata[i].rawSound)}`;
     //   }
     //   $$log(details);
     // }
