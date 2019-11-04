@@ -53,6 +53,15 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
 
   // Add symbols that are aliased from the board overlay.
   switch (game) {
+    case Game.MP2_USA:
+      if (needOverlayStubs) {
+        syms.push(".definelabel ViewBoardMap,0");
+      }
+      else {
+        syms.push(".definelabel ViewBoardMap,0x80103A64");
+      }
+      break;
+
     case Game.MP3_USA:
       if (needOverlayStubs) {
         syms.push(".definelabel GetBasicPromptSelection,0");
