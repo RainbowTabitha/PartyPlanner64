@@ -2289,6 +2289,16 @@ export default [{
       type: "code",
       name: "GetCurrentSpaceIndex" },
 {
+      addr: 2148452040, // 0x800EC6C8
+      type: "code",
+      name: "CloseMessage",
+      desc: "Closes open message window (with animation)" },
+{
+      addr: 2148452588, // 0x800EC8EC
+      type: "code",
+      name: "ShowMessage",
+      desc: "A0=character_index" },
+{
       addr: 2148453208, // 0x800ECB58
       type: "code",
       name: "GetAngleBetweenSpaces",

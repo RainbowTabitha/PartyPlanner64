@@ -24,7 +24,7 @@ export default [{
       name: "osMemSize",
       desc: "Size of RDRAM" },
 {
-      addr: 2147568432, // 0x80014B30
+      addr: 2147568404, // 0x80014B14
       type: "code",
       name: "PlaySound",
       desc: "A0=sound_index" },
@@ -153,6 +153,26 @@ export default [{
       name: "EventTableHydrate",
       desc: "Moves event table data into the space data" },
 {
+      addr: 2147836228, // 0x80056144
+      type: "code",
+      name: "CloseMessage",
+      desc: "Closes open message window (with animation)" },
+{
+      addr: 2147836776, // 0x80056368
+      type: "code",
+      name: "ShowMessage",
+      desc: "A0=character_index" },
+{
+      addr: 2147839024, // 0x80056C30
+      type: "code",
+      name: "RotateCharacterModel",
+      desc: "A0=player_index (-1 for cur)" },
+{
+      addr: 2147840736, // 0x800572E0
+      type: "code",
+      name: "SetPlayerOntoChain",
+      desc: "A0=player_index" },
+{
       addr: 2147840844, // 0x8005734C
       type: "code",
       name: "SetNextChainAndSpace" },
@@ -184,6 +204,11 @@ export default [{
       addr: 2147867960, // 0x8005DD38
       type: "code",
       name: "PlayerHasCoins",
+      desc: "A0=player_index" },
+{
+      addr: 2147868008, // 0x8005DD68
+      type: "code",
+      name: "SetBoardPlayerAnimation",
       desc: "A0=player_index" },
 {
       addr: 2147882164, // 0x800614B4
@@ -1838,6 +1863,14 @@ export default [{
       addr: 2148407648, // 0x800E1960
       type: "u32",
       name: "num_arrow_angles" },
+{
+      addr: 2148504494, // 0x800F93AE
+      type: "u16",
+      name: "total_turns" },
+{
+      addr: 2148504496, // 0x800F93B0
+      type: "u16",
+      name: "current_turn" },
 {
       addr: 2148509246, // 0x800FA63E
       type: "u16",
