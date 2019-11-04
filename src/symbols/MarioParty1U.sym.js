@@ -1943,6 +1943,11 @@ export default [{
       type: "u16",
       name: "enabled_feature_flags" },
 {
+      addr: 2148454802, // 0x800ED192
+      type: "u16",
+      name: "times_passed_start",
+      desc: "Number of times the start space has been passed" },
+{
       addr: 2148455760, // 0x800ED550
       type: "u16",
       name: "max_objects",

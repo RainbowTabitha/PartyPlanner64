@@ -2265,6 +2265,11 @@ export default [{
       name: "GetChainSpaceIndexFromAbsSpaceIndex",
       desc: "A0=abs_space_index" },
 {
+      addr: 2148446796, // 0x800EB24C
+      type: "code",
+      name: "SetPlayerOntoAbsSpaceIndex",
+      desc: "A0=abs_space_index" },
+{
       addr: 2148448240, // 0x800EB7F0
       type: "code",
       name: "SetSpaceType",
@@ -2381,6 +2386,59 @@ export default [{
       type: "code",
       name: "RefreshHUD",
       desc: "A0=player_index" },
+{
+      addr: 2148535712, // 0x80100DA0
+      type: "data",
+      name: "mini_ids_4p" },
+{
+      addr: 2148535732, // 0x80100DB4
+      type: "data",
+      name: "mini_ids_4p_easy" },
+{
+      addr: 2148535744, // 0x80100DC0
+      type: "data",
+      name: "mini_ids_1v3" },
+{
+      addr: 2148535756, // 0x80100DCC
+      type: "data",
+      name: "mini_ids_1v3_easy" },
+{
+      addr: 2148535764, // 0x80100DD4
+      type: "data",
+      name: "mini_ids_2v2" },
+{
+      addr: 2148535776, // 0x80100DE0
+      type: "data",
+      name: "mini_ids_2v2_easy" },
+{
+      addr: 2148535784, // 0x80100DE8
+      type: "data",
+      name: "mini_ids_battle" },
+{
+      addr: 2148535792, // 0x80100DF0
+      type: "data",
+      name: "mini_ids_battle_easy" },
+{
+      addr: 2148535796, // 0x80100DF4
+      type: "data",
+      name: "mini_ids_item" },
+{
+      addr: 2148535804, // 0x80100DFC
+      type: "data",
+      name: "mini_ids_item_easy" },
+{
+      addr: 2148535816, // 0x80100E08
+      type: "data",
+      name: "mini_ids_duel" },
+{
+      addr: 2148535824, // 0x80100E10
+      type: "data",
+      name: "mini_ids_duel_easy" },
+{
+      addr: 2148535832, // 0x80100E18
+      type: "data",
+      name: "num_minis_in_roulette",
+      desc: "Number of Mini-Games to populate the roulette with for each type (4p" },
 {
       addr: 2148553232, // 0x80105210
       type: "u16",

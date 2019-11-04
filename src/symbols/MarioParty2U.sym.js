@@ -24,6 +24,11 @@ export default [{
       name: "osMemSize",
       desc: "Size of RDRAM" },
 {
+      addr: 2147568432, // 0x80014B30
+      type: "code",
+      name: "PlaySound",
+      desc: "A0=sound_index" },
+{
       addr: 2147579520, // 0x80017680
       type: "code",
       name: "ReadMainFS",
@@ -78,6 +83,56 @@ export default [{
       name: "ShowPlayerCoinChange",
       desc: "A0=player_index" },
 {
+      addr: 2147800736, // 0x8004D6A0
+      type: "code",
+      name: "UseMushroom",
+      desc: "Mushroom item function" },
+{
+      addr: 2147800884, // 0x8004D734
+      type: "code",
+      name: "UseSkeleton_key",
+      desc: "Skeleton Key item function" },
+{
+      addr: 2147800920, // 0x8004D758
+      type: "code",
+      name: "UsePlunder_chest",
+      desc: "Plunder Chest item function" },
+{
+      addr: 2147800960, // 0x8004D780
+      type: "code",
+      name: "UseBowserBomb",
+      desc: "Bowser Bomb item function" },
+{
+      addr: 2147800992, // 0x8004D7A0
+      type: "code",
+      name: "UseDuelingGlove",
+      desc: "Dueling Glove item function" },
+{
+      addr: 2147801176, // 0x8004D858
+      type: "code",
+      name: "UseWarpBlock",
+      desc: "Warp Block item function" },
+{
+      addr: 2147801264, // 0x8004D8B0
+      type: "code",
+      name: "UseGoldenMushroom",
+      desc: "Golden Mushroom item function" },
+{
+      addr: 2147801412, // 0x8004D944
+      type: "code",
+      name: "UseBooBell",
+      desc: "Boo Bell item function" },
+{
+      addr: 2147801644, // 0x8004DA2C
+      type: "code",
+      name: "UseBowserSuit",
+      desc: "Bowser Suit item function" },
+{
+      addr: 2147801796, // 0x8004DAC4
+      type: "code",
+      name: "UseMagicLamp",
+      desc: "Magic Lamp item function" },
+{
       addr: 2147828328, // 0x80054268
       type: "code",
       name: "AddArrowAngle",
@@ -87,6 +142,11 @@ export default [{
       type: "code",
       name: "GetSpaceData",
       desc: "A0=space_index" },
+{
+      addr: 2147830704, // 0x80054BB0
+      type: "code",
+      name: "GetAbsSpaceIndexFromChainSpaceIndex",
+      desc: "A0=chain_index" },
 {
       addr: 2147833484, // 0x8005568C
       type: "code",
@@ -154,6 +214,11 @@ export default [{
       type: "code",
       name: "InitProcess" },
 {
+      addr: 2147981148, // 0x8007975C
+      type: "code",
+      name: "PlayCharacterSound",
+      desc: "A0=sound_index" },
+{
       addr: 2147998176, // 0x8007D9E0
       type: "code",
       name: "SleepProcess" },
@@ -161,6 +226,16 @@ export default [{
       addr: 2147998276, // 0x8007DA44
       type: "code",
       name: "SleepVProcess" },
+{
+      addr: 2148070724, // 0x8008F544
+      type: "code",
+      name: "InitFadeIn",
+      desc: "A0=fade_type" },
+{
+      addr: 2148070828, // 0x8008F5AC
+      type: "code",
+      name: "InitFadeOut",
+      desc: "A0=fade_type" },
 {
       addr: 2148397008, // 0x800DEFD0
       type: "data",
@@ -1723,6 +1798,11 @@ export default [{
       addr: 2148210096, // 0x800B15B0
       type: "code",
       name: "__umoddi3" },
+{
+      addr: 2148319248, // 0x800CC010
+      type: "data",
+      name: "item_function_pointers",
+      desc: "u32[10]" },
 {
       addr: 2148397008, // 0x800DEFD0
       type: "data",
