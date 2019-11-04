@@ -247,7 +247,7 @@ export const hvqfs = {
   },
 
   setROMOffset(newOffset: number, buffer: ArrayBuffer) {
-    $$log(`HVQFS.setROMOffset(${$$hex(newOffset)}})`);
+    $$log(`HVQFS.setROMOffset(${$$hex(newOffset)})`);
     let patchOffsets = this.getPatchOffsets();
     const [upper, lower] = getRegSetUpperAndLower(newOffset);
     for (let i = 0; i < patchOffsets.length; i++) {

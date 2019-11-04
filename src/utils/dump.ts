@@ -45,16 +45,16 @@ export function create(callback: (blob: Blob) => any) {
 }
 
 export function load(buffer: ArrayBuffer) {
-  let zip = new JSZip();
-  zip.loadAsync(buffer).then((zip: any) => {
-    let mainfs = zip.folder("mainfs");
-    mainfs.forEach((relativePath: string, file: any) => {
-      let dirFileRegex = /(\d+)\/(\d+)/;
-      let match = relativePath.match(dirFileRegex);
+  const zip = new JSZip();
+  zip.loadAsync(buffer).then(zip => {
+    const mainfsfolder = zip.folder("mainfs");
+    mainfsfolder.forEach((relativePath, file) => {
+      const dirFileRegex = /(\d+)\/(\d+)/;
+      const match = relativePath.match(dirFileRegex);
       if (!match)
         return;
-      let d = parseInt(match[1]);
-      let f = parseInt(match[2]);
+      const d = parseInt(match[1]);
+      const f = parseInt(match[2]);
       if (isNaN(d) || isNaN(f))
         return;
       file.async("arraybuffer").then((content: ArrayBuffer) => {
@@ -83,7 +83,7 @@ export function images() {
         if (FORM.isForm(fileBuffer)) {
           let formUnpacked = FORM.unpack(fileBuffer)!;
           if (formUnpacked.BMP1.length) {
-            formUnpacked.BMP1.forEach((bmpEntry: any, idx: number) => {
+            formUnpacked.BMP1.forEach((bmpEntry, idx) => {
               let dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
               dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
             });
@@ -147,7 +147,7 @@ export function formImages() {
       try {
         let formUnpacked = FORM.unpack(fileBuffer)!;
         if (formUnpacked.BMP1.length) {
-          formUnpacked.BMP1.forEach((bmpEntry: any) => {
+          formUnpacked.BMP1.forEach(bmpEntry => {
             let dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
             console.log(`${d}/${f}:`);
             console.log(dataUri);
