@@ -1,4 +1,4 @@
-import { BoardType, Space, SpaceSubtype, EventActivationType, EventExecutionType, GameVersion } from "./types";
+import { BoardType, Space, SpaceSubtype, EventActivationType, EventExecutionType, GameVersion, EventCodeLanguage } from "./types";
 import { getSavedBoards } from "./utils/localstorage";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
@@ -39,7 +39,7 @@ export interface IBoard {
   difficulty: number;
   spaces: ISpace[];
   links: { [startingSpaceIndex: number]: (number | number[]) };
-  events: { [name: string]: string };
+  events: { [name: string]: IBoardEvent | string };
   bg: IBoardBgDetails;
   otherbg: any;
   animbg?: string[];
@@ -48,6 +48,11 @@ export interface IBoard {
   audioIndex: number;
   _rom?: boolean;
   _deadSpace?: number;
+}
+
+interface IBoardEvent {
+  language: EventCodeLanguage;
+  code: string;
 }
 
 interface IBoardImage {
@@ -396,7 +401,7 @@ export function addEventToSpace(board: IBoard, space: ISpace, event: ISpaceEvent
 
     if (event.custom) {
       const customEvent = getEvent(event.id, board) as ICustomEvent;
-      addEventToBoard(board, event.id, customEvent.asm);
+      addEventToBoard(board, customEvent);
     }
   }
 }
@@ -415,17 +420,24 @@ export function removeEventFromSpace(space: ISpace, event: ISpaceEvent) {
   // Otherwise, try to search for essentially the same thing?
 }
 
-export function getBoardEventAsm(board: IBoard, eventId: string): string | null {
+export function getBoardEvent(board: IBoard, eventId: string): IBoardEvent | null {
   if (board.events) {
-    return board.events[eventId];
+    const boardEvent = board.events[eventId];
+    if (typeof boardEvent === "string") {
+      return { language: EventCodeLanguage.MIPS, code: boardEvent };
+    }
+    return boardEvent || null;
   }
   return null;
 }
 
-export function addEventToBoard(board: IBoard, eventName: string, asm: string) {
-  if (!asm)
-    throw new Error(`Attempting to add event ${eventName} but it doesn't have assembly code`);
-  board.events[eventName] = asm;
+export function addEventToBoard(board: IBoard, event: ICustomEvent) {
+  if (!event.asm)
+    throw new Error(`Attempting to add event ${event.name} but it doesn't have code`);
+  board.events[event.name] = {
+    language: event.language!,
+    code: event.asm,
+  };
 }
 
 export function removeEventFromBoard(board: IBoard, eventId: string): void {

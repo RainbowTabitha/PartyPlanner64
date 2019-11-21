@@ -24,7 +24,7 @@ import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { get, $setting } from "../views/settings";
-import { makeGameSymbolLabels, prepSingleEventAsm } from "../events/prepAsm";
+import { makeGameSymbolLabels, prepSingleEventAsm, makeGenericSymbolsForAddresses } from "../events/prepAsm";
 import * as THREE from "three";
 import { IBoardInfo } from "./boardinfobase";
 import { ChainSplit1 } from "../events/builtin/MP1/U/ChainSplit1";
@@ -139,7 +139,7 @@ export abstract class AdapterBase {
   protected abstract onAfterOverwrite?(romView: DataView, boardCopy: IBoard, boardInfo: IBoardInfo): void;
   protected abstract onWriteEvents?(board: IBoard): void;
 
-  overwriteBoard(boardIndex: number, board: IBoard) {
+  async overwriteBoard(boardIndex: number, board: IBoard) {
     let boardCopy = copyObject(board);
     const boardInfo = getBoardInfoByIndex(romhandler.getROMGame()!, boardIndex);
 
@@ -186,7 +186,7 @@ export abstract class AdapterBase {
       boardInfo.onWriteEvents(boardCopy);
     if (this.onWriteEvents)
       this.onWriteEvents(boardCopy);
-    this._writeEvents(boardCopy, boardInfo, boardIndex, chains, eventSyms);
+    await this._writeEvents(boardCopy, boardInfo, boardIndex, chains, eventSyms);
 
     this._clearOtherBoardNames(boardIndex);
     this._stashBoardIntoRom(board, boardInfo); // Don't use the boardCopy here
@@ -200,7 +200,7 @@ export abstract class AdapterBase {
     if (this.onAfterOverwrite)
       this.onAfterOverwrite(romView, boardCopy, boardInfo);
 
-    return this.onOverwritePromises(board, boardInfo, boardIndex);
+    await this.onOverwritePromises(board, boardInfo, boardIndex);
   }
 
   private _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
@@ -722,13 +722,13 @@ export abstract class AdapterBase {
   }
 
   // Write out all of the events ASM.
-  _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
+  async _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
     if (boardInfo.mainfsEventFile) {
       if (this.gameVersion !== 2) { // If events use non-string old write format
-        this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms);
+        await this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms);
       }
       else {
-        this._writeEventsNew(board, boardInfo, boardIndex, chains);
+        await this._writeEventsNew(board, boardInfo, boardIndex, chains);
       }
 
       if (!this.writeFullOverlay) {
@@ -737,7 +737,7 @@ export abstract class AdapterBase {
     }
   }
 
-  _writeEventsNew(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
+  async _writeEventsNew(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
     if (!boardInfo.mainfsEventFile)
       throw new Error(`No MainFS file specified to place board ASM for board ${boardIndex}.`);
 
@@ -805,7 +805,7 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let [writtenOffset, len] = writeEvent(eventBuffer, event, info, temp) as number[];
+        let [writtenOffset, len] = await writeEvent(eventBuffer, event, info, temp) as number[];
         eventTemp[event.id] = temp;
 
         // Apply address to event list.
@@ -850,7 +850,7 @@ export abstract class AdapterBase {
     //saveAs(new Blob([eventBuffer]), "eventBuffer");
   }
 
-  _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
+  async _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
     if (!boardInfo.mainfsEventFile)
       throw new Error(`No MainFS file specified to place board ASM for board ${boardIndex}.`);
 
@@ -882,7 +882,7 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let eventAsm = writeEvent(new ArrayBuffer(0), spaceEvent, info, temp);
+        let eventAsm = await writeEvent(new ArrayBuffer(0), spaceEvent, info, temp);
         eventTemp[spaceEvent.id] = temp;
 
         if (!(typeof eventAsm === "string")) {
@@ -899,6 +899,9 @@ export abstract class AdapterBase {
       eventLists.push(eventList);
     }
 
+    const eventAsmCombinedString = eventAsms.join("\n");
+    const genericAddrSymbols = makeGenericSymbolsForAddresses(eventAsmCombinedString);
+
     const asm = `
       .org ${$$hex(this.EVENT_RAM_LOC)}
       .ascii "PP64"
@@ -909,10 +912,11 @@ export abstract class AdapterBase {
       ${eventSyms}
 
       ${makeGameSymbolLabels(game, false).join("\n")}
+      ${genericAddrSymbols.join("\n")}
 
       ${eventTable.getAssembly()}
       ${eventLists.map(eventList => eventList.getAssembly()).join("\n")}
-      ${eventAsms.join("\n")}
+      ${eventAsmCombinedString}
     `;
 
     $$log(asm);

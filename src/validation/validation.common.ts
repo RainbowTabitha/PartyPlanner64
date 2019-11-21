@@ -1,4 +1,4 @@
-import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEventAsm } from "../boards";
+import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space } from "../types";
 import { romhandler } from "../romhandler";
 import { CustomAsmHelper } from "../events/customevents";
@@ -194,22 +194,22 @@ UnsupportedEvents.fails = function(board: IBoard, args: any) {
 };
 
 const FailingCustomEvents = createRule("CUSTOMEVENTFAIL", "Custom event errors", ValidationLevel.ERROR);
-FailingCustomEvents.fails = function(board: IBoard, args: any) {
+FailingCustomEvents.fails = async function(board: IBoard, args: any) {
   let failingEvents = Object.create(null);
   let gameID = romhandler.getROMGame()!;
-  board.spaces.forEach(space => {
+  for (const space of board.spaces) {
     if (!space || !space.events)
-      return;
-    space.events.forEach(event => {
+      continue;
+    for (const event of space.events) {
       if (!event)
-        return; // Let the other rule handle this.
+        continue; // Let the other rule handle this.
       if (!event.custom)
-        return;
+        continue;
 
       try {
         const customEvent = getEvent(event.id, board);
-        const asm = getBoardEventAsm(board, event.id)!;
-        CustomAsmHelper.testAssemble(asm, customEvent.parameters, {
+        const boardEvent = getBoardEvent(board, event.id)!;
+        await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
           game: gameID,
         });
       }
@@ -218,8 +218,8 @@ FailingCustomEvents.fails = function(board: IBoard, args: any) {
         if (!failingEvents[event.id])
           failingEvents[event.id] = true;
       }
-    });
-  });
+    }
+  }
 
   let ids = [];
   for (var id in failingEvents) {

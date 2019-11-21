@@ -10,10 +10,11 @@ export enum View {
   PATCHES = 5,
   STRINGS = 6,
   EVENTS = 7,
-  CREATEEVENT = 8,
-  DEBUG = 9,
-  AUDIO = 10,
-  ADDITIONAL_BGS = 11,
+  CREATEEVENT_ASM = 8,
+  CREATEEVENT_C = 9,
+  DEBUG = 10,
+  AUDIO = 11,
+  ADDITIONAL_BGS = 12,
 }
 
 export enum Space {
@@ -145,6 +146,12 @@ export function getGameName(id: string): string | null {
       return key;
   }
   return null;
+}
+
+/** Supported languages for custom event code. */
+export enum EventCodeLanguage {
+  MIPS = 0,
+  C = 1,
 }
 
 /** What conditions the event code is executed. */

@@ -1,9 +1,9 @@
-import { View } from "../types";
+import { View, EventCodeLanguage } from "../types";
 import * as React from "react";
 import { getCustomEvents, IEvent } from "../events/events";
 import { ICustomEvent, createCustomEvent } from "../events/customevents";
 import { changeCurrentEvent, changeView, confirmFromUser } from "../appControl";
-import { IBoard, removeEventFromBoard, addEventToBoard } from "../boards";
+import { IBoard, removeEventFromBoard, addEventToBoard, getBoardEvent } from "../boards";
 import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { saveAs } from "file-saver";
 
@@ -71,7 +71,8 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
 
     let boardEvents = [];
     for (let eventName in board.events) {
-      const customEvent = createCustomEvent(board.events[eventName]);
+      const boardEvent = getBoardEvent(board, eventName)!;
+      const customEvent = createCustomEvent(boardEvent.language, boardEvent.code);
       const isDestructive = _copyToLibraryWillOverwrite(customEvent);
       const isUnchanged = _boardAndLibraryEventAreInSync(customEvent, board);
       boardEvents.push(
@@ -115,12 +116,12 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
 
   onEditEvent = (event: IEvent) => {
     changeCurrentEvent(event);
-    changeView(View.CREATEEVENT);
+    changeView(_getViewForEvent(event));
   }
 
   onEditBoardEvent = (event: IEvent) => {
     changeCurrentEvent(event, this.props.board);
-    changeView(View.CREATEEVENT);
+    changeView(_getViewForEvent(event));
   }
 
   onDeleteEvent = async (event: IEvent) => {
@@ -143,7 +144,7 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
       proceed = await confirmFromUser(`Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`);
     }
     if (proceed) {
-      addEventToBoard(this.props.board, event.id, event.asm);
+      addEventToBoard(this.props.board, event);
       this.forceUpdate();
     }
   }
@@ -157,6 +158,16 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
       addEventToLibrary(event);
       this.forceUpdate();
     }
+  }
+}
+
+function _getViewForEvent(event: IEvent): View {
+  switch (event.language) {
+    case EventCodeLanguage.C:
+      return View.CREATEEVENT_C;
+
+    default:
+      return View.CREATEEVENT_ASM;
   }
 }
 
@@ -197,7 +208,7 @@ function _boardAndLibraryEventAreInSync(customEvent: ICustomEvent, board: IBoard
   const libEvent = getEventFromLibrary(customEvent.id) as ICustomEvent;
   if (!libEvent)
     return false;
-  return board.events[customEvent.id] === libEvent.asm;
+  return getBoardEvent(board, customEvent.id)!.code === libEvent.asm;
 }
 
 interface IEventRowProps {
@@ -268,13 +279,28 @@ class EventRow extends React.Component<IEventRowProps> {
 
   onExportEvent = () => {
     const event = this.props.event;
-    let asmBlob = new Blob([event.asm]);
-    saveAs(asmBlob, event.id + ".s");
+    const asmBlob = new Blob([event.asm]);
+    saveAs(asmBlob, getEventFileName(event));
   }
 }
 
 export function refreshEventsView() {
   if (_eventsViewInstance) {
     _eventsViewInstance.forceUpdate();
+  }
+}
+
+function getEventFileName(event: ICustomEvent): string {
+  return event.id + getEventFileExtension(event);
+}
+
+function getEventFileExtension(event: ICustomEvent): string {
+  switch (event.language) {
+    case EventCodeLanguage.C:
+      return ".c";
+
+    case EventCodeLanguage.MIPS:
+    default:
+      return ".s";
   }
 }

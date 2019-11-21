@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BoardType, SpaceSubtype, Space, EventActivationType, EventParameterType, GameVersion } from "./types";
-import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard, ISpaceEvent, IBoard } from "./boards";
+import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard, ISpaceEvent, IBoard, getBoardEvent } from "./boards";
 import { $setting, get } from "./views/settings";
 import { makeKeyClick } from "./utils/react";
 import { IEvent, getAvailableEvents, IEventParameter, createSpaceEvent, getEvent } from "./events/events";
@@ -974,7 +974,8 @@ function _getEventsForAddList() {
   let boardEvents = [];
   const board = getCurrentBoard();
   for (let eventName in board.events) {
-    boardEvents.push(createCustomEvent(board.events[eventName]));
+    const boardEvent = getBoardEvent(board, eventName)!;
+    boardEvents.push(createCustomEvent(boardEvent.language, boardEvent.code));
   }
 
   // Don't show library events that are also in the board events list.

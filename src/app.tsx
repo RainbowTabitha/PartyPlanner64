@@ -11,7 +11,8 @@ import { Settings } from "./views/settings";
 import { About } from "./views/about";
 import { ModelViewer } from "./views/models";
 import { EventsView } from "./views/eventsview";
-import { CreateEventView } from "./views/createevent";
+import { CreateASMEventView } from "./views/createevent_asm";
+import { CreateCEventView } from "./views/createevent_c";
 import { StringsViewer } from "./views/strings";
 import { GamesharkView } from "./views/gameshark";
 import { BoardMenu } from "./boardmenu";
@@ -117,8 +118,11 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
       case View.EVENTS:
         mainView = <EventsView board={this.state.currentBoard} />;
         break;
-      case View.CREATEEVENT:
-        mainView = <CreateEventView />;
+      case View.CREATEEVENT_ASM:
+        mainView = <CreateASMEventView />;
+        break;
+      case View.CREATEEVENT_C:
+        mainView = <CreateCEventView />;
         break;
       case View.STRINGS:
         mainView = <StringsViewer />;
