@@ -1800,6 +1800,11 @@ export default [{
       name: "p1_bowser_suit_flag",
       desc: "1 = suit is on" },
 {
+      addr: 2148340004, // 0x800D1124
+      type: "u8",
+      name: "p1_turn_color_status",
+      desc: "00=blank" },
+{
       addr: 2148340016, // 0x800D1130
       type: "u16",
       name: "p1_minigame_star" },
@@ -1920,6 +1925,11 @@ export default [{
       type: "u8",
       name: "p2_bowser_suit_flag",
       desc: "1 = suit is on" },
+{
+      addr: 2148340060, // 0x800D115C
+      type: "u8",
+      name: "p2_turn_color_status",
+      desc: "00=blank" },
 {
       addr: 2148340072, // 0x800D1168
       type: "u16",
@@ -2042,6 +2052,11 @@ export default [{
       name: "p3_bowser_suit_flag",
       desc: "1 = suit is on" },
 {
+      addr: 2148340116, // 0x800D1194
+      type: "u8",
+      name: "p3_turn_color_status",
+      desc: "00=blank" },
+{
       addr: 2148340128, // 0x800D11A0
       type: "u16",
       name: "p3_minigame_star" },
@@ -2162,6 +2177,11 @@ export default [{
       type: "u8",
       name: "p4_bowser_suit_flag",
       desc: "1 = suit is on" },
+{
+      addr: 2148340172, // 0x800D11CC
+      type: "u8",
+      name: "p4_turn_color_status",
+      desc: "00=blank" },
 {
       addr: 2148340184, // 0x800D11D8
       type: "u16",
