@@ -18,7 +18,7 @@ export async function compile(source: string): Promise<string> {
     noInitialRun: true,
     locateFile: (path: string, scriptDirectory: string) => {
       if (path === "smlrc.wasm") {
-        return "../../smlrc.wasm";
+        return process.env.PUBLIC_URL + "/smlrc.wasm";
       }
       return scriptDirectory + path; // Same as default in smlrc.js's locateFile
     },
