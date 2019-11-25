@@ -49,7 +49,9 @@ export async function compile(source: string): Promise<string> {
 
   let result = _smallerCInstance!.FS.readFile(outputFile, { encoding: "utf8" }) as string;
   result = fuseSections(result);
-  return convertToNamedRegisters(result);
+  result = convertToNamedRegisters(result);
+  result = includeFloatHelpers(result);
+  return result;
 }
 
 function str2ptr(env: EmscriptenModule, s: string): number {
@@ -173,17 +175,158 @@ ${sections.rdata.join("\n")}
 ${sections.bss.join("\n")}`;
 }
 
+// The compiler implements soft float operations.
 
-/*
- # Ident __floatsisf
- # Ident __floatunsisf
- # Ident __fixsfsi
- # Ident __fixunssfsi
- # Ident __addsf3
- # Ident __subsf3
- # Ident __negsf2
- # Ident __mulsf3
- # Ident __divsf3
- # Ident __lesf2
- # Ident __gesf2
- */
+const __floatsisf =
+  `__floatsisf:
+__floatunsisf:
+  mtc1 A0, F12
+  cvt.s.w F12, F12
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+// TODO: Is this implemented differently?
+// const __floatunsisf =
+//   `__floatunsisf:
+  
+//   JR RA
+//   NOP`;
+
+// TODO: __fixunssfsi
+const __fixsfsi =
+  `__fixsfsi:
+__fixunssfsi:
+  mtc1 A0, F12
+  cvt.w.s F12, F12
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+const __addsf3 =
+  `__addsf3:
+  mtc1 A0, F12
+  mtc1 A1, F13
+  add.s F12, F12, F13
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+const __subsf3 =
+  `__subsf3:
+  mtc1 A0, F12
+  mtc1 A1, F13
+  sub.s F12, F12, F13
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+const __negsf2 =
+  `__negsf2:
+  mtc1 A0, F12
+  neg.s F12, F12
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+const __mulsf3 =
+  `__mulsf3:
+  mtc1 A0, F12
+  mtc1 A1, F13
+  mul.s F12, F12, F13
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+const __divsf3 =
+  `__divsf3:
+  mtc1 A0, F12
+  mtc1 A1, F13
+  div.s F12, F12, F13
+  mfc1 V0, F12
+  JR RA
+  NOP`;
+
+// return +1 if either a or b (or both) is a NaN (TODO)
+// return 0 if a == b
+// return -1 if a < b
+// return +1 if a > b
+const __lesf2 =
+  `__lesf2:
+  mtc1 A0, F12
+  mtc1 A1, F13
+
+  c.eq.s F12, F13
+  bc1t __lesf2_ret ; a == b
+  li V0, 0
+
+  c.lt.s F12, F13
+  li V0, -1 ; a < b
+  bc1t __lesf2_ret
+  nop
+
+  li V0, 1 ; a > b
+
+  mfc1 V0, F12
+__lesf2_ret:
+  JR RA
+  NOP`;
+
+// return -1 if either a or b (or both) is a NaN (TODO)
+// return 0 if a == b
+// return -1 if a < b
+// return +1 if a > b
+const __gesf2 =
+  `__gesf2:
+  mtc1 A0, F12
+  mtc1 A1, F13
+
+  c.eq.s F12, F13
+  bc1t __gesf2_ret ; a == b
+  li V0, 0
+
+  c.lt.s F12, F13
+  li V0, -1 ; a < b
+  bc1t __gesf2_ret
+  nop
+
+  li V0, 1 ; a > b
+
+  mfc1 V0, F12
+__gesf2_ret:
+  JR RA
+  NOP`;
+
+
+function includeFloatHelpers(assembly: string): string {
+  let floatOps = "";
+
+  if (assembly.indexOf("__floatsisf") >= 0)
+    floatOps += "\n" + __floatsisf;
+  if (assembly.indexOf("__floatunsisf") >= 0)
+    floatOps += "\n" + __floatsisf;
+  if (assembly.indexOf("__fixsfsi") >= 0)
+    floatOps += "\n" + __fixsfsi;
+  if (assembly.indexOf("__fixunssfsi") >= 0)
+    floatOps += "\n" + __fixsfsi;
+  if (assembly.indexOf("__addsf3") >= 0)
+    floatOps += "\n" + __addsf3;
+  if (assembly.indexOf("__subsf3") >= 0)
+    floatOps += "\n" + __subsf3;
+  if (assembly.indexOf("__negsf2") >= 0)
+    floatOps += "\n" + __negsf2;
+  if (assembly.indexOf("__mulsf3") >= 0)
+    floatOps += "\n" + __mulsf3;
+  if (assembly.indexOf("__divsf3") >= 0)
+    floatOps += "\n" + __divsf3;
+  if (assembly.indexOf("__lesf2") >= 0)
+    floatOps += "\n" + __lesf2;
+  if (assembly.indexOf("__gesf2") >= 0)
+    floatOps += "\n" + __gesf2;
+
+  if (floatOps) {
+    assembly += "\n; .text\n.align 4\n" + floatOps.trim();
+  }
+
+  return assembly;
+}
