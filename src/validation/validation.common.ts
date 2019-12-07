@@ -1,13 +1,10 @@
-import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent } from "../boards";
+import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space } from "../types";
 import { romhandler } from "../romhandler";
 import { CustomAsmHelper } from "../events/customevents";
 import { getEvent, isUnsupported, IEventParameter } from "../events/events";
 import { createRule } from "./validationrules";
-import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
-import { makeFakeBgSyms } from "../events/additionalbg";
-import { assemble } from "mips-assembler";
-import { prepGenericAsm } from "../events/prepAsm";
+import { makeFakeBgSyms, testAdditionalBgCode } from "../events/additionalbg";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
 HasStart.fails = function(board: IBoard, args: any) {
@@ -401,20 +398,19 @@ GateSetup.fails = function(board: IBoard, args: any = {}) {
 };
 
 const AdditionalBackgroundCodeIssue = createRule("ADDITIONALBGCODEISSUE", "Additional background code issue", ValidationLevel.ERROR);
-AdditionalBackgroundCodeIssue.fails = function(board: IBoard, args: any = {}) {
-  if (!board.additionalbgcode) {
+AdditionalBackgroundCodeIssue.fails = async function(board: IBoard, args: any = {}) {
+  const bgCode = getAdditionalBackgroundCode(board);
+  if (!bgCode) {
     return false;
   }
 
-  const asmWithBgSyms = prepAdditionalBgAsm(board.additionalbgcode, 0, makeFakeBgSyms(board));
+  const bgIndices = makeFakeBgSyms(board);
   const game = romhandler.getROMGame()!;
-  const preppedAsm = prepGenericAsm(asmWithBgSyms, 0x80000000, game);
-  try {
-    assemble(preppedAsm);
-  }
-  catch (e) {
-    console.error(e);
-    return `The additional background code failed a test assembly.`;
+  const failures = await testAdditionalBgCode(bgCode.code, bgCode.language, bgIndices, game);
+
+  if (failures.length) {
+    console.error(failures);
+    return "The additional background code failed a test assembly.";
   }
 
   return false;

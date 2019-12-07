@@ -8,10 +8,9 @@ import { GateParameterNames } from "../events/builtin/MP3/U/GateEvent3";
 import { getArrowRotationLimit } from "./boardinfo";
 import { $$hex } from "../utils/debug";
 import { hvqfs } from "../fs/hvqfs";
-import { defaultAdditionalBgAsm } from "../events/additionalbg";
-import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
+import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
 
-export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): string {
+export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
@@ -176,14 +175,12 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIn
 
   const mirageStarEnabled = false; // Hard code to false for now.
 
-  const additionalbgcode = board.additionalbgcode || defaultAdditionalBgAsm;
-
   // This runs before we've written the additional bgs, but we can predict the directories.
   const additionalBgIndices = board.additionalbg && board.additionalbg.map((bg, i) => {
     return hvqfs.getDirectoryCount() + i
   });
 
-  const preppedAdditionalBgCode = prepAdditionalBgAsm(additionalbgcode, boardInfo.bgDir, additionalBgIndices);
+  const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
 
   return `
 .org 0x801059A0

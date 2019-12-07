@@ -3,11 +3,10 @@ import { SpaceSubtype, Game } from "../types";
 import { distance } from "../utils/number";
 import { IBoardInfo } from "./boardinfobase";
 import { getSymbol } from "../symbols/symbols";
-import { defaultAdditionalBgAsm } from "../events/additionalbg";
 import { hvqfs } from "../fs/hvqfs";
-import { prepAdditionalBgAsm } from "../events/prepAdditionalBgAsm";
+import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
 
-export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): string {
+export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
@@ -44,14 +43,12 @@ export function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIn
     toadIndices.push(bestToadIdx);
   }
 
-  const additionalbgcode = board.additionalbgcode || defaultAdditionalBgAsm;
-
   // This runs before we've written the additional bgs, but we can predict the directories.
   const additionalBgIndices = board.additionalbg && board.additionalbg.map((bg, i) => {
     return hvqfs.getDirectoryCount() + i
   });
 
-  const preppedAdditionalBgCode = prepAdditionalBgAsm(additionalbgcode, boardInfo.bgDir, additionalBgIndices);
+  const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
 
 return `
 .org 0x800F65E0

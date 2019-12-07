@@ -44,7 +44,7 @@ export interface IBoard {
   otherbg: any;
   animbg?: string[];
   additionalbg?: string[];
-  additionalbgcode?: string;
+  additionalbgcode?: IBoardEvent | string;
   audioIndex: number;
   _rom?: boolean;
   _deadSpace?: number;
@@ -450,6 +450,28 @@ export function removeEventFromBoard(board: IBoard, eventId: string): void {
       removeEventFromSpace(space, event);
     }
   });
+}
+
+export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
+  if (board.additionalbgcode) {
+    let additionalBgCode = board.additionalbgcode;
+    if (typeof additionalBgCode === "string") {
+      return { language: EventCodeLanguage.MIPS, code: additionalBgCode };
+    }
+    return additionalBgCode || null;
+  }
+  return null;
+}
+
+export function setAdditionalBackgroundCode(board: IBoard, code: string, language: EventCodeLanguage): void {
+  if (code) {
+    board.additionalbgcode = {
+      code, language
+    };
+  }
+  else {
+    delete board.additionalbgcode;
+  }
 }
 
 function applyTheme(board: IBoard, name: "default" = "default") {
