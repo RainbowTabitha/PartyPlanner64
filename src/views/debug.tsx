@@ -273,7 +273,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
         currentOffset += 4 * fileCount; // File offsets
 
         for (let f = 0; f < fileCount; f++) {
-          currentOffset += 8; // Header // TODO: This is not exactly right
+          currentOffset += mainfs.getFileHeaderSize(d, f); // Header
 
           if (d === dir && f === file) {
             result = `ROM: ${$$hex(currentOffset)}`;

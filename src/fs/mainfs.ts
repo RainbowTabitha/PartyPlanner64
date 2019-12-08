@@ -39,7 +39,7 @@ export interface IMainFsReadInfo {
   compressed?: ArrayBuffer;
 }
 
-function _getFileHeaderSize(compressionType: number) {
+export function _getFileHeaderSize(compressionType: number) {
   switch (compressionType) {
     case 0:
     case 1:
@@ -327,5 +327,14 @@ export class mainfs {
       }
     }
     return 0;
+  }
+
+  public static getFileHeaderSize(dir: number, file: number): number {
+    if (_mainfsCache && _mainfsCache[dir][file]) {
+      if (typeof _mainfsCache[dir][file].compressionType === "number") {
+        return _getFileHeaderSize(_mainfsCache[dir][file].compressionType);
+      }
+    }
+    return 8;
   }
 }
