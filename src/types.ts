@@ -162,10 +162,10 @@ export enum EventActivationType {
   //"MYSTERY" = 4,
   /**
    * Used with the special negative space indices:
-   * 0xFFFB: Before each player's dice roll.
-   * 0xFFFC:
-   * 0xFFFD:
-   * 0xFFFE:
+   * 0xFFFB -5: Before each player's dice roll.
+   * 0xFFFC -4:
+   * 0xFFFD -3:
+   * 0xFFFE -2:
    */
   //"PERTURN" = 7,
   "BEGINORWALKOVER" = 8,
