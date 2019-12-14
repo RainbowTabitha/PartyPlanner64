@@ -111,38 +111,34 @@ func_800F663C:
   lui   S5, hi(CORE_800ED5C0)
   addiu S5, S5, lo(CORE_800ED5C0)
   addu  S1, R0, R0
-  lui S4, 0x2492
-  ori S4, S4, 0x4925
   lui   S3, hi(func_800F663C_data1)
   addiu S3, S3, lo(func_800F663C_data1)
   lui   S2, hi(func_800F663C_data0)
   addiu S2, S2, lo(func_800F663C_data0)
+
 L800F6680:
-  jal   GetRandomByte
-  NOP
-  andi  V0, V0, 0xFF
-  multu V0, S4
-  mfhi  A0
-  subu  V1, V0, A0
-  srl   V1, V1, 1
-  addu  A0, A0, V1
-  srl   A0, A0, 2
-  sll   V1, A0, 3
-  subu  V1, V1, A0
-  subu  V0, V0, V1
-  jal   GetRandomByte
-   andi  S0, V0, 0xFF
-  andi  V0, V0, 0xFF
-  multu V0, S4
-  mfhi  A0
-  subu  V1, V0, A0
-  srl   V1, V1, 1
-  addu  A0, A0, V1
-  srl   A0, A0, 2
-  sll   V1, A0, 3
-  subu  V1, V1, A0
-  subu  V0, V0, V1
-  andi  A0, V0, 0xff
+  ; rand1 = GetRandomByte() % STAR_COUNT;
+  jal	GetRandomByte
+  nop
+  li   S4, STAR_COUNT
+  div  V0, S4
+  nop
+  mfhi S0
+  nop
+  andi  S0, S0, 0xff
+  nop
+
+  ; rand2 = GetRandomByte() % STAR_COUNT;
+  jal	GetRandomByte
+  nop
+  li   S4, STAR_COUNT
+  div  V0, S4
+  nop
+  mfhi A0
+  nop
+  andi  A0, A0, 0xff
+  nop
+
   beq   S0, A0, L800F6740
    sll   V1, A0, 1
   addu  A3, V1, S3
