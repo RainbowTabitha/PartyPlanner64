@@ -282,6 +282,7 @@ L800F68C0:
   bne  V0, R0, L800F68C0
    sll   V0, S1, 1
 L800F68EC:
+.if STAR_COUNT
   lh    V0, 0xa(S2)
   sll   V0, V0, 1
   addu  V0, V0, S2
@@ -301,6 +302,7 @@ L800F68EC:
   addu  A0, A0, V0
   jal   SetBoardFeatureDisabled
    lh    A0, lo(data_mystery_40s_list)(A0)
+.endif
   lw    RA, 0x2c(SP)
   lw    S4, 0x28(SP)
   lw    S3, 0x24(SP)
@@ -1364,11 +1366,11 @@ data_mystery_40s_list:
 
 .align 4
 star_space_indices:
-.halfword ${starIndices.join(",")}
+.halfword ${starIndices.join(",") || 0}
 
 .align 4
 toad_space_indices:
-.halfword ${toadIndices.join(",")}
+.halfword ${toadIndices.join(",") || 0}
 
 .align 4
 data_star_related_800F9920:
@@ -1376,7 +1378,7 @@ data_star_related_800F9920:
 
 .align 4
 toad_space_indices_repeat:
-.halfword ${toadIndices.join(",")}
+.halfword ${toadIndices.join(",") || 0}
 
 .align 4
 data_mystery_40s_list_2:
@@ -1401,7 +1403,7 @@ bss_bowser_model: .word 0
 bss_koopa_model: .word 0
 
 bss_toad_model: .word 0
-bss_toad_instances: .word ${toadIndices.map(() => 0).join(",")}
+bss_toad_instances: .word ${toadIndices.map(() => 0).join(",") || 0}
 
 .if BOO_COUNT
 bss_boo_model: .word 0

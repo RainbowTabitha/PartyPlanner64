@@ -74,18 +74,47 @@ _makeTooManyOfSubtypeRule(SpaceSubtype.BANK, "Banks");
 _makeTooManyOfSubtypeRule(SpaceSubtype.ITEMSHOP, "Item Shops");
 _makeTooManyOfSubtypeRule(SpaceSubtype.GATE, "Gates");
 
-const BadStarCount = createRule("BADSTARCOUNT", "Bad star count", ValidationLevel.ERROR);
-BadStarCount.fails = function(board: IBoard, args: any = {}) {
-  let low = args.low || 1;
-  let high = args.high || 1;
-  let count = board.spaces.filter(space => {
+function _getStarSpaceCount(board: IBoard): number {
+  return board.spaces.filter(space => {
     return space && space.star;
   }).length;
+}
+
+interface IBadStarCountProps {
+  low: number;
+  high: number;
+  disallowed?: { [count: number]: boolean };
+}
+
+const BadStarCount = createRule("BADSTARCOUNT", "Bad star count", ValidationLevel.ERROR);
+BadStarCount.fails = function(board: IBoard, args: IBadStarCountProps) {
+  const count = _getStarSpaceCount(board);
+
+  const disallowed = args.disallowed || {};
+  if (disallowed[count]) {
+    if (count === 1)
+      return `There cannot be exactly 1 star space.`;
+    else
+      return `There cannot be exactly ${count} star spaces.`;
+  }
+
+  const low = args.low || 0;
+  const high = args.high || 0;
+
   if (count < low || count > high) {
     if (low !== high)
       return `There are ${count} stars, but the range is ${low}-${high} for this board.`;
     else
       return `There are ${count} stars, but the count must be ${low} for this board.`;
+  }
+  return false;
+};
+
+const WarnNoStarSpaces = createRule("WARNNOSTARSPACES", "No star spaces", ValidationLevel.WARNING);
+WarnNoStarSpaces.fails = function(board: IBoard, args: any = {}) {
+  const count = _getStarSpaceCount(board);
+  if (count === 0) {
+    return `There are no star spaces, this may be unintentional.`;
   }
   return false;
 };
