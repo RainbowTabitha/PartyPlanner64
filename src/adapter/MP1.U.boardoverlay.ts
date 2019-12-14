@@ -5,6 +5,7 @@ import { IBoardInfo } from "./boardinfobase";
 import { getSymbol } from "../symbols/symbols";
 import { hvqfs } from "../fs/hvqfs";
 import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
+import { getShuffleSeedData } from "./overlayutils";
 
 export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
@@ -24,6 +25,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   }
 
   const show_next_star_fn = starIndices.length ? "show_next_star_spot" : "show_next_star_no_op";
+  const shuffleData = getShuffleSeedData(starIndices.length);
 
   let toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
   let toadIndices = [];
@@ -111,10 +113,10 @@ func_800F663C:
   lui   S5, hi(CORE_800ED5C0)
   addiu S5, S5, lo(CORE_800ED5C0)
   addu  S1, R0, R0
-  lui   S3, hi(func_800F663C_data1)
-  addiu S3, S3, lo(func_800F663C_data1)
-  lui   S2, hi(func_800F663C_data0)
-  addiu S2, S2, lo(func_800F663C_data0)
+  lui   S3, hi(shuffle_bias)
+  addiu S3, S3, lo(shuffle_bias)
+  lui   S2, hi(shuffle_order)
+  addiu S2, S2, lo(shuffle_order)
 
 L800F6680:
   ; rand1 = GetRandomByte() % STAR_COUNT;
@@ -169,8 +171,8 @@ L800F6744:
   bne  V0, R0, L800F6680
    NOP
   addu  S1, R0, R0
-  lui   A0, hi(func_800F663C_data0)
-  addiu A0, A0, lo(func_800F663C_data0)
+  lui   A0, hi(shuffle_order)
+  addiu A0, A0, lo(shuffle_order)
   sll   V0, S1, 1
 L800F6760:
   addu  V1, V0, S5
@@ -282,7 +284,6 @@ L800F68C0:
   bne  V0, R0, L800F68C0
    sll   V0, S1, 1
 L800F68EC:
-.if STAR_COUNT
   lh    V0, 0xa(S2)
   sll   V0, V0, 1
   addu  V0, V0, S2
@@ -302,7 +303,6 @@ L800F68EC:
   addu  A0, A0, V0
   jal   SetBoardFeatureDisabled
    lh    A0, lo(data_mystery_40s_list)(A0)
-.endif
   lw    RA, 0x2c(SP)
   lw    S4, 0x28(SP)
   lw    S3, 0x24(SP)
@@ -853,10 +853,12 @@ L800F70C0:
   jal   func_800F67A4
    NOP
 L800F7114:
+.if STAR_COUNT
   jal   draw_star_space_state
    NOP
   jal   draw_toads_outer
    NOP
+.endif
   jal   IsBoardFeatureDisabled
    addiu    A0, R0, 14
   bne  V0, R0, L800F714C
@@ -1355,14 +1357,16 @@ data_screen_dimensions:
 .word 0x43A00000 ; 320
 .word 0x43700000 ; 240
 
-func_800F663C_data0:
-.word 0x00030005, 0x00060000, 0x00010002, 0x00040000
+shuffle_order:
+.halfword ${shuffleData.order.join(",")}
 
-func_800F663C_data1:
-.word 0x00000000, 0x00000001, 0x00010001, 0x00030000
+.align 4
+shuffle_bias:
+.halfword ${shuffleData.bias.join(",")}
 
+.align 4
 data_mystery_40s_list:
-.halfword 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0
+.halfword 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C
 
 .align 4
 star_space_indices:

@@ -9,6 +9,7 @@ import { getArrowRotationLimit } from "./boardinfo";
 import { $$hex } from "../utils/debug";
 import { hvqfs } from "../fs/hvqfs";
 import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
+import { getShuffleSeedData } from "./overlayutils";
 
 export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
@@ -24,6 +25,8 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
       starIndices.push(i);
     }
   }
+
+  const shuffleData = getShuffleSeedData(starIndices.length);
 
   const toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
 
@@ -289,10 +292,10 @@ sw    S0, 0x10(SP)
 lui   S4, hi(CORE_800CD058)
 addiu S4, S4, lo(CORE_800CD058)
 move  S1, R0
-lui   S3, hi(D_8011D290)
-addiu S3, S3, lo(D_8011D290)
-lui   S2, hi(D_8011D280)
-addiu S2, S2, lo(D_8011D280)
+lui   S3, hi(shuffle_bias)
+addiu S3, S3, lo(shuffle_bias)
+lui   S2, hi(shuffle_order)
+addiu S2, S2, lo(shuffle_order)
 L80105EE0:
 jal   GetRandomByte
        NOP
@@ -329,8 +332,8 @@ slti  V0, S1, 0x3c
 bnez  V0, L80105EE0
        NOP
 move  S1, R0
-lui   A0, hi(D_8011D280)
-addiu A0, A0, lo(D_8011D280)
+lui   A0, hi(shuffle_order)
+addiu A0, A0, lo(shuffle_order)
 addu  V1, S4, S1
 L80105F70:
 sll   V0, S1, 1
@@ -19623,11 +19626,11 @@ overlaycalls:
 .word 0x00040000, overlaycall4
 .word 0xFFFF0000, 0x00000000
 
-D_8011D280:
-.halfword 0001 0002 0003 0000 0004 0005 0006 0007
+shuffle_order:
+.halfword ${shuffleData.order.join(",")}
 
-D_8011D290:
-.halfword 0000 0000 0000 0001 0001 0001 0001 0002
+shuffle_bias:
+.halfword ${shuffleData.bias.join(",")}
 
 D_8011D2A0:
 .halfword 0x6 0x7 0x8 0x9 0xA 0xB 0xC 0xD
@@ -19643,22 +19646,16 @@ D_8011D2C0:
 D_8011D2D0:
 tumble_face_tex_grin:
 .halfword 0xA 0x7E
-D_8011D2D4:
 tumble_face_tex_frown:
 .halfword 0xA 0x7F
-D_8011D2D8:
 tumble_face_tex_sad:
 .halfword 0xA 0x80
-D_8011D2DC:
 tumble_face_tex_smile:
 .halfword 0xA 0x81
-D_8011D2E0:
 tumble_face_tex_despair:
 .halfword 0xA 0x82
-D_8011D2E4:
 tumble_face_tex_gasp:
 .halfword 0xA 0x83
-D_8011D2E8:
 tumble_face_tex_beaming:
 .halfword 0xA 0x84
 

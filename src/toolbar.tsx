@@ -139,7 +139,7 @@ const mp3_actions: ToolbarItem[] = [
   { "name": "Connect spaces", "icon": lineImage, "type": Action.LINE },
   { "name": "Connect multiple spaces in one click", "icon": stickylineImage, "type": Action.LINE_STICKY },
   { "name": "Erase spaces and lines", "icon": eraserImage, "type": Action.ERASE },
-  { "name": "Rotate arrow spaces", "icon": rotateImage, "type": Action.ROTATE, advanced: true },
+  { "name": "Rotate arrow spaces", "icon": rotateImage, "type": Action.ROTATE },
   { "spacer": true},
   { "name": "Add blue space", "icon": blue3Image, "type": Action.ADD_BLUE, draggable: true },
   { "name": "Add red space", "icon": red3Image, "type": Action.ADD_RED, draggable: true },
