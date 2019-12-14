@@ -56,8 +56,11 @@ function onEditorTouchStart(event: TouchEvent) {
 function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: number, ctrlKey: boolean) {
   canvasRect = canvas.getBoundingClientRect();
 
-  const clickX = clientX - canvasRect.left;
-  const clickY = clientY - canvasRect.top;
+  clientX = Math.round(clientX);
+  clientY = Math.round(clientY);
+
+  const clickX = clientX - Math.round(canvasRect.left);
+  const clickY = clientY - Math.round(canvasRect.top);
 
   startX = lastX = clickX;
   startY = lastY = clickY;
@@ -291,6 +294,9 @@ function _onEditorMove(clickX: number, clickY: number) {
   if (currentBoardIsROM())
     return;
 
+  clickX = Math.round(clickX);
+  clickY = Math.round(clickY);
+
   const curAction = getCurrentAction();
   const selectedSpaces = _getSelectedSpaces();
   const curBoard = getCurrentBoard();
@@ -397,10 +403,10 @@ function _onEditorMove(clickX: number, clickY: number) {
         const deltaY = clickY - lastY;
 
         selectedSpaces.forEach(space => {
-          const newX = space.x + deltaX;
+          const newX = Math.round(space.x) + deltaX;
           space.x = Math.max(0, Math.min(newX, curBoard.bg.width));
 
-          const newY = space.y + deltaY;
+          const newY = Math.round(space.y) + deltaY;
           space.y = Math.max(0, Math.min(newY, curBoard.bg.height));
         });
 
@@ -479,8 +485,10 @@ function onEditorClick(event: MouseEvent) {
   startY = lastY = -1;
 
   const ctrlKey = event.ctrlKey;
-  const clickX = event.clientX - canvasRect!.left;
-  const clickY = event.clientY - canvasRect!.top;
+  const clientX = Math.round(event.clientX);
+  const clientY = Math.round(event.clientY);
+  const clickX = clientX - Math.round(canvasRect!.left);
+  const clickY = clientY - Math.round(canvasRect!.top);
   let clickedSpaceIdx = _getClickedSpace(clickX, clickY);
 
   const curBoard = getCurrentBoard();
@@ -596,15 +604,18 @@ function onEditorDrop(event: DragEvent) {
     return;
   }
 
+  const canvas = event.currentTarget as HTMLCanvasElement;
+  canvasRect = canvas.getBoundingClientRect();
+  const clientX = Math.round(event.clientX);
+  const clientY = Math.round(event.clientY);
+  const clickX = clientX - Math.round(canvasRect.left);
+  const clickY = clientY - Math.round(canvasRect.top);
+  const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
+
   if (typeof data === "object") {
     if (data.action) {
       _clearSelectedSpaces();
 
-      const canvas = event.currentTarget as HTMLCanvasElement;
-      canvasRect = canvas.getBoundingClientRect();
-      const clickX = event.clientX - canvasRect.left;
-      const clickY = event.clientY - canvasRect.top;
-      const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
       const curBoard = getCurrentBoard();
       const curSpace = droppedOnSpaceIdx === -1 ? null : curBoard.spaces[droppedOnSpaceIdx];
       _addSpace(data.action.type, clickX, clickY, curSpace, false, false);
@@ -612,11 +623,6 @@ function onEditorDrop(event: DragEvent) {
     else if (data.isEventParamDrop) {
       const handler = getEventParamDropHandler();
       if (handler) {
-        const canvas = event.currentTarget as HTMLCanvasElement;
-        canvasRect = canvas.getBoundingClientRect();
-        const clickX = event.clientX - canvasRect.left;
-        const clickY = event.clientY - canvasRect.top;
-        const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
         handler(droppedOnSpaceIdx);
       }
     }
