@@ -26,6 +26,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
     }
   }
 
+  const show_next_star_fn = starIndices.length ? "show_next_star_spot" : "show_next_star_no_op";
   const shuffleData = getShuffleSeedData(starIndices.length);
 
   const toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
@@ -296,12 +297,30 @@ lui   S3, hi(shuffle_bias)
 addiu S3, S3, lo(shuffle_bias)
 lui   S2, hi(shuffle_order)
 addiu S2, S2, lo(shuffle_order)
+
 L80105EE0:
-jal   GetRandomByte
-       NOP
-jal   GetRandomByte
- andi  S0, V0, 7
-andi  A0, V0, 7
+; rand1 = GetRandomByte() % STAR_COUNT;
+jal	GetRandomByte
+nop
+li   A0, STAR_COUNT
+div  V0, A0
+nop
+mfhi S0
+nop
+andi  S0, S0, 0xff
+nop
+
+; rand2 = GetRandomByte() % STAR_COUNT;
+jal	GetRandomByte
+nop
+li   A0, STAR_COUNT
+div  V0, A0
+nop
+mfhi A0
+nop
+andi  A0, A0, 0xff
+nop
+
 beq   S0, A0, L80105F50
  sll   V1, A0, 1
 addu  A3, V1, S3
@@ -341,7 +360,7 @@ addu  V0, V0, A0
 lbu   V0, 1(V0)
 sb    V0, 6(V1)
 addiu S1, S1, 1
-slti  V0, S1, 8
+slti  V0, S1, STAR_COUNT
 bnez  V0, L80105F70
  addu  V1, S4, S1
 lw    RA, 0x24(SP)
@@ -364,7 +383,7 @@ lui   AT, hi(CORE_800CD05D)
 sb    V0, lo(CORE_800CD05D)(AT)
 sll   V0, V0, 0x18
 sra   V0, V0, 0x18
-slti  V0, V0, 8
+slti  V0, V0, STAR_COUNT
 bnez  V0, L8010602C
        NOP
 lui   S0, hi(CORE_800CD065)
@@ -773,7 +792,7 @@ ldc1  F20, 0x18(SP)
 jr    RA
  addiu SP, SP, 0x20
 
-func_801065D0:
+show_next_star_spot:
 addiu SP, SP, -0x30
 sw    RA, 0x28(SP)
 sw    S3, 0x24(SP)
@@ -1018,6 +1037,31 @@ lw    S1, 0x1c(SP)
 lw    S0, 0x18(SP)
 jr    RA
  addiu SP, SP, 0x30
+
+; This custom alternative is the minimum necessary to skip the star showing.
+show_next_star_no_op:
+addiu SP, SP, -0x18
+sw    RA, 0x10(SP)
+
+; Causes fade back in (star shaped fade in)
+li    A0, 2
+jal   InitFadeIn
+ li    A1, 16
+
+; One or more of these may be unnecessary...
+jal   0x800F8C74
+ nop
+jal   0x8004819C
+ li    A0, 1
+jal   0x8004849C
+ nop
+
+jal SleepVProcess
+nop
+
+lw    RA, 0x10(SP)
+jr    RA
+addiu SP, SP, 0x18
 
 ; separate process that does "star get" celebration.
 func_8010698C:
@@ -2422,7 +2466,7 @@ lh    A1, 0(V0)
 jal   0x800EA6E0
  move  A0, S0
 addiu S0, S0, 1
-slti  V0, S0, 8
+slti  V0, S0, STAR_COUNT
 bnez  V0, L80107F5C
  sll   V0, S0, 1
 jal   0x80035F98
@@ -2435,10 +2479,12 @@ jal   func_80105FB0
        NOP
 ; drawing things
 L80107F9C:
+.if STAR_COUNT
 jal   draw_star_space_state
        NOP
 jal   draw_millenium_stars
        NOP
+.endif
 jal   draw_boo
        NOP
 jal   draw_bank_coins
@@ -2652,7 +2698,7 @@ jal   EndProcess
        NOP
 sw    R0, 0(S1)
 L8010822C:
-slti  V0, S0, 8
+slti  V0, S0, STAR_COUNT
 bnez  V0, L80108210
  sll   V0, S0, 2
 lw    RA, 0x1c(SP)
@@ -12041,7 +12087,7 @@ jal   EndProcess
        NOP
 sw    R0, 0(S1)
 L80111E88:
-slti  V0, S0, 8
+slti  V0, S0, STAR_COUNT
 bnez  V0, L80111E6C
  sll   V0, S0, 2
 lb    V0, 5(S7)
@@ -18721,8 +18767,8 @@ jal   setup_routine
        NOP
 jal   0x800FF41C
  li    A0, 2
-lui   A0, hi(func_801065D0)
-addiu A0, A0, lo(func_801065D0)
+lui   A0, hi(${show_next_star_fn})
+addiu A0, A0, lo(${show_next_star_fn})
 li    A1, 4101
 li    A2, 4096
 jal   InitProcess
@@ -19626,22 +19672,28 @@ overlaycalls:
 .word 0x00040000, overlaycall4
 .word 0xFFFF0000, 0x00000000
 
+.align 4
 shuffle_order:
 .halfword ${shuffleData.order.join(",")}
 
+.align 4
 shuffle_bias:
 .halfword ${shuffleData.bias.join(",")}
 
+.align 4
 D_8011D2A0:
 .halfword 0x6 0x7 0x8 0x9 0xA 0xB 0xC 0xD
 
+.align 4
 star_space_indices:
-.halfword ${starIndices.join(",")}
+.halfword ${starIndices.join(",") || 0}
 
+.align 4
 ; toad spaces
 D_8011D2C0:
-.halfword ${toadIndices.join(",")}
+.halfword ${toadIndices.join(",") || 0}
 
+.align 4
 ; dir/file of various tumble face textures
 D_8011D2D0:
 tumble_face_tex_grin:
@@ -19688,11 +19740,12 @@ D_8011D318:
 D_8011D31C:
 .word 0xFFFF0000
 
+.align 4
 ; star spaces 2
 D_8011D320:
 .halfword ${starIndices.join(",")} 0xFFFF
-.align 4
 
+.align 4
 ; interleaving array?
 D_8011D334: .halfword 0x7
 D_8011D336: .halfword 0xFFFF
@@ -19731,22 +19784,24 @@ gate_exit_spaces:
 .halfword ${gateEventInfos[1].gateEntryIndex}
 .halfword ${gateEventInfos[1].gateExitIndex}
 
+.align 4
 ; toad spaces 2
 D_8011D37C:
-.halfword ${toadIndices.join(",")}
-.align 4
+.halfword ${toadIndices.join(",") || 0}
 
+.align 4
 D_8011D38C:
 .halfword 0x06 0x07 0x08 0x09 0x0A 0x0B 0x0C 0x0D
 
+.align 4
 boo_space_indices:
 .halfword ${booIndex}
-.align 4
 
+.align 4
 bank_coin_space_indices:
 .halfword ${bankCoinSpaces.join(",")}
-.align 4
 
+.align 4
 ; bank coin coordinates?
 D_8011D3A4: .word 0xC0400000
 D_8011D3A8: .word 0x00000000
@@ -19781,9 +19836,11 @@ D_8011D410: .word 0x42340000
 D_8011D414: .word 0x00000000
 D_8011D418: .word 0x42340000
 
+.align 4
 gate_spaces:
 .halfword ${gateEventInfos.map(info => info.gateSpaceIndex).join(",")}
 
+.align 16
 ; indices into a list of main fs models
 ; for the gate graphics. Don't change.
 D_8011D420: .byte 0x00
@@ -19857,14 +19914,15 @@ D_8011D4F8: .word 0xFFFFFFFF
 D_8011D4FC: .word 0xFFFFFFFF
 D_8011D500: .word 0xFFFFFFFF
 
+.align 4
 bank_model_space_indices:
 .halfword ${bankSpaces.join(",")}
-.align 4
 
+.align 4
 item_shop_model_space_indices:
 .halfword ${itemShopSpaces.join(",")}
-.align 4
 
+.align 4
 ; Koopa Kard usage AI
 D_8011E058:
 .word 0x04000000 0x00F50014 0x0B541E1E
@@ -20784,6 +20842,7 @@ D_8011FA78:
 .word 0
 .word 0
 
+; holds millenium star object pointers?
 D_8011FA98:
 .word 0
 .word 0
@@ -20794,6 +20853,7 @@ D_8011FA98:
 .word 0
 .word 0
 
+.align 8
 D_8011FAB8: .word 0
 
 D_8011FABC: .word 0

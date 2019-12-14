@@ -705,6 +705,33 @@ L800F6E74:
   jr    RA
    addiu SP, SP, 0x20
 
+; This custom alternative is the minimum necessary to skip Toad's star showing.
+show_next_star_no_op:
+  addiu SP, SP, -0x18
+  sw    RA, 0x10(SP)
+
+  ; Causes fade back in (star shaped fade in)
+  addiu    A0, R0, 2
+  jal   0x80072644
+  addiu    A1, R0, 16
+
+  ; One or more of these may be unnecessary...
+  jal   0x800601D4
+  addiu    A0, R0, 90
+  jal   0x80056AF4
+  NOP
+  jal   0x8005DFB8
+  addiu    A0, R0, 1
+  jal   0x8005E3A8
+  NOP
+
+  jal SleepVProcess
+  nop
+
+  lw    RA, 0x10(SP)
+  jr    RA
+  addiu SP, SP, 0x18
+
 overlaycall0:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
@@ -1266,33 +1293,6 @@ overlaycall4:
   lw    RA, 0x10(SP)
   jr    RA
    addiu SP, SP, 0x18
-
-; This custom alternative is the minimum necessary to skip Toad's star showing.
-show_next_star_no_op:
-  addiu SP, SP, -0x18
-  sw    RA, 0x10(SP)
-
-  ; Causes fade back in (star shaped fade in)
-  addiu    A0, R0, 2
-  jal   0x80072644
-  addiu    A1, R0, 16
-
-  ; One or more of these may be unnecessary...
-  jal   0x800601D4
-  addiu    A0, R0, 90
-  jal   0x80056AF4
-  NOP
-  jal   0x8005DFB8
-  addiu    A0, R0, 1
-  jal   0x8005E3A8
-  NOP
-
-  jal SleepVProcess
-  nop
-
-  lw    RA, 0x10(SP)
-  jr    RA
-  addiu SP, SP, 0x18
 
 hydrate_events:
   ADDIU SP SP 0xFFE8

@@ -28,8 +28,8 @@ export function getValidationRules(gameID: Game) {
   rules.push(getRule("TOOMANYBOOS", { limit: 1 }));
   rules.push(getRule("TOOMANYGATES", { limit: 2 }));
 
-  // TODO: gamemasterplc: if you want to fix being able to pick up stars with few of them @PartyPlanner64 overwrite rom offset 0x320058 with all zeroes
-  rules.push(getRule("BADSTARCOUNT", { low: 8, high: 8 }));
+  rules.push(getRule("BADSTARCOUNT", { low: 0, high: 8, disallowed: { 1: true } }));
+  rules.push(getRule("WARNNOSTARSPACES"));
 
   // No longer needed? See MP3 onAfterOverwrite.
   //rules.push(getRule("TOOFEWBLUESPACES", { low: 14 }));
