@@ -17,9 +17,24 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
   const booIndex = (!booIndices.length ? board._deadSpace! : booIndices[0]);
   let booEventSpaces = getSpacesWithEvent(BooEvent.id, board);
-  if (!booEventSpaces.length) booEventSpaces = [board._deadSpace!];
+  let primaryBooEventSpace: number = -1;
+  if (!booEventSpaces.length) {
+    booEventSpaces = [board._deadSpace!];
+  }
+  else {
+    let bestDistance = Number.MAX_VALUE;
+    const booSpace = board.spaces[booIndex];
+    for (const booEventSpaceIndex of booEventSpaces) {
+      const booEventSpace = board.spaces[booEventSpaceIndex];
+      const dist = distance(booEventSpace.x, booEventSpace.y, booSpace.x, booSpace.y);
+      if (dist < bestDistance) {
+        bestDistance = dist;
+        primaryBooEventSpace = booEventSpaceIndex;
+      }
+    }
+  }
 
-  let starIndices = [];
+  const starIndices = [];
   for (let i = 0; i < board.spaces.length; i++) {
     if (board.spaces[i].star) {
       starIndices.push(i);
@@ -7837,7 +7852,7 @@ jal   GetAbsSpaceIndexFromChainSpaceIndex
 move  S2, V0
 sll   V0, S2, 0x10
 sra   S0, V0, 0x10
-li    V0, ${booEventSpaces[0]}
+li    V0, ${primaryBooEventSpace}
 beq   S0, V0, L8010DFB4
  li    T0, -1
 sw    T0, 0x94(SP)

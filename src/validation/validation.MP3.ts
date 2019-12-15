@@ -1,7 +1,7 @@
 import { getRule } from "./validationrules";
 import { getArrowRotationLimit } from "../adapter/boardinfo";
 import "./validation.common";
-import { BankEvent, ItemShopEvent, BooEvent } from "../events/builtin/events.common";
+import { BankEvent, ItemShopEvent } from "../events/builtin/events.common";
 import { Game } from "../types";
 
 const commonRules = [
@@ -22,7 +22,6 @@ export function getValidationRules(gameID: Game) {
   rules.push(getRule("TOOMANYBANKS", { limit: 2 }));
   rules.push(getRule("TOOMANYOFEVENT", { event: ItemShopEvent, high: 2 }));
   rules.push(getRule("TOOMANYITEMSHOPS", { limit: 2 }));
-  rules.push(getRule("TOOMANYOFEVENT", { event: BooEvent, high: 1 }));
 
   // TODO: gamemasterplc: @PartyPlanner64 replace 0x323AAC in ROM with a NOP if you want more boos
   rules.push(getRule("TOOMANYBOOS", { limit: 1 }));
