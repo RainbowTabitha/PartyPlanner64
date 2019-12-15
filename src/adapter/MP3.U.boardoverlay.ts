@@ -24,12 +24,14 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   else {
     let bestDistance = Number.MAX_VALUE;
     const booSpace = board.spaces[booIndex];
-    for (const booEventSpaceIndex of booEventSpaces) {
-      const booEventSpace = board.spaces[booEventSpaceIndex];
-      const dist = distance(booEventSpace.x, booEventSpace.y, booSpace.x, booSpace.y);
-      if (dist < bestDistance) {
-        bestDistance = dist;
-        primaryBooEventSpace = booEventSpaceIndex;
+    if (booSpace) {
+      for (const booEventSpaceIndex of booEventSpaces) {
+        const booEventSpace = board.spaces[booEventSpaceIndex];
+        const dist = distance(booEventSpace.x, booEventSpace.y, booSpace.x, booSpace.y);
+        if (dist < bestDistance) {
+          bestDistance = dist;
+          primaryBooEventSpace = booEventSpaceIndex;
+        }
       }
     }
   }
