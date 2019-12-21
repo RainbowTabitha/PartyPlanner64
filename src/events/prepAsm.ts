@@ -3,12 +3,12 @@ import { getSymbols } from "../symbols/symbols";
 import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
 import { Game, EventParameterType } from "../types";
 import { $$hex } from "../utils/debug";
-import { ISpaceEvent } from "../boards";
+import { IEventInstance } from "../boards";
 
 /**
  * Takes event asm, and makes it assemble (in isolation)
  */
-export function prepAsm(asm: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo) {
+export function prepAsm(asm: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo) {
   const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
   const asmWithParamSyms = [
     ...parameterSymbols,
@@ -35,12 +35,13 @@ export function prepGenericAsm(asm: string, addr: number, game: Game) {
 }
 
 export function prepSingleEventAsm(
-  asm: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo, keepStatic: boolean, eventNum: number): string
+  asm: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo, keepStatic: boolean, eventNum: number): string
 {
   // We either define a label at the top, or an alias to the main: label if present.
   const hasMainEntry = asm.split("\n").find(value => value.startsWith("main:"));
-  const topLabel = !hasMainEntry && `__PP64_INTERNAL_EVENT_${info.curSpaceIndex}_${eventNum}:`;
-  const bottomLabel = hasMainEntry && `.definelabel __PP64_INTERNAL_EVENT_${info.curSpaceIndex}_${eventNum},main`;
+  const eventLabel = createEventInstanceLabel(info.curSpaceIndex, eventNum);
+  const topLabel = !hasMainEntry && `${eventLabel}:`;
+  const bottomLabel = hasMainEntry && `.definelabel ${eventLabel},main`;
 
   return scopeLabelsStaticByDefault(`
     .beginfile ; Scopes static labels
@@ -125,7 +126,7 @@ export function makeGenericSymbolsForAddresses(asm: string): string[] {
   return results;
 }
 
-export function makeParameterSymbolLabels(event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo): string[] {
+export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo): string[] {
   let parameterSymbols: string[] = [];
   const parameters = event.parameters;
   const parameterValues = spaceEvent.parameterValues;
@@ -303,4 +304,9 @@ function replaceStaticRegionDirectives(lines: string[]): string {
   }
 
   return adjustedLines.join("\n");
+}
+
+export function createEventInstanceLabel(spaceIndex: number, eventNumber: number): string {
+  const strIndex = spaceIndex < 0 ? ("minus" + Math.abs(spaceIndex)) : spaceIndex;
+  return `__PP64_INTERNAL_EVENT_${strIndex}_${eventNumber}`;
 }

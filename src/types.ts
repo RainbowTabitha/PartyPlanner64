@@ -156,25 +156,62 @@ export enum EventCodeLanguage {
 
 /** What conditions the event code is executed. */
 export enum EventActivationType {
-  "WALKOVER" = 1,
-  //"MYSTERY" = 2,
-  "LANDON" = 3,
-  //"MYSTERY" = 4,
-  /**
-   * Used with the special negative space indices:
-   * 0xFFFB -5: Before each player's dice roll.
-   * 0xFFFC -4:
-   * 0xFFFD -3:
-   * 0xFFFE -2:
-   */
-  //"PERTURN" = 7,
-  "BEGINORWALKOVER" = 8,
+  WALKOVER = 1,
+  //"MYSTERY" = 2, // Executed after WALKOVER
+  LANDON = 3,
+  //"MYSTERY" = 4, // Executed after LANDON
+
+  /** Indicates one of the negative space indices is used for this event. */
+  SPECIAL = 7,
+
+  // Not in some games?
+  BEGINORWALKOVER = 8,
   //"MYSTERY" = 9,
 }
 
+/** What conditions the event code is executed. */
+export enum EditorEventActivationType {
+  WALKOVER = 1,
+  LANDON = 3,
+
+  // These aren't real activation types in the game, they're really special space types.
+  // But assigning events to one of these is effectively picking an activation type.
+
+  /** Before each player's dice roll. */
+  BEFORE_DICE_ROLL = -5,
+  /** Just before a player's turn. (Right as "PLAYER START" appears on screen.) */
+  BEFORE_PLAYER_TURN = -4,
+  FFFD = -3,
+  /** Before each turn. (Right as "PLAYER START" appears for the first player.) */
+  BEFORE_TURN = -2,
+
+  BEGINORWALKOVER = 8,
+}
+
+export function getEventActivationTypeFromEditorType(editorType: EditorEventActivationType): EventActivationType {
+  switch (editorType) {
+    case EditorEventActivationType.LANDON:
+      return EventActivationType.LANDON;
+    case EditorEventActivationType.WALKOVER:
+      return EventActivationType.WALKOVER;
+
+    case EditorEventActivationType.BEFORE_TURN:
+    case EditorEventActivationType.FFFD:
+    case EditorEventActivationType.BEFORE_PLAYER_TURN:
+    case EditorEventActivationType.BEFORE_DICE_ROLL:
+      return EventActivationType.SPECIAL;
+
+    case EditorEventActivationType.BEGINORWALKOVER:
+      return EventActivationType.BEGINORWALKOVER;
+
+    default:
+      throw new Error(`Unrecognized editor activation type ${editorType}`);
+  }
+}
+
 export enum EventExecutionType {
-  "DIRECT" = 1,
-  "PROCESS" = 2,
+  DIRECT = 1,
+  PROCESS = 2,
 }
 
 export function getExecutionTypeName(executionType: EventExecutionType) {

@@ -3,17 +3,17 @@ import { getBoardInfos, getBoardInfoByIndex } from "./boardinfo";
 import { hvqfs } from "../fs/hvqfs";
 import { mainfs } from "../fs/mainfs";
 import { audio } from "../fs/audio";
-import { IBoard, addSpace, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, ISpace } from "../boards";
+import { IBoard, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, ISpace, IEventInstance, getDeadSpace, getDeadSpaceIndex } from "../boards";
 import { copyObject } from "../utils/obj";
 import { determineChains, padChains, create as createBoardDef, parse as parseBoardDef } from "./boarddef";
-import { Space, BoardType, EventActivationType, SpaceSubtype } from "../types";
+import { BoardType, EventActivationType, SpaceSubtype, getEventActivationTypeFromEditorType, EditorEventActivationType } from "../types";
 import { $$log, $$hex } from "../utils/debug";
 import { getSymbol } from "../symbols/symbols";
 import { scenes, ISceneInfo } from "../fs/scenes";
 import { findCalls, getRegSetAddress } from "../utils/MIPS";
 import { SpaceEventTable } from "./eventtable";
 import { SpaceEventList } from "./eventlist";
-import { createSpaceEvent, write as writeEvent, parse as parseEvent, getEvent } from "../events/events";
+import { createEventInstance, write as writeEvent, parse as parseEvent, getEvent } from "../events/events";
 import { toU32, stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
 import { makeDivisibleBy, distance } from "../utils/number";
 import { parse as parseInst } from "mips-inst";
@@ -147,8 +147,7 @@ export abstract class AdapterBase {
     padChains(boardCopy, chains);
 
     // If the user didn't place enough 3d characters, banish them to this dead space off screen.
-    let deadSpace = addSpace(boardCopy.bg.width + 150, boardCopy.bg.height + 100, Space.OTHER, undefined, boardCopy);
-    boardCopy._deadSpace = deadSpace;
+    getDeadSpace(boardCopy); // Trigger creation before boarddef is created.
 
     this.onChangeGameSpaceTypesFromBoardSpaceTypes(boardCopy);
     this._reversePerspective(boardCopy);
@@ -572,7 +571,7 @@ export abstract class AdapterBase {
           if (links.length > 2) {
             throw new Error(`Encountered branch with ${links.length} directions, only 2 are supported currently`);
           }
-          event = createSpaceEvent(ChainSplit1, {
+          event = createEventInstance(ChainSplit1, {
             parameterValues: {
               left_space: links[0],
               right_space: links[1],
@@ -583,7 +582,7 @@ export abstract class AdapterBase {
         else {
           if (this.gameVersion !== 2)
             throw new Error("Unexpected code path for MP3");
-          event = createSpaceEvent(ChainSplit2, {
+          event = createEventInstance(ChainSplit2, {
             inlineArgs: links.concat(0xFFFF),
             parameterValues: {
               chains: endpoints,
@@ -592,7 +591,7 @@ export abstract class AdapterBase {
         }
       }
       else {
-        event = createSpaceEvent(ChainMerge, {
+        event = createEventInstance(ChainMerge, {
           parameterValues: {
             chain: _getChainWithSpace(links[0])!,
           },
@@ -619,7 +618,7 @@ export abstract class AdapterBase {
       let events = space.events || [];
       let hasStarEvent = events.some(e => { return e.id === "STAR" }); // Pretty unlikely
       if (!hasStarEvent)
-        addEventToSpace(board, space, createSpaceEvent(StarEvent));
+        addEventToSpace(board, space, createEventInstance(StarEvent));
     }
   }
 
@@ -659,7 +658,7 @@ export abstract class AdapterBase {
       let nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
 
       // Redundant to write event twice, except we need it attached to both spaces.
-      const gateEvent = createSpaceEvent(Gate, {
+      const gateEvent = createEventInstance(Gate, {
         parameterValues: {
           gatePrevChain: [prevChainIndex, prevChainSpaceIndex],
           gateEntryIndex: entrySpaceIndex,
@@ -672,7 +671,7 @@ export abstract class AdapterBase {
       addEventToSpace(board, exitSpace, gateEvent);
 
       // Need an additional event to close the gate.
-      addEventToSpace(board, space, createSpaceEvent(GateClose, {
+      addEventToSpace(board, space, createEventInstance(GateClose, {
         parameterValues: {
           gateIndex,
         },
@@ -761,11 +760,38 @@ export abstract class AdapterBase {
       eventTable.add(i, 0); // Just to keep track of what the table size is, address will be added later.
 
       let eventList = new SpaceEventList();
-      for (let e = 0; e < space.events.length; e++) {
-        let event = space.events[e];
-        eventList.add(event.activationType, event.executionType || (event as any).mystery, 0); // Also to track size
+      for (const event of space.events) {
+        const activationType = getEventActivationTypeFromEditorType(event.activationType);
+        eventList.add(activationType, event.executionType || (event as any).mystery, 0); // Also to track size
       }
       eventLists.push(eventList);
+    }
+
+    // Write any board events
+    const hasBoardEvents = board.boardevents && board.boardevents.length > 0;
+    const type5 = new SpaceEventList(-5);
+    const type4 = new SpaceEventList(-4);
+    const type3 = new SpaceEventList(-3);
+    const type2 = new SpaceEventList(-2);
+    const boardEventTypeInfos = [
+      { index: -5, list: type5, type: EditorEventActivationType.BEFORE_DICE_ROLL },
+      { index: -4, list: type4, type: EditorEventActivationType.BEFORE_PLAYER_TURN },
+      { index: -3, list: type3, type: EditorEventActivationType.FFFD },
+      { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
+    ];
+    if (hasBoardEvents) {
+      for (const { index, list, type } of boardEventTypeInfos) {
+        const events = _getEventsWithActivationType(board.boardevents!, type);
+        const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
+        for (const event of events) {
+          list.add(activationType, event.executionType, 0);
+        }
+
+        if (list.count() > 0) {
+          eventTable.add(index, 0);
+          eventLists.push(list);
+        }
+      }
     }
 
     // Figure out size of table and lists
@@ -833,6 +859,52 @@ export abstract class AdapterBase {
       eventListIndex++;
     }
 
+    // Now write any board events
+    if (hasBoardEvents) {
+      for (const { index, list, type } of boardEventTypeInfos) {
+        if (list.count() > 0) {
+          const events = _getEventsWithActivationType(board.boardevents!, type);
+          for (let e = 0; e < events.length; e++) {
+            const event = events[e];
+            let temp = eventTemp[event.id] || {};
+            let info = {
+              boardIndex,
+              board,
+              curSpaceIndex: index,
+              curSpace: null,
+              chains,
+              offset: currentOffset,
+              addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
+              game: romhandler.getROMGame()!,
+              gameVersion: this.gameVersion,
+            };
+
+            let [writtenOffset, len] = await writeEvent(eventBuffer, event, info, temp) as number[];
+            eventTemp[event.id] = temp;
+
+            // Apply address to event list.
+            // If the writtenOffset is way out of bounds (like > EVENT_MEM_SIZE)
+            // it probably means it is directly referencing old code (some 2/3
+            // events are like this for now) so we need to calc differently.
+            let eventListAsmAddr;
+            if (writtenOffset > this.EVENT_MEM_SIZE)
+              eventListAsmAddr = this._offsetToAddr(writtenOffset, boardInfo) | 0x80000000;
+            else
+              eventListAsmAddr = this._offsetToAddrBase(writtenOffset, this.EVENT_RAM_LOC);
+              list.setAddress(e, eventListAsmAddr);
+
+            currentOffset += len;
+          }
+
+          // Fill in the address of the event listing itself back into the event table.
+          let eventListAddr = this._offsetToAddrBase(eventListCurrentOffset, this.EVENT_RAM_LOC);
+          eventTable.add(index, eventListAddr);
+
+          eventListCurrentOffset += list.write(eventBuffer, eventListCurrentOffset);
+        }
+      }
+    }
+
     // Now we can write the event table, because all the addresses are set.
     eventTable.write(eventBuffer, this.EVENT_HEADER_SIZE);
 
@@ -868,10 +940,11 @@ export abstract class AdapterBase {
 
       let eventList = new SpaceEventList(i);
       for (let e = 0; e < space.events.length; e++) {
-        let spaceEvent = space.events[e];
-        eventList.add(spaceEvent.activationType, spaceEvent.executionType || (spaceEvent as any).mystery, 0);
+        let eventInstance = space.events[e];
+        const activationType = getEventActivationTypeFromEditorType(eventInstance.activationType);
+        eventList.add(activationType, eventInstance.executionType || (eventInstance as any).mystery, 0);
 
-        let temp = eventTemp[spaceEvent.id] || {};
+        let temp = eventTemp[eventInstance.id] || {};
         let info = {
           boardIndex,
           board,
@@ -882,21 +955,74 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let eventAsm = await writeEvent(new ArrayBuffer(0), spaceEvent, info, temp);
-        eventTemp[spaceEvent.id] = temp;
+        let eventAsm = await writeEvent(new ArrayBuffer(0), eventInstance, info, temp);
+        eventTemp[eventInstance.id] = temp;
 
         if (!(typeof eventAsm === "string")) {
-          throw new Error(`Event ${spaceEvent.id} did not return a string to assemble`);
+          throw new Error(`Event ${eventInstance.id} did not return a string to assemble`);
         }
 
-        const event = getEvent(spaceEvent.id, board);
+        const event = getEvent(eventInstance.id, board);
         eventAsms.push(
-          prepSingleEventAsm(eventAsm, event, spaceEvent, info, !staticsWritten[spaceEvent.id], e)
+          prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
         );
 
-        staticsWritten[spaceEvent.id] = true;
+        staticsWritten[eventInstance.id] = true;
       }
       eventLists.push(eventList);
+    }
+
+    // Write any board events
+    const hasBoardEvents = board.boardevents && board.boardevents.length > 0;
+    const type5 = new SpaceEventList(-5);
+    const type4 = new SpaceEventList(-4);
+    const type3 = new SpaceEventList(-3);
+    const type2 = new SpaceEventList(-2);
+    const boardEventTypeInfos = [
+      { index: -5, list: type5, type: EditorEventActivationType.BEFORE_DICE_ROLL },
+      { index: -4, list: type4, type: EditorEventActivationType.BEFORE_PLAYER_TURN },
+      { index: -3, list: type3, type: EditorEventActivationType.FFFD },
+      { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
+    ];
+    if (hasBoardEvents) {
+      for (const { index, list, type } of boardEventTypeInfos) {
+        const events = _getEventsWithActivationType(board.boardevents!, type);
+        const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
+        for (let e = 0; e < events.length; e++) {
+          const eventInstance = events[e];
+          list.add(activationType, eventInstance.executionType, 0);
+
+          let temp = eventTemp[eventInstance.id] || {};
+          let info = {
+            boardIndex,
+            board,
+            curSpaceIndex: index,
+            curSpace: null,
+            chains,
+            game,
+            gameVersion: this.gameVersion,
+          };
+
+          let eventAsm = await writeEvent(new ArrayBuffer(0), eventInstance, info, temp);
+          eventTemp[eventInstance.id] = temp;
+
+          if (!(typeof eventAsm === "string")) {
+            throw new Error(`Event ${eventInstance.id} did not return a string to assemble`);
+          }
+
+          const event = getEvent(eventInstance.id, board);
+          eventAsms.push(
+            prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
+          );
+
+          staticsWritten[eventInstance.id] = true;
+        }
+
+        if (list.count() > 0) {
+          eventTable.add(index, 0);
+          eventLists.push(list);
+        }
+      }
     }
 
     const eventAsmCombinedString = eventAsms.join("\n");
@@ -1218,12 +1344,12 @@ export abstract class AdapterBase {
       const booSpacesOffset = this._addrToOffsetBase(booRelativeAddr, sceneInfo.ram_start);
 
       for (let i = 0; i < booCount; i++) {
-        let booSpace = (booSpaces[i] === undefined ? board._deadSpace : booSpaces[i]);
+        let booSpace = (booSpaces[i] === undefined ? getDeadSpaceIndex(board) : booSpaces[i]);
         sceneView.setUint16(booSpacesOffset + (2 * i), booSpace!);
       }
     }
     else if (boardInfo.booSpaceInst) { // Just one Boo
-      let booSpace = (booSpaces[0] === undefined ? board._deadSpace : booSpaces[0]);
+      let booSpace = (booSpaces[0] === undefined ? getDeadSpaceIndex(board) : booSpaces[0]);
       sceneView.setUint16(boardInfo.booSpaceInst + 2, booSpace!);
     }
     else if (boardInfo.booCount) {
@@ -1231,7 +1357,7 @@ export abstract class AdapterBase {
       for (let b = 0; b < booArrOffset.length; b++) {
         let curBooSpaceIndexOffset = booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
-          let booSpace = booSpaces[i] === undefined ? board._deadSpace : booSpaces[i];
+          let booSpace = booSpaces[i] === undefined ? getDeadSpaceIndex(board) : booSpaces[i];
           sceneView.setUint16(curBooSpaceIndexOffset, booSpace!);
           curBooSpaceIndexOffset += 2;
         }
@@ -1275,7 +1401,7 @@ export abstract class AdapterBase {
     for (let b = 0; b < bankArrOffset.length; b++) {
       let curBankSpaceIndexOffset = bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankSpace = bankSpaces[i] === undefined ? board._deadSpace : bankSpaces[i];
+        let bankSpace = bankSpaces[i] === undefined ? getDeadSpaceIndex(board) : bankSpaces[i];
         sceneView.setUint16(curBankSpaceIndexOffset, bankSpace!);
         curBankSpaceIndexOffset += 2;
       }
@@ -1285,7 +1411,7 @@ export abstract class AdapterBase {
     for (let b = 0; b < boardInfo.bankCoinArrOffset.length; b++) {
       let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankCoinSpace = bankCoinSpaces[i] === undefined ? board._deadSpace : bankCoinSpaces[i];
+        let bankCoinSpace = bankCoinSpaces[i] === undefined ? getDeadSpaceIndex(board) : bankCoinSpaces[i];
         sceneView.setUint16(curBankCoinSpaceIndexOffset, bankCoinSpace!);
         curBankCoinSpaceIndexOffset += 2;
       }
@@ -1317,7 +1443,7 @@ export abstract class AdapterBase {
     for (let b = 0; b < boardInfo.itemShopArrOffset.length; b++) {
       let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset[b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
-        let ItemShopSpace = itemShopSpaces[i] === undefined ? board._deadSpace : itemShopSpaces[i];
+        let ItemShopSpace = itemShopSpaces[i] === undefined ? getDeadSpaceIndex(board) : itemShopSpaces[i];
         sceneView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace!);
         curItemShopSpaceIndexOffset += 2;
       }
@@ -1340,7 +1466,7 @@ export abstract class AdapterBase {
     for (let b = 0; b < gateArrOffset.length; b++) {
       let curGateSpaceIndexOffset = gateArrOffset[b];
       for (let i = 0; i < boardInfo.gateCount; i++) {
-        let gateSpace = gateSpaces[i] === undefined ? board._deadSpace : gateSpaces[i];
+        let gateSpace = gateSpaces[i] === undefined ? getDeadSpaceIndex(board) : gateSpaces[i];
         sceneView.setUint16(curGateSpaceIndexOffset, gateSpace!);
         curGateSpaceIndexOffset += 2;
       }
@@ -1554,3 +1680,7 @@ export abstract class AdapterBase {
     return {};
   }
 };
+
+function _getEventsWithActivationType(events: IEventInstance[], activationType: EditorEventActivationType): IEventInstance[] {
+  return events.filter(e => e.activationType === activationType);
+}

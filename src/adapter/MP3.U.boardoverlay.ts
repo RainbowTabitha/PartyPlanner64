@@ -1,4 +1,4 @@
-import { IBoard, getSpacesOfSubType, getSpacesWithEvent, forEachEvent } from "../boards";
+import { IBoard, getSpacesOfSubType, getSpacesWithEvent, forEachEvent, getDeadSpaceIndex } from "../boards";
 import { IBoardInfo } from "./boardinfobase";
 import { SpaceSubtype, Game, Space } from "../types";
 import { distance, getRawFloat32Format } from "../utils/number";
@@ -15,11 +15,11 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
-  const booIndex = (!booIndices.length ? board._deadSpace! : booIndices[0]);
+  const booIndex = (!booIndices.length ? getDeadSpaceIndex(board) : booIndices[0]);
   let booEventSpaces = getSpacesWithEvent(BooEvent.id, board);
   let primaryBooEventSpace: number = -1;
   if (!booEventSpaces.length) {
-    booEventSpaces = [board._deadSpace!];
+    booEventSpaces = [getDeadSpaceIndex(board)];
   }
   else {
     let bestDistance = Number.MAX_VALUE;
@@ -68,7 +68,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 
   const bankCoinSpaces = getSpacesOfSubType(SpaceSubtype.BANKCOIN, board);
   for (let i = 0; i < 2; i++) { // Ensure at least 2
-    if (bankCoinSpaces.length < 2) bankCoinSpaces.push(board._deadSpace!);
+    if (bankCoinSpaces.length < 2) bankCoinSpaces.push(getDeadSpaceIndex(board));
   }
 
   // Find the closest Bank subtype space for each bank event space.
@@ -78,7 +78,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   bankEventSpaces.forEach(spaceIndex => {
     const eventSpace = board.spaces[spaceIndex];
     let bestDistance = Number.MAX_VALUE;
-    let bestBankIdx = board._deadSpace!;
+    let bestBankIdx = getDeadSpaceIndex(board);
     for (let b = 0; b < bankSpaces.length; b++) {
       let bankIdx = bankSpaces[b];
       let bankSpace = board.spaces[bankIdx];
@@ -90,12 +90,12 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
     }
     bestBankForBankSpaces.push(bestBankIdx);
   });
-  if (!bankSpaces.length) bankSpaces.push(board._deadSpace!);
+  if (!bankSpaces.length) bankSpaces.push(getDeadSpaceIndex(board));
   for (let i = 0; i < 2; i++) { // Ensure at least 2
-    if (bankEventSpaces.length < 2) bankEventSpaces.push(board._deadSpace!);
+    if (bankEventSpaces.length < 2) bankEventSpaces.push(getDeadSpaceIndex(board));
   }
   for (let i = 0; i < 2; i++) { // Ensure at least 2
-    if (bestBankForBankSpaces.length < 2) bestBankForBankSpaces.push(board._deadSpace!);
+    if (bestBankForBankSpaces.length < 2) bestBankForBankSpaces.push(getDeadSpaceIndex(board));
   }
 
   // Find the closest ItemShop subtype space for each shop event space.
@@ -105,7 +105,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   itemShopEventSpaces.forEach(spaceIndex => {
     const eventSpace = board.spaces[spaceIndex];
     let bestDistance = Number.MAX_VALUE;
-    let bestShopIdx = board._deadSpace!;
+    let bestShopIdx = getDeadSpaceIndex(board);
     for (let b = 0; b < itemShopSpaces.length; b++) {
       let shopIdx = itemShopSpaces[b];
       let shopSpace = board.spaces[shopIdx];
@@ -117,12 +117,12 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
     }
     bestShopForShopEventSpaces.push(bestShopIdx);
   });
-  if (!itemShopSpaces.length) itemShopSpaces.push(board._deadSpace!);
+  if (!itemShopSpaces.length) itemShopSpaces.push(getDeadSpaceIndex(board));
   for (let i = 0; i < 2; i++) { // Ensure at least 2
-    if (itemShopEventSpaces.length < 2) itemShopEventSpaces.push(board._deadSpace!);
+    if (itemShopEventSpaces.length < 2) itemShopEventSpaces.push(getDeadSpaceIndex(board));
   }
   for (let i = 0; i < 2; i++) { // Ensure at least 2
-    if (bestShopForShopEventSpaces.length < 2) bestShopForShopEventSpaces.push(board._deadSpace!);
+    if (bestShopForShopEventSpaces.length < 2) bestShopForShopEventSpaces.push(getDeadSpaceIndex(board));
   }
 
   // We want to get the important details about the gate event
@@ -170,9 +170,9 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   });
   for (let i = 0; i < 2; i++) { // Ensure at least 2
     if (gateEventInfos.length < 2) gateEventInfos.push({
-      gateEntryIndex: board._deadSpace!,
-      gateSpaceIndex: board._deadSpace!,
-      gateExitIndex: board._deadSpace!,
+      gateEntryIndex: getDeadSpaceIndex(board),
+      gateSpaceIndex: getDeadSpaceIndex(board),
+      gateExitIndex: getDeadSpaceIndex(board),
       gatePrevChain: [0, 0],
       gateNextChain: [0, 0],
     });

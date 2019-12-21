@@ -1,7 +1,7 @@
 import { IEvent, IEventWriteInfo, IEventParseInfo } from "../../../events";
-import { EventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
+import { EditorEventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
-import { addConnection, ISpaceEvent } from "../../../../boards";
+import { addConnection, IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
 
 // Represents the "event" that takes the player from one chain to another.
@@ -9,7 +9,7 @@ import { addEventToLibrary } from "../../../EventLibrary";
 export const ChainMerge3: IEvent = {
   id: "CHAINMERGE3",
   name: "",
-  activationType: EventActivationType.WALKOVER,
+  activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.DIRECT,
   parameters: [
     { name: "prevSpace", type: EventParameterType.Number, },
@@ -62,7 +62,7 @@ export const ChainMerge3: IEvent = {
     }
     return false;
   },
-  write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
+  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
     // TODO: Could just use "prevSpace" etc below, the definelabels should work...
     return `
       ADDIU SP, SP, -0x18

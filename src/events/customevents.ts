@@ -2,10 +2,10 @@ import { IEvent, IEventWriteInfo, IEventParameter } from "./events";
 import { getSavedEvents } from "../utils/localstorage";
 import { $$log } from "../utils/debug";
 import { copyRange } from "../utils/arrays";
-import { EventActivationType, getGameName, Game, getExecutionTypeByName, EventParameterTypes, EventParameterType, EventCodeLanguage } from "../types";
+import { getGameName, Game, getExecutionTypeByName, EventParameterTypes, EventParameterType, EventCodeLanguage, EditorEventActivationType } from "../types";
 import { assemble } from "mips-assembler";
 import { prepAsm } from "./prepAsm";
-import { ISpaceEvent } from "../boards";
+import { IEventInstance } from "../boards";
 import { addEventToLibrary } from "./EventLibrary";
 import { compile } from "../utils/c-compiler";
 import { prepC } from "./prepC";
@@ -134,7 +134,7 @@ export const CustomAsmHelper = {
     const parameterValues = _makeFakeParameterValues(parameters);
 
     const customEvent = createCustomEvent(EventCodeLanguage.MIPS, asm);
-    const preppedAsm = prepAsm(asm, customEvent, { parameterValues } as ISpaceEvent, Object.assign({
+    const preppedAsm = prepAsm(asm, customEvent, { parameterValues } as IEventInstance, Object.assign({
       addr: 0,
     }, info) as IEventWriteInfo);
     const bytes = assemble(preppedAsm) as ArrayBuffer;
@@ -145,12 +145,12 @@ export const CustomAsmHelper = {
     const parameterValues = _makeFakeParameterValues(parameters);
 
     const customEvent = createCustomEvent(EventCodeLanguage.C, code);
-    const preppedC = prepC(code, customEvent, { parameterValues } as ISpaceEvent, info as IEventWriteInfo);
+    const preppedC = prepC(code, customEvent, { parameterValues } as IEventInstance, info as IEventWriteInfo);
 
     const asm = await compile(preppedC);
     $$log(asm);
 
-    const preppedAsm = prepAsm(asm, customEvent, {} as ISpaceEvent, Object.assign({
+    const preppedAsm = prepAsm(asm, customEvent, {} as IEventInstance, Object.assign({
       addr: 0,
     }, info) as IEventWriteInfo);
     assemble(preppedAsm);
@@ -195,7 +195,7 @@ export function createCustomEvent(language: EventCodeLanguage, code: string) {
     custom: true,
     language,
     asm: code,
-    activationType: EventActivationType.LANDON,
+    activationType: EditorEventActivationType.LANDON,
     executionType: executionType,
     supportedGames: supportedGames,
     parameters: parameters,
@@ -231,7 +231,7 @@ export async function validateCustomEvent(event: ICustomEvent): Promise<boolean>
   return true;
 }
 
-export async function writeCustomEvent(dataView: DataView, spaceEvent: ISpaceEvent,
+export async function writeCustomEvent(dataView: DataView, spaceEvent: IEventInstance,
   info: IEventWriteInfo, lang: EventCodeLanguage, code: string, temp: any) {
   $$log("Writing custom event", spaceEvent, info);
 

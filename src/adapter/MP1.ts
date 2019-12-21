@@ -1,7 +1,7 @@
 import { AdapterBase } from "./AdapterBase";
-import { ISpace, addEventToSpace, IBoard } from "../boards";
+import { ISpace, addEventToSpace, IBoard, getDeadSpaceIndex } from "../boards";
 import { Space, SpaceSubtype } from "../types";
-import { createSpaceEvent } from "../events/events";
+import { createEventInstance } from "../events/events";
 import { parse as parseInst } from "mips-inst";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL } from "../utils/arrays";
@@ -41,7 +41,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       space.star = true;
     }
     else if (space.type === Space.CHANCE) {
-      addEventToSpace(board, space, createSpaceEvent(ChanceTime));
+      addEventToSpace(board, space, createEventInstance(ChanceTime));
     }
   }
 
@@ -193,7 +193,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       let events = space.events || [];
       let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
       if (!hasStarChance)
-        addEventToSpace(board, space, createSpaceEvent(StarChanceEvent));
+        addEventToSpace(board, space, createEventInstance(StarChanceEvent));
     }
   }
 
@@ -325,7 +325,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       }
     }
 
-    koopaSpace = (koopaSpace === undefined ? board._deadSpace! : koopaSpace);
+    koopaSpace = (koopaSpace === undefined ? getDeadSpaceIndex(board) : koopaSpace);
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     sceneView.setUint16(boardInfo.koopaSpaceInst + 2, koopaSpace);
   }
@@ -352,7 +352,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       }
     }
 
-    bowserSpace = (bowserSpace === undefined ? board._deadSpace! : bowserSpace);
+    bowserSpace = (bowserSpace === undefined ? getDeadSpaceIndex(board) : bowserSpace);
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     sceneView.setUint16(boardInfo.bowserSpaceInst + 2, bowserSpace);
   }

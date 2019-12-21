@@ -1,4 +1,4 @@
-import { IBoard, getSpacesOfSubType } from "../boards";
+import { IBoard, getSpacesOfSubType, getDeadSpaceIndex } from "../boards";
 import { SpaceSubtype, Game } from "../types";
 import { distance } from "../utils/number";
 import { IBoardInfo } from "./boardinfobase";
@@ -13,10 +13,10 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
 
   const koopaIndices = getSpacesOfSubType(SpaceSubtype.KOOPA, board);
-  const koopaIndex = (!koopaIndices.length ? board._deadSpace! : koopaIndices[0]);
+  const koopaIndex = (!koopaIndices.length ? getDeadSpaceIndex(board) : koopaIndices[0]);
 
   const bowserIndices = getSpacesOfSubType(SpaceSubtype.BOWSER, board);
-  const bowserIndex = (!bowserIndices.length ? board._deadSpace! : bowserIndices[0]);
+  const bowserIndex = (!bowserIndices.length ? getDeadSpaceIndex(board) : bowserIndices[0]);
 
   let starIndices = [];
   for (let i = 0; i < board.spaces.length; i++) {

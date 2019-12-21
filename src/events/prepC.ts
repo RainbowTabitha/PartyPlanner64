@@ -1,12 +1,12 @@
 import { IEvent, IEventWriteInfo } from "./events";
-import { ISpaceEvent } from "../boards";
+import { IEventInstance } from "../boards";
 import { EventParameterType, Game } from "../types";
 import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
 
 /**
  * Takes event C code, and makes it able to compile (in isolation)
  */
-export function prepC(code: string, event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo) {
+export function prepC(code: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo) {
   const parameterDefines = makeParameterSymbolDefines(event, spaceEvent, info);
   const codeWithParamDefines = [
     ...parameterDefines,
@@ -31,7 +31,7 @@ export function prepGenericC(code: string, game: Game) {
 /**
  * Creates C pre-processor defines for parameters.
  */
-export function makeParameterSymbolDefines(event: IEvent, spaceEvent: ISpaceEvent, info: IEventWriteInfo): string[] {
+export function makeParameterSymbolDefines(event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo): string[] {
   let parameterSymbols: string[] = [];
   const parameters = event.parameters;
   const parameterValues = spaceEvent.parameterValues;

@@ -1,5 +1,5 @@
 import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
-import { ISpaceEvent, getSpacesOfSubType } from "../../../../boards";
+import { IEventInstance, getSpacesOfSubType, getDeadSpace } from "../../../../boards";
 import { SpaceSubtype } from "../../../../types";
 import { distance } from "../../../../utils/number";
 import { scenes } from "../../../../fs/scenes";
@@ -25,13 +25,13 @@ export const BankEvent2: Partial<IEvent> = {
     return true;
   },
 
-  write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
+  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
     let curBank = temp.curBank = temp.curBank || 1;
     temp.curBank++;
 
     // Find the closest Bank subtype space nearby.
     let bankSpaces = getSpacesOfSubType(SpaceSubtype.BANK, info.board);
-    let eventSpace = info.curSpace;
+    let eventSpace = info.curSpace || getDeadSpace(info.board);
     let bestDistance = Number.MAX_VALUE;
     let bestBankIdx = info.curSpaceIndex;
     for (let b = 0; b < bankSpaces.length; b++) {

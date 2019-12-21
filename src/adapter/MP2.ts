@@ -2,7 +2,7 @@ import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace } from "../boards";
 import { animationfs } from "../fs/animationfs";
 import { Space } from "../types";
-import { createSpaceEvent } from "../events/events";
+import { createEventInstance } from "../events/events";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL, arrayBufferToImageData } from "../utils/arrays";
 import { hvqfs } from "../fs/hvqfs";
@@ -79,7 +79,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
   hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.BANK) {
-      addEventToSpace(board, space, createSpaceEvent(BankEvent));
+      addEventToSpace(board, space, createEventInstance(BankEvent));
     }
   }
 

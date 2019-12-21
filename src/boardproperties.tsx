@@ -1,15 +1,19 @@
 import * as React from "react";
-import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces } from "./renderer";
+import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces, renderConnections, renderSpaces } from "./renderer";
 import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
   supportsAnimationBackgrounds, supportsAdditionalBackgrounds,
-  addAdditionalBG, removeAdditionalBG, boardIsROM
+  addAdditionalBG, removeAdditionalBG, boardIsROM, IEventInstance, addEventToBoard, removeEventFromBoard
 } from "./boards";
 import { openFile } from "./utils/input";
-import { BoardType, View } from "./types";
+import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
 import { changeView, promptUser } from "./appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
+import { SectionHeading } from "./propertiesshared";
+import { useForceUpdate } from "./utils/react";
+import { createEventInstance, IEvent } from "./events/events";
+import { EventsList } from "./components/EventList";
 
 import boardImage from "./img/header/board.png";
 import setbgImage from "./img/header/setbg.png";
@@ -64,6 +68,7 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
         {!romBoard && <CheckDeadEnds board={this.props.currentBoard} />}
         {animationBGList}
         {additionalBGList}
+        <BoardEventList board={board} />
       </div>
     );
   }
@@ -247,10 +252,9 @@ class BackgroundList extends React.Component<IBackgroundListProps> {
 
     return (
       <div className="propertiesAnimationBGList">
-        <span className="propertySectionTitle">
-          {this.props.title}
+        <SectionHeading text={this.props.title}>
           {this.props.children}
-        </span>
+        </SectionHeading>
         {entries}
         {addButton}
       </div>
@@ -406,4 +410,67 @@ class FindSpace extends React.Component<{}> {
       </div>
     );
   }
+};
+
+const BoardEventActivationTypes: EditorEventActivationType[] = [
+  EditorEventActivationType.BEFORE_TURN,
+  // EditorEventActivationType.FFFD,
+  EditorEventActivationType.BEFORE_PLAYER_TURN,
+  EditorEventActivationType.BEFORE_DICE_ROLL,
+];
+
+interface IBoardEventListProps {
+  board: IBoard;
+}
+
+const BoardEventList: React.FC<IBoardEventListProps> = props => {
+  const forceUpdate = useForceUpdate();
+
+  function onEventAdded(event: IEvent) {
+    const eventInstance = createEventInstance(event, {
+      activationType: EditorEventActivationType.BEFORE_PLAYER_TURN
+    });
+    addEventToBoard(props.board, eventInstance);
+    render();
+    forceUpdate();
+  }
+
+  function onEventDeleted(event: IEventInstance) {
+    removeEventFromBoard(props.board, event);
+    render();
+    forceUpdate();
+  }
+
+  function onEventActivationTypeToggle(event: IEventInstance) {
+    const curTypeIndex = BoardEventActivationTypes.indexOf(event.activationType);
+    if (curTypeIndex === -1) {
+      throw new Error(`Unexpected board event activation type ${event.activationType}`);
+    }
+
+    const nextType = BoardEventActivationTypes[(curTypeIndex + 1) % BoardEventActivationTypes.length];
+    event.activationType = nextType;
+  }
+
+  function onEventParameterSet(event: IEventInstance, name: string, value: number | boolean) {
+    if (!event.parameterValues) {
+      event.parameterValues = {};
+    }
+    event.parameterValues[name] = value;
+    renderConnections();
+    renderSpaces();
+  }
+
+  return (
+    <>
+      <SectionHeading text="Events" />
+      <div className="propertiesPadded">
+        <EventsList events={props.board.boardevents}
+          board={props.board}
+          onEventAdded={onEventAdded}
+          onEventDeleted={onEventDeleted}
+          onEventActivationTypeToggle={onEventActivationTypeToggle}
+          onEventParameterSet={onEventParameterSet} />
+      </div>
+    </>
+  );
 };

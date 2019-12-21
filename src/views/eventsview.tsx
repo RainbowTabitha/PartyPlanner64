@@ -3,7 +3,7 @@ import * as React from "react";
 import { getCustomEvents, IEvent } from "../events/events";
 import { ICustomEvent, createCustomEvent } from "../events/customevents";
 import { changeCurrentEvent, changeView, confirmFromUser } from "../appControl";
-import { IBoard, removeEventFromBoard, addEventToBoard, getBoardEvent } from "../boards";
+import { IBoard, excludeEventFromBoard, includeEventInBoard, getBoardEvent } from "../boards";
 import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { saveAs } from "file-saver";
 
@@ -133,7 +133,7 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
 
   onDeleteBoardEvent = async (event: IEvent) => {
     if (await confirmFromUser(`Are you sure you want to delete ${event.name}?`)) {
-      removeEventFromBoard(this.props.board, event.id);
+      excludeEventFromBoard(this.props.board, event.id);
       this.forceUpdate();
     }
   }
@@ -144,7 +144,7 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
       proceed = await confirmFromUser(`Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`);
     }
     if (proceed) {
-      addEventToBoard(this.props.board, event);
+      includeEventInBoard(this.props.board, event);
       this.forceUpdate();
     }
   }

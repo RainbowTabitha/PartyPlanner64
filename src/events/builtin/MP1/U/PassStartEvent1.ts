@@ -1,13 +1,13 @@
 import { hashEqual } from "../../../../utils/arrays";
 import { IEventParseInfo, IEvent, IEventWriteInfo } from "../../../events";
-import { EventActivationType, EventExecutionType, Game } from "../../../../types";
-import { ISpaceEvent } from "../../../../boards";
+import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import { IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
 
 export const PassStart: IEvent = {
   id: "PASSSTART",
   name: "Pass start",
-  activationType: EventActivationType.WALKOVER,
+  activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.PROCESS,
   supportedGames: [
     Game.MP1_USA,
@@ -26,7 +26,7 @@ export const PassStart: IEvent = {
 
     return false;
   },
-  write(dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
+  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
     return `
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)

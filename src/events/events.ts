@@ -1,7 +1,7 @@
-import { EventActivationType, Game, EventExecutionType, EventParameterType, EventCodeLanguage } from "../types";
+import { Game, EventExecutionType, EventParameterType, EventCodeLanguage, EditorEventActivationType } from "../types";
 import { makeDivisibleBy } from "../utils/number";
 import { copyObject } from "../utils/obj";
-import { IBoard, getCurrentBoard, ISpace, ISpaceEvent, getBoardEvent } from "../boards";
+import { IBoard, getCurrentBoard, ISpace, IEventInstance, getBoardEvent } from "../boards";
 import { romhandler } from "../romhandler";
 import { ICustomEvent, writeCustomEvent, createCustomEvent } from "./customevents";
 import { getEventFromLibrary, getEventsInLibrary } from "./EventLibrary";
@@ -10,8 +10,8 @@ export interface IEvent {
   readonly id: string;
   readonly name: string;
   readonly parse?: (dataView: DataView, info: IEventParseInfo) => boolean;
-  readonly write?: (dataView: DataView, event: ISpaceEvent, info: IEventWriteInfo, temp: any) => number[] | string | false;
-  readonly activationType: EventActivationType;
+  readonly write?: (dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) => number[] | string | false;
+  readonly activationType: EditorEventActivationType;
   readonly executionType: EventExecutionType;
   readonly fakeEvent?: boolean;
   readonly supportedGames: Game[];
@@ -63,8 +63,8 @@ export function getEvent(eventId: string, board: IBoard): IEvent {
   return getEventFromLibrary(eventId);
 }
 
-/** Creates a space event (the object stored in the board json for a given event) */
-export function createSpaceEvent(event: IEvent, args?: Partial<ISpaceEvent>): ISpaceEvent {
+/** Creates an event instance (the object stored in the board json for a given event) */
+export function createEventInstance(event: IEvent, args?: Partial<IEventInstance>): IEventInstance {
   const spaceEvent = Object.assign({
     id: event.id,
     activationType: event.activationType,
@@ -139,7 +139,7 @@ export interface IEventWriteInfo {
   boardIndex: number;
   board: IBoard;
   curSpaceIndex: number;
-  curSpace: ISpace;
+  curSpace: ISpace | null;
   chains: number[][];
   offset?: number;
   addr?: number;
@@ -153,7 +153,7 @@ function _getArgsSize(count: number) {
   return makeDivisibleBy(count * 2, 4);
 }
 
-export async function write(buffer: ArrayBuffer, event: ISpaceEvent, info: IEventWriteInfo, temp: any) {
+export async function write(buffer: ArrayBuffer, event: IEventInstance, info: IEventWriteInfo, temp: any) {
   // Write any inline arguments.
   // Normally, these are right by the event list, but it makes more sense
   // to write them mixed in right beside the ASM that actually uses them...

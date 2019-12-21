@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { showMessage, getCurrentEventIsBoardEvent } from "../appControl";
-import { getCurrentBoard, addEventToBoard } from "../boards";
+import { getCurrentBoard, includeEventInBoard } from "../boards";
 import { getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { createCustomEvent, validateCustomEvent } from "../events/customevents";
 import { Game, EventExecutionType, EventParameterType, EventCodeLanguage } from "../types";
@@ -64,7 +64,7 @@ export async function saveEvent(): Promise<void> {
 
   if (getCurrentEventIsBoardEvent()) {
     // A little sketch, but we can assume current board is target.
-    addEventToBoard(getCurrentBoard(), event);
+    includeEventInBoard(getCurrentBoard(), event);
   }
   else {
     addEventToLibrary(event); // Add globally.
