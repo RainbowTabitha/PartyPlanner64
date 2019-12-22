@@ -68,7 +68,7 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
         {!romBoard && <CheckDeadEnds board={this.props.currentBoard} />}
         {animationBGList}
         {additionalBGList}
-        <BoardEventList board={board} />
+        {!romBoard && <BoardEventList board={board} />}
       </div>
     );
   }
