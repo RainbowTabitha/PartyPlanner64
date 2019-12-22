@@ -12,9 +12,9 @@ const _defaultEventC = `// NAME:
 // EXECUTION: Direct
 
 void main() {
-  // Your code here!
-  // For code examples, see:
-  // https://github.com/PartyPlanner64/events
+    // Your code here!
+    // For code examples, see:
+    // https://github.com/PartyPlanner64/events
 }`;
 
 interface ICreateEventViewState {

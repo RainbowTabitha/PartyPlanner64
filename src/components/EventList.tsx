@@ -403,7 +403,7 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
       return null;
 
     const eventOptions = [
-      <option value="-1" key="-1" disabled>Add new event</option>
+      <option value="-1" key="-1" disabled>Add event</option>
     ];
 
     let index = 0;
