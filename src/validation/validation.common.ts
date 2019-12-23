@@ -1,4 +1,4 @@
-import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode } from "../boards";
+import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode, IEventInstance } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space } from "../types";
 import { romhandler } from "../romhandler";
 import { CustomAsmHelper } from "../events/customevents";
@@ -223,6 +223,22 @@ const FailingCustomEvents = createRule("CUSTOMEVENTFAIL", "Custom event errors",
 FailingCustomEvents.fails = async function(board: IBoard, args: any) {
   let failingEvents = Object.create(null);
   let gameID = romhandler.getROMGame()!;
+
+  async function testEvent(event: IEventInstance): Promise<void> {
+    try {
+      const customEvent = getEvent(event.id, board);
+      const boardEvent = getBoardEvent(board, event.id)!;
+      await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
+        game: gameID,
+      });
+    }
+    catch (e) {
+      console.error(e.toString());
+      if (!failingEvents[event.id])
+        failingEvents[event.id] = true;
+    }
+  }
+
   for (const space of board.spaces) {
     if (!space || !space.events)
       continue;
@@ -231,19 +247,15 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
         continue; // Let the other rule handle this.
       if (!event.custom)
         continue;
+      testEvent(event);
+    }
+  }
 
-      try {
-        const customEvent = getEvent(event.id, board);
-        const boardEvent = getBoardEvent(board, event.id)!;
-        await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
-          game: gameID,
-        });
-      }
-      catch (e) {
-        console.error(e.toString());
-        if (!failingEvents[event.id])
-          failingEvents[event.id] = true;
-      }
+  if (board.boardevents) {
+    for (const event of board.boardevents) {
+      if (!event.custom)
+        continue;
+      testEvent(event);
     }
   }
 
@@ -265,6 +277,21 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
 const BadCustomEventParameters = createRule("CUSTOMEVENTBADPARAMS", "Custom event parameter issues", ValidationLevel.ERROR);
 BadCustomEventParameters.fails = function(board: IBoard, args: any) {
   const missingParams = Object.create(null);
+
+  function testParameters(event: IEventInstance): void {
+    const customEvent = getEvent(event.id, board);
+    const parameters = customEvent.parameters;
+    if (parameters && parameters.length) {
+      parameters.forEach((parameter: IEventParameter) => {
+        if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
+          if (!missingParams[parameter.name])
+            missingParams[parameter.name] = 0;
+          missingParams[parameter.name]++;
+        }
+      });
+    }
+  }
+
   board.spaces.forEach(space => {
     if (!space || !space.events)
       return;
@@ -273,20 +300,17 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
         return; // Let the other rule handle this.
       if (!event.custom)
         return;
-
-      const customEvent = getEvent(event.id, board);
-      const parameters = customEvent.parameters;
-      if (parameters && parameters.length) {
-        parameters.forEach((parameter: IEventParameter) => {
-          if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
-            if (!missingParams[parameter.name])
-              missingParams[parameter.name] = 0;
-            missingParams[parameter.name]++;
-          }
-        });
-      }
+      testParameters(event);
     });
   });
+
+  if (board.boardevents) {
+    for (const event of board.boardevents) {
+      if (!event.custom)
+        continue;
+      testParameters(event);
+    }
+  }
 
   let errorLines = [];
   for (let id in missingParams) {
