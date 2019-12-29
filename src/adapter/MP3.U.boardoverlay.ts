@@ -20767,6 +20767,7 @@ percent_d_str_format:
 .asciiz "%d" ; 0x25640000
 .align 4
 
+.align 8
 D_8011F8D8: .word 0x3FF80000
 D_8011F8DC: .word 0x00000000
 
@@ -20795,26 +20796,35 @@ D_8011F934: .word 0x3F800000
 D_8011F938: .word 0xBF800000
 D_8011F93C: .word 0x3F800000
 
+.align 8
 D_8011F940: .word 0x3FD33333
 D_8011F944: .word 0x33333333
 
+.align 8
 D_8011F948: .word 0x3FE00000
 D_8011F94C: .word 0x00000000
+
+.align 8
 D_8011F950: .word 0x3FE00000
 D_8011F954: .word 0x00000000
 
+.align 8
 D_8011F958: .word 0x3FE00000
 D_8011F95C: .word 0x00000000
 
+.align 8
 D_8011F960: .word 0x3FE00000
 D_8011F964: .word 0x00000000
 
+.align 8
 D_8011F968: .word 0x3FF80000
 D_8011F96C: .word 0x00000000
 
+.align 8
 D_8011F970: .word 0x3FE99999
 D_8011F974: .word 0x9999999A
 
+.align 8
 D_8011F978: .word 0x3FE99999
 D_8011F97C: .word 0x9999999A
 
