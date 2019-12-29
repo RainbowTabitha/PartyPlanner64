@@ -27,7 +27,7 @@
     "electron-builder-build-publish": "electron-builder build -wl --publish always"
   },
   "dependencies": {
-    "@types/codemirror": "^0.0.81",
+    "@types/codemirror": "^0.0.82",
     "@types/draft-js": "^0.10.37",
     "@types/file-saver": "^2.0.1",
     "@types/jest": "24.0.23",
@@ -36,7 +36,7 @@
     "@types/react": "16.9.15",
     "@types/react-dom": "16.9.4",
     "basiccontext": "^3.5.1",
-    "codemirror": "^5.49.2",
+    "codemirror": "^5.50.0",
     "cookies-js": "^1.2.2",
     "draft-js": "^0.11.3",
     "electron-debug": "^3.0.1",
@@ -55,12 +55,12 @@
     "react-scripts": "3.3.0",
     "resize-image-data": "^0.3.0",
     "three": "^0.111.0",
-    "typescript": "3.7.3"
+    "typescript": "3.7.4"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
     "electron-builder": "^21.2.0",
-    "electron": "7.1.2"
+    "electron": "7.1.7"
   },
   "eslintConfig": {
     "extends": "react-app"
