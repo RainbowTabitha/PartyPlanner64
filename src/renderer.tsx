@@ -865,6 +865,15 @@ function getZoomedN64SizeForTelescope(gameVersion: GameVersion) {
   };
 }
 
+function addRecommendedBoundaryLine(board: IBoard, canvas: Canvas): void {
+  const context = canvas.getContext("2d")!;
+  context.lineWidth = 1;
+  context.strokeStyle = "rgba(0, 0, 0, 0.5)";
+  const { width, height} = board.bg;
+  const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(board.game);
+  context.strokeRect(N64_WIDTH_ZOOMED / 2, N64_HEIGHT_ZOOMED / 2, width - N64_WIDTH_ZOOMED, height - N64_HEIGHT_ZOOMED);
+}
+
 interface ITelescopeViewerProps {
   board: IBoard;
 }
@@ -882,17 +891,14 @@ const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
       canvas.width = props.board.bg.width;
       canvas.height = props.board.bg.height;
     }
+
+    addRecommendedBoundaryLine(props.board, canvas);
   }, [props.board]);
 
   useEffect(() => {
     screenshotCanvasRef.current = takeScreeny({ renderCharacters: true }).canvas;
-    const context = screenshotCanvasRef.current.getContext("2d")!;
 
-    context.lineWidth = 1;
-    context.strokeStyle = "rgba(0, 0, 0, 0.5)";
-    const { width, height} = props.board.bg;
-    const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(props.board.game);
-    context.strokeRect(N64_WIDTH_ZOOMED / 2, N64_HEIGHT_ZOOMED / 2, width - N64_WIDTH_ZOOMED, height - N64_HEIGHT_ZOOMED);
+    addRecommendedBoundaryLine(props.board, screenshotCanvasRef.current!);
   }, [props.board]);
 
   const onMouseMove = useCallback((ev: React.MouseEvent<Canvas>) => {
@@ -945,7 +951,9 @@ const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
     const canvas = canvasRef.current!;
     const context = canvas.getContext("2d")!;
     context.clearRect(0, 0, canvas.width, canvas.height);
-  }, []);
+
+    addRecommendedBoundaryLine(props.board, canvas);
+  }, [props.board]);
 
   return (
     <canvas ref={canvasRef}
