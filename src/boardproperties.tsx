@@ -7,7 +7,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
-import { changeView, promptUser } from "./appControl";
+import { changeView, promptUser, setHoveredBoardEvent } from "./appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 import { SectionHeading } from "./propertiesshared";
@@ -441,6 +441,14 @@ const BoardEventList: React.FC<IBoardEventListProps> = props => {
     forceUpdate();
   }
 
+  function onEventMouseEnter(event: IEventInstance) {
+    setHoveredBoardEvent(event);
+  }
+
+  function onEventMouseLeave(event: IEventInstance) {
+    setHoveredBoardEvent(null);
+  }
+
   function onEventActivationTypeToggle(event: IEventInstance) {
     const curTypeIndex = BoardEventActivationTypes.indexOf(event.activationType);
     if (curTypeIndex === -1) {
@@ -469,7 +477,9 @@ const BoardEventList: React.FC<IBoardEventListProps> = props => {
           onEventAdded={onEventAdded}
           onEventDeleted={onEventDeleted}
           onEventActivationTypeToggle={onEventActivationTypeToggle}
-          onEventParameterSet={onEventParameterSet} />
+          onEventParameterSet={onEventParameterSet}
+          onEventMouseEnter={onEventMouseEnter}
+          onEventMouseLeave={onEventMouseLeave} />
       </div>
     </>
   );

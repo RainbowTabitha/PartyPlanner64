@@ -2,7 +2,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { useRef, useCallback, useEffect } from "react";
 import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter, IEventInstance } from "./boards";
-import { BoardType, Space, SpaceSubtype, GameVersion } from "./types";
+import { BoardType, Space, SpaceSubtype, GameVersion, EventParameterType } from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
 import { getImage } from "./images";
@@ -453,7 +453,7 @@ function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, spaces?: 
 /** Does a strong red highlight around some spaces. */
 function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number[]) {
   const currentBoard = getCurrentBoard();
-  let radius = currentBoard.game === 3 ? 18 : 12;
+  const radius = currentBoard.game === 3 ? 18 : 12;
 
   for (let i = 0; i < spaces.length; i++) {
     const space = currentBoard.spaces[spaces[i]];
@@ -466,6 +466,35 @@ function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number
       context.fillStyle = "rgba(255, 0, 0, 0.85)";
       context.fill();
       context.restore();
+    }
+  }
+}
+
+function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, eventInstance: IEventInstance) {
+  const currentBoard = getCurrentBoard();
+  const radius = currentBoard.game === 3 ? 18 : 12;
+
+  const event = getEvent(eventInstance.id, currentBoard);
+  if (event.parameters) {
+    let associationNum = 0;
+    for (const parameter of event.parameters) {
+      if (parameter.type === EventParameterType.Space) {
+        const spaceIndex = eventInstance.parameterValues?.[parameter.name];
+        if (typeof spaceIndex === "number") {
+          const space = currentBoard.spaces[spaceIndex];
+          if (space) {
+            context.save();
+            context.beginPath();
+            context.arc(space.x, space.y, radius, 0, 2 * Math.PI);
+            context.shadowColor = "rgba(225, 225, 225, 1)";
+            context.shadowBlur = 2;
+            context.fillStyle = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.9)`;
+            context.fill();
+            context.restore();
+          }
+        }
+        associationNum++;
+      }
     }
   }
 }
@@ -677,6 +706,7 @@ let _boardSelectedSpaces: BoardSelectedSpaces | null;
 interface BoardSelectedSpacesProps {
   board: IBoard;
   selectedSpaces?: ISpace[] | null;
+  hoveredBoardEvent?: IEventInstance | null;
 }
 
 class BoardSelectedSpaces extends React.Component<BoardSelectedSpacesProps> {
@@ -706,7 +736,13 @@ class BoardSelectedSpaces extends React.Component<BoardSelectedSpacesProps> {
       selectedSpacesCanvas.width = board.bg.width;
       selectedSpacesCanvas.height = board.bg.height;
     }
-    _renderSelectedSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d")!, this.props.selectedSpaces);
+
+    const context = selectedSpacesCanvas.getContext("2d")!;
+    _renderSelectedSpaces(selectedSpacesCanvas, context, this.props.selectedSpaces);
+
+    if (this.props.hoveredBoardEvent) {
+      _highlightBoardEventSpaces(selectedSpacesCanvas, context, this.props.hoveredBoardEvent);
+    }
   }
 
   highlightSpaces(spaces: number[]) {
@@ -966,6 +1002,7 @@ const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
 interface IEditorProps {
   board: IBoard;
   selectedSpaces: ISpace[] | null;
+  hoveredBoardEvent?: IEventInstance | null;
   telescoping?: boolean;
 }
 
@@ -991,7 +1028,8 @@ export const Editor = class Editor extends React.Component<IEditorProps> {
         <BoardAssociations board={board}
           selectedSpaces={selectedSpaces} />
         <BoardSelectedSpaces board={board}
-          selectedSpaces={selectedSpaces} />
+          selectedSpaces={selectedSpaces}
+          hoveredBoardEvent={this.props.hoveredBoardEvent}/>
         <BoardSpaces board={board} />
         <BoardOverlay board={board} />
         {telescoping && <TelescopeViewer board={board} />}

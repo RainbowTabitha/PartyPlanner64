@@ -25,19 +25,27 @@ interface IEventsListProps {
   onEventDeleted(event: IEventInstance): void;
   onEventActivationTypeToggle(event: IEventInstance): void;
   onEventParameterSet(event: IEventInstance, name: string, value: any): void;
+  onEventMouseEnter?(event: IEventInstance): void;
+  onEventMouseLeave?(event: IEventInstance): void;
 }
 
-export class EventsList extends React.Component<IEventsListProps> {
+interface IEventsListState {
+  hoveredEvent: IEventInstance | null;
+}
+
+export class EventsList extends React.Component<IEventsListProps, IEventsListState> {
   render() {
-    let events = this.props.events || [];
+    const events = this.props.events || [];
     let id = 0;
     const entries = events.map((event: IEventInstance) => {
       return (
         <EventEntry event={event} key={`${event.id}-${id++}`}
           board={this.props.board}
-          onEventDeleted={this.props.onEventDeleted}
+          onEventDeleted={this.onDelete}
           onEventActivationTypeToggle={this.props.onEventActivationTypeToggle}
-          onEventParameterSet={this.props.onEventParameterSet} />
+          onEventParameterSet={this.props.onEventParameterSet}
+          onEventMouseEnter={this.onMouseEnter}
+          onEventMouseLeave={this.onMouseLeave} />
       );
     });
 
@@ -48,6 +56,32 @@ export class EventsList extends React.Component<IEventsListProps> {
       </div>
     );
   }
+
+  private onDelete = (event: IEventInstance) => {
+    // First simulate mouse leave
+    if (this.props.onEventMouseLeave && this.state.hoveredEvent === event) {
+      this.setState({ hoveredEvent: null });
+      this.props.onEventMouseLeave(event);
+    }
+
+    this.props.onEventDeleted(event);
+  }
+
+  private onMouseEnter = (event: IEventInstance) => {
+    this.setState({ hoveredEvent: event });
+
+    if (this.props.onEventMouseEnter) {
+      this.props.onEventMouseEnter(event);
+    }
+  }
+
+  private onMouseLeave = (event: IEventInstance) => {
+    this.setState({ hoveredEvent: null });
+
+    if (this.props.onEventMouseLeave) {
+      this.props.onEventMouseLeave(event);
+    }
+  }
 };
 
 interface IEventEntryProps {
@@ -56,6 +90,8 @@ interface IEventEntryProps {
   onEventDeleted(event: IEventInstance): void;
   onEventActivationTypeToggle(event: IEventInstance): void;
   onEventParameterSet(event: IEventInstance, name: string, value: number): void;
+  onEventMouseEnter?(event: IEventInstance): void;
+  onEventMouseLeave?(event: IEventInstance): void;
 }
 
 class EventEntry extends React.Component<IEventEntryProps> {
@@ -71,6 +107,18 @@ class EventEntry extends React.Component<IEventEntryProps> {
   onEventParameterSet = (name: string, value: any) => {
     this.props.onEventParameterSet(this.props.event, name, value);
     this.forceUpdate();
+  }
+
+  onEventMouseEnter = () => {
+    if (this.props.onEventMouseEnter) {
+      this.props.onEventMouseEnter(this.props.event);
+    }
+  }
+
+  onEventMouseLeave = () => {
+    if (this.props.onEventMouseLeave) {
+      this.props.onEventMouseLeave(this.props.event);
+    }
   }
 
   render() {
@@ -91,7 +139,9 @@ class EventEntry extends React.Component<IEventEntryProps> {
     }
 
     return (
-      <div className="eventEntry">
+      <div className="eventEntry"
+        onMouseEnter={this.onEventMouseEnter}
+        onMouseLeave={this.onEventMouseLeave}>
         <div className="eventEntryHeader">
           <span className="eventEntryName" title={name}>{name}</span>
           <div role="button" className="eventEntryDelete" onClick={this.onEventDeleted}
