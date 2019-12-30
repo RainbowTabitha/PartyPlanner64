@@ -3,7 +3,7 @@ import { getSymbols } from "../symbols/symbols";
 import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
 import { Game, EventParameterType } from "../types";
 import { $$hex } from "../utils/debug";
-import { IEventInstance, getCurrentBoard } from "../boards";
+import { IEventInstance } from "../boards";
 
 /**
  * Takes event asm, and makes it assemble (in isolation)
@@ -60,27 +60,22 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
     return `.definelabel ${symbol.name},0x${symbol.addr.toString(16)}`;
   });
 
-  // Should use __PP64_INTERNAL_VAL_AUDIO_INDEX, but it doesn't propagate through symbolOutputMap
-  const audioIndex = getCurrentBoard()?.audioIndex || 0;
-
   // Add symbols that are aliased from the board overlay.
   switch (game) {
     case Game.MP1_USA:
       if (needOverlayStubs) {
-        syms.push(".definelabel BOARD_AUDIO_INDEX,0");
+        syms.push(".definelabel GetBoardAudioIndex,0");
       }
       else {
-        syms.push(`.definelabel BOARD_AUDIO_INDEX,${audioIndex}`);
+        syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
       }
       break;
     case Game.MP2_USA:
       if (needOverlayStubs) {
         syms.push(".definelabel ViewBoardMap,0");
-        syms.push(".definelabel BOARD_AUDIO_INDEX,0");
       }
       else {
         syms.push(".definelabel ViewBoardMap,0x80103A64");
-        syms.push(`.definelabel BOARD_AUDIO_INDEX,${audioIndex}`);
       }
       break;
 
@@ -88,12 +83,12 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
       if (needOverlayStubs) {
         syms.push(".definelabel GetBasicPromptSelection,0");
         syms.push(".definelabel ViewBoardMap,0");
-        syms.push(".definelabel BOARD_AUDIO_INDEX,0");
+        syms.push(".definelabel GetBoardAudioIndex,0");
       }
       else {
         syms.push(".definelabel GetBasicPromptSelection,__PP64_INTERNAL_BASIC_MESSAGE_CHOICE");
         syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
-        syms.push(`.definelabel BOARD_AUDIO_INDEX,${audioIndex}`);
+        syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
       }
       break;
   }

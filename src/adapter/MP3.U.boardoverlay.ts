@@ -2527,11 +2527,22 @@ jr    RA
 
 ${preppedAdditionalBgCode}
 
+; A function that returns the audio index, to let custom events call to get the value.
+__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX:
+jr    RA
+ li V0 __PP64_INTERNAL_VAL_AUDIO_INDEX
+
 overlaycall2:
 addiu SP, SP, -0x18
 sw    RA, 0x10(SP)
+
+jal __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
+ nop
+
+; Start playing board audio.
 jal   0x8004A520
- li    A0, __PP64_INTERNAL_VAL_AUDIO_INDEX
+ move    A0, V0
+
 li    V0, 24 ; TODO: Are these also the audio index?
 lui   AT, hi(CORE_800CE198)
 sh    V0, lo(CORE_800CE198)(AT)

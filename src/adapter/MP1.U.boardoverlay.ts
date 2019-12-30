@@ -919,11 +919,22 @@ L800F717C:
 
 ${preppedAdditionalBgCode}
 
+; A function that returns the audio index, to let custom events call to get the value.
+__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX:
+jr    RA
+ li V0 __PP64_INTERNAL_VAL_AUDIO_INDEX
+
 overlaycall2:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
+
+  jal __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
+   nop
+
+  ; Start playing board audio.
   jal   0x80060128
-   addiu A0, R0, __PP64_INTERNAL_VAL_AUDIO_INDEX
+   move A0, V0
+
   jal   0x8001D240
    addiu A0, R0, 2
   jal   setup_routine
