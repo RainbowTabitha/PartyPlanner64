@@ -273,6 +273,8 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 .definelabel STAR_COUNT,${starIndices.length}
 .definelabel BOO_COUNT,${booIndices.length}
 
+.definelabel __PP64_INTERNAL_VAL_AUDIO_INDEX,${board.audioIndex || 0}
+
 main:
 addiu SP, SP, -0x18
 sw    RA, 0x10(SP)
@@ -2529,7 +2531,7 @@ overlaycall2:
 addiu SP, SP, -0x18
 sw    RA, 0x10(SP)
 jal   0x8004A520
- li    A0, ${board.audioIndex || 0}
+ li    A0, __PP64_INTERNAL_VAL_AUDIO_INDEX
 li    V0, 24 ; TODO: Are these also the audio index?
 lui   AT, hi(CORE_800CE198)
 sh    V0, lo(CORE_800CE198)(AT)

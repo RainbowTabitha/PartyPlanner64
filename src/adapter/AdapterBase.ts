@@ -1168,7 +1168,10 @@ export abstract class AdapterBase {
   _makeSymbolsForEventAssembly(syms: { [symbol: string]: number }, sceneInfo: ISceneInfo): string {
     let result: string = "";
     for (let symName in syms) {
-      if (symName.indexOf("__PP64_INTERNAL") === 0) {
+      if (symName.indexOf("__PP64_INTERNAL_VAL_") === 0) {
+        result += `.definelabel ${symName},${$$hex(syms[symName])}\n`;
+      }
+      else if (symName.indexOf("__PP64_INTERNAL") === 0) {
         result += `.definelabel ${symName},${$$hex(sceneInfo.ram_start + syms[symName])}\n`;
       }
     }

@@ -74,6 +74,8 @@ return `
 .definelabel STAR_COUNT,${starIndices.length}
 .definelabel BOO_COUNT,${booIndices.length}
 
+.definelabel __PP64_INTERNAL_VAL_AUDIO_INDEX,${board.audioIndex || 0}
+
 main:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
@@ -921,7 +923,7 @@ overlaycall2:
   addiu SP, SP, -0x18
   sw    RA, 0x10(SP)
   jal   0x80060128
-   addiu A0, R0, ${board.audioIndex || 0}
+   addiu A0, R0, __PP64_INTERNAL_VAL_AUDIO_INDEX
   jal   0x8001D240
    addiu A0, R0, 2
   jal   setup_routine
