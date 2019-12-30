@@ -121,6 +121,7 @@ export enum Action {
   ADD_DUEL_POWERUP = 39,
   ADD_DUEL_START_BLUE = 40,
   ADD_DUEL_START_RED = 41,
+  TELESCOPE = 42,
 }
 
 export enum Game {

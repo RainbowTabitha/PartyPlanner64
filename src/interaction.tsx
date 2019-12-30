@@ -27,6 +27,7 @@ import { Action, Space, SpaceSubtype } from "./types";
 import { getEventParamDropHandler } from "./utils/drag";
 import { $$log, $$hex } from "./utils/debug";
 import { changeCurrentAction, getCurrentAction, changeSelectedSpaces, getSelectedSpaces } from "./appControl";
+import { getMouseCoordsOnCanvas } from "./utils/canvas";
 
 let selectedSpaceIndices: { [index: number]: boolean } = {};
 let spaceWasMouseDownedOn = false;
@@ -56,11 +57,7 @@ function onEditorTouchStart(event: TouchEvent) {
 function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: number, ctrlKey: boolean) {
   canvasRect = canvas.getBoundingClientRect();
 
-  clientX = Math.round(clientX);
-  clientY = Math.round(clientY);
-
-  const clickX = clientX - Math.round(canvasRect.left);
-  const clickY = clientY - Math.round(canvasRect.top);
+  const [clickX, clickY] = getMouseCoordsOnCanvas(canvas, clientX, clientY);
 
   startX = lastX = clickX;
   startY = lastY = clickY;
@@ -605,11 +602,8 @@ function onEditorDrop(event: DragEvent) {
   }
 
   const canvas = event.currentTarget as HTMLCanvasElement;
+  const [clickX, clickY] = getMouseCoordsOnCanvas(canvas, event.clientX, event.clientY);
   canvasRect = canvas.getBoundingClientRect();
-  const clientX = Math.round(event.clientX);
-  const clientY = Math.round(event.clientY);
-  const clickX = clientX - Math.round(canvasRect.left);
-  const clickY = clientY - Math.round(canvasRect.top);
   const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
 
   if (typeof data === "object") {

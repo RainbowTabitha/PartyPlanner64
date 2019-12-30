@@ -101,7 +101,8 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     let mainView;
     switch (this.state.currentView) {
       case View.EDITOR:
-        mainView = <Editor board={this.state.currentBoard} selectedSpaces={this.state.selectedSpaces} />;
+        mainView = <Editor board={this.state.currentBoard} selectedSpaces={this.state.selectedSpaces}
+          telescoping={this.state.currentAction === Action.TELESCOPE} />;
         break;
       case View.DETAILS:
         mainView = <Details board={this.state.currentBoard} />;

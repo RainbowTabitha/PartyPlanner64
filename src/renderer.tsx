@@ -1,16 +1,19 @@
 import * as ReactDOM from "react-dom";
+import * as React from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter, IEventInstance } from "./boards";
-import { BoardType, Space, SpaceSubtype } from "./types";
+import { BoardType, Space, SpaceSubtype, GameVersion } from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
 import { getImage } from "./images";
-import { $$hex } from "./utils/debug";
-import * as React from "react";
+import { $$hex, $$log } from "./utils/debug";
 import { RightClickMenu } from "./rightclick";
 import { attachToCanvas, detachFromCanvas } from "./interaction";
 import { getEvent } from "./events/events";
 import { getDistinctColor } from "./utils/colors";
 import { isDebug } from "./debug";
+import { takeScreeny } from "./screenshot";
+import { getMouseCoordsOnCanvas } from "./utils/canvas";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
@@ -837,9 +840,125 @@ class BoardOverlay extends React.Component<BoardOverlayProps> {
   }
 };
 
+const N64_SCREEN_WIDTH = 320;
+const N64_SCREEN_HEIGHT = 240;
+
+function getZoomedN64SizeForTelescope(gameVersion: GameVersion) {
+  let WIDTH_ZOOM_FACTOR = 1;
+  let HEIGHT_ZOOM_FACTOR = 1;
+  switch (gameVersion) {
+    case 1:
+    case 2:
+      break;
+
+    case 3:
+      WIDTH_ZOOM_FACTOR = 0.785;
+      HEIGHT_ZOOM_FACTOR = 0.805;
+      break;
+  }
+
+  const N64_WIDTH_ZOOMED = (N64_SCREEN_WIDTH * WIDTH_ZOOM_FACTOR);
+  const N64_HEIGHT_ZOOMED = (N64_SCREEN_HEIGHT * HEIGHT_ZOOM_FACTOR);
+  return {
+    N64_WIDTH_ZOOMED,
+    N64_HEIGHT_ZOOMED
+  };
+}
+
+interface ITelescopeViewerProps {
+  board: IBoard;
+}
+
+const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
+  const canvasRef = useRef<Canvas | null>(null);
+  const screenshotCanvasRef = useRef<Canvas | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const editor = canvas.parentElement!;
+    const transformStyle = getEditorContentTransform(props.board, editor);
+    canvas.style.transform = transformStyle;
+    if (canvas.width !== props.board.bg.width || canvas.height !== props.board.bg.height) {
+      canvas.width = props.board.bg.width;
+      canvas.height = props.board.bg.height;
+    }
+  }, [props.board]);
+
+  useEffect(() => {
+    screenshotCanvasRef.current = takeScreeny({ renderCharacters: true }).canvas;
+    const context = screenshotCanvasRef.current.getContext("2d")!;
+
+    context.lineWidth = 1;
+    context.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    const { width, height} = props.board.bg;
+    const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(props.board.game);
+    context.strokeRect(N64_WIDTH_ZOOMED / 2, N64_HEIGHT_ZOOMED / 2, width - N64_WIDTH_ZOOMED, height - N64_HEIGHT_ZOOMED);
+  }, [props.board]);
+
+  const onMouseMove = useCallback((ev: React.MouseEvent<Canvas>) => {
+    const canvas = canvasRef.current!;
+    const context = canvas.getContext("2d")!;
+
+    const screenshotCanvas = screenshotCanvasRef.current;
+    if (!screenshotCanvas) {
+      return;
+    }
+
+    const [clickX, clickY] = getMouseCoordsOnCanvas(canvas, ev.clientX, ev.clientY);
+    const { width, height } = props.board.bg;
+    const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(props.board.game);
+
+    // The cutout from the board image, bounded like the game camera is.
+    let sx = Math.max(0, clickX - (N64_WIDTH_ZOOMED / 2));
+    let sy = Math.max(0, clickY - (N64_HEIGHT_ZOOMED / 2));
+    const sWidth = N64_WIDTH_ZOOMED;
+    const sHeight = N64_HEIGHT_ZOOMED;
+
+    if (width - sx < N64_WIDTH_ZOOMED) {
+      sx = width - N64_WIDTH_ZOOMED;
+    }
+    if (height - sy < N64_HEIGHT_ZOOMED) {
+      sy = height - N64_HEIGHT_ZOOMED;
+    }
+
+    $$log(`Viewing (${sx}, ${sy}) - (${sx + sWidth}, ${sy + sHeight})\nMouse: (${clickX}, ${clickY}`);
+
+    context.drawImage(
+      screenshotCanvas,
+      sx, sy, sWidth, sHeight,
+      0, 0, width, height
+    );
+
+    // Simulate the black bars the game has, which restrict the viewing area further.
+    const n64WidthRatio = width / N64_SCREEN_WIDTH;
+    const n64HeightRatio = height / N64_SCREEN_HEIGHT;
+    const horzBarHeight = 12 * n64HeightRatio;
+    const vertBarWidth = 16 * n64WidthRatio;
+    context.fillStyle = "black";
+    context.fillRect(0, 0, width, horzBarHeight); // top
+    context.fillRect(width - vertBarWidth, 0, vertBarWidth, height); // right
+    context.fillRect(0, height - horzBarHeight, width, horzBarHeight); // bottom
+    context.fillRect(0, 0, vertBarWidth, height); // left
+  }, [props.board]);
+
+  const onMouseLeave = useCallback(() => {
+    const canvas = canvasRef.current!;
+    const context = canvas.getContext("2d")!;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  return (
+    <canvas ref={canvasRef}
+      className="editor_telescope_viewer"
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave} />
+  );
+};
+
 interface IEditorProps {
   board: IBoard;
   selectedSpaces: ISpace[] | null;
+  telescoping?: boolean;
 }
 
 export const Editor = class Editor extends React.Component<IEditorProps> {
@@ -856,16 +975,18 @@ export const Editor = class Editor extends React.Component<IEditorProps> {
   componentDidUpdate() {}
 
   render() {
+    const { board, selectedSpaces, telescoping } = this.props;
     return (
       <div className="editor">
-        <BoardBG board={this.props.board} />
-        <BoardLines board={this.props.board} />
-        <BoardAssociations board={this.props.board}
-          selectedSpaces={this.props.selectedSpaces} />
-        <BoardSelectedSpaces board={this.props.board}
-          selectedSpaces={this.props.selectedSpaces} />
-        <BoardSpaces board={this.props.board} />
-        <BoardOverlay board={this.props.board} />
+        <BoardBG board={board} />
+        <BoardLines board={board} />
+        <BoardAssociations board={board}
+          selectedSpaces={selectedSpaces} />
+        <BoardSelectedSpaces board={board}
+          selectedSpaces={selectedSpaces} />
+        <BoardSpaces board={board} />
+        <BoardOverlay board={board} />
+        {telescoping && <TelescopeViewer board={board} />}
       </div>
     );
   }
