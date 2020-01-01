@@ -67,7 +67,7 @@ export const ChainMerge3: IEvent = {
     return `
       ADDIU SP, SP, -0x18
       SW    RA, 0x10(SP)
-      ADDIU A0, R0, ${event.parameterValues!.prevSpace}
+      ADDIU A0, R0, ${event.parameterValues!.prevSpace || 0}
       ADDIU A1, R0, ${event.parameterValues!.chain || 0}
       JAL   chainmerge_3_helper
       ADDIU A2, R0, ${event.parameterValues!.spaceIndex || 0}

@@ -11,6 +11,8 @@ const _defaultEventC = `// NAME:
 // GAMES:
 // EXECUTION: Direct
 
+#include "ultra64.h"
+
 void main() {
     // Your code here!
     // For code examples, see:
@@ -255,6 +257,15 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
         break;
 
       case 1: // MIPS
+        if (!this.getEventName()) {
+          showMessage("The event name is missing.");
+          return;
+        }
+        if (!this.getSupportedGames().length) {
+          showMessage("At least one game must be supported.");
+          return;
+        }
+
         let asm: string;
         const event = createCustomEvent(EventCodeLanguage.C, this.state.code);
         try {
