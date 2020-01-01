@@ -305,7 +305,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         }
         addEventByIndex(board, lastSpace, event, true);
       }
-      else {
+      else if (endLinks.length > 0) {
         event = createEventInstance(ChainMerge3, {
           parameterValues: {
             chain: _getChainWithSpace(endLinks[0])!,
@@ -400,9 +400,10 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         if (firstLinks.length > 1) {
           $$log("FIXME: branching isolated chain?");
         }
-        else {
+        else if (firstLinks.length > 0) {
           // This doesn't crash, but it creates a back forth loop at a dead end.
           // This probably will yield issues if the loop is over invisible spaces.
+          // Only do this if `firstLinks.length > 0`; if this is false, this is a single decorative space.
           event = createEventInstance(ChainMerge, { // Not CHAINMERGE3
             parameterValues: {
               chain: i,

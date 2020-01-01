@@ -590,7 +590,7 @@ export abstract class AdapterBase {
           });
         }
       }
-      else {
+      else if (links.length > 0) {
         event = createEventInstance(ChainMerge, {
           parameterValues: {
             chain: _getChainWithSpace(links[0])!,
@@ -598,7 +598,9 @@ export abstract class AdapterBase {
         });
       }
 
-      addEventByIndex(board, lastSpace, event, true);
+      if (event) {
+        addEventByIndex(board, lastSpace, event, true);
+      }
     }
 
     function _getChainWithSpace(space: number) {
