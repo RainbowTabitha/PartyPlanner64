@@ -247,7 +247,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
         continue; // Let the other rule handle this.
       if (!event.custom)
         continue;
-      testEvent(event);
+      await testEvent(event);
     }
   }
 
@@ -255,7 +255,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
     for (const event of board.boardevents) {
       if (!event.custom)
         continue;
-      testEvent(event);
+      await testEvent(event);
     }
   }
 
