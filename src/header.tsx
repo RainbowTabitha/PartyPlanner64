@@ -49,6 +49,7 @@ import saveImage from "./img/header/save.png";
 //import moreImage from "./img/header/more.png";
 import boardwarningImage from "./img/header/boardwarning.png";
 import boarderrorImage from "./img/header/boarderror.png";
+import loadingSquaresImage from "./img/assets/loadingsquares.gif";
 
 import "./css/header.scss";
 
@@ -664,11 +665,17 @@ const HeaderOverwriteBoardDropdown: React.FC<IHeaderOverwriteBoardDropdownProps>
   const [validationResults, setValidationResults] = useState<IValidationResult[] | null>(null);
 
   useEffect(() => {
-    resultsPromise.then(setValidationResults);
-  }, [resultsPromise]);
+    resultsPromise.then(results => {
+      setValidationResults(results);
+    }, (e) => {
+      onClose();
+      console.error(e);
+      showMessage("An error occurred during board validation, please submit an issue.\n\n" + e.toString());
+    });
+  }, [resultsPromise, onClose]);
 
   if (!validationResults)
-    return null;
+    return <PendingDropdown />;
 
   // Fragment only for weird typing bug.
   return <>
@@ -912,3 +919,12 @@ function newEventDropdown(closeFn: Function) {
     <NewEventDropdown onAccept={onAccept} />
   );
 }
+
+const PendingDropdown: React.FC<{}> = () =>
+{
+  return (
+    <div className="pendingDropdownBox">
+      <img className="pendingDropdownImage" src={loadingSquaresImage} alt="Loading"></img>
+    </div>
+  );
+};
