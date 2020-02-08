@@ -1877,6 +1877,11 @@ export default [{
       name: "scene",
       desc: "Current scene number" },
 {
+      addr: 2148520644, // 0x800FD2C4
+      type: "u8",
+      name: "p1_char",
+      desc: "00=Mario" },
+{
       addr: 2148520648, // 0x800FD2C8
       type: "u16",
       name: "p1_coins",
@@ -1916,6 +1921,11 @@ export default [{
       type: "u16",
       name: "p1_turn_status",
       desc: "Player 1 turn status" },
+{
+      addr: 2148520696, // 0x800FD2F8
+      type: "u8",
+      name: "p2_char",
+      desc: "00=Mario" },
 {
       addr: 2148520700, // 0x800FD2FC
       type: "u16",
@@ -1957,6 +1967,11 @@ export default [{
       name: "p2_turn_status",
       desc: "Player 2 turn status" },
 {
+      addr: 2148520748, // 0x800FD32C
+      type: "u8",
+      name: "p3_char",
+      desc: "00=Mario" },
+{
       addr: 2148520752, // 0x800FD330
       type: "u16",
       name: "p3_coins",
@@ -1976,6 +1991,11 @@ export default [{
       type: "u16",
       name: "p3_turn_statu",
       desc: "Player 3 turn status" },
+{
+      addr: 2148520800, // 0x800FD360
+      type: "u8",
+      name: "p4_char",
+      desc: "00=Mario" },
 {
       addr: 2148520804, // 0x800FD364
       type: "u16",

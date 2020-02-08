@@ -1690,10 +1690,74 @@ export default [{
       type: "u8",
       name: "current_turn" },
 {
+      addr: 2148323420, // 0x800CD05C
+      type: "u8",
+      name: "current_game_length",
+      desc: "00=Lite Play" },
+{
+      addr: 2148323421, // 0x800CD05D
+      type: "u8",
+      name: "current_star_spawn",
+      desc: "00 for first star spawn" },
+{
+      addr: 2148323422, // 0x800CD05E
+      type: "u8",
+      name: "star_spawn_indices",
+      desc: "array length 8 of the current star order" },
+{
       addr: 2148323431, // 0x800CD067
       type: "u8",
       name: "current_player_index",
       desc: "Player who's turn is active" },
+{
+      addr: 2148323433, // 0x800CD069
+      type: "u8",
+      name: "current_space_index" },
+{
+      addr: 2148323488, // 0x800CD0A0
+      type: "u8",
+      name: "board_ram9",
+      desc: "free for board use" },
+{
+      addr: 2148323489, // 0x800CD0A1
+      type: "u8",
+      name: "board_ram10",
+      desc: "free for board use" },
+{
+      addr: 2148323490, // 0x800CD0A2
+      type: "u8",
+      name: "board_ram11",
+      desc: "free for board use" },
+{
+      addr: 2148323491, // 0x800CD0A3
+      type: "u8",
+      name: "board_ram12",
+      desc: "free for board use" },
+{
+      addr: 2148323492, // 0x800CD0A4
+      type: "u8",
+      name: "board_ram13",
+      desc: "free for board use" },
+{
+      addr: 2148323493, // 0x800CD0A5
+      type: "u8",
+      name: "board_ram14",
+      desc: "free for board use" },
+{
+      addr: 2148323494, // 0x800CD0A6
+      type: "u8",
+      name: "board_ram15",
+      desc: "free for board use" },
+{
+      addr: 2148323495, // 0x800CD0A7
+      type: "u8",
+      name: "board_ram16",
+      desc: "free for board use" },
+{
+      addr: 2148323496, // 0x800CD0A8
+      type: "u8",
+      name: "board_ram17",
+      desc: "free for board use" },
 {
       addr: 2148323497, // 0x800CD0A9
       type: "u8",
@@ -2353,6 +2417,11 @@ export default [{
       type: "code",
       name: "GetTurnsElapsed" },
 {
+      addr: 2148454924, // 0x800ED20C
+      type: "code",
+      name: "RotatePlayerModel",
+      desc: "A0=player_index" },
+{
       addr: 2148456732, // 0x800ED91C
       type: "code",
       name: "SetPlayerOntoChain",
@@ -2367,6 +2436,10 @@ export default [{
       type: "code",
       name: "SetPrevChainAndSpace",
       desc: "A0=player_index" },
+{
+      addr: 2148457048, // 0x800EDA58
+      type: "code",
+      name: "ChangeStarLocation" },
 {
       addr: 2148460992, // 0x800EE9C0
       type: "code",

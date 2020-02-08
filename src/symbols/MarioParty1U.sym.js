@@ -273,6 +273,11 @@ export default [{
       name: "PlayerIsCurrent",
       desc: "A0=player_index tests if A0 is the current player" },
 {
+      addr: 2147822312, // 0x80052AE8
+      type: "code",
+      name: "PlayerStructIsCurrent",
+      desc: "A0=struct player pointer" },
+{
       addr: 2147822368, // 0x80052B20
       type: "code",
       name: "PlayerIsCPU",
