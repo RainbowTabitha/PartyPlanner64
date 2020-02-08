@@ -2,7 +2,11 @@
 
 // Derived originally from https://github.com/naphipps/brackets-mips-syntax-highlighter
 
-import { defineMode } from "codemirror";
+import { defineMode, StringStream } from "codemirror";
+
+interface IModeState {
+  blockComment: boolean;
+}
 
 defineMode("mips-pp64", function() {
   const directives = /\.(ascii|asciiz|align|beginstatic|byte|definelabel|else|elseif|endif|endstatic|fill|float|halfword|if|skip|word)\b/i;
@@ -12,21 +16,42 @@ defineMode("mips-pp64", function() {
   const numbers = /\b(0x[\da-f]+|o[0-7]+|b[0-1]+|\d+)\b/i;
 
   return {
-    startState: function() {
-      return { context: 0 };
+    startState: function(): IModeState {
+      return {
+        blockComment: false,
+      };
     },
 
-    token: function(stream, state) {
+    token: function(stream: StringStream, state: IModeState) {
       if (stream.eatSpace()) {
         return null;
       }
 
       let thisItem;
 
+      // Block comments
+      if (state.blockComment || stream.match("/*")) {
+        state.blockComment = true;
+
+        let mayBeMatch = false;
+        while (thisItem = stream.next()) { // eslint-disable-line no-cond-assign
+          if (thisItem === '/' && mayBeMatch) {
+            state.blockComment = false;
+            break;
+          }
+          else {
+            mayBeMatch = thisItem === '*';
+          }
+        }
+        return "comment";
+      }
+
+      // Line comments
       if (stream.eat(";") || stream.match("//")) {
         stream.skipToEnd();
         return "comment";
       }
+
       if (stream.eat('"')) {
         while (thisItem = stream.next()) { // eslint-disable-line no-cond-assign
           if (thisItem === '"') {
