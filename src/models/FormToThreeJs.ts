@@ -1,5 +1,6 @@
 import { IFormObj, FORM, IFAC1Parsed, IFAC1VertexEntry, IVTX1Vertex } from "./FORM";
 import * as THREE from "three";
+import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHelper";
 import { invertColor } from "../utils/image";
 import { $$hex, $$log } from "../utils/debug";
 import { arrayBufferToDataURL } from "../utils/arrays";
@@ -103,7 +104,7 @@ export class FormToThreeJs {
         }
 
         if (this.showVertexNormals) {
-          const normalsHelper = new THREE.VertexNormalsHelper(new THREE.Mesh(geometry, materials), 8, 0x00FF00, 1);
+          const normalsHelper = new VertexNormalsHelper(new THREE.Mesh(geometry, materials), 8, 0x00FF00, 1);
           newObj.add(normalsHelper);
         }
 
