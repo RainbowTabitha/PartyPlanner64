@@ -2561,11 +2561,6 @@ lui   A0, hi(shared_happening_event)
 jal   0x800F8D48
 addiu A0, A0, lo(shared_happening_event)
 
-; Sets up necessary per turn events
-lui   A0, hi(D_8011E4D8_event_table)
-jal   EventTableHydrate
-addiu A0, A0, lo(D_8011E4D8_event_table)
-
 jal   0x800FF41C
  move  A0, R0
 lw    RA, 0x10(SP)
@@ -17192,7 +17187,7 @@ jr    RA
 
 ; runs from 0xFFFB event table entry
 ; Poison / Bowser Curse, reduce movement to 3 spaces.
-func_80116BA0:
+__PP64_INTERNAL_CURSE_POISON_DICEROLL_EVENT:
 addiu SP, SP, -0x38
 sw    RA, 0x1c(SP)
 sw    S2, 0x18(SP)
@@ -17817,7 +17812,7 @@ jr    RA
 
 ; Runs from 0xFFFB event table entry
 ; Reversal (mushroom, curse)
-func_801174D4:
+__PP64_INTERNAL_REVERSAL_DICEROLL_EVENT:
 addiu SP, SP, -0x38
 sw    RA, 0x1c(SP)
 sw    S2, 0x18(SP)
@@ -18316,7 +18311,7 @@ sra   V0, V0, 0x10
 lb    V1, 0xf(S3)
 bne   V0, V1, L80117C30
        NOP
-jal   func_801174D4
+jal   __PP64_INTERNAL_REVERSAL_DICEROLL_EVENT
        NOP
 L80117C30:
 lw    RA, 0x38(SP)
@@ -20213,15 +20208,7 @@ D_8011E4B9: .byte 0xDE
 D_8011E4BA: .byte 0x35 0xF7
 D_8011E4BC: .byte 0x1A 0x42 0x00 0x00
 
-; codes that run with the 0xFFFB activation type below
-D_8011E4C0:
-.word 0x00070001 func_80116BA0
-.word 0x00070001 func_801174D4 0 0
-
-D_8011E4D8_event_table:
-.word 0xFFFB0000 D_8011E4C0
-.word 0xFFFF0000 00000000
-
+.align 16
 data_screen_dimensions:
 .word 00000000
 .word 00000000

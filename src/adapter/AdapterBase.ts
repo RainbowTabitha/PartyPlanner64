@@ -497,6 +497,9 @@ export abstract class AdapterBase {
 
     eventTable.forEach((eventTableEntry: any) => {
       let curSpaceIndex = eventTableEntry.spaceIndex;
+      if (curSpaceIndex < 0) {
+        $$log(`Space event on negative space ${curSpaceIndex}`);
+      }
 
       // Figure out the current info struct offset in the ROM.
       let curInfoAddr = eventTableEntry.address & 0x7FFFFFFF;
@@ -509,7 +512,7 @@ export abstract class AdapterBase {
       boardList.parse(buffer!, curInfoOffset);
       boardList.forEach(listEntry => {
         // Figure out the event ASM info in ROM.
-        let asmAddr = listEntry.address & 0x7FFFFFFF;
+        let asmAddr = (listEntry.address as number) & 0x7FFFFFFF;
         let asmOffset, codeView;
         if (asmAddr > (this.EVENT_RAM_LOC & 0x7FFFFFFF)) {
           asmOffset = this._addrToOffsetBase(asmAddr, this.EVENT_RAM_LOC);
@@ -770,7 +773,6 @@ export abstract class AdapterBase {
     }
 
     // Write any board events
-    const hasBoardEvents = board.boardevents && board.boardevents.length > 0;
     const type5 = new SpaceEventList(-5);
     const type4 = new SpaceEventList(-4);
     const type3 = new SpaceEventList(-3);
@@ -781,18 +783,18 @@ export abstract class AdapterBase {
       { index: -3, list: type3, type: EditorEventActivationType.FFFD },
       { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
     ];
-    if (hasBoardEvents) {
-      for (const { index, list, type } of boardEventTypeInfos) {
-        const events = _getEventsWithActivationType(board.boardevents!, type);
-        const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
-        for (const event of events) {
-          list.add(activationType, event.executionType, 0);
-        }
+    for (const { index, list, type } of boardEventTypeInfos) {
+      const events = _getEventsWithActivationType(board.boardevents || [], type);
+      const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
+      for (const event of events) {
+        list.add(activationType, event.executionType, 0);
+      }
 
-        if (list.count() > 0) {
-          eventTable.add(index, 0);
-          eventLists.push(list);
-        }
+      this.onAddDefaultBoardEvents(type, list);
+
+      if (list.count() > 0) {
+        eventTable.add(index, 0);
+        eventLists.push(list);
       }
     }
 
@@ -862,48 +864,47 @@ export abstract class AdapterBase {
     }
 
     // Now write any board events
-    if (hasBoardEvents) {
-      for (const { index, list, type } of boardEventTypeInfos) {
-        if (list.count() > 0) {
-          const events = _getEventsWithActivationType(board.boardevents!, type);
-          for (let e = 0; e < events.length; e++) {
-            const event = events[e];
-            let temp = eventTemp[event.id] || {};
-            let info = {
-              boardIndex,
-              board,
-              curSpaceIndex: index,
-              curSpace: null,
-              chains,
-              offset: currentOffset,
-              addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
-              game: romhandler.getROMGame()!,
-              gameVersion: this.gameVersion,
-            };
+    for (const { index, list, type } of boardEventTypeInfos) {
+      if (list.count() > 0) {
+        const events = _getEventsWithActivationType(board.boardevents || [], type);
+        for (let e = 0; e < events.length; e++) {
+          const event = events[e];
+          let temp = eventTemp[event.id] || {};
+          let info = {
+            boardIndex,
+            board,
+            curSpaceIndex: index,
+            curSpace: null,
+            chains,
+            offset: currentOffset,
+            addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
+            game: romhandler.getROMGame()!,
+            gameVersion: this.gameVersion,
+          };
 
-            let [writtenOffset, len] = await writeEvent(eventBuffer, event, info, temp) as number[];
-            eventTemp[event.id] = temp;
+          let [writtenOffset, len] = await writeEvent(eventBuffer, event, info, temp) as number[];
+          eventTemp[event.id] = temp;
 
-            // Apply address to event list.
-            // If the writtenOffset is way out of bounds (like > EVENT_MEM_SIZE)
-            // it probably means it is directly referencing old code (some 2/3
-            // events are like this for now) so we need to calc differently.
-            let eventListAsmAddr;
-            if (writtenOffset > this.EVENT_MEM_SIZE)
-              eventListAsmAddr = this._offsetToAddr(writtenOffset, boardInfo) | 0x80000000;
-            else
-              eventListAsmAddr = this._offsetToAddrBase(writtenOffset, this.EVENT_RAM_LOC);
-              list.setAddress(e, eventListAsmAddr);
+          // Apply address to event list.
+          // If the writtenOffset is way out of bounds (like > EVENT_MEM_SIZE)
+          // it probably means it is directly referencing old code (some 2/3
+          // events are like this for now) so we need to calc differently.
+          let eventListAsmAddr;
+          if (writtenOffset > this.EVENT_MEM_SIZE)
+            eventListAsmAddr = this._offsetToAddr(writtenOffset, boardInfo) | 0x80000000;
+          else
+            eventListAsmAddr = this._offsetToAddrBase(writtenOffset, this.EVENT_RAM_LOC);
 
-            currentOffset += len;
-          }
+          list.setAddress(e, eventListAsmAddr);
 
-          // Fill in the address of the event listing itself back into the event table.
-          let eventListAddr = this._offsetToAddrBase(eventListCurrentOffset, this.EVENT_RAM_LOC);
-          eventTable.add(index, eventListAddr);
-
-          eventListCurrentOffset += list.write(eventBuffer, eventListCurrentOffset);
+          currentOffset += len;
         }
+
+        // Fill in the address of the event listing itself back into the event table.
+        let eventListAddr = this._offsetToAddrBase(eventListCurrentOffset, this.EVENT_RAM_LOC);
+        eventTable.add(index, eventListAddr);
+
+        eventListCurrentOffset += list.write(eventBuffer, eventListCurrentOffset);
       }
     }
 
@@ -975,7 +976,6 @@ export abstract class AdapterBase {
     }
 
     // Write any board events
-    const hasBoardEvents = board.boardevents && board.boardevents.length > 0;
     const type5 = new SpaceEventList(-5);
     const type4 = new SpaceEventList(-4);
     const type3 = new SpaceEventList(-3);
@@ -986,44 +986,44 @@ export abstract class AdapterBase {
       { index: -3, list: type3, type: EditorEventActivationType.FFFD },
       { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
     ];
-    if (hasBoardEvents) {
-      for (const { index, list, type } of boardEventTypeInfos) {
-        const events = _getEventsWithActivationType(board.boardevents!, type);
-        const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
-        for (let e = 0; e < events.length; e++) {
-          const eventInstance = events[e];
-          list.add(activationType, eventInstance.executionType, 0);
+    for (const { index, list, type } of boardEventTypeInfos) {
+      const events = _getEventsWithActivationType(board.boardevents || [], type);
+      const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
+      for (let e = 0; e < events.length; e++) {
+        const eventInstance = events[e];
+        list.add(activationType, eventInstance.executionType, 0);
 
-          let temp = eventTemp[eventInstance.id] || {};
-          let info = {
-            boardIndex,
-            board,
-            curSpaceIndex: index,
-            curSpace: null,
-            chains,
-            game,
-            gameVersion: this.gameVersion,
-          };
+        let temp = eventTemp[eventInstance.id] || {};
+        let info = {
+          boardIndex,
+          board,
+          curSpaceIndex: index,
+          curSpace: null,
+          chains,
+          game,
+          gameVersion: this.gameVersion,
+        };
 
-          let eventAsm = await writeEvent(new ArrayBuffer(0), eventInstance, info, temp);
-          eventTemp[eventInstance.id] = temp;
+        let eventAsm = await writeEvent(new ArrayBuffer(0), eventInstance, info, temp);
+        eventTemp[eventInstance.id] = temp;
 
-          if (!(typeof eventAsm === "string")) {
-            throw new Error(`Event ${eventInstance.id} did not return a string to assemble`);
-          }
-
-          const event = getEvent(eventInstance.id, board);
-          eventAsms.push(
-            prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
-          );
-
-          staticsWritten[eventInstance.id] = true;
+        if (!(typeof eventAsm === "string")) {
+          throw new Error(`Event ${eventInstance.id} did not return a string to assemble`);
         }
 
-        if (list.count() > 0) {
-          eventTable.add(index, 0);
-          eventLists.push(list);
-        }
+        const event = getEvent(eventInstance.id, board);
+        eventAsms.push(
+          prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
+        );
+
+        staticsWritten[eventInstance.id] = true;
+      }
+
+      this.onAddDefaultBoardEvents(type, list);
+
+      if (list.count() > 0) {
+        eventTable.add(index, 0);
+        eventLists.push(list);
       }
     }
 
@@ -1182,6 +1182,13 @@ export abstract class AdapterBase {
 
   onWriteEventAsmHook(romView: DataView, boardInfo: IBoardInfo, boardIndex: number) {
     throw new Error("Adapter does not implement onWriteEventAsmHook");
+  }
+
+  /**
+   * Overwritten per game to add any default board events.
+   * All board events need to be in the same list, so we need to merge defaults with any custom ones.
+   */
+  protected onAddDefaultBoardEvents(editorActivationType: EditorEventActivationType, list: SpaceEventList): void {
   }
 
   _extractStarGuardians(board: IBoard, boardInfo: IBoardInfo) { // AKA Toads or Baby Bowsers lol

@@ -40,6 +40,9 @@ export class SpaceEventList {
     let dataView = new DataView(buffer, offset);
     let currentOffset = 0;
     this.forEach(entry => {
+      if (typeof entry.address === "string") {
+        throw new Error("Cannot write event list with symbolic address");
+      }
       this._writeEntry(dataView, currentOffset, entry.activationType, entry.executionType, entry.address);
       currentOffset += 8;
     });
@@ -53,9 +56,13 @@ export class SpaceEventList {
   public getAssembly(): string {
     let asm = `${createSpaceEventListLabel(this._spaceIndex!)}:\n`;
     this.forEach((entry, index) => {
-      asm +=
-      `.halfword ${entry.activationType}, ${entry.executionType}
-       .word ${createEventInstanceLabel(this._spaceIndex!, index)}\n`;
+      asm += `.halfword ${entry.activationType}, ${entry.executionType}\n`;
+      if (typeof entry.address === "string") {
+        asm += `.word ${entry.address}\n`; // A symbol, write verbatim.
+      }
+      else {
+        asm += `.word ${createEventInstanceLabel(this._spaceIndex!, index)}\n`;
+      }
     });
     asm += `.word 0, 0\n`;
     return asm;
@@ -73,7 +80,7 @@ export class SpaceEventList {
   }
 
   public add(activationType: EventActivationType,
-    executionType: EventExecutionType, address: number = 0)
+    executionType: EventExecutionType, address: number | string = 0)
   {
     this._entries.push(new SpaceEventListEntry(activationType, executionType, address));
   }
@@ -103,10 +110,10 @@ export class SpaceEventList {
 export class SpaceEventListEntry {
   public activationType: EventActivationType;
   public executionType: EventExecutionType;
-  public address: number;
+  public address: number | string;
 
   constructor(activationType: EventActivationType,
-    executionType: EventExecutionType, address: number)
+    executionType: EventExecutionType, address: number | string)
   {
     this.activationType = activationType;
     this.executionType = executionType;

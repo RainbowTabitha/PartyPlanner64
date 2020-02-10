@@ -1,6 +1,6 @@
 import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpace, getConnections, addEventByIndex } from "../boards";
-import { Space, BoardType, SpaceSubtype, EventExecutionType, EditorEventActivationType } from "../types";
+import { Space, BoardType, SpaceSubtype, EventExecutionType, EditorEventActivationType, getEventActivationTypeFromEditorType } from "../types";
 import { $$log } from "../utils/debug";
 import { createEventInstance } from "../events/events";
 import { strings } from "../fs/strings";
@@ -12,6 +12,7 @@ import { toPack } from "../utils/img/ImgPack";
 import { BMPfromRGBA } from "../utils/img/BMP";
 import { FORM } from "../models/FORM";
 import { scenes } from "../fs/scenes";
+import { SpaceEventList } from "./eventlist";
 import { IBoardInfo } from "./boardinfobase";
 import { ChainSplit3 } from "../events/builtin/MP3/U/ChainSplit3";
 import { ChainMerge3 } from "../events/builtin/MP3/U/ChainMergeEvent3";
@@ -122,6 +123,16 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   }
 
   onWriteEvents(board: IBoard) {
+  }
+
+  protected onAddDefaultBoardEvents(editorActivationType: EditorEventActivationType, list: SpaceEventList): void {
+    if (editorActivationType === EditorEventActivationType.BEFORE_DICE_ROLL) {
+      const activationType = getEventActivationTypeFromEditorType(editorActivationType);
+
+      // MP3 has two "Before Dice Roll" default events.
+      list.add(activationType, EventExecutionType.DIRECT, "__PP64_INTERNAL_CURSE_POISON_DICEROLL_EVENT");
+      list.add(activationType, EventExecutionType.DIRECT, "__PP64_INTERNAL_REVERSAL_DICEROLL_EVENT");
+    }
   }
 
   hydrateSpace(space: ISpace, board: IBoard) {
