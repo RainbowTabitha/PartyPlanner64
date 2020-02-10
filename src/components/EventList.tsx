@@ -13,6 +13,7 @@ import { getImage } from "../images";
 import eventpassingImage from "../img/toolbar/eventpassing.png";
 import eventstandingImage from "../img/toolbar/eventstanding.png";
 import eventbeforeturnImage from "../img/editor/boardproperties/eventperturn.png";
+import eventafterturnImage from "../img/editor/boardproperties/eventafterturn.png";
 import eventbeforeplayerturnImage from "../img/editor/boardproperties/eventbeforeplayerturn.png";
 import eventbeforedicerollImage from "../img/editor/boardproperties/eventbeforediceroll.png";
 import targetImage from "../img/events/target.png";
@@ -212,7 +213,7 @@ const ActivationTypeImages: { [activationType in EditorEventActivationType]: str
   [EditorEventActivationType.BEGINORWALKOVER]: undefined,
 
   [EditorEventActivationType.BEFORE_TURN]: eventbeforeturnImage,
-  [EditorEventActivationType.FFFD]: undefined,
+  [EditorEventActivationType.AFTER_TURN]: eventafterturnImage,
   [EditorEventActivationType.BEFORE_PLAYER_TURN]: eventbeforeplayerturnImage,
   [EditorEventActivationType.BEFORE_DICE_ROLL]: eventbeforedicerollImage,
 };
@@ -223,7 +224,7 @@ const ActivationTypeText: { [activationType in EditorEventActivationType]: strin
   [EditorEventActivationType.BEGINORWALKOVER]: undefined,
 
   [EditorEventActivationType.BEFORE_TURN]: "Before turn",
-  [EditorEventActivationType.FFFD]: "Type -3",
+  [EditorEventActivationType.AFTER_TURN]: "After turn",
   [EditorEventActivationType.BEFORE_PLAYER_TURN]: "Before player turn",
   [EditorEventActivationType.BEFORE_DICE_ROLL]: "Before dice roll",
 };
@@ -234,7 +235,7 @@ const ActivationTypeTitles: { [activationType in EditorEventActivationType]: str
   [EditorEventActivationType.BEGINORWALKOVER]: undefined,
 
   [EditorEventActivationType.BEFORE_TURN]: "Occurs once per turn, prior to seeing \"PLAYER START\" for the first player",
-  [EditorEventActivationType.FFFD]: undefined,
+  [EditorEventActivationType.AFTER_TURN]: "Occurs once per turn, prior to the Mini-Game selection list appearing",
   [EditorEventActivationType.BEFORE_PLAYER_TURN]: "Occurs for each player prior to seeing \"PLAYER START\" on their turn",
   [EditorEventActivationType.BEFORE_DICE_ROLL]: "Occurs for each player prior to the dice roll",
 };

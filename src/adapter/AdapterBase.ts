@@ -780,7 +780,7 @@ export abstract class AdapterBase {
     const boardEventTypeInfos = [
       { index: -5, list: type5, type: EditorEventActivationType.BEFORE_DICE_ROLL },
       { index: -4, list: type4, type: EditorEventActivationType.BEFORE_PLAYER_TURN },
-      { index: -3, list: type3, type: EditorEventActivationType.FFFD },
+      { index: -3, list: type3, type: EditorEventActivationType.AFTER_TURN },
       { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
     ];
     for (const { index, list, type } of boardEventTypeInfos) {
@@ -983,7 +983,7 @@ export abstract class AdapterBase {
     const boardEventTypeInfos = [
       { index: -5, list: type5, type: EditorEventActivationType.BEFORE_DICE_ROLL },
       { index: -4, list: type4, type: EditorEventActivationType.BEFORE_PLAYER_TURN },
-      { index: -3, list: type3, type: EditorEventActivationType.FFFD },
+      { index: -3, list: type3, type: EditorEventActivationType.AFTER_TURN },
       { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
     ];
     for (const { index, list, type } of boardEventTypeInfos) {

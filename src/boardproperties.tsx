@@ -412,12 +412,23 @@ class FindSpace extends React.Component<{}> {
   }
 };
 
-const BoardEventActivationTypes: EditorEventActivationType[] = [
-  EditorEventActivationType.BEFORE_TURN,
-  // EditorEventActivationType.FFFD,
-  EditorEventActivationType.BEFORE_PLAYER_TURN,
-  EditorEventActivationType.BEFORE_DICE_ROLL,
-];
+function getAvailableBoardActivationTypes(board: IBoard): EditorEventActivationType[] {
+  if (board.game === 3) {
+    return [
+      EditorEventActivationType.BEFORE_TURN,
+      EditorEventActivationType.AFTER_TURN,
+      EditorEventActivationType.BEFORE_PLAYER_TURN,
+      EditorEventActivationType.BEFORE_DICE_ROLL,
+    ];
+  }
+
+  // AFTER_TURN is not confirmed in other games besides 3.
+  return [
+    EditorEventActivationType.BEFORE_TURN,
+    EditorEventActivationType.BEFORE_PLAYER_TURN,
+    EditorEventActivationType.BEFORE_DICE_ROLL,
+  ];
+}
 
 interface IBoardEventListProps {
   board: IBoard;
@@ -450,12 +461,13 @@ const BoardEventList: React.FC<IBoardEventListProps> = props => {
   }
 
   function onEventActivationTypeToggle(event: IEventInstance) {
-    const curTypeIndex = BoardEventActivationTypes.indexOf(event.activationType);
+    const availableTypes = getAvailableBoardActivationTypes(props.board);
+    const curTypeIndex = availableTypes.indexOf(event.activationType);
     if (curTypeIndex === -1) {
       throw new Error(`Unexpected board event activation type ${event.activationType}`);
     }
 
-    const nextType = BoardEventActivationTypes[(curTypeIndex + 1) % BoardEventActivationTypes.length];
+    const nextType = availableTypes[(curTypeIndex + 1) % availableTypes.length];
     event.activationType = nextType;
   }
 

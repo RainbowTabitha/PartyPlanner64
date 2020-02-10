@@ -182,7 +182,8 @@ export enum EditorEventActivationType {
   BEFORE_DICE_ROLL = -5,
   /** Just before a player's turn. (Right as "PLAYER START" appears on screen.) */
   BEFORE_PLAYER_TURN = -4,
-  FFFD = -3,
+  /** After each turn. (After last player lands on space, before Mini-Game selection comes up.) */
+  AFTER_TURN = -3,
   /** Before each turn. (Right as "PLAYER START" appears for the first player.) */
   BEFORE_TURN = -2,
 
@@ -197,7 +198,7 @@ export function getEventActivationTypeFromEditorType(editorType: EditorEventActi
       return EventActivationType.WALKOVER;
 
     case EditorEventActivationType.BEFORE_TURN:
-    case EditorEventActivationType.FFFD:
+    case EditorEventActivationType.AFTER_TURN:
     case EditorEventActivationType.BEFORE_PLAYER_TURN:
     case EditorEventActivationType.BEFORE_DICE_ROLL:
       return EventActivationType.SPECIAL;
