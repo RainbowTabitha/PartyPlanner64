@@ -27,20 +27,20 @@
     "electron-builder-build-publish": "electron-builder build -wlm --publish always"
   },
   "dependencies": {
-    "@types/codemirror": "^0.0.84",
+    "@types/codemirror": "^0.0.87",
     "@types/draft-js": "^0.10.8",
     "@types/file-saver": "^2.0.1",
-    "@types/jest": "25.1.2",
+    "@types/jest": "25.1.4",
     "@types/jszip": "^3.1.7",
-    "@types/node": "12.12.14",
-    "@types/react": "16.9.19",
+    "@types/node": "13.9.1",
+    "@types/react": "16.9.23",
     "@types/react-dom": "16.9.5",
     "basiccontext": "^3.5.1",
-    "codemirror": "^5.51.0",
+    "codemirror": "^5.52.0",
     "cookies-js": "^1.2.2",
     "draft-js": "^0.11.4",
     "electron-debug": "^3.0.1",
-    "electron-updater": "^4.2.0",
+    "electron-updater": "^4.2.5",
     "file-saver": "^2.0.2",
     "gh-pages": "^2.2.0",
     "gltf-js-utils": "^2.0.2",
@@ -48,19 +48,19 @@
     "jszip": "^3.2.2",
     "midi-player-js": "^2.0.5",
     "mips-assembler": "^1.4.7",
-    "mips-inst": "^2.2.5",
+    "mips-inst": "^2.2.6",
     "node-sass": "^4.13.1",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "react-scripts": "3.3.1",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "react-scripts": "3.4.0",
     "resize-image-data": "^0.3.0",
-    "three": "^0.113.2",
-    "typescript": "3.7.5"
+    "three": "^0.113.0",
+    "typescript": "3.8.3"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
-    "electron-builder": "^22.3.2",
-    "electron": "8.0.0"
+    "electron-builder": "^22.4.1",
+    "electron": "8.1.1"
   },
   "eslintConfig": {
     "extends": "react-app"
