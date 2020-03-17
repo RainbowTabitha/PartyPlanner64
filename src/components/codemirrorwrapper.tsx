@@ -47,6 +47,7 @@ export class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> 
       value: this.props.value || this.props.defaultValue || "",
       extraKeys: {"Ctrl-Space": "autocomplete"},
       readOnly: this.props.readOnly || false,
+      viewportMargin: 3000,
     }) as CodeMirror.Editor;
     this.codemirror.on("change", this.onInternalValueChanged);
   }
