@@ -15,7 +15,7 @@ import { getROMAdapter } from "../adapter/adapters";
 import { showMessage } from "../appControl";
 import * as JSZipMod from "jszip";
 import { saveAs } from "file-saver";
-import { isFontPack, fontPackToRGBA32 } from "./img/FontPack";
+import { isFontPack, fontPackToRGBA32, isKnownFontPack } from "./img/FontPack";
 
 const JSZip = JSZipMod.default;
 
@@ -73,6 +73,8 @@ export function load(buffer: ArrayBuffer) {
 export function images() {
   let zip = new JSZip();
 
+  const game = romhandler.getROMGame()!;
+
   let mainfsfolder = zip.folder("mainfs");
   let mainfsDirCount = mainfs.getDirectoryCount();
   for (let d = 0; d < mainfsDirCount; d++) {
@@ -95,7 +97,7 @@ export function images() {
           continue;
         }
 
-        if (d === 0 && isFontPack(fileBuffer)) {
+        if ((d === 0 && isFontPack(fileBuffer)) || isKnownFontPack(game, d, f)) {
           let fontPack;
           try {
             fontPack = fontPackToRGBA32(fileBuffer);
@@ -103,21 +105,22 @@ export function images() {
           catch {}
 
           if (fontPack) {
+            const { charWidth, charHeight } = fontPack;
             let idx = 0;
             fontPack.chars.forEach(charImg => {
-              const dataUri = arrayBufferToDataURL(charImg, 10, 12);
+              const dataUri = arrayBufferToDataURL(charImg, charWidth, charHeight);
               dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
               idx++;
             });
             fontPack.images.forEach(img => {
-              const dataUri = arrayBufferToDataURL(img, 10, 12);
+              const dataUri = arrayBufferToDataURL(img, charWidth, charHeight);
               dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
               idx++;
             });
 
             const dataViews = fontPack.chars.concat(fontPack.images).map(buffer => new DataView(buffer));
-            const tilesBuf = fromTiles(dataViews, dataViews.length, 1, 10 * 4, 12);
-            const tilesUrl = arrayBufferToDataURL(tilesBuf, 10 * dataViews.length, 12);
+            const tilesBuf = fromTiles(dataViews, dataViews.length, 1, charWidth * 4, charHeight);
+            const tilesUrl = arrayBufferToDataURL(tilesBuf, charWidth * dataViews.length, charHeight);
             dirFolder.file(`${f}.all.png`, tilesUrl.substr(tilesUrl.indexOf(',') + 1), { base64: true });
 
             continue;
