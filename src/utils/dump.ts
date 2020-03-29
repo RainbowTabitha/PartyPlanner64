@@ -15,6 +15,7 @@ import { getROMAdapter } from "../adapter/adapters";
 import { showMessage } from "../appControl";
 import * as JSZipMod from "jszip";
 import { saveAs } from "file-saver";
+import { isFontPack, fontPackToRGBA32 } from "./img/FontPack";
 
 const JSZip = JSZipMod.default;
 
@@ -81,26 +82,58 @@ export function images() {
       try {
         let fileBuffer = mainfs.get(d, f);
         if (FORM.isForm(fileBuffer)) {
-          let formUnpacked = FORM.unpack(fileBuffer)!;
-          if (formUnpacked.BMP1.length) {
-            formUnpacked.BMP1.forEach((bmpEntry, idx) => {
-              let dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
+          try {
+            let formUnpacked = FORM.unpack(fileBuffer)!;
+            if (formUnpacked.BMP1.length) {
+              formUnpacked.BMP1.forEach((bmpEntry, idx) => {
+                let dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
+                dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
+              });
+            }
+          }
+          catch {}
+          continue;
+        }
+
+        if (d === 0 && isFontPack(fileBuffer)) {
+          let fontPack;
+          try {
+            fontPack = fontPackToRGBA32(fileBuffer);
+          }
+          catch {}
+
+          if (fontPack) {
+            let idx = 0;
+            fontPack.chars.forEach(charImg => {
+              const dataUri = arrayBufferToDataURL(charImg, 10, 12);
               dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
+              idx++;
             });
+            fontPack.images.forEach(img => {
+              const dataUri = arrayBufferToDataURL(img, 10, 12);
+              dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
+              idx++;
+            });
+
+            const dataViews = fontPack.chars.concat(fontPack.images).map(buffer => new DataView(buffer));
+            const tilesBuf = fromTiles(dataViews, dataViews.length, 1, 10 * 4, 12);
+            const tilesUrl = arrayBufferToDataURL(tilesBuf, 10 * dataViews.length, 12);
+            dirFolder.file(`${f}.all.png`, tilesUrl.substr(tilesUrl.indexOf(',') + 1), { base64: true });
+
+            continue;
           }
         }
-        else {
-          // Maybe an ImgPack?
-          let imgs = _readImgsFromMainFS(d, f)!;
-          imgs.forEach((imgInfo, idx) => {
-            let dataUri = arrayBufferToDataURL(imgInfo.src!, imgInfo.width, imgInfo.height);
-            dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
-          });
-          if (imgs.length > 1) {
-            let tilesBuf = fromTiles(_readPackedFromMainFS(d, f)!, imgs.length, 1, imgs[0].width * 4, imgs[0].height);
-            let tilesUrl = arrayBufferToDataURL(tilesBuf, imgs[0].width * imgs.length, imgs[0].height);
-            dirFolder.file(`${f}.all.png`, tilesUrl.substr(tilesUrl.indexOf(',') + 1), { base64: true });
-          }
+
+        // Maybe an ImgPack?
+        const imgs = _readImgsFromMainFS(d, f)!;
+        imgs.forEach((imgInfo, idx) => {
+          const dataUri = arrayBufferToDataURL(imgInfo.src!, imgInfo.width, imgInfo.height);
+          dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
+        });
+        if (imgs.length > 1) {
+          const tilesBuf = fromTiles(_readPackedFromMainFS(d, f)!, imgs.length, 1, imgs[0].width * 4, imgs[0].height);
+          const tilesUrl = arrayBufferToDataURL(tilesBuf, imgs[0].width * imgs.length, imgs[0].height);
+          dirFolder.file(`${f}.all.png`, tilesUrl.substr(tilesUrl.indexOf(',') + 1), { base64: true });
         }
       }
       catch (e) {}
