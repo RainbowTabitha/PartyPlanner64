@@ -36,23 +36,23 @@
     "@types/react": "16.9.23",
     "@types/react-dom": "16.9.5",
     "basiccontext": "^3.5.1",
-    "codemirror": "^5.52.0",
+    "codemirror": "^5.52.2",
     "cookies-js": "^1.2.2",
-    "draft-js": "^0.11.4",
+    "draft-js": "^0.11.5",
     "electron-debug": "^3.0.1",
     "electron-updater": "^4.2.5",
     "file-saver": "^2.0.2",
     "gh-pages": "^2.2.0",
     "gltf-js-utils": "^2.0.2",
     "immutable": "^3.8.1",
-    "jszip": "^3.2.2",
+    "jszip": "^3.3.0",
     "midi-player-js": "^2.0.5",
     "mips-assembler": "^1.4.7",
     "mips-inst": "^2.2.6",
     "node-sass": "^4.13.1",
-    "react": "^16.13.0",
-    "react-dom": "^16.13.0",
-    "react-scripts": "3.4.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1",
     "resize-image-data": "^0.3.0",
     "three": "^0.113.0",
     "typescript": "3.8.3"
@@ -60,7 +60,7 @@
   "devDependencies": {
     "dotenv": "^8.2.0",
     "electron-builder": "^22.4.1",
-    "electron": "8.1.1"
+    "electron": "8.2.0"
   },
   "eslintConfig": {
     "extends": "react-app"
