@@ -310,17 +310,16 @@ export default [{
 {
       addr: 2147850136, // 0x80059798
       type: "code",
-      name: "IsBoardFeatureDisabled",
-      desc: "A0=0xD:bowser" },
+      name: "IsBoardFeatureFlagSet" },
 {
       addr: 2147850204, // 0x800597DC
       type: "code",
-      name: "SetBoardFeatureEnabled",
+      name: "SetBoardFeatureFlag",
       desc: "A0=feature" },
 {
       addr: 2147850284, // 0x8005982C
       type: "code",
-      name: "SetBoardFeatureDisabled",
+      name: "ClearBoardFeatureFlag",
       desc: "A0=feature" },
 {
       addr: 2147850368, // 0x80059880
