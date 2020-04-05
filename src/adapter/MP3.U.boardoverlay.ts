@@ -2543,11 +2543,11 @@ jal __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
 jal   0x8004A520
  move    A0, V0
 
-li    V0, 24 ; TODO: Are these also the audio index?
+li    V0, __PP64_INTERNAL_VAL_AUDIO_INDEX
 lui   AT, hi(CORE_800CE198)
 sh    V0, lo(CORE_800CE198)(AT)
 jal   0x800F8D6C
- li    A0, 24
+ li    A0, __PP64_INTERNAL_VAL_AUDIO_INDEX
 jal   InitCameras
  li    A0, 2
 jal   setup_routine
