@@ -18,6 +18,7 @@ import copytoboardImage from "../img/events/copytoboard.png";
 import copytoboard_destructiveImage from "../img/events/copytoboard_destructive.png";
 
 import "../css/events.scss";
+import { stringComparer } from "../utils/string";
 
 let _eventsViewInstance: EventsView | null;
 
@@ -46,15 +47,16 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
       );
     }
 
-    let listing = null;
     const board = this.props.board;
-    const customEvents = getCustomEvents();
+    let listing = null;
+    let customEvents = getCustomEvents();
     if (!customEvents.length) {
       listing = (
         <tr><td>No custom events present — load or create your own!</td></tr>
       );
     }
     else {
+      customEvents = customEvents.sort((a, b) => stringComparer(a.name, b.name));
       listing = customEvents.map(customEvent => {
         const isDestructive = _copyToBoardWillOverwrite(customEvent, board);
         const isUnchanged = _boardAndLibraryEventAreInSync(customEvent, board);
@@ -83,6 +85,7 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
           onCopyToLibrary={isUnchanged ? undefined : this.onCopyToLibrary} />
       );
     }
+    boardEvents = boardEvents.sort((a, b) => stringComparer(a.key as string, b.key as string));
 
     return (
       <div className="eventsViewContainer">
@@ -132,7 +135,7 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
   }
 
   onDeleteBoardEvent = async (event: IEvent) => {
-    if (await confirmFromUser(`Are you sure you want to delete ${event.name}?`)) {
+    if (await confirmFromUser(`Are you sure you want to delete ${event.name} from the board?`)) {
       excludeEventFromBoard(this.props.board, event.id);
       this.forceUpdate();
     }
@@ -269,7 +272,10 @@ class EventRow extends React.Component<IEventRowProps> {
         {copyOption}
         <td className="eventNameTableCell"
           onClick={() => this.props.onEditEvent(this.props.event)}>
-          <span className="eventNameText">{this.props.event.name}</span>
+          <span className="eventNameText">
+            {this.props.event.name}
+            <span className="eventNameExtensionText">{getEventFileExtension(this.props.event)}</span>
+          </span>
           <img src={editImage} className="eventEditCellIcon"
             alt="Edit event" title="Edit event"/>
         </td>
