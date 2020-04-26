@@ -213,7 +213,7 @@ func_800F67A4:
   lh    S0, lo(CORE_800ED5D8)(S0)
   lui   AT, hi(CORE_800ED5CA)
   sh    R0, lo(CORE_800ED5CA)(AT)
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu    A0, R0, 68
   jal   func_800F663C
    NOP
@@ -257,12 +257,12 @@ L800F686C:
    addiu    A1, R0, 1
   addu  S0, S0, S3
   lh    A0, 0(S0)
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu S1, S1, 1
   slti  V0, S1, STAR_COUNT
   bnel V0, R0, L800F686C
    sll   S0, S1, 1
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 68
   bne  V0, R0, L800F68AC
    addiu    S0, R0, STAR_COUNT
@@ -303,7 +303,7 @@ L800F68EC:
   sll   V0, V0, 1
   lui   A0, hi(data_mystery_40s_list)
   addu  A0, A0, V0
-  jal   SetBoardFeatureDisabled
+  jal   ClearBoardFeatureFlag
    lh    A0, lo(data_mystery_40s_list)(A0)
   lw    RA, 0x2c(SP)
   lw    S4, 0x28(SP)
@@ -345,7 +345,7 @@ L800F6990:
   j     L800F6A24
    addiu    V0, R0, 1
 L800F69C8:
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 68
   bne  V0, R0, L800F69DC
    addiu    A0, R0, STAR_COUNT
@@ -596,7 +596,7 @@ L800F6D38:
   lh    V0, 0xa(S2)
   bne  V0, R0, L800F6D78
    addiu    A1, R0, 1258
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 68
   bnel V0, R0, L800F6D78
    addiu    A1, R0, 1258 ; "Let me show you where to find the next Star."
@@ -662,7 +662,7 @@ L800F6E28:
   lh    V0, 0xa(S2)
   bne  V0, R0, L800F6E74
    addiu    A1, R0, 1259
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 68
   bnel V0, R0, L800F6E74
    addiu    A1, R0, 1259 ; "This is the star spot. Get the star by giving Toad 20 coins"
@@ -782,23 +782,23 @@ overlaycall1:
   j     L800F6FEC
    NOP
 L800F6FB8:
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu    A0, R0, 0x46
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu    A0, R0, 0x47
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu    A0, R0, 0x49
   j     L800F6FE4
    addiu    A0, R0, 0x4B
 L800F6FD8:
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu    A0, R0, 0x47
   addiu    A0, R0, 0x49
 L800F6FE4:
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    NOP
 L800F6FEC:
-  jal   SetBoardFeatureEnabled
+  jal   SetBoardFeatureFlag
    addiu    A0, R0, 0x43
   jal   func_800F663C
    NOP
@@ -873,11 +873,11 @@ L800F70C0:
   slti  V0, S1, 4
   bne  V0, R0, L800F70C0
    NOP
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 78
   beq  V0, R0, L800F7114
    NOP
-  jal   SetBoardFeatureDisabled
+  jal   ClearBoardFeatureFlag
    addiu    A0, R0, 78
   jal   func_800F67A4
    NOP
@@ -888,14 +888,14 @@ L800F7114:
   jal   draw_toads_outer
    NOP
 .endif
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 14
   bne  V0, R0, L800F714C
    NOP
   jal   koopa_draw_outer
    NOP
 L800F714C:
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 15
   bne  V0, R0, L800F7164
    NOP
@@ -904,7 +904,7 @@ L800F714C:
 .endif
    NOP
 L800F7164:
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    addiu    A0, R0, 13
   bne  V0, R0, L800F717C
    NOP
@@ -943,7 +943,7 @@ overlaycall2:
    NOP
 
 ; TODO: Support the disabled koopa, boo, bowser setting with split event tables
-;  jal   IsBoardFeatureDisabled
+;  jal   IsBoardFeatureFlagSet
 ;   addiu A0, R0, 14
 ;  bne  V0, R0, L800F71D8
 ;   NOP
@@ -951,7 +951,7 @@ overlaycall2:
 ;  jal   EventTableHydrate
 ;   addiu A0, A0, lo(koopa_event_table)
 ;L800F71D8:
-;  jal   IsBoardFeatureDisabled
+;  jal   IsBoardFeatureFlagSet
 ;   addiu A0, R0, 15
 ;  bne  V0, R0, L800F71F4
 ;   NOP
@@ -959,7 +959,7 @@ overlaycall2:
 ;  jal   EventTableHydrate
 ;   addiu A0, A0, lo(boo_event_table)
 ;L800F71F4:
-;  jal   IsBoardFeatureDisabled
+;  jal   IsBoardFeatureFlagSet
 ;   addiu A0, R0, 13
 ;  bne  V0, R0, L800F7210
 ;   NOP
@@ -1163,7 +1163,7 @@ L800F74C0:
   sw    R0, 0(V0)
   sll   V0, S0, 1
   addu  V0, V0, S1
-  jal   IsBoardFeatureDisabled
+  jal   IsBoardFeatureFlagSet
    lh    A0, 0(V0)
   bnel V0, R0, L800F74F0
    addiu S0, S0, 1

@@ -732,8 +732,8 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
         await adapter.overwriteBoard(this.props.boardIndex, currentBoard);
       }
       catch (e) {
-        $$log(`Error overriding board: ${e}`);
-        showMessage("Error overwriting the board.");
+        console.error(e);
+        showMessage("Error overwriting the board.\n\n" + e.toString());
         return;
       }
 
