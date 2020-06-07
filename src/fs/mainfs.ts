@@ -26,6 +26,9 @@ _mainFSOffsets[Game.MP1_JPN] = [
 _mainFSOffsets[Game.MP2_USA] = [ // Default 0x0041DD30
   { upper: 0x416E6, lower: 0x416EE },
 ];
+_mainFSOffsets[Game.MP2_JPN] = [ // Default 0x00417540
+  { upper: 0x40D8A, lower: 0x40D92 },
+];
 _mainFSOffsets[Game.MP3_USA] = [
   { upper: 0x3619E, lower: 0x361A6 },
 ];

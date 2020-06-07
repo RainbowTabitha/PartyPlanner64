@@ -211,6 +211,7 @@ export const romhandler = new class RomHandler {
         this._gameVersion = 1;
         return 1;
       case Game.MP2_USA:
+      case Game.MP2_JPN:
         this._gameVersion = 2;
         return 2;
       case Game.MP3_USA:

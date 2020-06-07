@@ -148,6 +148,7 @@ _HVQFSOffsets[Game.MP2_USA] = [ // Default at 0x01164160
   { ovl: 0x70, upper: 0x1B5A, lower: 0x1B62 }, // ROM: 0x4107BA
   { ovl: 0x72, upper: 0x1E, lower: 0x26 }, // ROM: 0x4157AE
 ];
+// MP2 JPN 0x1156170
 _HVQFSOffsets[Game.MP3_USA] = [ // Default at 0x128CC60
   { ovl: 0x81, upper: 0x11E66, lower: 0x11E6E }, // ROM: 0xD07A6
   { ovl: 0x81, upper: 0x25716, lower: 0x2571E }, // ROM: 0xE4056

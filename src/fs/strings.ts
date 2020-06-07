@@ -25,6 +25,7 @@ _stringOffsets[Game.MP2_USA] = [ // Default at 0x1142DD0
   { upper: 0x00089356, lower: 0x0008935E },
   { upper: 0x0008936A, lower: 0x00089372 },
 ];
+// MP2_JPN 0x113E720
 
 
 export class StringTable {
@@ -220,7 +221,11 @@ export const strings = {
   },
 
   extract() {
-    let view = romhandler.getDataView(strings.getROMOffset()!);
+    const romOffset = strings.getROMOffset();
+    if (romOffset === null) {
+      return;
+    }
+    let view = romhandler.getDataView();
     return _strFsInstance = new strings.StringTable(view);
   },
 
