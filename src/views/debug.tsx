@@ -114,7 +114,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
             value={this.state.romToRamNumber}
             onChange={e => this.setState({ romToRamNumber: e.target.value, romToRamResult: "" })}
           />
-          <Button onClick={this.onRomToRamClick}>ROM -> RAM</Button>
+          <Button onClick={this.onRomToRamClick}>ROM {"->"} RAM</Button>
           <br />
           <span className="selectable dbMonospace">{this.state.romToRamResult}</span>
           <br /><br />
@@ -127,7 +127,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
             value={this.state.mainfsToRomIndex}
             onChange={e => this.setState({ mainfsToRomIndex: e.target.value, mainfsToRomResult: "" })}
           />
-          <Button onClick={this.onMainFSToRomClick}>MainFS -> ROM</Button>
+          <Button onClick={this.onMainFSToRomClick}>MainFS {"->"} ROM</Button>
           <br />
           <span className="selectable dbMonospace">{this.state.mainfsToRomResult}</span>
           <br /><br />
