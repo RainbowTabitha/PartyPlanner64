@@ -225,7 +225,7 @@ export const strings = {
     if (romOffset === null) {
       return;
     }
-    let view = romhandler.getDataView();
+    let view = romhandler.getDataView(romOffset);
     return _strFsInstance = new strings.StringTable(view);
   },
 

@@ -270,7 +270,7 @@ function romSelected(event: any) {
       blockUI(false);
       $$log("ROM loaded");
     }, reason => {
-      $$log(`Error loading ROM: ${reason}`);
+      console.error(reason);
       showMessage(`Error loading the ROM file.\n\n${reason}`);
     });
   };
