@@ -170,6 +170,7 @@ _HVQFSOffsets[Game.MP3_USA] = [ // Default at 0x128CC60
   { ovl: 0x7D, upper: 0x18EE, lower: 0x18F6 }, // ROM: 0x54F5FE
   { ovl: 0x7D, upper: 0x28B6, lower: 0x28BE }, // ROM: 0x5505C6
 ];
+// MP3 JPN 0x1287380
 
 interface IHVQMetadata {
   tileWidth: number;
@@ -248,7 +249,7 @@ export const hvqfs = {
 
   setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     $$log(`HVQFS.setROMOffset(${$$hex(newOffset)})`);
-    let patchOffsets = this.getPatchOffsets();
+    let patchOffsets = this.getPatchOffsets()!;
     const [upper, lower] = getRegSetUpperAndLower(newOffset);
     for (let i = 0; i < patchOffsets.length; i++) {
       const patchOffset = patchOffsets[i];
@@ -269,7 +270,12 @@ export const hvqfs = {
   },
 
   getPatchOffsets() {
-    return _HVQFSOffsets[romhandler.getROMGame()!].map(offset => {
+    const gameOffsets = _HVQFSOffsets[romhandler.getROMGame()!];
+    if (!gameOffsets) {
+      return null;
+    }
+
+    return gameOffsets.map(offset => {
       if (offset.lower < 10 && !offset.ovl) { // Delete when JPN is converted
         return {
           upper: offset.upper,

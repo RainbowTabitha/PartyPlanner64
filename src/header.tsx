@@ -271,7 +271,7 @@ function romSelected(event: any) {
       $$log("ROM loaded");
     }, reason => {
       $$log(`Error loading ROM: ${reason}`);
-      showMessage("Error loading the ROM file.");
+      showMessage(`Error loading the ROM file.\n\n${reason}`);
     });
   };
   reader.readAsArrayBuffer(file);

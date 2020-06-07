@@ -123,39 +123,41 @@ export async function validateCurrentBoardForOverwrite(): Promise<IValidationRes
   // Evaluate any rules specific to certain ROM board targets.
   // As we switch to common overlays, these cases are dwindling.
   const boardInfos = getBoardInfos(gameID);
-  for (let boardIndex = 0; boardIndex < romBoards.length; boardIndex++) {
-    const board = romBoards[boardIndex];
-    if (_dontShowInUI(board, currentBoard.type))
-      continue;
+  if (boardInfos) {
+    for (let boardIndex = 0; boardIndex < romBoards.length; boardIndex++) {
+      const board = romBoards[boardIndex];
+      if (_dontShowInUI(board, currentBoard.type))
+        continue;
 
-    const boardInfo = boardInfos[boardIndex];
-    let unavailable = !_overwriteAvailable(boardInfo);
+      const boardInfo = boardInfos[boardIndex];
+      let unavailable = !_overwriteAvailable(boardInfo);
 
-    let boardLevelErrors: string[] = [];
-    let boardLevelWarnings: string[] = [];
-    if (!unavailable && !get($setting.uiSkipValidation)) {
-      let rules = _getRulesForBoard(gameID, boardIndex);
-      for (const rule of rules) {
-        let failureResult = rule.fails(currentBoard);
-        if (isPromiseLike(failureResult)) {
-          failureResult = await failureResult;
-        }
-        if (failureResult) {
-          if (rule.level === ValidationLevel.ERROR)
-            boardLevelErrors.push(failureResult);
-          else if (rule.level === ValidationLevel.WARNING)
-            boardLevelWarnings.push(failureResult);
+      let boardLevelErrors: string[] = [];
+      let boardLevelWarnings: string[] = [];
+      if (!unavailable && !get($setting.uiSkipValidation)) {
+        let rules = _getRulesForBoard(gameID, boardIndex);
+        for (const rule of rules) {
+          let failureResult = rule.fails(currentBoard);
+          if (isPromiseLike(failureResult)) {
+            failureResult = await failureResult;
+          }
+          if (failureResult) {
+            if (rule.level === ValidationLevel.ERROR)
+              boardLevelErrors.push(failureResult);
+            else if (rule.level === ValidationLevel.WARNING)
+              boardLevelWarnings.push(failureResult);
+          }
         }
       }
-    }
 
-    results.push({
-      name: board.name,
-      unavailable,
-      forcedDisabled,
-      errors: boardLevelErrors,
-      warnings: boardLevelWarnings,
-    });
+      results.push({
+        name: board.name,
+        unavailable,
+        forcedDisabled,
+        errors: boardLevelErrors,
+        warnings: boardLevelWarnings,
+      });
+    }
   }
 
   return results;

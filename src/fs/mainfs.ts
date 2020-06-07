@@ -29,6 +29,9 @@ _mainFSOffsets[Game.MP2_USA] = [ // Default 0x0041DD30
 _mainFSOffsets[Game.MP3_USA] = [
   { upper: 0x3619E, lower: 0x361A6 },
 ];
+_mainFSOffsets[Game.MP3_JPN] = [ // Default 0x005517F0
+  { upper: 0x3618A, lower: 0x36192 },
+];
 
 let _mainfsCache: IMainFsReadInfo[][] | null;
 

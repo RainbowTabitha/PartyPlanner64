@@ -61,9 +61,14 @@ export abstract class AdapterBase {
   public abstract HEAP_FREE_ADDR: number;
   public abstract writeFullOverlay: boolean;
 
-  public loadBoards() {
+  public loadBoards(): IBoard[] {
     let boards = [];
-    let boardInfos = getBoardInfos(romhandler.getROMGame()!);
+    const game = romhandler.getROMGame()!;
+    let boardInfos = getBoardInfos(game);
+    if (!boardInfos) {
+      $$log(`Game ${game} has no board infos defined in PP64`);
+      return [];
+    }
 
     for (let i = 0; i < boardInfos.length; i++) {
       if (isDebug())
