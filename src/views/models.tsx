@@ -387,7 +387,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
       scene.add(modelObj);
 
       if (this.props.showVertexNormals) {
-        const normalsHelper = new VertexNormalsHelper(modelObj, 8, 0x00FF00, 1);
+        const normalsHelper = new VertexNormalsHelper(modelObj, 8, 0x00FF00);
         scene.add(normalsHelper);
       }
 

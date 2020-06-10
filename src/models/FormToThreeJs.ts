@@ -104,7 +104,7 @@ export class FormToThreeJs {
         }
 
         if (this.showVertexNormals) {
-          const normalsHelper = new VertexNormalsHelper(new THREE.Mesh(geometry, materials), 8, 0x00FF00, 1);
+          const normalsHelper = new VertexNormalsHelper(new THREE.Mesh(geometry, materials), 8, 0x00FF00);
           newObj.add(normalsHelper);
         }
 
@@ -248,8 +248,8 @@ export class FormToThreeJs {
 
   _parseMaterials(form: IFormObj): THREE.MeshBasicMaterial[] {
     const materials = [
-      new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors }),
-      new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors }),
+      new THREE.MeshBasicMaterial({ vertexColors: true }),
+      new THREE.MeshBasicMaterial({ vertexColors: true }),
     ];
 
     if (form.BMP1) {
@@ -293,7 +293,7 @@ export class FormToThreeJs {
       alphaTest: 0.5,
       map: texture,
       transparent: true,
-      vertexColors: THREE.VertexColors,
+      vertexColors: true,
     });
   }
 
