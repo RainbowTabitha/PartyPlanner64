@@ -96,6 +96,8 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
 
 _audioOffsets[Game.MP1_JPN] = [ // Length ?
 ];
+_audioOffsets[Game.MP1_PAL] = [ // Length ?
+];
 
 _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   // 0x1750450

@@ -122,6 +122,7 @@ _HVQFSOffsets[Game.MP1_JPN] = [
   { upper: 0x00313A1A, lower: 6 },
   { upper: 0x00316A02, lower: 6 },
 ];
+// MP1_PAL 0x10357D0
 _HVQFSOffsets[Game.MP2_USA] = [ // Default at 0x01164160
   { upper: 0x00054BD2, lower: 0x00054BDA },
   { upper: 0x00063A36, lower: 0x00063A3E },

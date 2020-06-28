@@ -28,8 +28,6 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   public HEAP_FREE_ADDR: number = 0x00017800;
   public TABLE_HYDRATE_ADDR: number = 0x0005568C;
 
-  public SCENE_TABLE_ROM: number = 0x000C9474;
-
   public writeFullOverlay: boolean = false;
 
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {

@@ -1824,6 +1824,10 @@ export default [{
       type: "code",
       name: "__umoddi3" },
 {
+      addr: 2148305012, // 0x800C8874
+      type: "data",
+      name: "overlay_table" },
+{
       addr: 2148319248, // 0x800CC010
       type: "data",
       name: "item_function_pointers",

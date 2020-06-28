@@ -318,9 +318,8 @@ export function searchForPatchLocations(offset: number) {
 }
 
 export function printSceneTable() {
-  const adapter = getROMAdapter();
-  if (!(adapter && adapter.SCENE_TABLE_ROM)) {
-    console.log("ROM is not loaded, or scene table location is unknown");
+  if (!romhandler.romIsLoaded()) {
+    console.log("ROM is not loaded");
     return;
   }
 
@@ -347,9 +346,8 @@ export function printSceneTable() {
 
 /** Prints the overlay table in n64split format. */
 export function printSceneN64Split() {
-  const adapter = getROMAdapter();
-  if (!(adapter && adapter.SCENE_TABLE_ROM)) {
-    console.log("ROM is not loaded, or scene table location is unknown");
+  if (!romhandler.romIsLoaded()) {
+    console.log("ROM is not loaded");
     return;
   }
 

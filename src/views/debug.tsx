@@ -23,6 +23,7 @@ import { mainfs } from "../fs/mainfs";
 import { makeDivisibleBy } from "../utils/number";
 
 import "../css/debug.scss";
+import { romToRAM } from "../utils/offsets";
 
 interface IDebugViewState {
   sceneIndex: string;
@@ -241,7 +242,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
 
       if (!result) {
         if (num >= 0x1000) {
-          result = `RAM: ${$$hex(((num - 0xC00) | 0x80000000) >>> 0)}`
+          result = `RAM: ${$$hex(romToRAM(num))}`
         }
       }
     }

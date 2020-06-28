@@ -20,6 +20,10 @@ _stringOffsets[Game.MP1_USA] = [
 _stringOffsets[Game.MP1_JPN] = [
   { upper: 0x0001AD9E, lower: 0x0001ADA6 },
 ];
+// TODO: PAL has more tables for other langs. Defining ENG only for now.
+_stringOffsets[Game.MP1_PAL] = [ // Default at 0x0FF0850
+  { upper: 0x0001BA32, lower: 0x0001BA36 },
+];
 _stringOffsets[Game.MP2_USA] = [ // Default at 0x1142DD0
   { upper: 0x0001D22A, lower: 0x0001D232 },
   { upper: 0x00089356, lower: 0x0008935E },

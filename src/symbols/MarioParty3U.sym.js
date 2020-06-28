@@ -1559,6 +1559,10 @@ export default [{
       name: "midpoint",
       desc: "A0=output_xyz" },
 {
+      addr: 2148098804, // 0x800962F4
+      type: "data",
+      name: "overlay_table" },
+{
       addr: 2148103760, // 0x80097650
       type: "u32",
       name: "rng_seed" },

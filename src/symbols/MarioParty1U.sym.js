@@ -1865,7 +1865,7 @@ export default [{
 {
       addr: 2148277364, // 0x800C1C74
       type: "data",
-      name: "dma_table" },
+      name: "overlay_table" },
 {
       addr: 2148282356, // 0x800C2FF4
       type: "data",
