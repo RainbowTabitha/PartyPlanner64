@@ -57,7 +57,7 @@ export const BooEvent2: Partial<IEvent> = {
       }
 
       // Just point to the event because we left it there.
-      return [0x002A0D18, 0];
+      return [0x002A0D18, 0, 0];
     }
 
     throw new Error("Can't write Boo to board index " + info.boardIndex);

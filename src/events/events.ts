@@ -10,7 +10,7 @@ export interface IEvent {
   readonly id: string;
   readonly name: string;
   readonly parse?: (dataView: DataView, info: IEventParseInfo) => boolean;
-  readonly write?: (dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) => number[] | string | false;
+  readonly write?: (dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) => [number, number, number] | string | false;
   readonly activationType: EditorEventActivationType;
   readonly executionType: EventExecutionType;
   readonly fakeEvent?: boolean;

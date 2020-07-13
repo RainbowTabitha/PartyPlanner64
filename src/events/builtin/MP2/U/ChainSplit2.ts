@@ -132,7 +132,7 @@ export const ChainSplit2: IEvent = {
     dataView.setUint16(0xEA, chains[0]); // Set the left chain index.
     dataView.setUint16(0xEE, chains[1]); // Set the right chain index.
 
-    return [info.offset!, lenWritten];
+    return [info.offset!, lenWritten, 0];
   }
 };
 addEventToLibrary(ChainSplit2);

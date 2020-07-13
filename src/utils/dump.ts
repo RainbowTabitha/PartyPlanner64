@@ -11,7 +11,6 @@ import { scenes } from "../fs/scenes";
 import { romhandler } from "../romhandler";
 import { FORM } from "../models/FORM";
 import { MTNX } from "../models/MTNX";
-import { getROMAdapter } from "../adapter/adapters";
 import { showMessage } from "../appControl";
 import * as JSZipMod from "jszip";
 import { saveAs } from "file-saver";

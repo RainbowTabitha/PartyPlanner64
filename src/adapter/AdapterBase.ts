@@ -840,8 +840,10 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let [writtenOffset, len] = await writeEvent(eventBuffer, event, info, temp) as number[];
+        let [writtenOffset, len, mainOffset] = await writeEvent(eventBuffer, event, info, temp) as number[];
         eventTemp[event.id] = temp;
+
+        const absMainOffset = writtenOffset + (mainOffset || 0);
 
         // Apply address to event list.
         // If the writtenOffset is way out of bounds (like > EVENT_MEM_SIZE)
@@ -849,9 +851,9 @@ export abstract class AdapterBase {
         // events are like this for now) so we need to calc differently.
         let eventListAsmAddr;
         if (writtenOffset > this.EVENT_MEM_SIZE)
-          eventListAsmAddr = this._offsetToAddr(writtenOffset, boardInfo) | 0x80000000;
+          eventListAsmAddr = this._offsetToAddr(absMainOffset, boardInfo) | 0x80000000;
         else
-          eventListAsmAddr = this._offsetToAddrBase(writtenOffset, this.EVENT_RAM_LOC);
+          eventListAsmAddr = this._offsetToAddrBase(absMainOffset, this.EVENT_RAM_LOC);
         eventList.setAddress(e, eventListAsmAddr);
 
         currentOffset += len;

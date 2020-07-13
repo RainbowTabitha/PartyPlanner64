@@ -247,10 +247,11 @@ export async function writeCustomEvent(dataView: DataView, spaceEvent: IEventIns
   }
 
   const preppedAsm = prepAsm(code, customEvent, spaceEvent, info);
-  const bytes = assemble(preppedAsm) as ArrayBuffer;
+  const symMap = Object.create(null);
+  const bytes = assemble(preppedAsm, { symbolOutputMap: symMap }) as ArrayBuffer;
   $$log(preppedAsm);
   copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset!, bytes.byteLength];
+  return [info.offset!, bytes.byteLength, symMap["main"] || 0];
 }
 
 // Yes, right here, load cached events...

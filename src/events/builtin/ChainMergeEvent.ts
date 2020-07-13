@@ -98,7 +98,7 @@ export const ChainMerge: IEvent = {
     }
     const bytes = assemble(prepAsm(asm, ChainMerge, event, info)) as ArrayBuffer;
     copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-    return [info.offset!, bytes.byteLength];
+    return [info.offset!, bytes.byteLength, 0];
   }
 };
 addEventToLibrary(ChainMerge);

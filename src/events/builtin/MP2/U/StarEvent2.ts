@@ -16,6 +16,6 @@ export const StarEvent2: Partial<IEvent> = {
   },
   write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
     // Just point to the event because we left it alone.
-    return [0x29E0DC, 0];
+    return [0x29E0DC, 0, 0];
   },
 };
