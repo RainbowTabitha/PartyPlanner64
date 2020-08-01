@@ -25,10 +25,10 @@ const JSZip = JSZipMod.default;
 export function create(callback: (blob: Blob) => any) {
   let zip = new JSZip();
 
-  let mainfsfolder = zip.folder("mainfs");
+  let mainfsfolder = zip.folder("mainfs")!;
   let mainfsDirCount = mainfs.getDirectoryCount();
   for (let d = 0; d < mainfsDirCount; d++) {
-    let dirFolder = mainfsfolder.folder(d.toString());
+    let dirFolder = mainfsfolder.folder(d.toString())!;
     let dirFileCount = mainfs.getFileCount(d);
     for (let f = 0; f < dirFileCount; f++) {
       let file = mainfs.get(d, f);
@@ -47,7 +47,7 @@ export function create(callback: (blob: Blob) => any) {
 export function load(buffer: ArrayBuffer) {
   const zip = new JSZip();
   zip.loadAsync(buffer).then(zip => {
-    const mainfsfolder = zip.folder("mainfs");
+    const mainfsfolder = zip.folder("mainfs")!;
     mainfsfolder.forEach((relativePath, file) => {
       const dirFileRegex = /(\d+)\/(\d+)/;
       const match = relativePath.match(dirFileRegex);
@@ -74,10 +74,10 @@ export function images() {
 
   const game = romhandler.getROMGame()!;
 
-  let mainfsfolder = zip.folder("mainfs");
+  let mainfsfolder = zip.folder("mainfs")!;
   let mainfsDirCount = mainfs.getDirectoryCount();
   for (let d = 0; d < mainfsDirCount; d++) {
-    let dirFolder = mainfsfolder.folder(d.toString());
+    let dirFolder = mainfsfolder.folder(d.toString())!;
     let dirFileCount = mainfs.getFileCount(d);
     for (let f = 0; f < dirFileCount; f++) {
       try {
