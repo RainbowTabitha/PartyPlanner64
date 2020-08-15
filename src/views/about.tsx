@@ -3,7 +3,7 @@ import { isElectron } from "../utils/electron";
 
 import logoloadingImage from "../img/logoloading.png";
 import mpllogoImage from "../img/mpllogo.png";
-import btcImage from "../img/about/btc.png";
+import shirtImage from "../img/about/shirt.png";
 
 import "../css/about.scss";
 
@@ -92,12 +92,13 @@ export const About = class About extends React.Component {
         </div>
         <br />
         <br />
-        <div className="aboutBtcBanner" title="Donate via Bitcoin">
-          <a href="bitcoin:1N6xiKibCqoRAWmrYt3DZ7u8KLTPXxAA4E" target="_blank" rel="noopener noreferrer">
-            <img className="aboutBtcImg" src={btcImage} height="32" width="32" alt="Bitcoin"></img>
+        <div className="aboutHeader">
+          <a href="https://teespring.com/stores/partyplanner64" target="_blank" rel="noopener">
+            <div className="aboutShirt">
+                <img src={shirtImage} alt="PartyPlanner64 merchandise" className="aboutShirtImg" />
+                <span className="aboutShirtText">Official merchandise</span>
+            </div>
           </a>
-          <br />
-          <span className="aboutBtcText selectable">1N6xiKibCqoRAWmrYt3DZ7u8KLTPXxAA4E</span>
         </div>
         <br />
         <br />
@@ -106,14 +107,6 @@ export const About = class About extends React.Component {
         <span className="aboutDisclaimer">Mario Party is a registered trademark of Nintendo.</span>
       </div>
     );
-
-    //<div className="aboutText">
-        //  <span className="aboutTextLabel">Special thanks to these contributors!</span>
-        //  <ul>
-        //    <li>Luke</li>
-        //    <li>Dominic</li>
-        //  </ul>
-        //</div>
   }
 
   componentDidMount() {
