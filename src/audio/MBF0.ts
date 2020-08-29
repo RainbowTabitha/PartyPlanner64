@@ -94,11 +94,13 @@ export class MBF0 {
         buffer,
         mystery0: view.getUint8(tableEntryOffset),
         mystery1: view.getUint8(tableEntryOffset + 1),
+        mystery4: view.getUint32(tableEntryOffset + 4),
         soundbankIndex: view.getUint8(tableEntryOffset + 2),
       });
 
       assert(view.getUint8(tableEntryOffset + 3) === 0);
-      assert(view.getUint32(tableEntryOffset + 4) === 0x07000000);
+      assert(view.getUint32(tableEntryOffset + 4) === 0x07000000
+        || view.getUint32(tableEntryOffset + 4) === 0);
     }
 
     const extraOffsetsOffset = MBF0_HEADER_SIZE + (16 * midiCount);
@@ -169,7 +171,7 @@ export class MBF0 {
       dataView.setUint8(currentOffset + 1, midiInfo.mystery1);
       dataView.setUint8(currentOffset + 2, midiInfo.soundbankIndex);
       dataView.setUint8(currentOffset + 3, 0);
-      dataView.setUint32(currentOffset + 4, 0x07000000);
+      dataView.setUint32(currentOffset + 4, midiInfo.mystery4);
       dataView.setUint32(currentOffset + 8, buffersMap.get(midiInfo.buffer)!);
       dataView.setUint32(currentOffset + 12, midiInfo.buffer.byteLength);
 
@@ -228,5 +230,6 @@ interface IMidiInfo {
   buffer: ArrayBuffer;
   mystery0: number;
   mystery1: number;
+  mystery4: number;
   soundbankIndex: number;
 }
