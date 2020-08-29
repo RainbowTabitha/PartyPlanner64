@@ -47,7 +47,7 @@ export class MBF0 {
     this._extract(dataView);
   }
 
-  _extract(view: DataView) {
+  private _extract(view: DataView) {
     const midiCount = view.getUint32(4);
     const tableEntriesOffset = 0x40;
 

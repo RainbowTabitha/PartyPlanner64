@@ -11,3 +11,9 @@ export function $$hex(num: number, prefix: string = "0x") {
     hexVal = "0" + hexVal;
   return (num < 0 ? "-" : "") + prefix + hexVal;
 }
+
+/** Does an assertion. */
+export function assert(condition: boolean) {
+  if (isDebug())
+    console.assert(condition);
+}

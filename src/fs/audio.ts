@@ -1,4 +1,4 @@
-import { $$log, $$hex } from "../utils/debug";
+import { $$log, $$hex, assert } from "../utils/debug";
 import { copyRange } from "../utils/arrays";
 import { Game } from "../types";
 import { romhandler } from "../romhandler";
@@ -18,8 +18,8 @@ interface IOffsetInfo {
 }
 
 interface IOffsetObj {
-  type?: "S2" | "T3" | "MBF0" | "SBF0" | "FXD0";
-  relative: number;
+  type: "S2" | "T3" | "MBF0" | "SBF0" | "FXD0" | "Pointer";
+  byteLength: number;
   offsets: IOffsetInfo[];
 }
 
@@ -32,7 +32,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
   // 15396A0
   {
     type: "S2",
-    relative: 0,
+    byteLength: 0x23F520,
     offsets: [
       { upper: 0x00061746, lower: 0x0006174A },
       { ovl: 0x6E, upper: 0xE62, lower: 0xE66 }, // ROM: 0x2DA3D2
@@ -42,7 +42,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
   // 1778BC0
   {
     type: "S2",
-    relative: 0x23F520,
+    byteLength: 0xB9F20,
     offsets: [
       { upper: 0x0001AF2A, lower: 0x0001AF2E },
       { upper: 0x0006174E, lower: 0x00061752 },
@@ -55,7 +55,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
   // 1832AE0
   {
     type: "T3",
-    relative: 0x2F9440,
+    byteLength: 0x385980,
     offsets: [
       { upper: 0x0001AF32, lower: 0x0001AF36 },
       { upper: 0x0006172E, lower: 0x00061732 },
@@ -68,7 +68,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
   // 1BB8460
   {
     type: "T3",
-    relative: 0x67EDC0,
+    byteLength: 0x134800,
     offsets: [
       { upper: 0x0001AF0E, lower: 0x0001AF12 },
       { upper: 0x00061762, lower: 0x00061766 },
@@ -79,7 +79,7 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
   // 1CECC60
   {
     type: "FXD0",
-    relative: 0x7B35C0,
+    byteLength: 0x830,
     offsets: [
       { upper: 0x0001AF5A, lower: 0x0001AF5E },
     ]
@@ -87,7 +87,8 @@ _audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
 
   // 1CED490, 0xffffffffs EOF
   {
-    relative: 0x7B3DF0,
+    type: "Pointer",
+    byteLength: 0,
     offsets: [
       { upper: 0x0001AF66, lower: 0x0001AF6A },
     ]
@@ -103,7 +104,7 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   // 0x1750450
   {
     type: "MBF0",
-    relative: 0,
+    byteLength: 0x1B9C40,
     offsets: [
       { upper: 0x0001D342, lower: 0x0001D346 },
       { upper: 0x0007A9EE, lower: 0x0007A9F2 },
@@ -113,7 +114,7 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   // 0x190A090
   {
     type: "SBF0",
-    relative: 0x1B9C40,
+    byteLength: 0x3B5380,
     offsets: [
       { upper: 0x0007A9FA, lower: 0x0007A9FE },
     ]
@@ -121,7 +122,7 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   // 0x1CBF410
   {
     type: "SBF0",
-    relative: 0x56EFC0,
+    byteLength: 0x16B150,
     offsets: [
       { upper: 0x0001D34E, lower: 0x0001D352 },
       { upper: 0x0007AA1E, lower: 0x0007AA22 },
@@ -130,7 +131,7 @@ _audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
   // 0x1E2A560
   {
     type: "FXD0",
-    relative: 0x6DA110,
+    byteLength: 0xA40,
     offsets: [
       { upper: 0x0001D382, lower: 0x0001D386 },
     ]
@@ -140,7 +141,7 @@ _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
   // 0x1881C40
   {
     type: "MBF0",
-    relative: 0,
+    byteLength: 0x1D4C30,
     offsets: [
       { upper: 0x0000F26A, lower: 0x0000F26E },
       { upper: 0x0004BEF2, lower: 0x0004BEF6 },
@@ -149,7 +150,7 @@ _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
   // 0x1A56870
   {
     type: "SBF0",
-    relative: 0x1D4C30,
+    byteLength: 0x4A67D0,
     offsets: [
       { upper: 0x0000F276, lower: 0x0000F27A },
       { upper: 0x0004BEFE, lower: 0x0004BF02 },
@@ -158,7 +159,7 @@ _audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
   // 0x1EFD040
   {
     type: "FXD0",
-    relative: 0x67B400,
+    byteLength: 0xA40,
     offsets: [
       { upper: 0x0000F29E, lower: 0x0000F2A2 },
     ]
@@ -219,13 +220,13 @@ export const audio = {
     return offset;
   },
 
-  setROMOffset(newOffset: number, buffer: ArrayBuffer) {
+  setROMOffset(newOffset: number, outBuffer: ArrayBuffer) {
     $$log(`Audio.setROMOffset(${$$hex(newOffset)})`);
     let patchSubsections = this.getPatchInfo();
+    let currentOffset = newOffset;
     for (let i = 0; i < patchSubsections.length; i++) {
       let subsection = patchSubsections[i];
-      let subsectionaddr = newOffset + subsection.relative;
-      const [upper, lower] = getRegSetUpperAndLower(subsectionaddr);
+      const [upper, lower] = getRegSetUpperAndLower(currentOffset);
       for (let j = 0; j < subsection.offsets.length; j++) {
         const patchOffset = subsection.offsets[j];
         let patchROMUpper = patchOffset.upper;
@@ -236,11 +237,14 @@ export const audio = {
           sceneView.setUint16(patchROMLower, lower);
         }
         else {
-          const romView = new DataView(buffer);
+          const romView = new DataView(outBuffer);
           romView.setUint16(patchROMUpper, upper);
           romView.setUint16(patchROMLower, lower);
         }
       }
+
+      assert(subsection.byteLength % 16 === 0);
+      currentOffset += subsection.byteLength;
     }
   },
 
@@ -354,6 +358,7 @@ export const audio = {
           _newCache.push(new FXD0(romhandler.getDataView(fxd0Offset)));
           break;
 
+        case "Pointer":
         default:
           _newCache.push(null);
           break;
