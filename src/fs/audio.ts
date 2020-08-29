@@ -10,6 +10,7 @@ import { SBF0 } from "../audio/SBF0";
 import { T3 } from "../audio/T3";
 import { FXD0 } from "../audio/FXD0";
 import { isDebug } from "../debug";
+import { makeDivisibleBy } from "../utils/number";
 
 interface IOffsetInfo {
   upper: number;
@@ -439,11 +440,16 @@ export const audio = {
       switch (info.type) {
         case "S2":
         case "T3":
-        case "MBF0":
         case "SBF0":
         case "FXD0":
           copyRange(buffer, _bufferCache[i]!, currentOffset, 0, _bufferCache[i]!.byteLength);
           currentOffset += info.byteLength;
+          break;
+
+        case "MBF0":
+          const mbf0 = _parsedCache![i] as MBF0;
+          currentOffset += mbf0.pack(buffer, currentOffset);
+          currentOffset = makeDivisibleBy(currentOffset, 16);
           break;
 
         case "Pointer":

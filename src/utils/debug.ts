@@ -14,6 +14,10 @@ export function $$hex(num: number, prefix: string = "0x") {
 
 /** Does an assertion. */
 export function assert(condition: boolean) {
-  if (isDebug())
-    console.assert(condition);
+  if (isDebug()) {
+    if (!condition) {
+      debugger;
+      throw new Error("Assertion failed");
+    }
+  }
 }

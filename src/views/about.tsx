@@ -93,12 +93,14 @@ export const About = class About extends React.Component {
         <br />
         <br />
         <div className="aboutHeader">
+          {/* eslint-disable react/jsx-no-target-blank */}
           <a href="https://teespring.com/stores/partyplanner64" target="_blank" rel="noopener">
             <div className="aboutShirt">
                 <img src={shirtImage} alt="PartyPlanner64 merchandise" className="aboutShirtImg" />
                 <span className="aboutShirtText">Official merchandise</span>
             </div>
           </a>
+          {/* eslint-enable react/jsx-no-target-blank */}
         </div>
         <br />
         <br />
