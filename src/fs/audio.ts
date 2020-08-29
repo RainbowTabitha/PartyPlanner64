@@ -23,154 +23,166 @@ interface IOffsetObj {
   offsets: IOffsetInfo[];
 }
 
-const _audioOffsets: { [game: string]: IOffsetObj[] } = {};
+let _bufferCache: ArrayBuffer[] | null;
+let _parsedCache: (S2 | T3 | MBF0 | SBF0 | FXD0 | null)[] | null;
 
-let _audioCache: ArrayBuffer | null;
-let _newCache: (S2 | T3 | MBF0 | SBF0 | FXD0 | null)[] | null;
+type AudioOffsetInfo = { [game in Game]: readonly IOffsetObj[] };
+const _audioOffsets: AudioOffsetInfo = {
+  [Game.MP1_USA]: [ // Length 0x7B3DF0
+    // 15396A0
+    {
+      type: "S2",
+      byteLength: 0x23F520,
+      offsets: [
+        { upper: 0x00061746, lower: 0x0006174A },
+        { ovl: 0x6E, upper: 0xE62, lower: 0xE66 }, // ROM: 0x2DA3D2
+      ]
+    },
 
-_audioOffsets[Game.MP1_USA] = [ // Length 0x7B3DF0
-  // 15396A0
-  {
-    type: "S2",
-    byteLength: 0x23F520,
-    offsets: [
-      { upper: 0x00061746, lower: 0x0006174A },
-      { ovl: 0x6E, upper: 0xE62, lower: 0xE66 }, // ROM: 0x2DA3D2
-    ]
-  },
+    // 1778BC0
+    {
+      type: "S2",
+      byteLength: 0xB9F20,
+      offsets: [
+        { upper: 0x0001AF2A, lower: 0x0001AF2E },
+        { upper: 0x0006174E, lower: 0x00061752 },
+        { upper: 0x0006177E, lower: 0x00061782 },
+        { ovl: 0x6E, upper: 0xE6A, lower: 0xE6E }, // ROM: 0x2DA3DA
+        { ovl: 0x6E, upper: 0xE92, lower: 0xE96 }, // ROM: 0x2DA402
+      ]
+    },
 
-  // 1778BC0
-  {
-    type: "S2",
-    byteLength: 0xB9F20,
-    offsets: [
-      { upper: 0x0001AF2A, lower: 0x0001AF2E },
-      { upper: 0x0006174E, lower: 0x00061752 },
-      { upper: 0x0006177E, lower: 0x00061782 },
-      { ovl: 0x6E, upper: 0xE6A, lower: 0xE6E }, // ROM: 0x2DA3DA
-      { ovl: 0x6E, upper: 0xE92, lower: 0xE96 }, // ROM: 0x2DA402
-    ]
-  },
+    // 1832AE0
+    {
+      type: "T3",
+      byteLength: 0x385980,
+      offsets: [
+        { upper: 0x0001AF32, lower: 0x0001AF36 },
+        { upper: 0x0006172E, lower: 0x00061732 },
+        { upper: 0x00061786, lower: 0x0006178A },
+        { ovl: 0x6E, upper: 0xE4E, lower: 0xE52 }, // ROM: 0x2DA3BE
+        { ovl: 0x6E, upper: 0xE9A, lower: 0xE9E }, // ROM: 0x2DA40A
+      ]
+    },
 
-  // 1832AE0
-  {
-    type: "T3",
-    byteLength: 0x385980,
-    offsets: [
-      { upper: 0x0001AF32, lower: 0x0001AF36 },
-      { upper: 0x0006172E, lower: 0x00061732 },
-      { upper: 0x00061786, lower: 0x0006178A },
-      { ovl: 0x6E, upper: 0xE4E, lower: 0xE52 }, // ROM: 0x2DA3BE
-      { ovl: 0x6E, upper: 0xE9A, lower: 0xE9E }, // ROM: 0x2DA40A
-    ]
-  },
+    // 1BB8460
+    {
+      type: "T3",
+      byteLength: 0x134800,
+      offsets: [
+        { upper: 0x0001AF0E, lower: 0x0001AF12 },
+        { upper: 0x00061762, lower: 0x00061766 },
+        { ovl: 0x6E, upper: 0xE7A, lower: 0xE7E }, // ROM: 0x2DA3EA
+      ]
+    },
 
-  // 1BB8460
-  {
-    type: "T3",
-    byteLength: 0x134800,
-    offsets: [
-      { upper: 0x0001AF0E, lower: 0x0001AF12 },
-      { upper: 0x00061762, lower: 0x00061766 },
-      { ovl: 0x6E, upper: 0xE7A, lower: 0xE7E }, // ROM: 0x2DA3EA
-    ]
-  },
+    // 1CECC60
+    {
+      type: "FXD0",
+      byteLength: 0x830,
+      offsets: [
+        { upper: 0x0001AF5A, lower: 0x0001AF5E },
+      ]
+    },
 
-  // 1CECC60
-  {
-    type: "FXD0",
-    byteLength: 0x830,
-    offsets: [
-      { upper: 0x0001AF5A, lower: 0x0001AF5E },
-    ]
-  },
+    // 1CED490, 0xffffffffs EOF
+    {
+      type: "Pointer",
+      byteLength: 0,
+      offsets: [
+        { upper: 0x0001AF66, lower: 0x0001AF6A },
+      ]
+    },
+  ],
 
-  // 1CED490, 0xffffffffs EOF
-  {
-    type: "Pointer",
-    byteLength: 0,
-    offsets: [
-      { upper: 0x0001AF66, lower: 0x0001AF6A },
-    ]
-  },
-];
+  [Game.MP1_JPN]: [ // Length ?
+  ],
+  [Game.MP1_PAL]: [ // Length ?
+  ],
 
-_audioOffsets[Game.MP1_JPN] = [ // Length ?
-];
-_audioOffsets[Game.MP1_PAL] = [ // Length ?
-];
+  [Game.MP2_USA]: [ // Length 0x6DAB50
+    // 0x1750450
+    {
+      type: "MBF0",
+      byteLength: 0x1B9C40,
+      offsets: [
+        { upper: 0x0001D342, lower: 0x0001D346 },
+        { upper: 0x0007A9EE, lower: 0x0007A9F2 },
+        { upper: 0x0007AA12, lower: 0x0007AA16 },
+      ]
+    },
+    // 0x190A090
+    {
+      type: "SBF0",
+      byteLength: 0x3B5380,
+      offsets: [
+        { upper: 0x0007A9FA, lower: 0x0007A9FE },
+      ]
+    },
+    // 0x1CBF410
+    {
+      type: "SBF0",
+      byteLength: 0x16B150,
+      offsets: [
+        { upper: 0x0001D34E, lower: 0x0001D352 },
+        { upper: 0x0007AA1E, lower: 0x0007AA22 },
+      ]
+    },
+    // 0x1E2A560
+    {
+      type: "FXD0",
+      byteLength: 0xA40,
+      offsets: [
+        { upper: 0x0001D382, lower: 0x0001D386 },
+      ]
+    },
+  ],
 
-_audioOffsets[Game.MP2_USA] = [ // Length 0x6DAB50
-  // 0x1750450
-  {
-    type: "MBF0",
-    byteLength: 0x1B9C40,
-    offsets: [
-      { upper: 0x0001D342, lower: 0x0001D346 },
-      { upper: 0x0007A9EE, lower: 0x0007A9F2 },
-      { upper: 0x0007AA12, lower: 0x0007AA16 },
-    ]
-  },
-  // 0x190A090
-  {
-    type: "SBF0",
-    byteLength: 0x3B5380,
-    offsets: [
-      { upper: 0x0007A9FA, lower: 0x0007A9FE },
-    ]
-  },
-  // 0x1CBF410
-  {
-    type: "SBF0",
-    byteLength: 0x16B150,
-    offsets: [
-      { upper: 0x0001D34E, lower: 0x0001D352 },
-      { upper: 0x0007AA1E, lower: 0x0007AA22 },
-    ]
-  },
-  // 0x1E2A560
-  {
-    type: "FXD0",
-    byteLength: 0xA40,
-    offsets: [
-      { upper: 0x0001D382, lower: 0x0001D386 },
-    ]
-  },
-];
-_audioOffsets[Game.MP3_USA] = [ // Length 0x67be40
-  // 0x1881C40
-  {
-    type: "MBF0",
-    byteLength: 0x1D4C30,
-    offsets: [
-      { upper: 0x0000F26A, lower: 0x0000F26E },
-      { upper: 0x0004BEF2, lower: 0x0004BEF6 },
-    ]
-  },
-  // 0x1A56870
-  {
-    type: "SBF0",
-    byteLength: 0x4A67D0,
-    offsets: [
-      { upper: 0x0000F276, lower: 0x0000F27A },
-      { upper: 0x0004BEFE, lower: 0x0004BF02 },
-    ]
-  },
-  // 0x1EFD040
-  {
-    type: "FXD0",
-    byteLength: 0xA40,
-    offsets: [
-      { upper: 0x0000F29E, lower: 0x0000F2A2 },
-    ]
-  },
-  // E0F 0x1EFDA80
-];
+  [Game.MP2_JPN]: [ // Length ?
+  ],
+  [Game.MP2_PAL]: [ // Length ?
+  ],
+
+  [Game.MP3_USA]: [ // Length 0x67be40
+    // 0x1881C40
+    {
+      type: "MBF0",
+      byteLength: 0x1D4C30,
+      offsets: [
+        { upper: 0x0000F26A, lower: 0x0000F26E },
+        { upper: 0x0004BEF2, lower: 0x0004BEF6 },
+      ]
+    },
+    // 0x1A56870
+    {
+      type: "SBF0",
+      byteLength: 0x4A67D0,
+      offsets: [
+        { upper: 0x0000F276, lower: 0x0000F27A },
+        { upper: 0x0004BEFE, lower: 0x0004BF02 },
+      ]
+    },
+    // 0x1EFD040
+    {
+      type: "FXD0",
+      byteLength: 0xA40,
+      offsets: [
+        { upper: 0x0000F29E, lower: 0x0000F2A2 },
+      ]
+    },
+    // E0F 0x1EFDA80
+  ],
+
+  [Game.MP3_JPN]: [ // Length ?
+  ],
+  [Game.MP3_PAL]: [ // Length ?
+  ],
+}
 
 export const audio = {
   getROMOffset(subsection = 0) {
     const infos = this.getPatchInfo();
-    if (!infos)
+    if (!infos || !infos.length)
       return null;
     let patchInfo = infos[subsection];
     if (!patchInfo)
@@ -222,13 +234,13 @@ export const audio = {
 
   setROMOffset(newOffset: number, outBuffer: ArrayBuffer) {
     $$log(`Audio.setROMOffset(${$$hex(newOffset)})`);
-    let patchSubsections = this.getPatchInfo();
+    let infos = this.getPatchInfo();
     let currentOffset = newOffset;
-    for (let i = 0; i < patchSubsections.length; i++) {
-      let subsection = patchSubsections[i];
+    for (let i = 0; i < infos.length; i++) {
+      const info = infos[i];
       const [upper, lower] = getRegSetUpperAndLower(currentOffset);
-      for (let j = 0; j < subsection.offsets.length; j++) {
-        const patchOffset = subsection.offsets[j];
+      for (let j = 0; j < info.offsets.length; j++) {
+        const patchOffset = info.offsets[j];
         let patchROMUpper = patchOffset.upper;
         let patchROMLower = patchOffset.lower;
         if (typeof patchOffset.ovl === "number") {
@@ -243,8 +255,22 @@ export const audio = {
         }
       }
 
-      assert(subsection.byteLength % 16 === 0);
-      currentOffset += subsection.byteLength;
+      switch (info.type) {
+        case "S2":
+        case "T3":
+        case "MBF0":
+        case "SBF0":
+        case "FXD0":
+          assert(info.byteLength % 16 === 0);
+          currentOffset += info.byteLength;
+          break;
+
+        case "Pointer":
+          break;
+
+        default:
+          throw new Error("Unhandled audio subsection type: " + info.type);
+      }
     }
   },
 
@@ -262,8 +288,8 @@ export const audio = {
 
   getSequenceTableCount(): number {
     let count = 0;
-    for (let i = 0; i < _newCache!.length; i++) {
-      const cacheEntry = _newCache![i];
+    for (let i = 0; i < _parsedCache!.length; i++) {
+      const cacheEntry = _parsedCache![i];
       if (cacheEntry && "midis" in cacheEntry)
         count++;
     }
@@ -271,12 +297,12 @@ export const audio = {
   },
 
   getSequenceTable(index: number): S2 | MBF0 | null {
-    if (!_newCache)
+    if (!_parsedCache)
       return null;
 
     let curIndex = -1;
-    for (let i = 0; i < _newCache.length; i++) {
-      const cacheEntry = _newCache[i];
+    for (let i = 0; i < _parsedCache.length; i++) {
+      const cacheEntry = _parsedCache[i];
       if (cacheEntry && "midis" in cacheEntry) {
         curIndex++;
 
@@ -290,8 +316,8 @@ export const audio = {
 
   getSoundTableCount(): number {
     let count = 0;
-    for (let i = 0; i < _newCache!.length; i++) {
-      const cacheEntry = _newCache![i];
+    for (let i = 0; i < _parsedCache!.length; i++) {
+      const cacheEntry = _parsedCache![i];
       if (cacheEntry && "sounds" in cacheEntry)
         count++;
     }
@@ -299,12 +325,12 @@ export const audio = {
   },
 
   getSoundTable(index: number): T3 | SBF0 | null {
-    if (!_newCache)
+    if (!_parsedCache)
       return null;
 
     let curIndex = -1;
-    for (let i = 0; i < _newCache.length; i++) {
-      const cacheEntry = _newCache[i];
+    for (let i = 0; i < _parsedCache.length; i++) {
+      const cacheEntry = _parsedCache[i];
       if (cacheEntry && "sounds" in cacheEntry) {
         curIndex++;
 
@@ -316,52 +342,59 @@ export const audio = {
     return null;
   },
 
-  clearCache() {
-    _audioCache = null;
-    _newCache = null;
+  clearCache(): void {
+    _bufferCache = null;
+    _parsedCache = null;
   },
 
-  extract() {
-    let buffer = romhandler.getROMBuffer()!;
+  extract(): void {
+    const buffer = romhandler.getROMBuffer()!;
     let offset = this.getROMOffset();
     if (offset === null)
       return;
-    let len = this.getByteLength();
-    _audioCache = buffer.slice(offset, offset + len);
 
-    _newCache = [];
     const infos = this.getPatchInfo();
+    _bufferCache = new Array(infos.length);
+    _parsedCache = [];
     for (let i = 0; i < infos.length; i++) {
-      switch (infos[i].type) {
+      const info = infos[i];
+      switch (info.type) {
         case "S2":
           const s2Offset = this.getROMOffset(i)!;
-          _newCache.push(new S2(romhandler.getDataView(s2Offset)));
+          _bufferCache.push(buffer.slice(s2Offset, s2Offset + info.byteLength));
+          _parsedCache.push(new S2(romhandler.getDataView(s2Offset)));
           break;
 
         case "T3":
           const t3Offset = this.getROMOffset(i)!;
-          _newCache.push(new T3(romhandler.getDataView(t3Offset)));
+          _bufferCache.push(buffer.slice(t3Offset, t3Offset + info.byteLength));
+          _parsedCache.push(new T3(romhandler.getDataView(t3Offset)));
           break;
 
         case "MBF0":
           const mbf0Offset = this.getROMOffset(i)!;
-          _newCache.push(new MBF0(romhandler.getDataView(mbf0Offset)));
+          _bufferCache.push(buffer.slice(mbf0Offset, mbf0Offset + info.byteLength));
+          _parsedCache.push(new MBF0(romhandler.getDataView(mbf0Offset)));
           break;
 
         case "SBF0":
           const sbf0Offset = this.getROMOffset(i)!;
-          _newCache.push(new SBF0(romhandler.getDataView(sbf0Offset)));
+          _bufferCache.push(buffer.slice(sbf0Offset, sbf0Offset + info.byteLength));
+          _parsedCache.push(new SBF0(romhandler.getDataView(sbf0Offset)));
           break;
 
         case "FXD0":
           const fxd0Offset = this.getROMOffset(i)!;
-          _newCache.push(new FXD0(romhandler.getDataView(fxd0Offset)));
+          _bufferCache.push(buffer.slice(fxd0Offset, fxd0Offset + info.byteLength));
+          _parsedCache.push(new FXD0(romhandler.getDataView(fxd0Offset)));
           break;
 
         case "Pointer":
-        default:
-          _newCache.push(null);
+          _parsedCache.push(null);
           break;
+
+        default:
+          throw new Error("Unhandled audio subsection type: " + info.type);
       }
     }
 
@@ -387,33 +420,72 @@ export const audio = {
   //   }
   },
 
-  extractAsync() {
+  extractAsync(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.extract();
       resolve();
     });
   },
 
-  pack(buffer: ArrayBuffer, offset: number = 0) {
-    copyRange(buffer, _audioCache!, offset, 0, _audioCache!.byteLength);
-    return _audioCache!.byteLength;
+  pack(buffer: ArrayBuffer, offset: number = 0): number {
+    const infos = this.getPatchInfo();
+    if (!infos || !infos.length || !_bufferCache) {
+      throw new Error("Unable to write audio section.");
+    }
+
+    let currentOffset = offset;
+    for (let i = 0; i < infos.length; i++) {
+      const info = infos[i];
+      switch (info.type) {
+        case "S2":
+        case "T3":
+        case "MBF0":
+        case "SBF0":
+        case "FXD0":
+          copyRange(buffer, _bufferCache[i], currentOffset, 0, _bufferCache[i].byteLength);
+          currentOffset += info.byteLength;
+          break;
+
+        case "Pointer":
+          break;
+
+        default:
+          throw new Error("Unhandled audio subsection type: " + info.type);
+      }
+    }
+
+    const byteLengthWritten = currentOffset - offset;
+    assert(byteLengthWritten % 16 === 0);
+    return byteLengthWritten;
   },
 
   // Gets the full byte length of the audio section of the ROM.
   getByteLength() {
-    // Who knows how to interpret the audio section? Hard code for now.
-    let gameID = romhandler.getROMGame();
-    switch(gameID) {
-      case Game.MP1_USA:
-        return 0x7B3DF0; // 0x1CED490 - 0x15396A0
-      case Game.MP1_JPN:
-        return 0x10; // FIXME
-      case Game.MP2_USA:
-        return 0x6DAB50; // 0x1E2AFA0 - 0x1750450
-      case Game.MP3_USA:
-        return 0x67BE40; // 0x1EFDA80 - 0x1881C40
+    const infos = this.getPatchInfo();
+    if (!infos || !infos.length) {
+      throw new Error("Unable to determine audio section length.");
     }
 
-    throw new Error("Figure out the audio section length for " + gameID);
+    let byteLength = 0;
+    for (let i = 0; i < infos.length; i++) {
+      const info = infos[i];
+      switch (info.type) {
+        case "S2":
+        case "T3":
+        case "MBF0":
+        case "SBF0":
+        case "FXD0":
+          byteLength += info.byteLength;
+          break;
+
+        case "Pointer":
+          break;
+
+        default:
+          throw new Error("Unhandled audio subsection type: " + info.type);
+      }
+    }
+
+    return byteLength;
   }
 };
