@@ -376,7 +376,7 @@ function _exportWav(table: number, index: number, name?: string): void {
 function _replaceMidi(table: number, index: number): void {
   const seqTable = audio.getSequenceTable(table)!;
 
-  openFile("midi/*", (event: any) => {
+  openFile("audio/midi", (event: any) => {
     const file = event.target.files[0];
     if (!file)
       return;

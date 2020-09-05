@@ -105,7 +105,7 @@ const _audioOffsets: AudioOffsetInfo = {
     // 0x1750450
     {
       type: "MBF0",
-      byteLength: 0x1B9C40,
+      // byteLength: 0x1B9C40,
       offsets: [
         { upper: 0x0001D342, lower: 0x0001D346 },
         { upper: 0x0007A9EE, lower: 0x0007A9F2 },
