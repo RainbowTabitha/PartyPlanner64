@@ -44,7 +44,7 @@ let _mainfsCache: IMainFsReadInfo[][] | null;
 
 export interface IMainFsReadInfo {
   compressionType: number;
-  decompressedSize: number;
+  decompressedSize?: number;
   decompressed: ArrayBuffer;
   compressed?: ArrayBuffer;
 }

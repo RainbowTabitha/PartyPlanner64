@@ -699,7 +699,7 @@ function _migrateOldCustomEvents(board: IBoard) {
         console.warn(`When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`);
       }
       board.events[spaceEvent.id] = (spaceEvent as ICustomEvent).asm;
-      delete (spaceEvent as ICustomEvent).asm;
+      delete (spaceEvent as any).asm;
     }
   });
 }
