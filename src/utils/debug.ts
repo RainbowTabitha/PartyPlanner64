@@ -13,7 +13,7 @@ export function $$hex(num: number, prefix: string = "0x") {
 }
 
 /** Does an assertion. */
-export function assert(condition: boolean) {
+export function assert(condition: boolean): asserts condition {
   if (isDebug()) {
     if (!condition) {
       debugger;

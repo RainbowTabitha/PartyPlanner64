@@ -20,7 +20,7 @@ interface IOffsetInfo {
 
 interface IOffsetObj {
   type: "S2" | "T3" | "MBF0" | "SBF0" | "FXD0" | "Pointer";
-  byteLength: number;
+  byteLength?: number;
   offsets: IOffsetInfo[];
 }
 
@@ -148,7 +148,7 @@ const _audioOffsets: AudioOffsetInfo = {
     // 0x1881C40
     {
       type: "MBF0",
-      byteLength: 0x1D4C30,
+      // byteLength: 0x1D4C30,
       offsets: [
         { upper: 0x0000F26A, lower: 0x0000F26E },
         { upper: 0x0004BEF2, lower: 0x0004BEF6 },
@@ -259,11 +259,17 @@ export const audio = {
       switch (info.type) {
         case "S2":
         case "T3":
-        case "MBF0":
         case "SBF0":
         case "FXD0":
+          assert(typeof info.byteLength === "number");
           assert(info.byteLength % 16 === 0);
           currentOffset += info.byteLength;
+          break;
+
+        case "MBF0":
+          assert(!!_parsedCache![i]);
+          const mbf0 = _parsedCache![i] as MBF0;
+          currentOffset += mbf0.getByteLength();
           break;
 
         case "Pointer":
@@ -361,12 +367,14 @@ export const audio = {
       const info = infos[i];
       switch (info.type) {
         case "S2":
+          assert(typeof info.byteLength === "number");
           const s2Offset = this.getROMOffset(i)!;
           _bufferCache[i] = buffer.slice(s2Offset, s2Offset + info.byteLength);
           _parsedCache[i] = new S2(romhandler.getDataView(s2Offset));
           break;
 
         case "T3":
+          assert(typeof info.byteLength === "number");
           const t3Offset = this.getROMOffset(i)!;
           _bufferCache[i] = buffer.slice(t3Offset, t3Offset + info.byteLength);
           _parsedCache[i] = new T3(romhandler.getDataView(t3Offset));
@@ -374,17 +382,19 @@ export const audio = {
 
         case "MBF0":
           const mbf0Offset = this.getROMOffset(i)!;
-          _bufferCache[i] = buffer.slice(mbf0Offset, mbf0Offset + info.byteLength);
-          _parsedCache[i] = new MBF0(romhandler.getDataView(mbf0Offset));
+          const mbf0 = _parsedCache[i] = new MBF0(romhandler.getDataView(mbf0Offset));
+          _bufferCache[i] = buffer.slice(mbf0Offset, mbf0Offset + mbf0.getByteLength());
           break;
 
         case "SBF0":
+          assert(typeof info.byteLength === "number");
           const sbf0Offset = this.getROMOffset(i)!;
           _bufferCache[i] = buffer.slice(sbf0Offset, sbf0Offset + info.byteLength);
           _parsedCache[i] = new SBF0(romhandler.getDataView(sbf0Offset));
           break;
 
         case "FXD0":
+          assert(typeof info.byteLength === "number");
           const fxd0Offset = this.getROMOffset(i)!;
           _bufferCache[i] = buffer.slice(fxd0Offset, fxd0Offset + info.byteLength);
           _parsedCache[i] = new FXD0(romhandler.getDataView(fxd0Offset));
@@ -442,6 +452,7 @@ export const audio = {
         case "T3":
         case "SBF0":
         case "FXD0":
+          assert(typeof info.byteLength === "number");
           copyRange(buffer, _bufferCache[i]!, currentOffset, 0, _bufferCache[i]!.byteLength);
           currentOffset += info.byteLength;
           break;
@@ -478,10 +489,15 @@ export const audio = {
       switch (info.type) {
         case "S2":
         case "T3":
-        case "MBF0":
         case "SBF0":
         case "FXD0":
+          assert(typeof info.byteLength === "number");
           byteLength += info.byteLength;
+          break;
+
+        case "MBF0":
+          const mbf0 = _parsedCache![i] as MBF0;
+          byteLength += mbf0.getByteLength();
           break;
 
         case "Pointer":

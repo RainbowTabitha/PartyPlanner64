@@ -39,11 +39,25 @@
     padding-top: 3px;
     padding-bottom: 3px;
   }
+}
+
+.audioTableExpandedContent {
+  padding: 2px 5px 2px 5px;
+}
+
+.audioTableExpandedLabel {
+  margin-left: 0.5em;
+}
+
+.audioTableSmallEditIcon {
+  margin-left: 0.25em;
+  opacity: 0.5;
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
 
   &:hover {
-    td {
-      background-color: rgba(0, 0, 0, 0.2);
-    }
+    opacity: 1;
   }
 }
 
@@ -53,9 +67,6 @@
 
 .btnAudioExport {
   white-space: nowrap;
-  padding: 0;
-  padding-top: 2px;
-  padding-right: 2px;
   margin: 1px;
 
   background-color: rgba(0, 0, 0, 0.2);

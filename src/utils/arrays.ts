@@ -2,14 +2,21 @@ import { createContext } from "./canvas";
 import { $$hex } from "./debug";
 import * as SparkMD5 from "../lib/js-spark-md5/spark-md5";
 
-export function copyRange(outArr: ArrayBuffer | DataView, inArr: ArrayBuffer | DataView, outOffset: number, inOffset: number, len: number) {
+export function copyRange(outArr: ArrayBuffer | DataView, inArr: ArrayBuffer | DataView | number[], outOffset: number, inOffset: number, len: number) {
   if (outArr instanceof ArrayBuffer)
     outArr = new DataView(outArr);
   if (inArr instanceof ArrayBuffer)
     inArr = new DataView(inArr);
 
-  for (var i = 0; i < len; i++) {
-    outArr.setUint8(outOffset + i, inArr.getUint8(inOffset + i));
+  if (Array.isArray(inArr)) {
+    for (let i = 0; i < len; i++) {
+      outArr.setUint8(outOffset + i, inArr[inOffset + i]);
+    }
+  }
+  else {
+    for (let i = 0; i < len; i++) {
+      outArr.setUint8(outOffset + i, inArr.getUint8(inOffset + i));
+    }
   }
 }
 

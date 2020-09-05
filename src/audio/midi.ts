@@ -3,9 +3,14 @@
 
 // https://github.com/derselbst/N64SoundTools/blob/master/N64MidiTool/N64MidiLibrary/MidiParse.cpp#L296
 
+import { copyRange } from "../utils/arrays";
+import { assert } from "../utils/debug";
+
 /* eslint-disable */
 
 const LENGTH_HEADER = 0x44;
+const MIDI_HEADER_MAGIC = 0x4D546864; // MThd
+const MIDI_TRACK_MAGIC = 0x4D54726B; // MTrk
 
 interface IRefs {
   altPattern: number[] | null;
@@ -835,6 +840,757 @@ export function parseGameMidi(inView: DataView, inputSize: number): ArrayBuffer 
 }
 
 /**
+ * Converts a normal midi file to a midi that can be put in the game.
+ *
+ * https://github.com/derselbst/N64SoundTools/blob/master/N64MidiTool/N64MidiLibrary/MidiParse.cpp#L12837
+ *
+ * @param midiFile Normal midi file.
+ */
+export function createGameMidi(midiFile: ArrayBuffer): ArrayBuffer | null {
+  let loop = false;
+  let loopPoint = 0;
+  let useRepeaters = false;
+
+  let trackEventCount: number[] = [];
+  let trackEvents: TrackEvent[][] = [];
+  for (let x = 0; x < 32; x++) {
+    trackEvents.push([]);
+    trackEventCount.push(0);
+  }
+
+  const dataView = new DataView(midiFile);
+
+  if (dataView.getUint32(0) !== MIDI_HEADER_MAGIC) {
+    return null;
+  }
+
+  const headerLength = dataView.getUint32(4);
+  const type = dataView.getUint16(8);
+  let numTracks = dataView.getUint16(10);
+  const tempo = dataView.getUint16(12);
+
+  if (numTracks > 16) {
+    console.log("Too many tracks, truncating to 16.");
+    numTracks = 16;
+  }
+
+  if (type !== 0 && type !== 1) {
+    console.log("Invalid midi type");
+    return null;
+  }
+
+  let refs: IRefs = {
+    altPattern: null,
+    altOffset: 0,
+    altLength: 0,
+    position: 0xE,
+    original: 0,
+  };
+  let unknownsHit = false;
+
+  let highestAbsoluteTime = 0;
+  let highestAbsoluteTimeByTrack = [];
+  for (let x = 0; x < 16; x++) {
+    highestAbsoluteTimeByTrack[x] = 0;
+  }
+
+  for (let trackNum = 0; trackNum < numTracks; trackNum++) {
+    let absoluteTime = 0;
+
+    if (dataView.getUint32(refs.position) !== MIDI_TRACK_MAGIC) {
+      console.log("Invalid track midi header");
+      return null;
+    }
+
+    const trackLength = dataView.getUint32(refs.position + 4);
+    refs.position += 8;
+
+    let previousEventValue = 0xFF;
+    let endFlag = false;
+
+    while (!endFlag && (refs.position < midiFile.byteLength)) {
+      refs.original = 0;
+      let timeTag = _getVLBytes(dataView, refs, false);
+      absoluteTime += timeTag;
+
+      let eventVal = _readMidiByte(dataView, refs, false);
+      let statusBit = eventVal <= 0x7F ? true : false;
+
+      if (eventVal === 0xFF) { // meta event.
+        let subType = _readMidiByte(dataView, refs, false);
+
+        if (subType === 0x2F) { // End of Track Event.
+          absoluteTime -= timeTag;
+          endFlag = true;
+          let length = _readMidiByte(dataView, refs, false); // end 00 in real mid
+        }
+        else if (subType === 0x51) { // Set Tempo Event.
+          let length = _readMidiByte(dataView, refs, false);
+          _readMidiByte(dataView, refs, false);
+          _readMidiByte(dataView, refs, false);
+          _readMidiByte(dataView, refs, false);
+        }
+        else if (subType < 0x7F && !(subType === 0x51 || subType === 0x2F)) { // Various Unused Meta Events.
+          let length = _getVLBytes(dataView, refs, false); // Was _readMidiByte in Subdrag code.
+          for (let i = 0; i < length; i++) {
+            _readMidiByte(dataView, refs, false);
+          }
+        }
+        else if (subType === 0x7F) { // Unused Sequencer Specific Event
+          let length = _getVLBytes(dataView, refs, false);
+          for (let i = 0; i < length; i++) {
+            _readMidiByte(dataView, refs, false);
+          }
+        }
+
+        previousEventValue = eventVal;
+      }
+      else if ((eventVal >= 0x80 && eventVal < 0x90)
+        || (statusBit && (previousEventValue >= 0x80 && previousEventValue < 0x90))) {
+        let curEventVal;
+        let noteNumber;
+        if (statusBit) {
+          noteNumber = eventVal;
+          curEventVal = previousEventValue;
+        }
+        else {
+          noteNumber = _readMidiByte(dataView, refs, false);
+          curEventVal = eventVal;
+        }
+        let velocity = _readMidiByte(dataView, refs, false);
+        if (!statusBit) {
+          previousEventValue = eventVal;
+        }
+      }
+      else if ((eventVal >= 0x90 && eventVal < 0xA0)
+        || (statusBit && (previousEventValue >= 0x90 && previousEventValue < 0xA0))) {
+				let curEventVal;
+				let noteNumber;
+				if (statusBit) {
+					noteNumber = eventVal;
+					curEventVal = previousEventValue;
+				}
+				else {
+					noteNumber = _readMidiByte(dataView, refs, false);
+					curEventVal = eventVal;
+				}
+				let velocity = _readMidiByte(dataView, refs, false);
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xB0) && (eventVal < 0xC0))
+        || (statusBit && (previousEventValue >= 0xB0 && previousEventValue < 0xC0))) // controller change
+			{
+				let controllerType;
+				if (statusBit) {
+					controllerType = eventVal;
+				}
+				else {
+					controllerType = _readMidiByte(dataView, refs, false);
+				}
+				let controllerValue = _readMidiByte(dataView, refs, false);
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xC0) && (eventVal < 0xD0))
+        || (statusBit && (previousEventValue >= 0xC0 && previousEventValue < 0xD0))) // change instrument
+			{
+				let instrument;
+				if (statusBit) {
+					instrument = eventVal;
+				}
+				else {
+					instrument = _readMidiByte(dataView, refs, false);
+				}
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xD0) && (eventVal < 0xE0))
+        || (statusBit && (previousEventValue >= 0xD0 && previousEventValue < 0xE0))) // channel aftertouch
+			{
+				let amount;
+				if (statusBit) {
+					amount = eventVal;
+				}
+				else {
+					amount = _readMidiByte(dataView, refs, false);
+				}
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xE0) && (eventVal < 0xF0))
+        || (statusBit && (previousEventValue >= 0xE0 && previousEventValue < 0xF0))) // pitch bend
+			{
+				let valueLSB;
+				if (statusBit) {
+					valueLSB = eventVal;
+				}
+				else {
+					valueLSB = _readMidiByte(dataView, refs, false);
+				}
+				let valueMSB = _readMidiByte(dataView, refs, false);
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+			else if (eventVal == 0xF0 || eventVal == 0xF7) {
+				let length = _getVLBytes(dataView, refs, false);
+				// subtract length
+				for (let i = 0; i < length; i++) {
+					_readMidiByte(dataView, refs, false);
+				}
+      }
+			else {
+				if (!unknownsHit) {
+					console.warn("Invalid midi character found");
+					unknownsHit = true;
+				}
+			}
+    }
+
+    if (absoluteTime > highestAbsoluteTime) {
+      highestAbsoluteTime = absoluteTime;
+    }
+    if (absoluteTime > highestAbsoluteTimeByTrack[trackNum]) {
+      highestAbsoluteTimeByTrack[trackNum] = absoluteTime;
+    }
+  }
+
+  refs = {
+    altPattern: null,
+    altOffset: 0,
+    altLength: 0,
+    position: 0xE,
+    original: 0,
+  };
+
+  for (let trackNum = 0; trackNum < numTracks; trackNum++) {
+    let absoluteTime = 0;
+    if (dataView.getUint32(refs.position) !== MIDI_TRACK_MAGIC) {
+      console.log("Invalid track midi header");
+      return null;
+    }
+
+    const trackLength = dataView.getUint32(refs.position + 4);
+    refs.position += 8;
+
+    let previousEventValue = 0xFF;
+    let endFlag = false;
+    let didLoop = false;
+
+    if (loop && loopPoint === 0 && highestAbsoluteTimeByTrack[trackNum] > 0) {
+      const newTrackEvent = trackEvents[trackNum][trackEventCount[trackNum]] = new TrackEvent();
+      newTrackEvent.type = 0xFF;
+      newTrackEvent.absoluteTime = 0;
+      newTrackEvent.contentSize = 3;
+      newTrackEvent.contents = [0x2E, 0x00, 0xFF];
+      newTrackEvent.deltaTime = 0;
+      newTrackEvent.obsoleteEvent = false;
+
+      trackEventCount[trackNum]++;
+      didLoop = true;
+    }
+
+    while (!endFlag && (refs.position < midiFile.byteLength)) {
+      refs.original = 0;
+      let timeTag = _getVLBytes(dataView, refs, false);
+      absoluteTime += timeTag;
+
+      let newTrackEvent = trackEvents[trackNum][trackEventCount[trackNum]] = new TrackEvent();
+      newTrackEvent.deltaTime = timeTag;
+      newTrackEvent.obsoleteEvent = false;
+      newTrackEvent.contents = null;
+      newTrackEvent.absoluteTime = absoluteTime;
+
+      if (loop && !didLoop && highestAbsoluteTimeByTrack[trackNum] > loopPoint) {
+        if (absoluteTime == loopPoint) {
+          newTrackEvent.type = 0xFF;
+					newTrackEvent.absoluteTime = absoluteTime;
+					newTrackEvent.contentSize = 3;
+					newTrackEvent.contents = [0x2E, 0x00, 0xFF];
+					newTrackEvent.deltaTime = timeTag;
+					newTrackEvent.obsoleteEvent = false;
+
+          trackEventCount[trackNum]++;
+
+          newTrackEvent = trackEvents[trackNum][trackEventCount[trackNum]] = new TrackEvent();
+          newTrackEvent.deltaTime = timeTag;
+          newTrackEvent.obsoleteEvent = false;
+          newTrackEvent.contents = null;
+          newTrackEvent.absoluteTime = absoluteTime;
+
+          didLoop = true;
+        }
+        else if (absoluteTime > loopPoint) {
+          newTrackEvent.type = 0xFF;
+					newTrackEvent.absoluteTime = loopPoint;
+					newTrackEvent.contentSize = 3;
+					newTrackEvent.contents = [0x2E, 0x00, 0xFF];
+					if (trackEventCount[trackNum] > 0)
+						newTrackEvent.deltaTime = loopPoint - trackEvents[trackNum][trackEventCount[trackNum] - 1].absoluteTime;
+					else
+						newTrackEvent.deltaTime = loopPoint;
+					newTrackEvent.obsoleteEvent = false;
+
+          trackEventCount[trackNum]++;
+
+          newTrackEvent = trackEvents[trackNum][trackEventCount[trackNum]] = new TrackEvent();
+          newTrackEvent.deltaTime = absoluteTime - loopPoint;
+          newTrackEvent.obsoleteEvent = false;
+          newTrackEvent.contents = null;
+          newTrackEvent.absoluteTime = absoluteTime;
+
+          didLoop = true;
+        }
+      }
+
+      let eventVal = _readMidiByte(dataView, refs, false);
+      let statusBit = eventVal <= 0x7F ? true : false;
+      if (eventVal === 0xFF) {
+        let subType = _readMidiByte(dataView, refs, false);
+        if (subType === 0x2F) {
+          endFlag = true;
+          if (loop && highestAbsoluteTimeByTrack[trackNum] > loopPoint) {
+            let prevEvent = trackEvents[trackNum][trackEventCount[trackNum] - 1];
+            if (prevEvent.type === 0xFF && prevEvent.contentSize > 0 && prevEvent.contents![0] === 0x2E) {
+              newTrackEvent = prevEvent;
+              newTrackEvent.type = 0xFF;
+              newTrackEvent.contentSize = 1;
+              newTrackEvent.contents = [0x2F];
+            }
+            else {
+              let newTrackEventLast = trackEvents[trackNum][trackEventCount[trackNum] + 1] = new TrackEvent();
+              newTrackEventLast.absoluteTime = highestAbsoluteTime;
+							newTrackEventLast.deltaTime = 0;
+							newTrackEventLast.durationTime = newTrackEvent.durationTime;
+							newTrackEventLast.obsoleteEvent = newTrackEvent.obsoleteEvent;
+
+							newTrackEventLast.type = 0xFF;
+							newTrackEventLast.contentSize = 1;
+							newTrackEventLast.contents = [0x2F];
+
+							newTrackEvent.type = 0xFF;
+							if (highestAbsoluteTime > (prevEvent.absoluteTime + prevEvent.durationTime)) {
+								newTrackEvent.deltaTime = (highestAbsoluteTime - (prevEvent.absoluteTime + prevEvent.durationTime));
+								newTrackEvent.absoluteTime = highestAbsoluteTime;
+							}
+							else {
+								newTrackEvent.deltaTime = 0;
+								newTrackEvent.absoluteTime = prevEvent.absoluteTime;
+							}
+
+							newTrackEvent.contentSize = 7;
+							newTrackEvent.contents = [
+                0x2D, 0xFF, 0xFF,
+                0x0, // todo write location
+                0x0,
+                0x0,
+                0x0
+              ];
+							newTrackEvent.obsoleteEvent = false;
+
+							trackEventCount[trackNum]++;
+            }
+          }
+          else {
+            newTrackEvent.type = 0xFF;
+            newTrackEvent.contentSize = 1;
+            newTrackEvent.contents = [0x2F];
+          }
+
+          let length = _readMidiByte(dataView, refs, false); // end 00 in real midi
+        }
+        else if (subType === 0x51) {
+          let length = _readMidiByte(dataView, refs, false);
+
+          newTrackEvent.type = 0xFF;
+          newTrackEvent.contentSize = 4;
+          newTrackEvent.contents = [
+            0x51,
+            _readMidiByte(dataView, refs, false),
+            _readMidiByte(dataView, refs, false),
+            _readMidiByte(dataView, refs, false)
+          ];
+        }
+        else if (subType < 0x7F && !(subType == 0x51 || subType == 0x2F)) {
+          newTrackEvent.type = 0xFF;
+          let length = _getVLBytes(dataView, refs, false); // Was _readMidiByte in Subdrag code.
+          for (let i = 0; i < length; i++) {
+            _readMidiByte(dataView, refs, false);
+          }
+          newTrackEvent.obsoleteEvent = true;
+        }
+        else if (subType === 0x7F) { // Unused sequencer specific event.
+          newTrackEvent.type = 0xFF;
+          let length = _getVLBytes(dataView, refs, false);
+          for (let i = 0; i < length; i++) {
+            _readMidiByte(dataView, refs, false);
+          }
+          newTrackEvent.obsoleteEvent = true;
+        }
+
+        previousEventValue = eventVal;
+      }
+      else if ((eventVal >= 0x80 && eventVal < 0x90)
+        || (statusBit && (previousEventValue >= 0x80 && previousEventValue < 0x90)))
+			{
+				let curEventVal;
+				let noteNumber;
+				if (statusBit) {
+					newTrackEvent.type = previousEventValue;
+					noteNumber = eventVal;
+					curEventVal = previousEventValue;
+				}
+				else {
+					newTrackEvent.type = eventVal;
+					noteNumber = _readMidiByte(dataView, refs, false);
+					curEventVal = eventVal;
+				}
+				let velocity = _readMidiByte(dataView, refs, false);
+
+				for (let testBackwards = (trackEventCount[trackNum] - 1); testBackwards >= 0; testBackwards--)
+				{
+          if ((trackEvents[trackNum][testBackwards].type == (0x90 | (curEventVal & 0xF)))
+            && !(trackEvents[trackNum][testBackwards].obsoleteEvent))
+					{
+						if (trackEvents[trackNum][testBackwards].contents![0] == noteNumber)
+						{
+							trackEvents[trackNum][testBackwards].durationTime = (absoluteTime - trackEvents[trackNum][testBackwards].absoluteTime);
+							break;
+						}
+					}
+				}
+
+				newTrackEvent.durationTime = 0;
+				newTrackEvent.contentSize = 2;
+				newTrackEvent.contents = [noteNumber, velocity];
+				newTrackEvent.obsoleteEvent = true;
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if ((eventVal >= 0x90 && eventVal < 0xA0)
+        || (statusBit && (previousEventValue >= 0x90 && previousEventValue < 0xA0)))
+			{
+				let curEventVal;
+				let noteNumber;
+				if (statusBit) {
+					newTrackEvent.type = previousEventValue;
+					noteNumber = eventVal;
+					curEventVal = previousEventValue;
+				}
+				else {
+					newTrackEvent.type = eventVal;
+					noteNumber = _readMidiByte(dataView, refs, false);
+					curEventVal = eventVal;
+				}
+				let velocity = _readMidiByte(dataView, refs, false);
+
+				if (velocity === 0) {
+					// simulate note off
+					for (let testBackwards = (trackEventCount[trackNum] - 1); testBackwards >= 0; testBackwards--) {
+						if (((trackEvents[trackNum][testBackwards].type == curEventVal)) && !(trackEvents[trackNum][testBackwards].obsoleteEvent)) {
+							if (trackEvents[trackNum][testBackwards].contents![0] == noteNumber) {
+								trackEvents[trackNum][testBackwards].durationTime = (absoluteTime - trackEvents[trackNum][testBackwards].absoluteTime);
+								break;
+							}
+						}
+					}
+
+					newTrackEvent.durationTime = 0;
+					newTrackEvent.contentSize = 2;
+					newTrackEvent.contents = [noteNumber, velocity];
+					newTrackEvent.obsoleteEvent = true;
+				}
+				else
+				{
+					// check if no note off received, if so, turn it off and restart note
+					for (let testBackwards = (trackEventCount[trackNum] - 1); testBackwards >= 0; testBackwards--)
+					{
+						if (((trackEvents[trackNum][testBackwards].type == curEventVal)) && !(trackEvents[trackNum][testBackwards].obsoleteEvent))
+						{
+							if (trackEvents[trackNum][testBackwards].contents![0] == noteNumber)
+							{
+								if (trackEvents[trackNum][testBackwards].durationTime == 0) // means unfinished note
+									trackEvents[trackNum][testBackwards].durationTime = (absoluteTime - trackEvents[trackNum][testBackwards].absoluteTime);
+								break;
+							}
+						}
+					}
+
+					newTrackEvent.durationTime = 0; // to be filled in
+					newTrackEvent.contentSize = 2;
+					newTrackEvent.contents = [noteNumber, velocity];
+				}
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xB0) && (eventVal < 0xC0))
+        || (statusBit && (previousEventValue >= 0xB0 && previousEventValue < 0xC0))) // controller change
+			{
+				let controllerType;
+				if (statusBit) {
+					controllerType = eventVal;
+					newTrackEvent.type = previousEventValue;
+				}
+				else {
+					controllerType = _readMidiByte(dataView, refs, false);
+					newTrackEvent.type = eventVal;
+				}
+
+				let controllerValue = _readMidiByte(dataView, refs, false);
+
+				newTrackEvent.contentSize = 2;
+				newTrackEvent.contents = [controllerType, controllerValue];
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xC0) && (eventVal < 0xD0))
+        || (statusBit && (previousEventValue >= 0xC0 && previousEventValue < 0xD0))) // change instrument
+			{
+				let instrument;
+				if (statusBit) {
+					instrument = eventVal;
+					newTrackEvent.type = previousEventValue;
+				}
+				else {
+					instrument = _readMidiByte(dataView, refs, false);
+					newTrackEvent.type = eventVal;
+				}
+
+				if ((eventVal & 0xF) === 9) // Drums in GM
+					instrument = instrument;
+				else
+					instrument = instrument;
+
+				newTrackEvent.contentSize = 1;
+				newTrackEvent.contents = [instrument];
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xD0) && (eventVal < 0xE0))
+        || (statusBit && (previousEventValue >= 0xD0 && previousEventValue < 0xE0))) // channel aftertouch
+			{
+				newTrackEvent.type = eventVal;
+				let amount;
+				if (statusBit) {
+					amount = eventVal;
+					newTrackEvent.type = previousEventValue;
+				}
+				else {
+					amount = _readMidiByte(dataView, refs, false);
+					newTrackEvent.type = eventVal;
+				}
+
+				newTrackEvent.contentSize = 1;
+				newTrackEvent.contents = [amount];
+				//newTrackEvent.obsoleteEvent = true; // temporary?
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+      else if (((eventVal >= 0xE0) && (eventVal < 0xF0))
+        || (statusBit && (previousEventValue >= 0xE0 && previousEventValue < 0xF0))) // pitch bend
+			{
+				newTrackEvent.type = eventVal;
+				let valueLSB;
+				if (statusBit) {
+					valueLSB = eventVal;
+					newTrackEvent.type = previousEventValue;
+				}
+				else {
+					valueLSB = _readMidiByte(dataView, refs, false);
+					newTrackEvent.type = eventVal;
+				}
+
+				let valueMSB = _readMidiByte(dataView, refs, false);
+
+				newTrackEvent.contentSize = 2;
+				newTrackEvent.contents = [valueLSB, valueMSB];
+				//newTrackEvent.obsoleteEvent = true; // temporary?
+
+				if (!statusBit)
+					previousEventValue = eventVal;
+			}
+			else if (eventVal == 0xF0 || eventVal == 0xF7) {
+        newTrackEvent.type = eventVal;
+				let length = _getVLBytes(dataView, refs, false);
+				// subtract length
+				for (let i = 0; i < length; i++) {
+					_readMidiByte(dataView, refs, false);
+				}
+
+				newTrackEvent.obsoleteEvent = true;
+      }
+			else {
+				if (!unknownsHit)
+				{
+					console.error("Invalid midi character found");
+					unknownsHit = true;
+				}
+			}
+
+			trackEventCount[trackNum]++;
+    }
+  }
+
+  let outFile = new ArrayBuffer(0x100000); // TOOD: What size?
+  let outView = new DataView(outFile);
+  let outPos = 0;
+
+  let timeOffset = 0;
+  let startPosition = 0x44;
+  for (let i = 0; i < numTracks; i++) {
+    let sizeData = 0;
+    let loopStartPosition = 0;
+    let foundLoopStart = false;
+    let previousTrackEvent = 0;
+
+    if (trackEventCount[i] > 0) {
+      outView.setUint32(outPos, startPosition);
+      outPos += 4;
+
+      for (let j = 0; j < trackEventCount[i]; j++) {
+        const trackEvent = trackEvents[i][j];
+        let [timeDelta, lengthTimeDelta] = _returnVLBytes(trackEvent.deltaTime + timeOffset);
+
+        if (trackEvent.obsoleteEvent) {
+          timeOffset += trackEvent.deltaTime;
+        }
+        else {
+          if (trackEvent.type === 0xFF && trackEvent.contents![0] === 0x2E) {
+            foundLoopStart = true;
+            loopStartPosition = startPosition + sizeData + 1 + trackEvent.contentSize + lengthTimeDelta;
+          }
+
+          timeOffset = 0;
+          sizeData += lengthTimeDelta;
+
+          if (trackEvent.type === 0xFF && trackEvent.contents![0] === 0x2D) {
+            let offsetBack = ((startPosition + sizeData) - loopStartPosition + 8);
+						trackEvent.contents![3] = ((offsetBack >> 24) & 0xFF);
+						trackEvent.contents![4] = ((offsetBack >> 16) & 0xFF);
+						trackEvent.contents![5] = ((offsetBack >> 8) & 0xFF);
+						trackEvent.contents![6] = ((offsetBack >> 0) & 0xFF);
+          }
+
+          if ((trackEvent.type !== previousTrackEvent) || (trackEvent.type === 0xFF)) {
+						sizeData += 1;
+					}
+
+					sizeData += trackEvent.contentSize;
+
+					if ((trackEvent.type >= 0x90) && (trackEvent.type < 0xA0)) {
+						let [duration, lengthDurationBytes] = _returnVLBytes(trackEvent.durationTime);
+
+						sizeData += lengthDurationBytes;
+					}
+
+					previousTrackEvent = trackEvent.type;
+        }
+      }
+      startPosition += sizeData;
+    }
+    else {
+      outView.setUint32(outPos, 0);
+      outPos += 4;
+    }
+  }
+
+  for (let i = numTracks; i < 16; i++) {
+    outView.setUint32(outPos, 0);
+    outPos += 4;
+  }
+
+  outView.setUint32(outPos, tempo);
+  outPos += 4;
+
+  for (let i = 0; i < numTracks; i++) {
+    if (trackEventCount[i] > 0) {
+      let previousTrackEvent = 0;
+      for (let j = 0; j < trackEventCount[i]; j++) {
+        let trackEvent = trackEvents[i][j];
+        if (trackEvent.obsoleteEvent) {
+          timeOffset += trackEvent.deltaTime;
+        }
+        else {
+          let [timeDelta, lengthTimeDelta] = _returnVLBytes(trackEvent.deltaTime + timeOffset);
+          timeOffset = 0;
+          outPos = _writeVLBytes(outView, outPos, timeDelta, lengthTimeDelta, false);
+
+          if (trackEvent.type !== previousTrackEvent || trackEvent.type === 0xFF) {
+            outView.setUint8(outPos, trackEvent.type);
+            outPos++;
+          }
+
+          copyRange(outView, trackEvent.contents!, outPos, 0, trackEvent.contentSize);
+          outPos += trackEvent.contentSize;
+
+          if ((trackEvent.type >= 0x90) && (trackEvent.type < 0xA0)) {
+            let [duration, lengthDurationBytes] = _returnVLBytes(trackEvent.durationTime);
+            outPos = _writeVLBytes(outView, outPos, duration, lengthDurationBytes, false);
+          }
+
+          previousTrackEvent = trackEvent.type;
+        }
+      }
+    }
+  }
+
+  const inArray = outFile.slice(0, outPos);
+  const inArrayDataView = new DataView(inArray);
+  let offsetheader = [];
+  let extraOffsets = [];
+  for (let x = 0; x < 0x40; x += 4) {
+    offsetheader[x / 4] =
+      ((((((inArrayDataView.getUint8(x) << 8)
+        | inArrayDataView.getUint8(x+1)) << 8)
+        | inArrayDataView.getUint8(x+2)) << 8)
+        | inArrayDataView.getUint8(x+3));
+    extraOffsets[x / 4] = 0;
+  }
+
+  for (let x = 0; x < outPos; x++) {
+		if (x > 0x44) {
+			if (inArrayDataView.getUint8(x) === 0xFE) // need to write twice
+			{
+				for (let y = 0; y < numTracks; y++) {
+					if (offsetheader[y] > x) {
+						extraOffsets[y]++;
+					}
+				}
+			}
+		}
+  }
+
+  for (let x = 0; x < 16; x++) {
+    inArrayDataView.setUint32(x * 4, offsetheader[x] + extraOffsets[x]);
+  }
+
+  let outPosNew = 0;
+  for (let x = 0; x < outPos; x++) {
+    outView.setUint8(outPosNew, inArrayDataView.getUint8(x));
+    outPosNew++;
+		if (x > 0x44) {
+      if (inArrayDataView.getUint8(x) === 0xFE) { // need to write twice
+        outView.setUint8(outPosNew, inArrayDataView.getUint8(x));
+        outPosNew++;
+      }
+		}
+	}
+
+  assert(outPosNew >= outPos);
+
+  // if (useRepeaters) // TODO?
+
+  return outFile.slice(0, outPosNew);
+}
+
+/**
  * The start of the MIDI data in the ROM is a bunch of
  * offsets to track data. This counts these offsets.
  */
@@ -991,6 +1747,15 @@ function _readMidiByte(inView: DataView, refs: IRefs, includeFERepeats: boolean)
   return returnByte;
 }
 
+/**
+ * Writes variable-length bytes to DataView.
+ * @param outView
+ * @param outPos
+ * @param value
+ * @param len
+ * @param includeFERepeats
+ * @returns New outPos value.
+ */
 function _writeVLBytes(outView: DataView, outPos: number, value: number, len: number, includeFERepeats: boolean) {
   let tempByte: number;
   if (len === 1) {
