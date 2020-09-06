@@ -1,5 +1,6 @@
 import * as Draft from "draft-js";
 import * as React from "react";
+import { useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { splice } from "./utils/string";
 
 import defaultImage from "./img/richtext/default.png";
@@ -63,25 +64,53 @@ export interface IMPEditorProps {
   maxlines?: number;
 }
 
-export interface IMPEditorState {
-  editorState: Draft.EditorState;
-  theme: MPEditorTheme;
+export interface IMPEditorRef {
+  focus: () => void;
 }
 
-export class MPEditor extends React.Component<IMPEditorProps, IMPEditorState> {
-  private editor: any;
+/**
+ * Component for rich text editing.
+ * Supports controlled or local state editing.
+ */
+export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>((props, ref) => {
+  const editor = useRef<Draft.Editor | null>(null);
 
-  constructor(props: IMPEditorProps) {
-    super(props);
+  const focus = useCallback(() => {
+    editor.current?.focus();
+  }, []);
 
-    let editorState;
+  useImperativeHandle(ref, () => ({
+    focus
+  }), [focus]);
+
+  const plaintextRef = useRef<string | undefined>(props.value);
+
+  const createEditorStateFromProps = useCallback(() => {
     if (props.value) {
-      editorState = MPEditorStringAdapter.stringToEditorState(props.value);
+      return MPEditorStringAdapter.stringToEditorState(props.value);
     }
     else {
-      editorState = EditorState.createEmpty();
+      return EditorState.createEmpty();
     }
+  }, [props.value]);
 
+  const [editorStateValue, setEditorStateValue] = useState(createEditorStateFromProps);
+
+  // Compute effective state, based on whether component is controlled or not.
+  let editorState: Draft.EditorState;
+  if ("value" in props) {
+    if (props.value !== plaintextRef.current) {
+      editorState = createEditorStateFromProps();
+    }
+    else {
+      editorState = editorStateValue;
+    }
+  }
+  else {
+    editorState = editorStateValue;
+  }
+
+  const [theme, setTheme] = useState(() => {
     // Take a specified theme, or make an educated guess.
     let theme: MPEditorTheme = props.theme as MPEditorTheme;
     if (typeof props.theme !== "number") {
@@ -90,139 +119,70 @@ export class MPEditor extends React.Component<IMPEditorProps, IMPEditorState> {
       else
         theme = MPEditorTheme.Light;
     }
+    return theme;
+  });
 
-    this.state = {
-      editorState,
+  const onChange = (newEditorState: Draft.EditorState) => {
+    const newStringValue = MPEditorStringAdapter.editorStateToString(newEditorState, {
       theme,
-    };
-  }
-
-  componentDidUpdate() {
-    if ((this.props.displayMode || MPEditorDisplayMode.Edit) !== MPEditorDisplayMode.Edit) {
-      const oldValue = MPEditorStringAdapter.editorStateToString(this.state.editorState, {
-        theme: this.state.theme,
-      });
-      if (oldValue !== this.props.value) {
-        const newEditorState = MPEditorStringAdapter.stringToEditorState(this.props.value!);
-        this.setState({ editorState: newEditorState });
-      }
-    }
-  }
-
-  render() {
-    const {editorState} = this.state;
-    const displayMode = this.props.displayMode || MPEditorDisplayMode.Edit;
-
-    let toolbar;
-    const showToolbar = this.props.showToolbar;
-    if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
-      toolbar = (
-        <MPEditorToolbar onItemClick={this.onToolbarClick}
-          itemBlacklist={this.props.itemBlacklist} />
-      );
-    }
-
-    const toolbarPlacement = this.props.toolbarPlacement || MPEditorToolbarPlacement.Top;
-
-    let className = "mpEditor";
-
-    if (displayMode === MPEditorDisplayMode.Display)
-      className += " mpDisplay";
-
-    if (this.state.theme === MPEditorTheme.Light)
-      className += " mpEditorLight";
-    if (this.state.theme === MPEditorTheme.Dark)
-      className += " mpEditorDark";
-
-    if (toolbar) {
-      if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
-        className += " mpEditorShowToolbarBottom";
-      else
-        className += " mpEditorShowToolbarTop";
-    }
-
-    return (
-      <div className={className}>
-        {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
-        <div className="mpEditorWrapper">
-          <Editor ref={editor => { this.editor = editor; }}
-            editorState={editorState}
-            stripPastedStyles={true}
-            readOnly={displayMode !== MPEditorDisplayMode.Edit}
-            customStyleMap={colorStyleMap}
-            onChange={this.onChange}
-            onFocus={this.onFocus}
-            onBlur={this.onBlur}
-            handleReturn={this.handleReturn} />
-        </div>
-        {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
-      </div>
-    );
-  }
-
-  focus = () => {
-    this.editor.focus();
-  }
-
-  onChange = (editorState: Draft.EditorState) => {
-    this.setState({editorState});
-    this.setState((prevState, props: IMPEditorProps) => {
-      if (props.onValueChange)
-        props.onValueChange(props.id, MPEditorStringAdapter.editorStateToString(prevState.editorState, {
-          theme: prevState.theme,
-        }));
     });
-  }
+    plaintextRef.current = newStringValue;
 
-  handleReturn = (e: any, editorState: any) => {
-    if (this.props.maxlines) {
+    setEditorStateValue(newEditorState);
+
+    if (props.onValueChange) {
+      props.onValueChange(props.id, newStringValue);
+    }
+  };
+
+  const handleReturn = (e: any, editorState: any) => {
+    if (props.maxlines) {
       let text = editorState.getCurrentContent().getPlainText();
 
       // = because Return would create an additional line
-      if (text.split("\n").length >= this.props.maxlines)
+      if (text.split("\n").length >= props.maxlines)
         return "handled";
     }
 
     return "not-handled";
-  }
+  };
 
-  onFocus = (event: any) => {
-    if (this.props.onFocus)
-      this.props.onFocus(event);
-  }
+  const onFocus = (event: any) => {
+    if (props.onFocus)
+      props.onFocus(event);
+  };
 
-  onBlur = (event: any) => {
-    if (this.props.onBlur)
-      this.props.onBlur(event);
-  }
+  const onBlur = (event: any) => {
+    if (props.onBlur)
+      props.onBlur(event);
+  };
 
-  onToolbarClick = (item: IToolbarItem) => {
+  const onToolbarClick = (item: IToolbarItem) => {
     switch (item.type) {
       case "COLOR":
-        this.toggleColor(item.key);
+        toggleColor(item.key);
         break;
       case "IMAGE":
-        this.addImage(item.char!);
+        addImage(item.char!);
         break;
       case "ACTION":
         switch (item.key) {
           case "DARKLIGHT":
-            const nextTheme = this.state.theme === MPEditorTheme.Light
+            const nextTheme = theme === MPEditorTheme.Light
               ? MPEditorTheme.Dark
-              : MPEditorTheme.Light
-            this.setState({ theme: nextTheme });
+              : MPEditorTheme.Light;
+            setTheme(nextTheme);
             break;
         }
         break;
     }
 
     setTimeout(() => {
-      this.focus();
+      focus();
     }, 0);
-  }
+  };
 
-  toggleColor = (toggledColor: string) => {
-    const {editorState} = this.state;
+  const toggleColor = (toggledColor: string) => {
     const selection = editorState.getSelection();
     const prevContentState = editorState.getCurrentContent();
 
@@ -254,11 +214,10 @@ export class MPEditor extends React.Component<IMPEditorProps, IMPEditorState> {
       );
     }
 
-    this.onChange(nextEditorState);
-  }
+    onChange(nextEditorState);
+  };
 
-  addImage = (char: string) => {
-    const {editorState} = this.state;
+  const addImage = (char: string) => {
     const selection = editorState.getSelection();
 
     // Insert a character that will be styled into an image.
@@ -274,9 +233,57 @@ export class MPEditor extends React.Component<IMPEditorProps, IMPEditorState> {
       "insert-characters"
     );
 
-    this.onChange(nextEditorState);
+    onChange(nextEditorState);
+  };
+
+  const displayMode = props.displayMode || MPEditorDisplayMode.Edit;
+
+  let toolbar;
+  const showToolbar = props.showToolbar;
+  if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
+    toolbar = (
+      <MPEditorToolbar onItemClick={onToolbarClick}
+        itemBlacklist={props.itemBlacklist} />
+    );
   }
-};
+
+  const toolbarPlacement = props.toolbarPlacement || MPEditorToolbarPlacement.Top;
+
+  let className = "mpEditor";
+
+  if (displayMode === MPEditorDisplayMode.Display)
+    className += " mpDisplay";
+
+  if (theme === MPEditorTheme.Light)
+    className += " mpEditorLight";
+  else if (theme === MPEditorTheme.Dark)
+    className += " mpEditorDark";
+
+  if (toolbar) {
+    if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
+      className += " mpEditorShowToolbarBottom";
+    else
+      className += " mpEditorShowToolbarTop";
+  }
+
+  return (
+    <div className={className}>
+      {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
+      <div className="mpEditorWrapper">
+        <Editor ref={ref => { editor.current = ref; }}
+          editorState={editorState}
+          stripPastedStyles={true}
+          readOnly={displayMode !== MPEditorDisplayMode.Edit}
+          customStyleMap={colorStyleMap}
+          onChange={onChange}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          handleReturn={handleReturn} />
+      </div>
+      {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
+    </div>
+  );
+});
 
 function imageStrategy(contentBlock: Draft.ContentBlock, callback: any, contentState: unknown) {
   const text = contentBlock.getText();
@@ -552,47 +559,44 @@ class MPEditorToolbarSeparator extends React.Component { // eslint-disable-line
 };
 
 /**
- * Converts bReadonlyetween game strings and Draft.js editor state.
+ * Converts between game strings and Draft.js editor state.
  */
 export const MPEditorStringAdapter = new class MPEditorStringAdapter {
   editorStateToString(editorState: Draft.EditorState, args: { theme: MPEditorTheme }) {
     const contentState = editorState.getCurrentContent();
-
     let textBlocks: string[] = [];
 
     const defaultColor = args.theme === MPEditorTheme.Light ? "DEFAULT" : "WHITE";
 
-    const blockMap = contentState.getBlockMap();
-    let blockIndex = -1; // forEach is from immutable, no index param?
-    blockMap.forEach((block) => {
-      blockIndex++;
+    let currentColor = defaultColor;
+    let colorChanged = false;
 
-      let currentColor: string;
-      let defaulting: boolean;
+    const blockMap = contentState.getBlockMap();
+    blockMap.forEach((block) => {
+      let blockText = block!.getText();
       const changes: { [index: number]: string} = {};
       block!.findStyleRanges(
         (characterMetadata) => {
           const style = characterMetadata.getStyle();
           let color = style.find(value => { return !!colorStyleMap[value!]; });
           if (!color) {
-            defaulting = true;
             color = defaultColor;
           }
-          else
-            defaulting = false;
-          currentColor = color;
+          if (color !== currentColor) {
+            currentColor = color;
+            colorChanged = true;
+          }
           return true;
         },
         (start, end) => {
-          if (defaulting && start === 0 && blockIndex === 0)
-            return; // Avoid always starting strings with color.
+          if (!colorChanged)
+            return; // Avoid always starting strings with color, or repeating same color over again.
 
           changes[start] = "<" + currentColor + ">";
         }
       );
 
       let currentIndexOffset = 0;
-      let blockText = block!.getText();
       for (let index in changes) {
         const replaceIndex = currentIndexOffset + parseInt(index);
         blockText = splice(blockText, replaceIndex, 0, changes[index]);
@@ -601,7 +605,6 @@ export const MPEditorStringAdapter = new class MPEditorStringAdapter {
 
       textBlocks.push(blockText);
     });
-
     return textBlocks.join("\n");
   }
 

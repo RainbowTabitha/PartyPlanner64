@@ -3,7 +3,7 @@ import { romhandler } from "../romhandler";
 import { strings } from "../fs/strings";
 import { strings3 } from "../fs/strings3";
 import { arrayToArrayBuffer } from "../utils/arrays";
-import { MPEditor, MPEditorDisplayMode, MPEditorToolbarPlacement } from "../texteditor";
+import { MPEditor, MPEditorDisplayMode, MPEditorToolbarPlacement, IMPEditorRef } from "../texteditor";
 
 import "../css/strings.scss";
 
@@ -59,7 +59,7 @@ interface IStringEditWrapperProps {
 }
 
 class StringEditWrapper extends React.Component<IStringEditWrapperProps> {
-  private editor: MPEditor | null = null;
+  private editor: IMPEditorRef | null = null;
 
   state = {
     hasFocus: false,
