@@ -33,7 +33,7 @@ const _audioOffsets: AudioOffsetInfo = {
     // 15396A0
     {
       type: "S2",
-      byteLength: 0x23F520,
+      // byteLength: 0x23F520,
       offsets: [
         { upper: 0x00061746, lower: 0x0006174A },
         { ovl: 0x6E, upper: 0xE62, lower: 0xE66 }, // ROM: 0x2DA3D2
@@ -43,7 +43,7 @@ const _audioOffsets: AudioOffsetInfo = {
     // 1778BC0
     {
       type: "S2",
-      byteLength: 0xB9F20,
+      // byteLength: 0xB9F20,
       offsets: [
         { upper: 0x0001AF2A, lower: 0x0001AF2E },
         { upper: 0x0006174E, lower: 0x00061752 },
@@ -257,13 +257,18 @@ export const audio = {
       }
 
       switch (info.type) {
-        case "S2":
         case "T3":
         case "SBF0":
         case "FXD0":
           assert(typeof info.byteLength === "number");
           assert(info.byteLength % 16 === 0);
           currentOffset += info.byteLength;
+          break;
+
+        case "S2":
+          assert(!!_parsedCache![i]);
+          const s2 = _parsedCache![i] as S2;
+          currentOffset += s2.getByteLength();
           break;
 
         case "MBF0":
@@ -367,10 +372,9 @@ export const audio = {
       const info = infos[i];
       switch (info.type) {
         case "S2":
-          assert(typeof info.byteLength === "number");
           const s2Offset = this.getROMOffset(i)!;
-          _bufferCache[i] = buffer.slice(s2Offset, s2Offset + info.byteLength);
-          _parsedCache[i] = new S2(romhandler.getDataView(s2Offset));
+          const s2 = _parsedCache[i] = new S2(romhandler.getDataView(s2Offset));
+          _bufferCache[i] = buffer.slice(s2Offset, s2Offset + s2.getByteLength());
           break;
 
         case "T3":
@@ -448,13 +452,18 @@ export const audio = {
     for (let i = 0; i < infos.length; i++) {
       const info = infos[i];
       switch (info.type) {
-        case "S2":
         case "T3":
         case "SBF0":
         case "FXD0":
           assert(typeof info.byteLength === "number");
           copyRange(buffer, _bufferCache[i]!, currentOffset, 0, _bufferCache[i]!.byteLength);
           currentOffset += info.byteLength;
+          break;
+
+        case "S2":
+          const s2 = _parsedCache![i] as S2;
+          currentOffset += s2.pack(buffer, currentOffset);
+          currentOffset = makeDivisibleBy(currentOffset, 16);
           break;
 
         case "MBF0":
@@ -487,12 +496,16 @@ export const audio = {
     for (let i = 0; i < infos.length; i++) {
       const info = infos[i];
       switch (info.type) {
-        case "S2":
         case "T3":
         case "SBF0":
         case "FXD0":
           assert(typeof info.byteLength === "number");
           byteLength += info.byteLength;
+          break;
+
+        case "S2":
+          const s2 = _parsedCache![i] as S2;
+          byteLength += s2.getByteLength();
           break;
 
         case "MBF0":

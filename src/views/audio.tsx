@@ -2,7 +2,6 @@ import * as React from "react";
 import { useState } from "react";
 import { romhandler } from "../romhandler";
 import { audio } from "../fs/audio";
-import { MBF0 } from "../audio/MBF0";
 import { getAdapter } from "../adapter/adapters";
 import { playMidi } from "../audio/midiplayer";
 import { Button } from "../controls";
@@ -99,8 +98,6 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
           </span>;
         }
 
-        const canOverwrite = table instanceof MBF0;
-
         sequenceRows.push(
           <AudioTrackRow key={tableIndex + "-" + midiIndex}
             table={tableIndex}
@@ -118,12 +115,12 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
                     <img src={exportImage} height="16" width="16" alt="Export midi" />
                     Download midi
                   </Button>
-                  {canOverwrite && <Button
+                  <Button
                     onClick={() => _replaceMidi(tableIndex, midiIndex)}
                     css="btnAudioExport">
                     <img src={importImage} height="16" width="16" alt="Import midi" />
                     Replace midi
-                  </Button>}
+                  </Button>
                   <label className="audioTableExpandedLabel">Soundbank index: </label>
                   {table.midis[s].soundbankIndex}
                   <img src={editImage}
