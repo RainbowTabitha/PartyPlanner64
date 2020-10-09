@@ -477,6 +477,10 @@ export function excludeEventFromBoard(board: IBoard, eventId: string): void {
       removeEventFromSpace(space, event);
     }
   });
+
+  if (board.boardevents?.length) {
+    board.boardevents = board.boardevents.filter(event => event.id !== eventId);
+  }
 }
 
 export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
