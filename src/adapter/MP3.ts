@@ -44,8 +44,8 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     }
   }
 
-  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
-    return createBoardOverlay(board, boardInfo, boardIndex);
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number) {
+    return createBoardOverlay(board, boardInfo, boardIndex, audioIndex);
   }
 
   onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
@@ -773,18 +773,6 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     mainfs.write(19, gateIndex!, gatePacked);
 
     clearTimeout(failTimer);
-  }
-
-  onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
-    super.onWriteAudio(board, boardInfo, boardIndex);
-    if (!boardInfo.audioIndexOffset || !boardInfo.sceneIndex)
-      return;
-
-    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    const index = board.audioIndex;
-    // MP3 writes the index in a couple other places too.
-    sceneView.setUint16(boardInfo.audioIndexOffset + 4, index);
-    sceneView.setUint16(boardInfo.audioIndexOffset + 0x14, index);
   }
 
   // Writes to 0x800A1904, break 0x8004a520 (JAL 0C012948)

@@ -396,7 +396,7 @@ async function _changeSoundbankIndex(table: number, midiIndex: number): Promise<
   const seqTable = audio.getSequenceTable(table)!;
   const bankCount = seqTable.soundbanks.banks.length;
 
-  return await promptUser(`Enter new soundbank index (0 through ${bankCount}):`).then(value => {
+  return await promptUser(`Enter new soundbank index (0 through ${bankCount - 1}):`).then(value => {
     if (!value) {
       return false;
     }

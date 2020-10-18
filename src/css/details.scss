@@ -3,11 +3,15 @@
   margin-top: 1em;
   max-width: 675px; // 775px;
   padding: 1em;
+
+  .detailsSpan, label, h2 {
+    color: #EEEEEE;
+  }
 }
 
 .detailTextContainer, .detailImgContainer, .detailRichTextContainer, .audioDetailsContainer, .difficultyDetailsContainer {
-  float: left;
-  margin: 5px;
+  display: inline-block;
+  margin: 5px 10px 5px 0;
   vertical-align: top;
 }
 
@@ -15,15 +19,22 @@
   min-height: 70px;
 }
 
+#detailsForm h2 {
+  margin-bottom: 0;
+}
+
 #detailsForm label {
   display: block;
   max-width: 100%;
   margin: 10px 0 5px 0;
-  color: #EEEEEE;
   font-weight: 700;
 }
 
-#detailsForm input, #detailsForm textarea {
+#detailsForm .audioDetailsContainer label {
+  display: inline;
+}
+
+#detailsForm input[type="text"], #detailsForm textarea {
   font-size: 14px;
   border: 1px solid #777777;
   border-radius: 2px;
@@ -40,8 +51,16 @@
   width: 500px;
 }
 
-#detailsForm input {
+#detailsForm input[type="text"] {
   height: 20px;
+}
+
+#detailsForm input[type="radio"] {
+  margin-right: 0.3em;
+
+  &:not(:first-child) {
+    margin-left: 1.5em;
+  }
 }
 
 .detailImgSelect {
@@ -101,4 +120,24 @@
 }
 .difficultyDetailsLevels:hover .difficultyLevelFocused {
   background-image: url("../img/details/star_hover_dark.png");
+}
+
+.audioDetailsRadioGroup {
+  margin: 0.5em 0 1em 0;
+}
+
+.audioCustomSection {
+  margin: 0.5em 0;
+}
+
+.audioDetailsSmallEditIcon {
+  margin-left: 0.25em;
+  opacity: 0.5;
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
 }

@@ -1,10 +1,13 @@
-import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode, IEventInstance } from "../boards";
+import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode, IEventInstance, BoardAudioType } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space } from "../types";
 import { romhandler } from "../romhandler";
 import { CustomAsmHelper } from "../events/customevents";
 import { getEvent, isUnsupported, IEventParameter } from "../events/events";
 import { createRule } from "./validationrules";
 import { makeFakeBgSyms, testAdditionalBgCode } from "../events/additionalbg";
+import { dataUrlToArrayBuffer } from "../utils/arrays";
+import { createGameMidi } from "../audio/midi";
+import { audio } from "../fs/audio";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
 HasStart.fails = function(board: IBoard, args: any) {
@@ -464,6 +467,59 @@ AdditionalBackgroundCodeIssue.fails = async function(board: IBoard, args: any = 
   if (failures.length) {
     console.error(failures);
     return "The additional background code failed a test assembly.";
+  }
+
+  return false;
+};
+
+const AudioDetailsIssue = createRule("AUDIODETAILSISSUE", "Audio details issue", ValidationLevel.ERROR);
+AudioDetailsIssue.fails = async function(board: IBoard, args: any = {}) {
+  if (typeof board.audioType !== "number") {
+    return "Expected audioType to be defined.";
+  }
+
+  switch (board.audioType) {
+    case BoardAudioType.InGame:
+      if (typeof board.audioIndex !== "number") {
+        return "Expected an audio track index to be defined.";
+      }
+      // TODO: Validate range of audio index?
+      break;
+
+    case BoardAudioType.Custom:
+      if (!board.audioData) {
+        return "Expected custom audio data to be defined.";
+      }
+
+      const soundbankIndex = board.audioData.soundbankIndex;
+      const seqTable = audio.getSequenceTable(0)!;
+      const bankCount = seqTable.soundbanks.banks.length;
+      if (soundbankIndex < 0 || soundbankIndex >= bankCount) {
+        return `Soundbank index for custom audio is out of range (0 - ${bankCount - 1})`;
+      }
+
+      if (!board.audioData.data) {
+        return "Custom audio was chosen, but a midi file was not uploaded."
+      }
+      let midiBuffer: ArrayBuffer;
+      try {
+        midiBuffer = dataUrlToArrayBuffer(board.audioData.data);
+      }
+      catch {
+        return "Custom audio midi data could not be parsed into an ArrayBuffer.";
+      }
+
+      let gameMidi;
+      try {
+        gameMidi = createGameMidi(midiBuffer);
+      }
+      catch {
+        return "Custom audio midi data could not be converted into game audio.";
+      }
+      if (!gameMidi) {
+        return "Custom audio midi data could not be converted into game audio.";
+      }
+      break;
   }
 
   return false;

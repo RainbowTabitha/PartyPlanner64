@@ -46,9 +46,25 @@ export interface IBoard {
   animbg?: string[];
   additionalbg?: string[];
   additionalbgcode?: IBoardEvent | string;
-  audioIndex: number;
+  audioType?: BoardAudioType;
+  audioIndex?: number;
+  audioData?: IBoardAudioData;
   _rom?: boolean;
   _deadSpace?: number;
+}
+
+/** Type of board audio. */
+export enum BoardAudioType {
+  /** Song from the original game. */
+  InGame = 0,
+  /** Song provided by the user. */
+  Custom = 1,
+}
+
+interface IBoardAudioData {
+  name: string;
+  data: string;
+  soundbankIndex: number;
 }
 
 interface IBoardEvent {
@@ -108,6 +124,7 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
     spaces: [],
     links: {},
     events: {},
+    audioType: BoardAudioType.InGame,
   };
   switch (gameVersion) {
     case 1:
@@ -626,6 +643,10 @@ function _fixPotentiallyOldBoard(board: IBoard) {
 
   if (!("events" in board)) {
     (board as IBoard).events = {};
+  }
+
+  if (typeof board.audioType === "undefined") {
+    (board as IBoard).audioType = BoardAudioType.InGame;
   }
 
   _migrateOldCustomEvents(board);

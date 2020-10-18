@@ -11,7 +11,7 @@ import { hvqfs } from "../fs/hvqfs";
 import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
 import { getShuffleSeedData } from "./overlayutils";
 
-export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
+export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
@@ -273,7 +273,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 .definelabel STAR_COUNT,${starIndices.length}
 .definelabel BOO_COUNT,${booIndices.length}
 
-.definelabel __PP64_INTERNAL_VAL_AUDIO_INDEX,${board.audioIndex || 0}
+.definelabel __PP64_INTERNAL_VAL_AUDIO_INDEX,${audioIndex || 0}
 
 main:
 addiu SP, SP, -0x18

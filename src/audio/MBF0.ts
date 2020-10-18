@@ -167,11 +167,11 @@ export class MBF0 {
     currentOffset = MBF0_HEADER_SIZE;
     for (const midiInfo of this.midis) {
 
-      dataView.setUint8(currentOffset, midiInfo.mystery0);
-      dataView.setUint8(currentOffset + 1, midiInfo.mystery1);
+      dataView.setUint8(currentOffset, midiInfo.mystery0 || 0);
+      dataView.setUint8(currentOffset + 1, (typeof midiInfo.mystery1 === "number") ? midiInfo.mystery1 : 0x6F);
       dataView.setUint8(currentOffset + 2, midiInfo.soundbankIndex);
       dataView.setUint8(currentOffset + 3, 0);
-      dataView.setUint32(currentOffset + 4, midiInfo.mystery4);
+      dataView.setUint32(currentOffset + 4, (typeof midiInfo.mystery4 === "number") ? midiInfo.mystery4 : 0x07000000);
       dataView.setUint32(currentOffset + 8, buffersMap.get(midiInfo.buffer)!);
       dataView.setUint32(currentOffset + 12, midiInfo.buffer.byteLength);
 
@@ -228,8 +228,8 @@ export class MBF0 {
 
 interface IMidiInfo {
   buffer: ArrayBuffer;
-  mystery0: number;
-  mystery1: number;
-  mystery4: number;
+  mystery0?: number;
+  mystery1?: number;
+  mystery4?: number;
   soundbankIndex: number;
 }

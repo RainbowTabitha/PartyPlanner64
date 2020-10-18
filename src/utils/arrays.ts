@@ -98,6 +98,20 @@ export function arrayBufferToDataURL(buffer: ArrayBuffer, width: number, height:
   return canvasCtx.canvas.toDataURL();
 }
 
+/**
+ * Converts a Data URL to an ArrayBuffer.
+ * @param dataUrl Data URL. `data:mime;base64,...`
+ */
+export function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
+  const binary = atob(dataUrl.split(",")[1]);
+  const buffer = new ArrayBuffer(binary.length);
+  const byteArray = new Uint8Array(buffer);
+  for (let i = 0; i < binary.length; i++) {
+    byteArray[i] = binary.charCodeAt(i);
+  }
+  return buffer;
+}
+
 export function arrayBuffersEqual(first: ArrayBuffer, second: ArrayBuffer) {
   if (first.byteLength !== second.byteLength)
     return false;

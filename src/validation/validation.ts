@@ -44,6 +44,7 @@ function _getRulesForGame(gameID: Game): IValidationRule[] {
     getRule("TOOMANYPATHOPTIONS"),
     getRule("CHARACTERSONPATH"),
     getRule("SPLITATNONINVISIBLESPACE"),
+    getRule("AUDIODETAILSISSUE"),
   ];
 
   switch (gameID) {

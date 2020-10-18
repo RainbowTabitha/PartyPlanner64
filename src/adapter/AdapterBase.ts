@@ -3,11 +3,11 @@ import { getBoardInfos, getBoardInfoByIndex } from "./boardinfo";
 import { hvqfs } from "../fs/hvqfs";
 import { mainfs } from "../fs/mainfs";
 import { audio } from "../fs/audio";
-import { IBoard, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, ISpace, IEventInstance, getDeadSpace, getDeadSpaceIndex } from "../boards";
+import { IBoard, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, ISpace, IEventInstance, getDeadSpace, getDeadSpaceIndex, BoardAudioType } from "../boards";
 import { copyObject } from "../utils/obj";
 import { determineChains, padChains, create as createBoardDef, parse as parseBoardDef } from "./boarddef";
 import { BoardType, EventActivationType, SpaceSubtype, getEventActivationTypeFromEditorType, EditorEventActivationType } from "../types";
-import { $$log, $$hex } from "../utils/debug";
+import { $$log, $$hex, assert } from "../utils/debug";
 import { getSymbol } from "../symbols/symbols";
 import { scenes, ISceneInfo } from "../fs/scenes";
 import { findCalls, getRegSetAddress } from "../utils/MIPS";
@@ -22,7 +22,7 @@ import { createContext } from "../utils/canvas";
 import { toArrayBuffer } from "../utils/image";
 import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
-import { arrayBufferToDataURL } from "../utils/arrays";
+import { arrayBufferToDataURL, dataUrlToArrayBuffer } from "../utils/arrays";
 import { get, $setting } from "../views/settings";
 import { makeGameSymbolLabels, prepSingleEventAsm, makeGenericSymbolsForAddresses } from "../events/prepAsm";
 import * as THREE from "three";
@@ -35,6 +35,7 @@ import { isDebug } from "../debug";
 
 import bootsplashImage from "../img/bootsplash.png";
 import { getImageData } from "../utils/img/getImageData";
+import { createGameMidi } from "../audio/midi";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -161,10 +162,11 @@ export abstract class AdapterBase {
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
     this._createGateEvents(boardCopy, boardInfo, chains);
+    const audioIndex = this.onWriteAudio(boardCopy, boardInfo, boardIndex);
 
     let eventSyms: string = "";
     if (this.writeFullOverlay) {
-      eventSyms = await this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex);
+      eventSyms = await this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex, audioIndex);
     }
     else {
       // Wipe out the event ASM from those events.
@@ -178,7 +180,6 @@ export abstract class AdapterBase {
 
       this._writeStarInfo(boardCopy, boardInfo);
       this._writeBoos(boardCopy, boardInfo);
-      this.onWriteAudio(boardCopy, boardInfo, boardIndex);
     }
 
     this.onWriteStrings(boardCopy, boardInfo);
@@ -207,8 +208,8 @@ export abstract class AdapterBase {
     await this.onOverwritePromises(board, boardInfo, boardIndex);
   }
 
-  private async _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
-    const overlayAsm = await this.onCreateBoardOverlay(board, boardInfo, boardIndex);
+  private async _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
+    const overlayAsm = await this.onCreateBoardOverlay(board, boardInfo, boardIndex, audioIndex);
     const game = romhandler.getROMGame()!;
     const asm = `
         ${makeGameSymbolLabels(game, true).join("\n")}
@@ -238,7 +239,7 @@ export abstract class AdapterBase {
     return eventSyms;
   }
 
-  async onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): Promise<string> {
+  async onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
     throw new Error("Adapter does not implement onCreateBoardOverlay");
   }
 
@@ -1675,13 +1676,35 @@ export abstract class AdapterBase {
     board.audioIndex = sceneView.getUint16(boardInfo.audioIndexOffset);
   }
 
-  onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
-    if (!boardInfo.audioIndexOffset || !boardInfo.sceneIndex)
-      return;
+  /**
+   * Called to apply the background music choice to the ROM.
+   * @returns Effective audio index to use.
+   */
+  onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): number {
+    let audioIndex: number;
+    switch (board.audioType) {
+      case BoardAudioType.Custom:
+        const seqTable = audio.getSequenceTable(0)!;
+        assert(!!seqTable);
+        audioIndex = seqTable.midis.length;
+        seqTable.midis.push({
+          buffer: createGameMidi(dataUrlToArrayBuffer(board.audioData!.data))!,
+          soundbankIndex: board.audioData!.soundbankIndex,
+        });
+        break;
 
-    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    const index = board.audioIndex || 0;
-    sceneView.setUint16(boardInfo.audioIndexOffset, index);
+      case BoardAudioType.InGame:
+      default:
+        audioIndex = board.audioIndex || 0;
+        break;
+    }
+
+    if (boardInfo.audioIndexOffset && boardInfo.sceneIndex) {
+      const sceneView = scenes.getDataView(boardInfo.sceneIndex);
+      sceneView.setUint16(boardInfo.audioIndexOffset, audioIndex);
+    }
+
+    return audioIndex;
   }
 
   getAudioMap(): string[] {

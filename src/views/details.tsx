@@ -1,18 +1,24 @@
 import { BoardType } from "../types";
-import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM } from "../boards";
+import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType } from "../boards";
 import * as React from "react";
 import { make8Bit } from "../utils/img/RGBA32";
 import { MPEditor, MPEditorDisplayMode } from "../texteditor";
 import { openFile } from "../utils/input";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
-import { refresh, showMessage } from "../appControl";
+import { promptUser, refresh, showMessage } from "../appControl";
 
 import "../css/details.scss";
 import { getImageData } from "../utils/img/getImageData";
+import editImage from "../img/audio/edit.png";
+import { audio } from "../fs/audio";
+import { assert } from "../utils/debug";
+import { romhandler } from "../romhandler";
+
+type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "br";
 
 interface IDetailsItemBase {
-  type: string;
+  type: DetailsType;
   id?: string;
   desc?: string;
   maxlines?: number;
@@ -21,13 +27,15 @@ interface IDetailsItemBase {
 }
 
 const _details_mp1: IDetailsItemBase[] = [
+  { type: "header", desc: "Basic Info" },
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
-  { type: "br" },
+  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
+  { type: "header", desc: "Background Music" },
+  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
+  { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 128, height: 64 },
   { type: "image", id: "detailBoardLogoImg", desc: "Board logo", width: 250, height: 100 },
-  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
-  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
   { type: "br" },
   { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
   { type: "image", id: "detailBoardConversationBg", desc: "Conversation background", width: 320, height: 240  },
@@ -35,40 +43,46 @@ const _details_mp1: IDetailsItemBase[] = [
 ];
 
 const _details_mp2: IDetailsItemBase[] = [
+  { type: "header", desc: "Basic Info" },
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
-  { type: "br" },
+  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
+  { type: "header", desc: "Background Music" },
+  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
+  { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 64, height: 48 },
   { type: "image", id: "detailBoardSelectIcon", desc: "Board select icon", width: 32, height: 32 },
   { type: "image", id: "detailBoardLogoImg", desc: "Board logo", width: 260, height: 120 },
-  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
-  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
   { type: "br" },
   { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
 ];
 
 const _details_mp3: IDetailsItemBase[] = [
+  { type: "header", desc: "Basic Info" },
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
-  { type: "br" },
+  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
+  { type: "header", desc: "Background Music" },
+  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
+  { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 64, height: 64 },
   { type: "image", id: "detailBoardLogoImg", desc: "Board logo", width: 226, height: 120 },
   { type: "image", id: "detailBoardLogoTextImg", desc: "Board logo text", width: 226, height: 36 },
-  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
-  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
   { type: "br" },
   { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
 ];
 
 const _details_mp3_duel: IDetailsItemBase[] = [
+  { type: "header", desc: "Basic Info" },
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
-  { type: "br" },
+  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
+  { type: "header", desc: "Background Music" },
+  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
+  { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 64, height: 64 },
   { type: "image", id: "detailBoardLogoImg", desc: "Board logo", width: 226, height: 120 },
   { type: "image", id: "detailBoardLogoTextImg", desc: "Board logo text", width: 226, height: 36 },
-  { type: "audio", id: "detailBoardAudio", desc: "Background music" },
-  { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
 ];
 
 function _getGameDetails(): IDetailsItemBase[] {
@@ -142,10 +156,6 @@ function _setValue(id: string, value: any, board: IBoard) {
     case "detailBoardLogoTextImg":
       board.otherbg.boardlogotext = value;
       break;
-    case "detailBoardAudio":
-      board.audioIndex = value;
-      refresh();
-      break;
     case "detailBoardLargeSceneBg":
       board.otherbg.largescene = value;
       break;
@@ -154,6 +164,36 @@ function _setValue(id: string, value: any, board: IBoard) {
       break;
     case "detailBoardSplashscreenBg":
       board.otherbg.splashscreen = value;
+      break;
+    case "detailBoardAudio":
+      const audioChanges = value as IDetailsAudioChanges;
+      if ("audioType" in audioChanges) {
+        board.audioType = audioChanges.audioType!;
+        switch (audioChanges.audioType) {
+          case BoardAudioType.Custom:
+            if (!board.audioData) {
+              board.audioData = {
+                name: "(select a midi file)",
+                data: "",
+                soundbankIndex: 0
+              };
+            }
+            break;
+        }
+      }
+      if (typeof audioChanges.gameAudioIndex === "number") {
+        board.audioIndex = audioChanges.gameAudioIndex;
+      }
+      if (audioChanges.midiName) {
+        board.audioData!.name = audioChanges.midiName;
+      }
+      if (audioChanges.midiData) {
+        board.audioData!.data = audioChanges.midiData;
+      }
+      if (typeof audioChanges.soundbankIndex === "number") {
+        board.audioData!.soundbankIndex = audioChanges.soundbankIndex;
+      }
+      refresh();
       break;
   }
 }
@@ -276,11 +316,6 @@ export class Details extends React.Component<IDetailsProps> {
     let formEls = _getGameDetails().map(detail => {
       let value = _getValue(detail.id, this.props);
       switch (detail.type) {
-        case "text":
-          return (
-            <DetailsTextInput id={detail.id!} desc={detail.desc!} readonly={readonly}
-              value={value} onTextChange={this.onTextChange} key={detail.id} />
-          );
         case "richtext":
           const displayMode = readonly
             ? MPEditorDisplayMode.Readonly
@@ -313,6 +348,10 @@ export class Details extends React.Component<IDetailsProps> {
             <DetailsDifficulty id={detail.id!} desc={detail.desc!} readonly={readonly}
               value={value} key={detail.id} onDifficultySelected={this.onValueChange} />
           );
+        case "header":
+          return (
+            <h2 key={"header" + keyId++}>{detail.desc!}</h2>
+          );
         case "br":
           return (
             <br key={"br" + keyId++} />
@@ -323,33 +362,6 @@ export class Details extends React.Component<IDetailsProps> {
     return (
       <div id="detailsForm">
         {formEls}
-      </div>
-    );
-  }
-};
-
-interface IDetailsTextInputProps {
-  id: string;
-  desc: string;
-  readonly: boolean;
-  value: string;
-  onTextChange(id: string, event: any): any;
-}
-
-class DetailsTextInput extends React.Component<IDetailsTextInputProps> {
-  onTextChange = (event: any) => {
-    this.props.onTextChange(this.props.id, event); // Pass up to parent.
-  }
-
-  render() {
-    let id = this.props.id;
-    let desc = this.props.desc;
-    let readonly = this.props.readonly;
-    return (
-      <div className="detailTextContainer">
-        <label htmlFor={id}>{desc}</label>
-        <input id={id} type="text" placeholder={desc} value={this.props.value}
-          readOnly={readonly} defaultValue="" onChange={this.onTextChange} />
       </div>
     );
   }
@@ -440,40 +452,142 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
   }
 };
 
+interface IDetailsAudioChanges {
+  audioType?: BoardAudioType;
+  gameAudioIndex?: number;
+  midiName?: string;
+  midiData?: string;
+  soundbankIndex?: number;
+}
+
 interface IDetailsAudioProps {
   id: string;
   desc: string;
   readonly: boolean;
   value: number;
-  onAudioSelected(id: string, index: number): any;
+  onAudioSelected(id: string, changes: IDetailsAudioChanges): any;
 }
 
 class DetailsAudio extends React.Component<IDetailsAudioProps> {
   state = {}
 
-  onSelection = (e: any) => {
-    this.props.onAudioSelected(this.props.id, parseInt(e.target.value));
+  onGameMusicIndexSelection = (e: any) => {
+    this.props.onAudioSelected(this.props.id, {
+      gameAudioIndex: parseInt(e.target.value)
+    });
+  }
+
+  onAudioTypeChanged = (audioType: BoardAudioType) => {
+    this.props.onAudioSelected(this.props.id, {
+      audioType
+    });
+  }
+
+  onMidiPrompt = async () => {
+    openFile("audio/midi", (event: any) => {
+      const file = event.target.files[0];
+      if (!file)
+        return;
+
+      const reader = new FileReader();
+      reader.onload = error => {
+        assert(typeof reader.result === "string");
+        this.props.onAudioSelected(this.props.id, {
+          midiName: file.name,
+          midiData: reader.result,
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  onSoundbankIndexPrompt = async () => {
+    let upperBound = 0;
+    if (romhandler.romIsLoaded() && romhandler.getGameVersion() === getCurrentBoard().game) {
+      const seqTable = audio.getSequenceTable(0)!;
+      upperBound = seqTable.soundbanks.banks.length - 1;
+    }
+
+    return await promptUser(`Enter new soundbank index${upperBound ? `(0 through ${upperBound}` : ""}:`).then(value => {
+      if (!value) {
+        return;
+      }
+
+      const newSoundbankIndex = parseInt(value);
+      if (isNaN(newSoundbankIndex) || (upperBound && newSoundbankIndex > upperBound)) {
+        showMessage("Invalid soundbank index.");
+        return;
+      }
+
+      this.props.onAudioSelected(this.props.id, {
+        soundbankIndex: newSoundbankIndex
+      });
+    });
   }
 
   render() {
-    let index = 0;
-    let audioNames = getAdapter(getCurrentBoard().game)!.getAudioMap();
-    let audioOptions = audioNames.map((song: string) => {
-      let curIndex = index++;
-      if (!song)
-        return null;
-      return (
-        <option value={curIndex} key={curIndex}>{song}</option>
-      );
-    });
+    const currentBoard = getCurrentBoard();
+
+    let audioInputUI;
+    switch (currentBoard.audioType) {
+      case BoardAudioType.InGame:
+        let index = 0;
+        let audioNames = getAdapter(currentBoard.game)!.getAudioMap();
+        let audioOptions = audioNames.map((song: string) => {
+          let curIndex = index++;
+          if (!song)
+            return null;
+          return (
+            <option value={curIndex} key={curIndex}>{song}</option>
+          );
+        });
+        audioInputUI = (
+          <select className="audioSelect" value={this.props.value}
+            disabled={this.props.readonly} onChange={this.onGameMusicIndexSelection}>
+            {audioOptions}
+          </select>
+        );
+        break;
+
+      case BoardAudioType.Custom:
+        audioInputUI = (
+          <div>
+            <div className="audioCustomSection">
+              <span className="detailsSpan">{currentBoard.audioData!.name}</span>
+              <img src={editImage}
+                className="audioDetailsSmallEditIcon"
+                title="Upload midi file"
+                alt="Upload midi file"
+                onClick={this.onMidiPrompt} />
+            </div>
+            <div className="audioCustomSection">
+              <label>Soundbank index: </label>
+              <span className="detailsSpan">{currentBoard.audioData?.soundbankIndex || 0}</span>
+              <img src={editImage}
+                className="audioDetailsSmallEditIcon"
+                title="Change soundbank index"
+                alt="Change soundbank index"
+                onClick={this.onSoundbankIndexPrompt} />
+            </div>
+          </div>
+        );
+        break;
+    }
 
     return (
       <div className="audioDetailsContainer">
-        <label>{this.props.desc}</label>
-        <select className="audioSelect" value={this.props.value}
-          disabled={this.props.readonly} onChange={this.onSelection}>
-          {audioOptions}
-        </select>
+        <div className="audioDetailsRadioGroup">
+          <input type="radio" id={this.props.id + "-romaudio"} value="romaudio"
+            checked={currentBoard.audioType === BoardAudioType.InGame}
+            onChange={() => this.onAudioTypeChanged(BoardAudioType.InGame)} />
+          <label htmlFor={this.props.id + "-romaudio"}>In-Game Music Track</label>
+
+          <input type="radio" id={this.props.id + "-custom"} value="custom"
+            checked={currentBoard.audioType === BoardAudioType.Custom}
+            onChange={() => this.onAudioTypeChanged(BoardAudioType.Custom)} />
+          <label htmlFor={this.props.id + "-custom"}>Custom Audio</label>
+        </div>
+        {audioInputUI}
       </div>
     );
   }
