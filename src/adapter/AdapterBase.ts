@@ -1688,7 +1688,7 @@ export abstract class AdapterBase {
         assert(!!seqTable);
         audioIndex = seqTable.midis.length;
         seqTable.midis.push({
-          buffer: createGameMidi(dataUrlToArrayBuffer(board.audioData!.data))!,
+          buffer: createGameMidi(dataUrlToArrayBuffer(board.audioData!.data), { loop: true })!,
           soundbankIndex: board.audioData!.soundbankIndex,
         });
         break;

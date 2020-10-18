@@ -839,6 +839,10 @@ export function parseGameMidi(inView: DataView, inputSize: number): ArrayBuffer 
   return out.slice(0, outPos);
 }
 
+interface ICreateGameMidiOptions {
+  loop?: boolean;
+}
+
 /**
  * Converts a normal midi file to a midi that can be put in the game.
  *
@@ -846,10 +850,10 @@ export function parseGameMidi(inView: DataView, inputSize: number): ArrayBuffer 
  *
  * @param midiFile Normal midi file.
  */
-export function createGameMidi(midiFile: ArrayBuffer): ArrayBuffer | null {
-  let loop = false;
-  let loopPoint = 0;
-  let useRepeaters = false;
+export function createGameMidi(midiFile: ArrayBuffer, options?: ICreateGameMidiOptions): ArrayBuffer | null {
+  const loop = options?.loop || false;
+  const loopPoint = 0;
+  const useRepeaters = false;
 
   let trackEventCount: number[] = [];
   let trackEvents: TrackEvent[][] = [];

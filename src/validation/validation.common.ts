@@ -511,7 +511,7 @@ AudioDetailsIssue.fails = async function(board: IBoard, args: any = {}) {
 
       let gameMidi;
       try {
-        gameMidi = createGameMidi(midiBuffer);
+        gameMidi = createGameMidi(midiBuffer, { loop: true });
       }
       catch {
         return "Custom audio midi data could not be converted into game audio.";
