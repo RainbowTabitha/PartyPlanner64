@@ -508,7 +508,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
       upperBound = seqTable.soundbanks.banks.length - 1;
     }
 
-    return await promptUser(`Enter new soundbank index${upperBound ? `(0 through ${upperBound}` : ""}:`).then(value => {
+    return await promptUser(`Enter new soundbank index${upperBound ? ` (0 through ${upperBound})` : ""}:`).then(value => {
       if (!value) {
         return;
       }
