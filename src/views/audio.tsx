@@ -402,7 +402,7 @@ async function _changeSoundbankIndex(table: number, midiIndex: number): Promise<
     }
 
     const newSoundbankIndex = parseInt(value);
-    if (isNaN(newSoundbankIndex)) {
+    if (isNaN(newSoundbankIndex) || newSoundbankIndex < 0 || newSoundbankIndex >= bankCount) {
       showMessage("Invalid soundbank index.");
       return false;
     }
