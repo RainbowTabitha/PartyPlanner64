@@ -2377,6 +2377,10 @@ export default [{
       type: "code",
       name: "GetCurrentSpaceIndex" },
 {
+      addr: 2148449708, // 0x800EBDAC
+      type: "code",
+      name: "RedrawSpaces" },
+{
       addr: 2148452040, // 0x800EC6C8
       type: "code",
       name: "CloseMessage",
