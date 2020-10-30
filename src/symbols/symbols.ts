@@ -24,10 +24,6 @@ function _getSymbolsForGame(game: Game): ISymbol[] {
   throw new Error("Unrecognized game type " + game);
 }
 
-interface ISymbols {
-  [symName: string]: ISymbol[];
-}
-
 export interface ISymbol {
   name: string;
   type: string;

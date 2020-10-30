@@ -2,8 +2,6 @@
 // Converted from a module.
 
 window.THREEToOBJ = (function (JSZip, Geometry) {
-  const mimeType = 'text/plain';
-
   function geometryToData(geometry, material) {
     const { faces, vertices, faceVertexUvs: [faceVertexUvs] }  = geometry;
 
