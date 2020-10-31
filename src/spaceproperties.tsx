@@ -519,7 +519,9 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = props => {
 
   function onEventAdded(event: IEvent) {
     const space = props.selectedSpace;
-    const spaceEvent = createEventInstance(event);
+    const spaceEvent = createEventInstance(event, {
+      activationType: getDefaultActivationType(space)
+    });
     addEventToSpace(getCurrentBoard(), space, spaceEvent);
     render();
     forceUpdate();
@@ -562,3 +564,17 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = props => {
     </>
   );
 };
+
+function getDefaultActivationType(space: ISpace): EditorEventActivationType {
+  switch (space.type) {
+    // These spaces are not solid, so default to passing.
+    case Space.OTHER:
+    case Space.START:
+    case Space.ARROW:
+    case Space.STAR:
+    case Space.BLACKSTAR:
+      return EditorEventActivationType.WALKOVER;
+  }
+
+  return EditorEventActivationType.LANDON;
+}
