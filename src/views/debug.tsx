@@ -10,6 +10,7 @@ import {
   formImages,
   printSceneTable,
   printSceneN64Split,
+  printSceneN64Splat,
   printSceneAsm,
   findStrings,
   findStrings3
@@ -89,6 +90,7 @@ export const DebugView = class DebugView extends React.Component<{}, IDebugViewS
 
           <Button onClick={printSceneTable}>Print scene table (console)</Button>
           <Button onClick={printSceneN64Split}>Print scene table n64split (console)</Button>
+          <Button onClick={printSceneN64Splat}>Print scene table n64splat (console)</Button>
           <br /><br />
 
           <input type="text" placeholder="Directory" className="dbInputShort"

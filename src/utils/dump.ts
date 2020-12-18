@@ -363,6 +363,32 @@ export function printSceneN64Split() {
   console.log(strings.join("\n"));
 }
 
+/** Prints the overlay table in n64splat format. */
+export function printSceneN64Splat() {
+  if (!romhandler.romIsLoaded()) {
+    console.log("ROM is not loaded");
+    return;
+  }
+
+  const sceneCount = scenes.count();
+  const strings = [];
+  for (let i = 0; i < sceneCount; i++) {
+    const info = scenes.getInfo(i);
+
+    strings.push(`  - name: overlay${i}`);
+    strings.push("    type: code");
+    strings.push("    overlay: True");
+    strings.push(`    start: ${$$hex(info.rom_start)}`);
+    strings.push(`    vram: ${$$hex(info.code_start)}`);
+    strings.push("    files:");
+    strings.push(`      - [${$$hex(info.rom_start)}, "asm"]`);
+    strings.push(`      - [${$$hex(info.rom_start + (info.rodata_start - info.code_start))}, "bin"] # rodata`);
+    strings.push("");
+  }
+
+  console.log(strings.join("\n"));
+}
+
 // Prints region of ROM as assembly instructions
 export function printAsm(start: number, end: number) {
   let romView = romhandler.getDataView();
