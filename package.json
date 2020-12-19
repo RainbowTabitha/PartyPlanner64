@@ -27,21 +27,21 @@
     "electron-builder-build-publish": "electron-builder build -wlm --publish always"
   },
   "dependencies": {
-    "@types/codemirror": "^0.0.98",
+    "@types/codemirror": "^0.0.102",
     "@types/draft-js": "^0.10.44",
     "@types/file-saver": "^2.0.1",
-    "@types/jest": "26.0.15",
+    "@types/jest": "26.0.19",
     "@types/jszip": "^3.4.1",
-    "@types/node": "14.14.6",
-    "@types/react": "16.9.55",
-    "@types/react-dom": "16.9.9",
+    "@types/node": "14.14.14",
+    "@types/react": "17.0.0",
+    "@types/react-dom": "17.0.0",
     "basiccontext": "^3.5.1",
-    "codemirror": "^5.58.2",
+    "codemirror": "^5.58.3",
     "cookies-js": "^1.2.2",
     "draft-js": "^0.11.7",
     "electron-debug": "^3.0.1",
     "electron-updater": "^4.3.5",
-    "file-saver": "^2.0.2",
+    "file-saver": "^2.0.5",
     "gh-pages": "^3.1.0",
     "gltf-js-utils": "^4.0.1",
     "immutable": "^3.8.1",
@@ -54,13 +54,13 @@
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.0",
     "resize-image-data": "^0.3.0",
-    "three": "0.122.0",
+    "three": "0.123.0",
     "typescript": "4.0.5"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
     "electron-builder": "^22.9.1",
-    "electron": "10.1.5"
+    "electron": "11.1.0"
   },
   "eslintConfig": {
     "extends": "react-app"
