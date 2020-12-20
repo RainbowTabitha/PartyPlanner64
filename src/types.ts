@@ -247,13 +247,20 @@ export const EventParameterTypes = [
   "+Number",
   "Number[]",
   "Space",
+  "Space[]",
 ];
 
 /** Types of event parameters allowed. */
 export enum EventParameterType {
   Boolean = "Boolean",
-  Space = "Space",
   Number = "Number",
   PositiveNumber = "+Number",
   NumberArray = "Number[]",
+  Space = "Space",
+  SpaceArray = "Space[]",
+}
+
+/** True if the event parameter type is an array value type. */
+export function isArrayEventParameterType(type: EventParameterType): boolean {
+  return type.endsWith("[]");
 }

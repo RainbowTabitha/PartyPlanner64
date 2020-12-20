@@ -1,5 +1,5 @@
 import * as React from "react";
-import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces, renderConnections, renderSpaces } from "./renderer";
+import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces, renderConnections, renderSpaces, renderSelectedSpaces } from "./renderer";
 import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
   supportsAnimationBackgrounds, supportsAdditionalBackgrounds,
   addAdditionalBG, removeAdditionalBG, boardIsROM, IEventInstance, addEventToBoard, removeEventFromBoard
@@ -478,6 +478,7 @@ const BoardEventList: React.FC<IBoardEventListProps> = props => {
     event.parameterValues[name] = value;
     renderConnections();
     renderSpaces();
+    renderSelectedSpaces();
   }
 
   return (

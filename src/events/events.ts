@@ -146,6 +146,7 @@ export interface IEventWriteInfo {
   game: Game;
   gameVersion: 1 | 2 | 3;
   argsAddr?: number;
+  testCompile?: boolean;
 }
 
 function _getArgsSize(count: number) {

@@ -98,6 +98,7 @@ interface IEventDetailsFormProps {
   name: string;
   supportedGames: Game[];
   executionType: EventExecutionType;
+  language: EventCodeLanguage;
   parameters: IEventParameter[];
   onGameToggleClicked(id: any, pressed: boolean): any;
   onExecTypeToggleClicked(id: any, pressed: boolean): any;
@@ -144,6 +145,7 @@ export class EventDetailsForm extends React.Component<IEventDetailsFormProps> {
         <br />
         <label>Parameters:</label>
         <EventParametersList
+          language={this.props.language}
           parameters={this.props.parameters}
           onAddEventParameter={this.props.onAddEventParameter}
           onRemoveEventParameter={this.props.onRemoveEventParameter} />
@@ -161,6 +163,7 @@ export class EventDetailsForm extends React.Component<IEventDetailsFormProps> {
 }
 
 interface IEventParametersListProps {
+  language: EventCodeLanguage;
   parameters: IEventParameter[];
   onAddEventParameter(entry: IEventParameter): any;
   onRemoveEventParameter(entry: IEventParameter): any;
@@ -183,6 +186,7 @@ class EventParametersList extends React.Component<IEventParametersListProps> {
           </tbody>
         </table>
         <EventParametersAddNewEntry
+          language={this.props.language}
           onAddEntry={this.props.onAddEventParameter} />
       </div>
     );
@@ -216,6 +220,7 @@ class EventParametersEntry extends React.Component<IEventParametersEntryProps> {
 }
 
 interface IEventParametersAddNewEntryProps {
+  language: EventCodeLanguage;
   onAddEntry(entry: IEventParameter): any;
 }
 
@@ -226,6 +231,7 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
   }
 
   render() {
+    const isC = this.props.language === EventCodeLanguage.C;
     return (
       <div className="eventParameterAddNewEntry">
         <select value={this.state.selectedType}
@@ -235,6 +241,7 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
           <option value={EventParameterType.Number}>Number</option>
           <option value={EventParameterType.PositiveNumber}>Positive Number</option>
           <option value={EventParameterType.Space}>Space</option>
+          {isC && <option value={EventParameterType.SpaceArray}>Space Array</option>}
         </select>
         <input type="text" placeholder="Name"
           value={this.state.name}

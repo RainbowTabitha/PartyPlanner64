@@ -25,3 +25,17 @@ const _kellyColors = [
 export function getDistinctColor(index: number): number[] {
   return _kellyColors[index % _kellyColors.length];
 }
+
+export interface IColorQueue {
+  next(): number[];
+}
+
+/** Returns a thing that will give out distinct colors when asked. */
+export function makeColorQueue(): IColorQueue {
+  let index = 0;
+  return {
+    next() {
+      return getDistinctColor(index++);
+    }
+  };
+}

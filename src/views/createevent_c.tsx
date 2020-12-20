@@ -98,6 +98,7 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
           onGameToggleClicked={this.onGameToggleClicked}
           executionType={this.state.executionType}
           onExecTypeToggleClicked={this.onExecTypeToggleClicked}
+          language={EventCodeLanguage.C}
           parameters={this.state.parameters}
           onAddEventParameter={this.onAddEventParameter}
           onRemoveEventParameter={this.onRemoveEventParameter} />

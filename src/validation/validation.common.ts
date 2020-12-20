@@ -1,8 +1,8 @@
 import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode, IEventInstance, BoardAudioType } from "../boards";
-import { ValidationLevel, SpaceSubtype, Space } from "../types";
+import { ValidationLevel, SpaceSubtype, Space, isArrayEventParameterType } from "../types";
 import { romhandler } from "../romhandler";
 import { CustomAsmHelper } from "../events/customevents";
-import { getEvent, isUnsupported, IEventParameter } from "../events/events";
+import { getEvent, isUnsupported } from "../events/events";
 import { createRule } from "./validationrules";
 import { makeFakeBgSyms, testAdditionalBgCode } from "../events/additionalbg";
 import { dataUrlToArrayBuffer } from "../utils/arrays";
@@ -285,13 +285,16 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
     const customEvent = getEvent(event.id, board);
     const parameters = customEvent.parameters;
     if (parameters && parameters.length) {
-      parameters.forEach((parameter: IEventParameter) => {
+      for (const parameter of parameters) {
+        if (isArrayEventParameterType(parameter.type)) {
+          continue; // Not enforcing these are set right now.
+        }
         if (!event.parameterValues || !event.parameterValues.hasOwnProperty(parameter.name)) {
           if (!missingParams[parameter.name])
             missingParams[parameter.name] = 0;
           missingParams[parameter.name]++;
         }
-      });
+      }
     }
   }
 

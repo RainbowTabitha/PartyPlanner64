@@ -159,17 +159,32 @@ $propertySectionHeight: 14px;
   height: 10px;
 }
 
+.eventParameterRightAlign {
+  margin-left: auto;
+}
+
+.eventEntryDelete, .eventParameterDelete {
+  background: url("../img/events/deletelist.png") no-repeat;
+  background-position: center;
+  opacity: 0.6;
+
+  &:hover {
+    background: url("../img/events/deletelist_hover.png") no-repeat;
+    background-position: center;
+    opacity: 1;
+    cursor: pointer;
+  }
+}
+
 .eventEntryDelete {
   width: 16px;
   height: 16px;
-  line-height: 16px;
-  text-align: center;
+}
 
-  &:hover {
-    font-weight: bold;
-    color: #AA0000;
-    cursor: pointer;
-  }
+.eventParameterDelete {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .eventEntryItemParameterName {
@@ -180,6 +195,10 @@ $propertySectionHeight: 14px;
 
 .eventEntryItemParameterUnset {
   color: #841617;
+  font-style: italic;
+}
+
+.eventEntryItemParameterHypothetical {
   font-style: italic;
 }
 

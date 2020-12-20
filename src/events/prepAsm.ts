@@ -148,6 +148,15 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
           parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue ? 1 : 0}`);
           break;
 
+        case EventParameterType.Number:
+          if (typeof parameterValue === "number") {
+            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+          }
+          break;
+
+        case EventParameterType.NumberArray:
+          break; // TODO: Maybe expose labels for these?
+
         case EventParameterType.Space:
           parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
           if (info.chains) {
@@ -162,14 +171,8 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
           }
           break;
 
-        case EventParameterType.Number:
-          if (typeof parameterValue === "number") {
-            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
-          }
-          break;
-
-        case EventParameterType.NumberArray:
-          break; // TODO: Maybe expose labels for these?
+        case EventParameterType.SpaceArray:
+          break; // Without macros, not sure what we can do for these.
 
         default:
           if (typeof parameterValue !== "undefined" && parameterValue !== null) {

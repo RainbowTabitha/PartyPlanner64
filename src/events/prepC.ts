@@ -43,28 +43,52 @@ export function makeParameterSymbolDefines(event: IEvent, spaceEvent: IEventInst
           parameterSymbols.push(`#define ${parameter.name} ${parameterValue ? 1 : 0}`);
           break;
 
-        case EventParameterType.Space:
-          parameterSymbols.push(`#define ${parameter.name} ${parameterValue}`);
-          if (info.chains) {
-            const indices = getChainIndexValuesFromAbsoluteIndex(info.chains, parameterValue as number);
-            parameterSymbols.push(`#define ${parameter.name}_chain_index ${indices[0]}`);
-            parameterSymbols.push(`#define ${parameter.name}_chain_space_index ${indices[1]}`);
-          }
-          else {
-            // Mostly for testCompile
-            parameterSymbols.push(`#define ${parameter.name}_chain_index -1`);
-            parameterSymbols.push(`#define ${parameter.name}_chain_space_index -1`);
-          }
-          break;
-
         case EventParameterType.Number:
+        case EventParameterType.PositiveNumber:
           if (typeof parameterValue === "number") {
             parameterSymbols.push(`#define ${parameter.name} ${parameterValue}`);
+          }
+          else {
+            parameterSymbols.push(`#define ${parameter.name} 0`);
           }
           break;
 
         case EventParameterType.NumberArray:
           break; // TODO: Maybe expose labels for these?
+
+        case EventParameterType.Space:
+          if (info.testCompile) {
+            parameterSymbols.push(`#define ${parameter.name} 0`);
+            parameterSymbols.push(`#define ${parameter.name}_chain_index 0`);
+            parameterSymbols.push(`#define ${parameter.name}_chain_space_index 0`);
+          }
+          else {
+            parameterSymbols.push(`#define ${parameter.name} ${parameterValue}`);
+            if (info.chains) {
+              const indices = getChainIndexValuesFromAbsoluteIndex(info.chains, parameterValue as number);
+              parameterSymbols.push(`#define ${parameter.name}_chain_index ${indices[0]}`);
+              parameterSymbols.push(`#define ${parameter.name}_chain_space_index ${indices[1]}`);
+            }
+          }
+          break;
+
+        case EventParameterType.SpaceArray:
+          if (info.testCompile) {
+            parameterSymbols.push(`#define ${parameter.name} 0`);
+            parameterSymbols.push(`#define ${parameter.name}_chain_indices 0`);
+            parameterSymbols.push(`#define ${parameter.name}_chain_space_indices 0`);
+          }
+          else {
+            const spaceArr = (parameterValue as number[]) || [];
+            parameterSymbols.push(`#define ${parameter.name} ${spaceArr.join(",")}`);
+
+            const allIndices = spaceArr.map(s => getChainIndexValuesFromAbsoluteIndex(info.chains, s));
+            const chainIndices = allIndices.map(x => x[0]);
+            const chainSpaceIndices = allIndices.map(x => x[1]);
+            parameterSymbols.push(`#define ${parameter.name}_chain_indices ${chainIndices.join(",")}`);
+            parameterSymbols.push(`#define ${parameter.name}_chain_space_indices ${chainSpaceIndices.join(",")}`);
+          }
+          break;
 
         default:
           if (typeof parameterValue !== "undefined" && parameterValue !== null) {

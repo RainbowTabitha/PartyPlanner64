@@ -2,7 +2,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { useRef, useCallback, useEffect } from "react";
 import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter, IEventInstance } from "./boards";
-import { BoardType, Space, SpaceSubtype, GameVersion, EventParameterType } from "./types";
+import { BoardType, Space, SpaceSubtype, GameVersion, EventParameterType, isArrayEventParameterType } from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
 import { getImage } from "./images";
@@ -64,27 +64,40 @@ function _renderAssociations(
   let lastEvent: IEventInstance;
   let associationNum = 0;
   forEachEventParameter(board, (parameter, event, space) => {
-    if (parameter.type === "Space") {
-      if (selectedSpaces[0] !== space)
-        return; // Only draw associations for the selected space.
+    if (selectedSpaces[0] !== space)
+      return; // Only draw associations for the selected space.
 
-      // Reset coloring for each event.
-      if (lastEvent !== event) {
-        associationNum = 0;
-      }
-      lastEvent = event;
+    // Reset coloring for each event.
+    if (lastEvent !== event) {
+      associationNum = 0;
+    }
+    lastEvent = event;
 
-      const associatedSpaceIndex =
-        event.parameterValues && event.parameterValues[parameter.name];
-      if (typeof associatedSpaceIndex === "number") {
-        const associatedSpace = board.spaces[associatedSpaceIndex];
+    let spaceIndicesToAssociate: number[] | undefined;
+    switch (parameter.type) {
+      case EventParameterType.Space:
+        const associatedSpaceIndex =
+          event.parameterValues && event.parameterValues[parameter.name];
+        if (typeof associatedSpaceIndex === "number") {
+          spaceIndicesToAssociate = [associatedSpaceIndex];
+        }
+        break;
+
+      case EventParameterType.SpaceArray:
+        spaceIndicesToAssociate = event.parameterValues && (event.parameterValues[parameter.name] as number[]);
+        break;
+    }
+
+    if (spaceIndicesToAssociate) {
+      spaceIndicesToAssociate.forEach(spaceIndex => {
+        const associatedSpace = board.spaces[spaceIndex];
         if (!associatedSpace)
-          return; // I guess maybe this could happen?
+          return; // Probably shouldn't happen.
 
         const dotsColor = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.5)`;
         drawAssociation(context, space.x, space.y, associatedSpace.x, associatedSpace.y, dotsColor);
-      }
-      associationNum++;
+        associationNum++;
+      });
     }
   });
 }
@@ -478,9 +491,25 @@ function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, even
   if (event.parameters) {
     let associationNum = 0;
     for (const parameter of event.parameters) {
-      if (parameter.type === EventParameterType.Space) {
-        const spaceIndex = eventInstance.parameterValues?.[parameter.name];
-        if (typeof spaceIndex === "number") {
+      let spacesIndicesToHighlight: number[] | undefined;
+      switch (parameter.type) {
+        case EventParameterType.Space:
+          const spaceIndex = eventInstance.parameterValues?.[parameter.name];
+          if (typeof spaceIndex === "number") {
+            spacesIndicesToHighlight = [spaceIndex];
+          }
+          break;
+
+        case EventParameterType.SpaceArray:
+          const spaceIndices = eventInstance.parameterValues?.[parameter.name];
+          if (Array.isArray(spaceIndices)) {
+            spacesIndicesToHighlight = spaceIndices;
+          }
+          break;
+      }
+
+      if (spacesIndicesToHighlight) {
+        for (const spaceIndex of spacesIndicesToHighlight) {
           const space = currentBoard.spaces[spaceIndex];
           if (space) {
             context.save();
@@ -491,9 +520,10 @@ function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, even
             context.fillStyle = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.9)`;
             context.fill();
             context.restore();
+
+            associationNum++;
           }
         }
-        associationNum++;
       }
     }
   }
@@ -509,6 +539,9 @@ function __determineSpaceEventImg(space: ISpace, board: IBoard) {
       if (event.parameters) {
         for (let p = 0; p < event.parameters.length; p++) {
           const parameter = event.parameters[p];
+          if (isArrayEventParameterType(parameter.type)) {
+            continue;
+          }
           if (!spaceEvent.parameterValues || !spaceEvent.parameterValues.hasOwnProperty(parameter.name)) {
             return getImage("eventErrorImg");
           }

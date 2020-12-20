@@ -145,7 +145,7 @@ export const CustomAsmHelper = {
     const parameterValues = _makeFakeParameterValues(parameters);
 
     const customEvent = createCustomEvent(EventCodeLanguage.C, code);
-    const preppedC = prepC(code, customEvent, { parameterValues } as IEventInstance, info as IEventWriteInfo);
+    const preppedC = prepC(code, customEvent, { parameterValues } as IEventInstance, { testCompile: true, ...(info as IEventWriteInfo)});
 
     const asm = await compile(preppedC);
     $$log(asm);

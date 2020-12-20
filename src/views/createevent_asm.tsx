@@ -77,6 +77,7 @@ export class CreateASMEventView extends React.Component<{}, ICreateEventViewStat
           onGameToggleClicked={this.onGameToggleClicked}
           executionType={this.state.executionType}
           onExecTypeToggleClicked={this.onExecTypeToggleClicked}
+          language={EventCodeLanguage.MIPS}
           parameters={this.state.parameters}
           onAddEventParameter={this.onAddEventParameter}
           onRemoveEventParameter={this.onRemoveEventParameter} />

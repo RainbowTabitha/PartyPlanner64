@@ -1,4 +1,4 @@
-import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType } from "./types";
+import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType, EventParameterType } from "./types";
 import { getSavedBoards } from "./utils/localstorage";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
@@ -354,23 +354,39 @@ function _removeConnections(spaceIdx: number, board: IBoard) {
 
 function _removeAssociations(spaceIdx: number, board: IBoard) {
   forEachEventParameter(board, (parameter: IEventParameter, event: IEventInstance) => {
-    if (parameter.type === "Space") {
-      if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
-        if (event.parameterValues[parameter.name] === spaceIdx) {
-          delete event.parameterValues[parameter.name];
+    switch (parameter.type) {
+      case EventParameterType.Space:
+        if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
+          if (event.parameterValues[parameter.name] === spaceIdx) {
+            delete event.parameterValues[parameter.name];
+          }
         }
-      }
+        break;
+
+      case EventParameterType.SpaceArray:
+        const parameterValue = event.parameterValues?.[parameter.name];
+        if (event.parameterValues && Array.isArray(parameterValue)) {
+          event.parameterValues[parameter.name] = parameterValue.filter(s => s !== spaceIdx);
+        }
+        break;
     }
   });
 }
 
-export function forEachEvent(board: IBoard, fn: (event: IEventInstance, space: ISpace, spaceIndex: number) => void) {
+export function forEachEvent(board: IBoard, fn: (event: IEventInstance, space?: ISpace, spaceIndex?: number) => void) {
+  if (board.boardevents) {
+    // Reverse to allow deletion in callback.
+    for (let i = board.boardevents.length - 1; i >= 0; i--) {
+      const event = board.boardevents[i];
+      fn(event);
+    }
+  }
+
   const spaces = board.spaces;
   if (spaces && spaces.length) {
     for (let s = 0; s < spaces.length; s++) {
       const space = spaces[s];
       if (space.events && space.events.length) {
-        // Reverse to allow deletion in callback.
         for (let i = space.events.length - 1; i >= 0; i--) {
           const event = space.events[i];
           fn(event, space, s);
@@ -380,13 +396,13 @@ export function forEachEvent(board: IBoard, fn: (event: IEventInstance, space: I
   }
 }
 
-export function forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: IEventInstance, space: ISpace) => void) {
-  forEachEvent(board, (spaceEvent: IEventInstance, space: ISpace) => {
-    const event = getEvent(spaceEvent.id, board);
+export function forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: IEventInstance, space?: ISpace) => void) {
+  forEachEvent(board, (eventInstance: IEventInstance, space?: ISpace) => {
+    const event = getEvent(eventInstance.id, board);
     if (event.parameters) {
       for (let p = 0; p < event.parameters.length; p++) {
         const parameter = event.parameters[p];
-        fn(parameter, spaceEvent, space);
+        fn(parameter, eventInstance, space);
       }
     }
   });
@@ -491,13 +507,14 @@ export function excludeEventFromBoard(board: IBoard, eventId: string): void {
 
   forEachEvent(board, (event, space) => {
     if (event.id === eventId) {
-      removeEventFromSpace(space, event);
+      if (space) {
+        removeEventFromSpace(space, event);
+      }
+      else {
+        removeEventFromBoard(board, event);
+      }
     }
   });
-
-  if (board.boardevents?.length) {
-    board.boardevents = board.boardevents.filter(event => event.id !== eventId);
-  }
 }
 
 export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
@@ -898,10 +915,19 @@ export function removeSpace(index: number, board: IBoard = getCurrentBoard()) {
 
   // Update space event parameter indices
   forEachEventParameter(board, (parameter: IEventParameter, event: IEventInstance) => {
-    if (parameter.type === "Space") {
-      if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
-        event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
-      }
+    switch (parameter.type) {
+      case EventParameterType.Space:
+        if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
+          event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
+        }
+        break;
+
+      case EventParameterType.SpaceArray:
+        const parameterValue = event.parameterValues?.[parameter.name];
+        if (event.parameterValues && Array.isArray(parameterValue)) {
+          event.parameterValues[parameter.name] = parameterValue.map(_adjust);
+        }
+        break;
     }
   });
 }
@@ -949,8 +975,8 @@ export function getSpacesOfSubType(subtype: SpaceSubtype, board: IBoard = getCur
 export function getSpacesWithEvent(eventName: string, board: IBoard = getCurrentBoard()): number[] {
   const eventSpaces: number[] = [];
   forEachEvent(board, (event, space, spaceIndex) => {
-    if (event.id === eventName) {
-      eventSpaces.push(spaceIndex);
+    if (space && event.id === eventName) {
+      eventSpaces.push(spaceIndex!);
     }
   });
   return eventSpaces;

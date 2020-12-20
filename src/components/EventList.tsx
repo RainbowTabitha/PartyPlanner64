@@ -6,7 +6,7 @@ import { getBoardEvent, getCurrentBoard, IEventInstance, IBoard } from "../board
 import { copyObject } from "../utils/obj";
 import { EventParameterType, EditorEventActivationType } from "../types";
 import { promptUser, showMessage } from "../appControl";
-import { getDistinctColor } from "../utils/colors";
+import { IColorQueue, makeColorQueue } from "../utils/colors";
 import { setEventParamDropHandler } from "../utils/drag";
 import { getImage } from "../images";
 
@@ -17,7 +17,7 @@ import eventafterturnImage from "../img/editor/boardproperties/eventafterturn.pn
 import eventbeforeplayerturnImage from "../img/editor/boardproperties/eventbeforeplayerturn.png";
 import eventbeforedicerollImage from "../img/editor/boardproperties/eventbeforediceroll.png";
 import targetImage from "../img/events/target.png";
-
+import { assert } from "../utils/debug";
 
 interface IEventsListProps {
   events?: IEventInstance[];
@@ -146,7 +146,7 @@ class EventEntry extends React.Component<IEventEntryProps> {
         <div className="eventEntryHeader">
           <span className="eventEntryName" title={name}>{name}</span>
           <div role="button" className="eventEntryDelete" onClick={this.onEventDeleted}
-            title="Remove this event">✖</div>
+            title="Remove this event"></div>
         </div>
         <div className="eventEntryOptions">
           <EventActivationTypeToggle
@@ -167,7 +167,7 @@ interface IEventParameterButtonsProps {
 
 const EventParameterButtons: React.FC<IEventParameterButtonsProps> = props => {
   const { parameters, eventInstance, onEventParameterSet } = props;
-  let currentSpaceParameterIndex = 0;
+  const colorQueue = makeColorQueue();
 
   return <>{parameters.map((parameter: IEventParameter) => {
     const parameterValue = eventInstance.parameterValues
@@ -195,10 +195,36 @@ const EventParameterButtons: React.FC<IEventParameterButtonsProps> = props => {
         return (
           <EventSpaceParameterButton key={parameter.name}
             parameter={parameter}
-            spaceParameterIndex={currentSpaceParameterIndex++}
             parameterValue={parameterValue}
+            colorQueue={colorQueue}
             onEventParameterSet={onEventParameterSet} />
         );
+
+      case EventParameterType.SpaceArray:
+        let nodes: React.ReactElement[] = [];
+
+        if (Array.isArray(parameterValue)) {
+          nodes = parameterValue.map((spaceIndex, i) => {
+            return (
+              <EventSpaceParameterButton key={`${parameter.name}[${i}]`}
+                parameter={parameter}
+                parameterValue={parameterValue}
+                parameterArrayIndex={i}
+                colorQueue={colorQueue}
+                onEventParameterSet={onEventParameterSet} />
+            );
+          })
+        }
+
+        nodes.push(
+          <EventSpaceParameterButton key={`${parameter.name}[${nodes.length}]`}
+            parameter={parameter}
+            parameterValue={parameterValue}
+            parameterArrayIndex={nodes.length}
+            colorQueue={colorQueue}
+            onEventParameterSet={onEventParameterSet} />
+        );
+        return nodes;
 
       case EventParameterType.NumberArray:
       default:
@@ -351,34 +377,63 @@ class EventBooleanParameterButton extends React.Component<IEventBooleanParameter
 
 interface IEventSpaceParameterButtonProps {
   parameter: any;
-  spaceParameterIndex: number;
   parameterValue: any;
-  positiveOnly?: boolean;
+  parameterArrayIndex?: number;
+  colorQueue: IColorQueue;
   onEventParameterSet(name: string, value: number): any;
 }
 
 class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButtonProps> {
   render() {
+    const isArrayEntry = typeof this.props.parameterArrayIndex === "number";
     const parameterValue = this.props.parameterValue;
-    const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
+
+    let valueHasBeenSet;
+    let displayName = this.props.parameter.name;
+    if (isArrayEntry) {
+      const arrValue = parameterValue && parameterValue[this.props.parameterArrayIndex!];
+      valueHasBeenSet = typeof arrValue !== "undefined" && arrValue !== null;
+      displayName += `[${this.props.parameterArrayIndex}]`;
+    }
+    else {
+      valueHasBeenSet = typeof parameterValue !== "undefined" && parameterValue !== null;
+    }
+
+    let nameClass = "eventEntryItemParameterName";
+    if (isArrayEntry && !valueHasBeenSet) {
+      nameClass += " eventEntryItemParameterHypothetical";
+    }
+
     const tooltip = `(Space) ${this.props.parameter.name}: ${valueHasBeenSet ? "set" : "null"}`
       + "\nDrag to a space to associate it";
-    const color = getDistinctColor(this.props.spaceParameterIndex);
-    const colorStyle = { backgroundColor: `rgb(${color.join(", ")})` };
+
+    let valueRepresentation;
+    if (valueHasBeenSet) {
+      valueRepresentation = (
+        <span className="eventEntryItemParameterSpaceSetWrapper">
+          <span style={{ backgroundColor: `rgb(${this.props.colorQueue.next().join(", ")})` }}
+            className="eventEntryItemParameterColorSwatch"></span> set
+        </span>
+      );
+    }
+    else if (isArrayEntry) {
+      valueRepresentation = <span>—</span>;
+    }
+    else {
+      valueRepresentation = <span className="eventEntryItemParameterUnset">null</span>;
+    }
+
     return (
       <div className="eventEntryItem eventEntryItemDraggable" title={tooltip}
         draggable={true}
         onDragStart={this.onDragStart}
         onClick={this.onParameterClicked}>
         <img alt="Target" src={targetImage} />
-        <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
+        <span className={nameClass}>{displayName}:</span>
         &nbsp;
-        {valueHasBeenSet ?
-          <span className="eventEntryItemParameterSpaceSetWrapper">set
-            <span style={colorStyle} className="eventEntryItemParameterColorSwatch"></span>
-          </span>
-          : <span className="eventEntryItemParameterUnset">null</span>
-        }
+        {valueRepresentation}
+        {isArrayEntry && valueHasBeenSet &&
+          <EventParameterArrayDeleteButton onDeleteButtonClicked={this.onDeleteButtonClicked} />}
       </div>
     );
   }
@@ -394,14 +449,48 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
   onSpaceDroppedOn = (spaceIndex: number) => {
     setEventParamDropHandler(null);
     if (spaceIndex >= 0) {
-      this.props.onEventParameterSet(this.props.parameter.name, spaceIndex);
+      const isArrayEntry = typeof this.props.parameterArrayIndex === "number";
+      if (isArrayEntry) {
+        const arr = this.props.parameterValue || [];
+        arr[this.props.parameterArrayIndex!] = spaceIndex;
+        this.props.onEventParameterSet(this.props.parameter.name, arr);
+      }
+      else {
+        this.props.onEventParameterSet(this.props.parameter.name, spaceIndex);
+      }
+    }
+  }
+
+  onDeleteButtonClicked = () => {
+    const isArrayEntry = typeof this.props.parameterArrayIndex === "number";
+    assert(isArrayEntry);
+    let arr = this.props.parameterValue || [];
+    if (arr.length) {
+      arr.splice(this.props.parameterArrayIndex, 1);
+      this.props.onEventParameterSet(this.props.parameter.name, arr);
     }
   }
 
   onParameterClicked = () => {
-    showMessage("To associate a space with this event, click and drag from this list entry and release over the target space.");
+    showMessage("To associate a space with this event parameter, click and drag from this list entry and release over the target space.");
   }
 };
+
+interface IEventParameterArrayDeleteButtonProps {
+  onDeleteButtonClicked(): void;
+}
+
+function EventParameterArrayDeleteButton(props: IEventParameterArrayDeleteButtonProps) {
+  return (
+    <div role="button"
+      className="eventParameterRightAlign eventParameterDelete"
+      onClick={e => {
+        e.stopPropagation();
+        props.onDeleteButtonClicked();
+      }}
+      title="Remove this array entry"></div>
+  );
+}
 
 interface IEventAddProps {
   onEventAdded(event: IEvent): void;
