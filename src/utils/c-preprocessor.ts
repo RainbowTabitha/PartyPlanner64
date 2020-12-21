@@ -12,7 +12,7 @@ export async function preprocess(contents: string): Promise<string> {
         }
 
         // TODO: Handle other file includes.
-        return null;
+        resumer(null);
       },
 
       completion_func(preprocessedText) {
