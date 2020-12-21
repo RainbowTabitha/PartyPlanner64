@@ -1,11 +1,19 @@
 import SmallerC, { EmscriptenModule } from "../lib/SmallerC/smlrc";
-import { ultra64h } from "../events/includes/ultra64h";
+import { preprocess } from "./c-preprocessor";
 
 /**
  * Compiles C source to MIPS assembly.
  * @param source C source code string
  */
 export async function compile(source: string): Promise<string> {
+  try {
+    source = await preprocess(source);
+    //$$log("preprocessed:", source);
+  }
+  catch (e) {
+    throw new Error(e);
+  }
+
   let _smallerCInstance: EmscriptenModule;
   let _smallerCPromiseLike: PromiseLike<EmscriptenModule>;
 
@@ -36,9 +44,6 @@ export async function compile(source: string): Promise<string> {
   await smallerCPromise;
 
   _smallerCInstance!.FS.writeFile("/input.c", source, { flags: "w+" });
-
-  // Add files that can be included.
-  _smallerCInstance!.FS.writeFile("/ultra64.h", ultra64h, { flags: "w+" });
 
   const outputFile = "/output.s";
   const argv = ["./smallerc", "/input.c", outputFile];
