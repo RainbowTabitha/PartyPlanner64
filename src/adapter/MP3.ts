@@ -611,7 +611,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     board.otherbg.boardselect = this._readImgFromMainFS(20, boardInfo.img.boardSelectImg, 0);
   }
 
-  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let boardSelectImg = boardInfo.img && boardInfo.img.boardSelectImg;
       if (!boardSelectImg) {
@@ -656,7 +656,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       this._readImgFromMainFS(19, boardInfo.img.splashLogoTextImg!, 0);
   }
 
-  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
       if (!splashLogoImg) {
@@ -707,7 +707,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     });
   }
 
-  onWriteBoardLogoTextImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardLogoTextImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
       if (!splashLogoTextImg) {

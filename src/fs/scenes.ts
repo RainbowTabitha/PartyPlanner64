@@ -70,7 +70,7 @@ export const scenes = new class Scenes {
     }, 0);
   }
 
-  extractAsync() {
+  extractAsync(): Promise<void> {
     return new Promise((resolve) => {
       this.extract();
       resolve();

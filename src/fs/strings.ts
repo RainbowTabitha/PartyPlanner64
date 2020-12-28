@@ -233,7 +233,7 @@ export const strings = {
     return _strFsInstance = new strings.StringTable(view);
   },
 
-  extractAsync() {
+  extractAsync(): Promise<void> {
     return new Promise((resolve, reject) => {
       strings.extract();
       resolve();

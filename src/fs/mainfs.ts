@@ -193,7 +193,7 @@ export class mainfs {
     return _mainfsCache;
   }
 
-  public static extractAsync() {
+  public static extractAsync(): Promise<void> {
     return new Promise((resolve) => {
       mainfs.extract();
       resolve();

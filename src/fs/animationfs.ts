@@ -181,7 +181,7 @@ export const animationfs = {
     return _animfsCache;
   },
 
-  extractAsync() {
+  extractAsync(): Promise<void> {
     return new Promise((resolve, reject) => {
       animationfs.extract();
       resolve();

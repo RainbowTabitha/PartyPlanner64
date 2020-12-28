@@ -23,7 +23,7 @@ export class FormToThreeJs {
     return new Promise((resolve) => {
       Promise.all(this.__promises).then(() => {
         this.__promises = [];
-        resolve(this.__threeResult);
+        resolve(this.__threeResult!);
       });
     });
   }

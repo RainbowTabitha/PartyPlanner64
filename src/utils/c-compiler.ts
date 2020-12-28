@@ -35,7 +35,7 @@ export async function compile(source: string): Promise<string> {
     printErr: addError,
   });
 
-  const smallerCPromise = new Promise((resolve) => {
+  const smallerCPromise = new Promise<void>((resolve) => {
     _smallerCPromiseLike.then(Module => {
       _smallerCInstance = Module;
       resolve();

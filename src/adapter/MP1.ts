@@ -425,7 +425,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     board.otherbg.boardlogo = this._readImgFromMainFS(10, boardInfo.img.pauseLogoImg, 0);
   }
 
-  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let introLogoImgs = boardInfo.img.introLogoImg;
       let pauseLogoImg = boardInfo.img.pauseLogoImg;

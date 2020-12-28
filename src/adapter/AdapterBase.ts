@@ -1509,7 +1509,7 @@ export abstract class AdapterBase {
 
     const bgPromises = [];
     for (let i = 0; i < additionalBgs.length; i++) {
-      const bgPromise = new Promise((resolve) => {
+      const bgPromise = new Promise<void>((resolve) => {
         const index = i;
         getImageData(additionalBgs[i], width, height).then(imgData => {
           bgImgData[index] = imgData;
@@ -1531,7 +1531,7 @@ export abstract class AdapterBase {
     $$log("Adapter does not implement onParseBoardSelectImg");
   }
 
-  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     $$log("Adapter does not implement onWriteBoardSelectImg");
     return new Promise((resolve, reject) => {
       resolve();
@@ -1542,14 +1542,14 @@ export abstract class AdapterBase {
     $$log("Adapter does not implement onParseBoardLogoImg");
   }
 
-  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     $$log("Adapter does not implement onWriteBoardLogoImgs");
     return new Promise((resolve, reject) => {
       resolve();
     });
   }
 
-  _brandBootSplashscreen() {
+  _brandBootSplashscreen(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!get($setting.writeBranding)) {
         resolve();

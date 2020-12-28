@@ -366,7 +366,7 @@ export const hvqfs = {
     return _hvqCache;
   },
 
-  extractAsync() {
+  extractAsync(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.extract();
       resolve();

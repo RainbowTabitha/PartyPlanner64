@@ -319,7 +319,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     let mainBgImgData: ImageData;
     let animImgData = new Array(animSources.length);
 
-    const mainBgPromise = new Promise((resolve) => {
+    const mainBgPromise = new Promise<void>((resolve) => {
       getImageData(mainBgSrc, width, height).then(imgData => {
         mainBgImgData = imgData;
         resolve();
@@ -328,7 +328,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
     const animPromises = [mainBgPromise];
     for (let i = 0; i < animSources.length; i++) {
-      const animPromise = new Promise((resolve) => {
+      const animPromise = new Promise<void>((resolve) => {
         const index = i;
         getImageData(animSources[i], width, height).then(imgData => {
           animImgData[index] = imgData;
@@ -354,7 +354,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     board.otherbg.boardselect = this._readImgFromMainFS(9, boardInfo.img.boardSelectImg, 0);
   }
 
-  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let boardSelectImg = boardInfo.img.boardSelectImg;
       if (!boardSelectImg) {
@@ -400,7 +400,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     board.otherbg.boardselecticon = dataUrl;
   }
 
-  _writeBoardSelectIcon(board: IBoard, boardInfo: IBoardInfo) {
+  _writeBoardSelectIcon(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!boardInfo.img.boardSelectIconCoords) {
         resolve();
@@ -416,7 +416,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
       let blankBackImage: HTMLImageElement, newBoardSelectIconImage: HTMLImageElement;
 
-      let blankBackPromise = new Promise(function(resolve, reject) {
+      let blankBackPromise = new Promise<void>(function(resolve, reject) {
         blankBackImage = new Image();
         blankBackImage.onload = function() {
           resolve();
@@ -424,7 +424,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         blankBackImage.src = mp2boardselectblank1Image;
       });
 
-      let newIconPromise = new Promise(function(resolve, reject) {
+      let newIconPromise = new Promise<void>(function(resolve, reject) {
         newBoardSelectIconImage = new Image();
         newBoardSelectIconImage.onload = function() {
           resolve();
@@ -532,7 +532,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       this._readImgFromMainFS(10, boardInfo.img.introLogoImg as number, 0);
   }
 
-  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
+  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let introLogoImg = boardInfo.img.introLogoImg;
       if (!introLogoImg) {

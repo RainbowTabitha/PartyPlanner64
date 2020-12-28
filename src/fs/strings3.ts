@@ -225,7 +225,7 @@ export const strings3 = {
     return _strFsInstances;
   },
 
-  extractAsync() {
+  extractAsync(): Promise<void> {
     return new Promise((resolve, reject) => {
       strings3.extract();
       resolve();
