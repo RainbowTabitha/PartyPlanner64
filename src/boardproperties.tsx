@@ -21,7 +21,6 @@ import editdetailsImage from "./img/header/editdetails.png";
 import deadendImage from "./img/editor/boardproperties/deadend.png";
 import animaddImage from "./img/toolbar/animadd.png";
 
-
 interface IBoardPropertiesProps {
   currentBoard: IBoard;
 }
@@ -272,9 +271,16 @@ interface IBackgroundListEntryProps {
 class BackgroundListEntry extends React.Component<IBackgroundListEntryProps> {
   state = { }
 
-  onMouseDown = () => {
-    if (!animationPlaying())
+  private __deleteBtn: HTMLDivElement | null = null;
+
+  onMouseDown = (event: React.MouseEvent) => {
+    if (event.target && event.target === this.__deleteBtn) {
+      return;
+    }
+
+    if (!animationPlaying()) {
       external.setBGImage(this.props.bg);
+    }
   }
 
   restoreMainBG = () => {
@@ -282,7 +288,8 @@ class BackgroundListEntry extends React.Component<IBackgroundListEntryProps> {
       renderBG();
   }
 
-  onRemove = () => {
+  onRemove = (event: React.MouseEvent) => {
+    event.stopPropagation();
     this.props.onRemoveBackground(this.props.index);
   }
 
@@ -294,9 +301,11 @@ class BackgroundListEntry extends React.Component<IBackgroundListEntryProps> {
         onMouseOut={this.restoreMainBG}>
         <img src={this.props.bg} className="propertiesActionButtonImg" width="24" height="24" alt="" />
         <span className="propertiesActionButtonSpan">{this.props.text}</span>
-        <div role="button" className="animBGEntryDelete"
+        <div role="button"
+          ref={btn => this.__deleteBtn = btn}
+          className="propertiesActionButtonDeleteBtn propertiesActionButtonRightAlign"
           onClick={this.onRemove}
-          title="Remove this background">✖</div>
+          title="Remove this background"></div>
       </div>
     );
   }

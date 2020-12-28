@@ -222,6 +222,9 @@ $propertySectionHeight: 14px;
 }
 
 .propertiesActionButton {
+  display: flex;
+  align-items: center;
+
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
     cursor: pointer;
@@ -229,30 +232,32 @@ $propertySectionHeight: 14px;
 }
 
 .propertiesActionButtonImg {
-  display: inline-block;
   margin: 2px;
   margin-right: 0.25em;
-  vertical-align: middle;
   border-radius: 2px;
 }
 
 .propertiesActionButtonSpan {
   font-size: 10pt;
   line-height: 24px;
-  vertical-align: middle;
 }
 
-.animBGEntryDelete {
+.propertiesActionButtonRightAlign {
+  margin-left: auto;
+}
+
+.propertiesActionButtonDeleteBtn {
   width: 16px;
   height: 16px;
-  line-height: 26px;
   margin-right: 0.25em;
-  text-align: center;
-  float: right;
+  background: url("../img/editor/boardproperties/deletelist.png") no-repeat;
+  background-position: center;
+  opacity: 0.6;
 
   &:hover {
-    font-weight: bold;
-    color: #AA0000;
+    background: url("../img/editor/boardproperties/deletelist_hover.png") no-repeat;
+    background-position: center;
+    opacity: 1;
     cursor: pointer;
   }
 }
