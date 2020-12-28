@@ -231,7 +231,6 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
   }
 
   render() {
-    const isC = this.props.language === EventCodeLanguage.C;
     return (
       <div className="eventParameterAddNewEntry">
         <select value={this.state.selectedType}
@@ -241,7 +240,7 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
           <option value={EventParameterType.Number}>Number</option>
           <option value={EventParameterType.PositiveNumber}>Positive Number</option>
           <option value={EventParameterType.Space}>Space</option>
-          {isC && <option value={EventParameterType.SpaceArray}>Space Array</option>}
+          <option value={EventParameterType.SpaceArray}>Space Array</option>
         </select>
         <input type="text" placeholder="Name"
           value={this.state.name}

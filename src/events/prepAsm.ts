@@ -172,7 +172,22 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
           break;
 
         case EventParameterType.SpaceArray:
-          break; // Without macros, not sure what we can do for these.
+          if (info.testCompile) {
+            parameterSymbols.push(`${parameter.name} equ 0`);
+            parameterSymbols.push(`${parameter.name}_chain_indices equ 0`);
+            parameterSymbols.push(`${parameter.name}_chain_space_indices equ 0`);
+          }
+          else {
+            const spaceArr = (parameterValue as number[]) || [];
+            parameterSymbols.push(`${parameter.name} equ ${spaceArr.join(",")}`);
+
+            const allIndices = spaceArr.map(s => getChainIndexValuesFromAbsoluteIndex(info.chains, s));
+            const chainIndices = allIndices.map(x => x[0]);
+            const chainSpaceIndices = allIndices.map(x => x[1]);
+            parameterSymbols.push(`${parameter.name}_chain_indices equ ${chainIndices.join(",")}`);
+            parameterSymbols.push(`${parameter.name}_chain_space_indices equ ${chainSpaceIndices.join(",")}`);
+          }
+          break;
 
         default:
           if (typeof parameterValue !== "undefined" && parameterValue !== null) {
@@ -238,10 +253,17 @@ export function scopeLabelsStaticByDefault(asm: string, keepStatic: boolean): st
 function findLabelsToScope(lines: string[]): string[] {
   const defineLabelRegex = /^\.definelabel\s+([^,]+)/i;
   const labelRegex = /^([@\w!?]+):/i;
+  const equRegex = /^\s*([@\w!?]+)\s+equ(?:$|\s+)/i;
 
   let foundLabels: string[] = [];
   lines.forEach(line => {
     let match = defineLabelRegex.exec(line);
+    if (match) {
+      foundLabels.push(match[1]);
+      return;
+    }
+
+    match = equRegex.exec(line);
     if (match) {
       foundLabels.push(match[1]);
       return;

@@ -136,6 +136,7 @@ export const CustomAsmHelper = {
     const customEvent = createCustomEvent(EventCodeLanguage.MIPS, asm);
     const preppedAsm = prepAsm(asm, customEvent, { parameterValues } as IEventInstance, Object.assign({
       addr: 0,
+      testCompile: true,
     }, info) as IEventWriteInfo);
     const bytes = assemble(preppedAsm) as ArrayBuffer;
     return bytes;
