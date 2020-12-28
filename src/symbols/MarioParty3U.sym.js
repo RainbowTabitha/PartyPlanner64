@@ -34,6 +34,18 @@ export default [{
       name: "FreeMainFS",
       desc: "Free's an allocated MainFS file pointer" },
 {
+      addr: 2147525168, // 0x8000A230
+      type: "code",
+      name: "DecodeNone" },
+{
+      addr: 2147525324, // 0x8000A2CC
+      type: "code",
+      name: "DecodeLZ" },
+{
+      addr: 2147528704, // 0x8000B000
+      type: "code",
+      name: "DecodeFile" },
+{
       addr: 2147529068, // 0x8000B16C
       type: "code",
       name: "GetRandomByte" },
@@ -60,10 +72,83 @@ export default [{
       name: "InitAnimations",
       desc: "A0=1" },
 {
+      addr: 2147702848, // 0x80035840
+      type: "code",
+      name: "MakePermHeap" },
+{
       addr: 2147702884, // 0x80035864
       type: "code",
       name: "MallocPerm",
       desc: "A0=size" },
+{
+      addr: 2147702920, // 0x80035888
+      type: "code",
+      name: "FreePerm",
+      desc: "A0=ptr" },
+{
+      addr: 2147702948, // 0x800358A4
+      type: "code",
+      name: "ReallocPerm" },
+{
+      addr: 2147702992, // 0x800358D0
+      type: "code",
+      name: "GetAllocatedPermHeapSize" },
+{
+      addr: 2147703024, // 0x800358F0
+      type: "code",
+      name: "GetUsedMemoryBlockCountPerm" },
+{
+      addr: 2147703056, // 0x80035910
+      type: "code",
+      name: "MakeTempHeap" },
+{
+      addr: 2147703092, // 0x80035934
+      type: "code",
+      name: "MallocTemp" },
+{
+      addr: 2147703128, // 0x80035958
+      type: "code",
+      name: "FreeTemp" },
+{
+      addr: 2147703156, // 0x80035974
+      type: "code",
+      name: "ReallocTemp" },
+{
+      addr: 2147703200, // 0x800359A0
+      type: "code",
+      name: "GetAllocatedTempHeapSize" },
+{
+      addr: 2147703232, // 0x800359C0
+      type: "code",
+      name: "GetUsedMemoryBlockCountTemp" },
+{
+      addr: 2147705040, // 0x800360D0
+      type: "code",
+      name: "MakeHeap" },
+{
+      addr: 2147705072, // 0x800360F0
+      type: "code",
+      name: "Malloc" },
+{
+      addr: 2147705224, // 0x80036188
+      type: "code",
+      name: "Free" },
+{
+      addr: 2147705416, // 0x80036248
+      type: "code",
+      name: "Realloc" },
+{
+      addr: 2147705616, // 0x80036310
+      type: "code",
+      name: "GetAllocatedHeapSize" },
+{
+      addr: 2147705668, // 0x80036344
+      type: "code",
+      name: "GetUsedMemoryBlockCount" },
+{
+      addr: 2147705708, // 0x8003636C
+      type: "code",
+      name: "GetMemoryAllocSize" },
 {
       addr: 2147774816, // 0x80047160
       type: "code",
