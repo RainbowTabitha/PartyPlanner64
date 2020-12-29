@@ -129,8 +129,12 @@ function compress01(src: DataView) {
   * is read as the value of length and 0x12 is added. When the lookback
   * distance is farther than the start (out of bounds), 0s are inserted.
   *
-  * It is noted as type "3" when used for non-HVQ images, but there is no known
-  * difference between types 2 and 3.
+  * This is also the implementation used for decompression types 03 and 04.
+  * 03 and 04 are considered the same by the game engine.
+  * 02 differs from 03/04 in that it is the only implementation that checks
+  * whether lookback goes out of bounds, and handles it. As far as I know,
+  * it is OK to use that handling for 03/04 as well, since the behavior would
+  * otherwise be undefined.
   */
 function decompress02(src: DataView, dst: DataView, decompressedSize: number) {
   // Current positions in src/dst buffers.
