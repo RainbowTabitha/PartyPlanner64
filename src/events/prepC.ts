@@ -75,12 +75,14 @@ export function makeParameterSymbolDefines(event: IEvent, spaceEvent: IEventInst
         case EventParameterType.SpaceArray:
           if (info.testCompile) {
             parameterSymbols.push(`#define ${parameter.name} 0`);
+            parameterSymbols.push(`#define ${parameter.name}_length 1`);
             parameterSymbols.push(`#define ${parameter.name}_chain_indices 0`);
             parameterSymbols.push(`#define ${parameter.name}_chain_space_indices 0`);
           }
           else {
             const spaceArr = (parameterValue as number[]) || [];
             parameterSymbols.push(`#define ${parameter.name} ${spaceArr.join(",")}`);
+            parameterSymbols.push(`#define ${parameter.name}_length ${spaceArr.length}`);
 
             const allIndices = spaceArr.map(s => getChainIndexValuesFromAbsoluteIndex(info.chains, s));
             const chainIndices = allIndices.map(x => x[0]);

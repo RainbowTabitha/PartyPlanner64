@@ -174,12 +174,14 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
         case EventParameterType.SpaceArray:
           if (info.testCompile) {
             parameterSymbols.push(`${parameter.name} equ 0`);
+            parameterSymbols.push(`${parameter.name}_length equ 1`);
             parameterSymbols.push(`${parameter.name}_chain_indices equ 0`);
             parameterSymbols.push(`${parameter.name}_chain_space_indices equ 0`);
           }
           else {
             const spaceArr = (parameterValue as number[]) || [];
             parameterSymbols.push(`${parameter.name} equ ${spaceArr.join(",")}`);
+            parameterSymbols.push(`${parameter.name}_length equ ${spaceArr.length}`);
 
             const allIndices = spaceArr.map(s => getChainIndexValuesFromAbsoluteIndex(info.chains, s));
             const chainIndices = allIndices.map(x => x[0]);
