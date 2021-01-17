@@ -60,44 +60,33 @@ export const ChainSplit3: IEvent = {
     const chainArgs = event.parameterValues!["chainArgs"] as number[];
     const altChain = event.parameterValues!.altChain as number[] || [];
     return `
-    .if reverse
-      revSplitMain:
         addiu SP, SP, -0x18
-        sw    RA, 0x10(SP)
+        sw    RA, 0x14(SP)
+        sw    S0, 0x10(SP)
+
+    .if reverse
         jal   GetPlayerStruct
         li    A0, -1
         lbu   V0, 0x17(V0)
         andi  V0, V0, 0x80
-        beq   V0, R0, revSplitExit
+        beq   V0, R0, exit_chain_split
         NOP
         lui   V0, hi(cur_player_spaces_remaining)
         lw    V0, lo(cur_player_spaces_remaining)(V0)
-        beq   V0, R0, revSplitExit
+        beq   V0, R0, exit_chain_split
         NOP
-        jal   chain_split_3_main
+        j   do_chain_split
         NOP
-      revSplitExit:
-        lw    RA, 0x10(SP)
-        jr    RA
-        addiu SP, SP, 0x18
     .endif
 
     .if hasgate
-      addiu SP, SP, -0x18
-      sw    RA, 0x14(SP)
-      sw    S0, 0x10(SP)
       jal   GetPlayerStruct
       li    A0, -1
       move  S0, V0
       lbu   A0, 0x15(S0)
-      sll   A0, A0, 0x18
-      sra   A0, A0, 0x18
       lbu   A1, 0x16(S0)
-      sll   A1, A1, 0x18
-      sra   A1, A1, 0x18
-      andi  A0, A0, 0xffff
       jal   GetAbsSpaceIndexFromChainSpaceIndex
-      andi  A1, A1, 0xffff
+      NOP
       sll   V0, V0, 0x10
       sra   V0, V0, 0x10
       ; Check for the previous space being the gate chain's first space.
@@ -113,16 +102,9 @@ export const ChainSplit3: IEvent = {
       jal   SetNextChainAndSpace
       li   A2, ${altChain[1] || 0} ; Index in chain
       lbu   V0, 0x17(S0)
-      andi  V0, V0, 0xfe
+      andi  V0, V0, 0xFE
       j     exit_chain_split
       sb    V0, 0x17(S0)
-
-    .else
-
-    chain_split_3_main:
-      addiu SP, SP, -0x18
-      sw    RA, 0x10(SP)
-
     .endif
 
     do_chain_split:
@@ -140,12 +122,9 @@ export const ChainSplit3: IEvent = {
       jal   EndProcess
        move  A0, R0
     .endif
-    .if hasgate
+
       lw    RA, 0x14(SP)
       lw    S0, 0x10(SP)
-    .else
-      lw    RA, 0x10(SP)
-    .endif
       jr    RA
        addiu SP, SP, 0x18
 
@@ -187,14 +166,9 @@ export const ChainSplit3: IEvent = {
        lb    A0, lo(current_player_index)(A0)
       move  S4, V0
       lbu   A0, 0x15(S4)
-      sll   A0, A0, 0x18
-      sra   A0, A0, 0x18
       lbu   A1, 0x16(S4)
-      sll   A1, A1, 0x18
-      sra   A1, A1, 0x18
-      andi  A0, A0, 0xffff
       jal   GetAbsSpaceIndexFromChainSpaceIndex
-       andi  A1, A1, 0xffff
+       NOP
       sll   V0, V0, 0x10
       sra   A1, V0, 0x10
       li    A2, 2
