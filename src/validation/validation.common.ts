@@ -1,13 +1,14 @@
-import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode, IEventInstance, BoardAudioType } from "../boards";
+import { IBoard, getConnections, getSpacesOfSubType, getStartSpaceIndex, getDeadEnds, getBoardEvent, getAdditionalBackgroundCode, IEventInstance, BoardAudioType, getAudioSelectCode } from "../boards";
 import { ValidationLevel, SpaceSubtype, Space, isArrayEventParameterType } from "../types";
 import { romhandler } from "../romhandler";
 import { CustomAsmHelper } from "../events/customevents";
 import { getEvent, isUnsupported } from "../events/events";
 import { createRule } from "./validationrules";
-import { makeFakeBgSyms, testAdditionalBgCode } from "../events/additionalbg";
+import { testAdditionalBgCodeWithGame } from "../events/additionalbg";
 import { dataUrlToArrayBuffer } from "../utils/arrays";
 import { createGameMidi } from "../audio/midi";
 import { audio } from "../fs/audio";
+import { testGetAudioCodeWithGame } from "../events/getaudiochoice";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
 HasStart.fails = function(board: IBoard, args: any) {
@@ -463,13 +464,30 @@ AdditionalBackgroundCodeIssue.fails = async function(board: IBoard, args: any = 
     return false;
   }
 
-  const bgIndices = makeFakeBgSyms(board);
   const game = romhandler.getROMGame()!;
-  const failures = await testAdditionalBgCode(bgCode.code, bgCode.language, bgIndices, game);
+  const failures = await testAdditionalBgCodeWithGame(bgCode.code, bgCode.language, board, game);
 
   if (failures.length) {
     console.error(failures);
     return "The additional background code failed a test assembly.";
+  }
+
+  return false;
+};
+
+const GetAudioIndexCodeIssue = createRule("GETAUDIOINDEXCODEISSUE", "Audio selection code issue", ValidationLevel.ERROR);
+GetAudioIndexCodeIssue.fails = async function(board: IBoard, args: any = {}) {
+  const code = getAudioSelectCode(board);
+  if (!code) {
+    return false;
+  }
+
+  const game = romhandler.getROMGame()!;
+  const failures = await testGetAudioCodeWithGame(code.code, code.language, board, game);
+
+  if (failures.length) {
+    console.error(failures);
+    return "The music selection code failed a test assembly.";
   }
 
   return false;
@@ -493,34 +511,39 @@ AudioDetailsIssue.fails = async function(board: IBoard, args: any = {}) {
       if (!board.audioData) {
         return "Expected custom audio data to be defined.";
       }
-
-      const soundbankIndex = board.audioData.soundbankIndex;
-      const seqTable = audio.getSequenceTable(0)!;
-      const bankCount = seqTable.soundbanks.banks.length;
-      if (soundbankIndex < 0 || soundbankIndex >= bankCount) {
-        return `Soundbank index for custom audio is out of range (0 - ${bankCount - 1})`;
+      if (!Array.isArray(board.audioData)) {
+        return "Expected custom audio data to be an array.";
       }
 
-      if (!board.audioData.data) {
-        return "Custom audio was chosen, but a midi file was not uploaded."
-      }
-      let midiBuffer: ArrayBuffer;
-      try {
-        midiBuffer = dataUrlToArrayBuffer(board.audioData.data);
-      }
-      catch {
-        return "Custom audio midi data could not be parsed into an ArrayBuffer.";
-      }
+      for (const audioEntry of board.audioData) {
+        const soundbankIndex = audioEntry.soundbankIndex;
+        const seqTable = audio.getSequenceTable(0)!;
+        const bankCount = seqTable.soundbanks.banks.length;
+        if (soundbankIndex < 0 || soundbankIndex >= bankCount) {
+          return `Soundbank index for custom audio is out of range (0 - ${bankCount - 1})`;
+        }
 
-      let gameMidi;
-      try {
-        gameMidi = createGameMidi(midiBuffer, { loop: true });
-      }
-      catch {
-        return "Custom audio midi data could not be converted into game audio.";
-      }
-      if (!gameMidi) {
-        return "Custom audio midi data could not be converted into game audio.";
+        if (!audioEntry.data) {
+          return "Custom audio was chosen, but a midi file was not uploaded."
+        }
+        let midiBuffer: ArrayBuffer;
+        try {
+          midiBuffer = dataUrlToArrayBuffer(audioEntry.data);
+        }
+        catch {
+          return "Custom audio midi data could not be parsed into an ArrayBuffer.";
+        }
+
+        let gameMidi;
+        try {
+          gameMidi = createGameMidi(midiBuffer, { loop: true });
+        }
+        catch {
+          return "Custom audio midi data could not be converted into game audio.";
+        }
+        if (!gameMidi) {
+          return "Custom audio midi data could not be converted into game audio.";
+        }
       }
       break;
   }

@@ -162,11 +162,11 @@ export abstract class AdapterBase {
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
     this._createGateEvents(boardCopy, boardInfo, chains);
-    const audioIndex = this.onWriteAudio(boardCopy, boardInfo, boardIndex);
+    const audioIndices = this.onWriteAudio(boardCopy, boardInfo, boardIndex);
 
     let eventSyms: string = "";
     if (this.writeFullOverlay) {
-      eventSyms = await this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex, audioIndex);
+      eventSyms = await this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex, audioIndices);
     }
     else {
       // Wipe out the event ASM from those events.
@@ -208,8 +208,8 @@ export abstract class AdapterBase {
     await this.onOverwritePromises(board, boardInfo, boardIndex);
   }
 
-  private async _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
-    const overlayAsm = await this.onCreateBoardOverlay(board, boardInfo, boardIndex, audioIndex);
+  private async _writeNewBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]): Promise<string> {
+    const overlayAsm = await this.onCreateBoardOverlay(board, boardInfo, boardIndex, audioIndices);
     const game = romhandler.getROMGame()!;
     const asm = `
         ${makeGameSymbolLabels(game, true).join("\n")}
@@ -239,7 +239,7 @@ export abstract class AdapterBase {
     return eventSyms;
   }
 
-  async onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
+  async onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]): Promise<string> {
     throw new Error("Adapter does not implement onCreateBoardOverlay");
   }
 
@@ -1680,31 +1680,34 @@ export abstract class AdapterBase {
    * Called to apply the background music choice to the ROM.
    * @returns Effective audio index to use.
    */
-  onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): number {
-    let audioIndex: number;
+  onWriteAudio(board: IBoard, boardInfo: IBoardInfo, boardIndex: number): number[] {
+    let audioIndices: number[] = [];
     switch (board.audioType) {
       case BoardAudioType.Custom:
         const seqTable = audio.getSequenceTable(0)!;
         assert(!!seqTable);
-        audioIndex = seqTable.midis.length;
-        seqTable.midis.push({
-          buffer: createGameMidi(dataUrlToArrayBuffer(board.audioData!.data), { loop: true })!,
-          soundbankIndex: board.audioData!.soundbankIndex,
-        });
+        for (const audioEntry of board.audioData!) {
+          audioIndices.push(seqTable.midis.length);
+          seqTable.midis.push({
+            buffer: createGameMidi(dataUrlToArrayBuffer(audioEntry.data), { loop: true })!,
+            soundbankIndex: audioEntry.soundbankIndex,
+          });
+        }
+
         break;
 
       case BoardAudioType.InGame:
       default:
-        audioIndex = board.audioIndex || 0;
+        audioIndices = [board.audioIndex || 0];
         break;
     }
 
     if (boardInfo.audioIndexOffset && boardInfo.sceneIndex) {
       const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-      sceneView.setUint16(boardInfo.audioIndexOffset, audioIndex);
+      sceneView.setUint16(boardInfo.audioIndexOffset, audioIndices[0]);
     }
 
-    return audioIndex;
+    return audioIndices;
   }
 
   getAudioMap(): string[] {

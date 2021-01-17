@@ -1,5 +1,5 @@
 import { BoardType } from "../types";
-import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType } from "../boards";
+import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType, IBoardAudioData } from "../boards";
 import * as React from "react";
 import { make8Bit } from "../utils/img/RGBA32";
 import { MPEditor, MPEditorDisplayMode } from "../texteditor";
@@ -7,13 +7,16 @@ import { openFile } from "../utils/input";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
 import { promptUser, refresh, showMessage } from "../appControl";
-
-import "../css/details.scss";
 import { getImageData } from "../utils/img/getImageData";
-import editImage from "../img/audio/edit.png";
 import { audio } from "../fs/audio";
 import { assert } from "../utils/debug";
 import { romhandler } from "../romhandler";
+
+import "../css/details.scss";
+
+import editImage from "../img/audio/edit.png";
+import audioImage from "../img/details/audio.png";
+import deleteImage from "../img/details/delete.png";
 
 type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "br";
 
@@ -172,11 +175,7 @@ function _setValue(id: string, value: any, board: IBoard) {
         switch (audioChanges.audioType) {
           case BoardAudioType.Custom:
             if (!board.audioData) {
-              board.audioData = {
-                name: "(select a midi file)",
-                data: "",
-                soundbankIndex: 0
-              };
+              board.audioData = [];
             }
             break;
         }
@@ -184,14 +183,35 @@ function _setValue(id: string, value: any, board: IBoard) {
       if (typeof audioChanges.gameAudioIndex === "number") {
         board.audioIndex = audioChanges.gameAudioIndex;
       }
-      if (audioChanges.midiName) {
-        board.audioData!.name = audioChanges.midiName;
-      }
-      if (audioChanges.midiData) {
-        board.audioData!.data = audioChanges.midiData;
-      }
-      if (typeof audioChanges.soundbankIndex === "number") {
-        board.audioData!.soundbankIndex = audioChanges.soundbankIndex;
+
+      const customAudioIndex = audioChanges.customAudioIndex;
+      if (typeof customAudioIndex === "number") {
+        assert(Array.isArray(board.audioData));
+        assert(customAudioIndex <= board.audioData.length);
+
+        if (customAudioIndex === board.audioData.length) {
+          board.audioData.push({
+            name: "(select a midi file)",
+            data: "",
+            soundbankIndex: 0
+          });
+        }
+
+        if (audioChanges.delete) {
+          assert(customAudioIndex < board.audioData.length);
+          board.audioData.splice(customAudioIndex, 1);
+        }
+        else {
+          if (audioChanges.midiName) {
+            board.audioData[customAudioIndex].name = audioChanges.midiName;
+          }
+          if (audioChanges.midiData) {
+            board.audioData[customAudioIndex].data = audioChanges.midiData;
+          }
+          if (typeof audioChanges.soundbankIndex === "number") {
+            board.audioData[customAudioIndex].soundbankIndex = audioChanges.soundbankIndex;
+          }
+        }
       }
       refresh();
       break;
@@ -341,7 +361,9 @@ export class Details extends React.Component<IDetailsProps> {
         case "audio":
           return (
             <DetailsAudio id={detail.id!} desc={detail.desc!} readonly={readonly}
-              value={value} key={detail.id} onAudioSelected={this.onValueChange} />
+              value={value} key={detail.id}
+              onAudioSelected={this.onValueChange}
+              onAudioDeleted={(id, index) => this.onValueChange(id, { customAudioIndex: index, delete: true })}/>
           );
         case "difficulty":
           return (
@@ -455,9 +477,11 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
 interface IDetailsAudioChanges {
   audioType?: BoardAudioType;
   gameAudioIndex?: number;
+  customAudioIndex?: number;
   midiName?: string;
   midiData?: string;
   soundbankIndex?: number;
+  delete?: boolean;
 }
 
 interface IDetailsAudioProps {
@@ -466,6 +490,7 @@ interface IDetailsAudioProps {
   readonly: boolean;
   value: number;
   onAudioSelected(id: string, changes: IDetailsAudioChanges): any;
+  onAudioDeleted(id: string, customAudioIndex: number): void;
 }
 
 class DetailsAudio extends React.Component<IDetailsAudioProps> {
@@ -483,7 +508,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
     });
   }
 
-  onMidiPrompt = async () => {
+  onMidiPrompt = async (customAudioIndex: number) => {
     openFile("audio/midi", (event: any) => {
       const file = event.target.files[0];
       if (!file)
@@ -493,6 +518,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
       reader.onload = error => {
         assert(typeof reader.result === "string");
         this.props.onAudioSelected(this.props.id, {
+          customAudioIndex,
           midiName: file.name,
           midiData: reader.result,
         });
@@ -501,7 +527,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
     });
   }
 
-  onSoundbankIndexPrompt = async () => {
+  onSoundbankIndexPrompt = async (customAudioIndex: number) => {
     let upperBound = 0;
     if (romhandler.romIsLoaded() && romhandler.getGameVersion() === getCurrentBoard().game) {
       const seqTable = audio.getSequenceTable(0)!;
@@ -520,9 +546,14 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
       }
 
       this.props.onAudioSelected(this.props.id, {
+        customAudioIndex,
         soundbankIndex: newSoundbankIndex
       });
     });
+  }
+
+  onDeleteAudioEntry = (customAudioIndex: number) => {
+    this.props.onAudioDeleted(this.props.id, customAudioIndex);
   }
 
   render() {
@@ -550,27 +581,27 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
         break;
 
       case BoardAudioType.Custom:
-        audioInputUI = (
-          <div>
-            <div className="audioCustomSection">
-              <span className="detailsSpan">{currentBoard.audioData!.name}</span>
-              <img src={editImage}
-                className="audioDetailsSmallEditIcon"
-                title="Upload midi file"
-                alt="Upload midi file"
-                onClick={this.onMidiPrompt} />
-            </div>
-            <div className="audioCustomSection">
-              <label>Soundbank index: </label>
-              <span className="detailsSpan">{currentBoard.audioData?.soundbankIndex || 0}</span>
-              <img src={editImage}
-                className="audioDetailsSmallEditIcon"
-                title="Change soundbank index"
-                alt="Change soundbank index"
-                onClick={this.onSoundbankIndexPrompt} />
-            </div>
-          </div>
-        );
+        audioInputUI = currentBoard.audioData!.map((audioEntry, i) => (
+          <DetailsCustomAudioEntry
+            key={i + audioEntry.name}
+            audioEntry={audioEntry}
+            canDelete
+            onDeleteAudioEntry={() => this.onDeleteAudioEntry(i)}
+            onMidiPrompt={() => this.onMidiPrompt(i)}
+            onSoundbankIndexPrompt={() => this.onSoundbankIndexPrompt(i)} />
+        ));
+        audioInputUI.push(
+          <DetailsCustomAudioEntry
+            key="newentry"
+            audioEntry={{
+              name: "",
+              data: "",
+              soundbankIndex: 0
+            }}
+            canDelete={false}
+            onMidiPrompt={() => this.onMidiPrompt(currentBoard.audioData!.length)}
+            onSoundbankIndexPrompt={() => this.onSoundbankIndexPrompt(currentBoard.audioData!.length)} />
+        )
         break;
     }
 
@@ -592,6 +623,55 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
     );
   }
 };
+
+interface IDetailsCustomAudioEntry {
+  audioEntry: IBoardAudioData;
+  canDelete: boolean;
+  onDeleteAudioEntry?(): void;
+  onMidiPrompt(): void;
+  onSoundbankIndexPrompt(): void;
+}
+
+function DetailsCustomAudioEntry(props: IDetailsCustomAudioEntry) {
+  const name = props.audioEntry.name || "(select a midi file)";
+  const hasData = !!props.audioEntry.data;
+
+  return (
+    <div className="audioCustomEntry">
+      <img src={audioImage}
+        className="audioCustomIcon audioCustomIconAudio"
+        title="Custom audio track"
+        alt="Custom audio track" />
+      <div className="audioCustomTextSections">
+        <div className="audioCustomSection">
+          <span className="detailsSpan">{name}</span>
+          <img src={editImage}
+            className="audioDetailsSmallEditIcon"
+            title="Upload midi file"
+            alt="Upload midi file"
+            onClick={props.onMidiPrompt}
+            tabIndex={0} />
+        </div>
+        {hasData && <div className="audioCustomSection">
+          <label>Soundbank index: </label>
+          <span className="detailsSpan">{props.audioEntry.soundbankIndex || 0}</span>
+          <img src={editImage}
+            className="audioDetailsSmallEditIcon"
+            title="Change soundbank index"
+            alt="Change soundbank index"
+            onClick={props.onSoundbankIndexPrompt}
+            tabIndex={0} />
+        </div>}
+      </div>
+      {props.canDelete && <img src={deleteImage}
+        onClick={props.onDeleteAudioEntry}
+        className="audioCustomIcon audioCustomIconDelete"
+        title="Remove audio track"
+        alt="Remove audio track"
+        tabIndex={0} />}
+    </div>
+  );
+}
 
 interface IDetailsDifficultyProps {
   id: string;

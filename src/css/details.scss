@@ -1,7 +1,7 @@
 #detailsForm {
   margin: 0 auto;
   margin-top: 1em;
-  max-width: 675px; // 775px;
+  max-width: 665px; // 775px;
   padding: 1em;
 
   .detailsSpan, label, h2 {
@@ -17,6 +17,10 @@
 
 .audioDetailsContainer, .difficultyDetailsContainer {
   min-height: 70px;
+}
+
+.audioDetailsContainer {
+  width: 100%;
 }
 
 #detailsForm h2 {
@@ -124,6 +128,41 @@
 
 .audioDetailsRadioGroup {
   margin: 0.5em 0 1em 0;
+}
+
+.audioCustomEntry {
+  border: 1px solid #514745;
+  border-radius: 5px;
+  background-color: #816A66;
+  padding: 0.5em;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 0.5em;
+  width: 100%;
+}
+
+.audioCustomIcon {
+  margin-right: 0.5em;
+  flex-shrink: 0;
+}
+
+.audioCustomIconAudio {
+  opacity: 0.8;
+}
+
+.audioCustomIconDelete {
+  cursor: pointer;
+  opacity: 0.5;
+  margin-left: 0.5em;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.audioCustomTextSections {
+  flex: 1;
 }
 
 .audioCustomSection {

@@ -48,7 +48,8 @@ export interface IBoard {
   additionalbgcode?: IBoardEvent | string;
   audioType?: BoardAudioType;
   audioIndex?: number;
-  audioData?: IBoardAudioData;
+  audioData?: IBoardAudioData[];
+  audioSelectCode?: IBoardEvent;
   _rom?: boolean;
   _deadSpace?: number;
 }
@@ -61,13 +62,13 @@ export enum BoardAudioType {
   Custom = 1,
 }
 
-interface IBoardAudioData {
+export interface IBoardAudioData {
   name: string;
   data: string;
   soundbankIndex: number;
 }
 
-interface IBoardEvent {
+export interface IBoardEvent {
   language: EventCodeLanguage;
   code: string;
 }
@@ -539,6 +540,21 @@ export function setAdditionalBackgroundCode(board: IBoard, code: string, languag
   }
 }
 
+export function getAudioSelectCode(board: IBoard): IBoardEvent | null {
+  return board.audioSelectCode || null;
+}
+
+export function setAudioSelectCode(board: IBoard, code: string, language: EventCodeLanguage): void {
+  if (code) {
+    board.audioSelectCode = {
+      code, language
+    };
+  }
+  else {
+    delete board.audioSelectCode;
+  }
+}
+
 function applyTheme(board: IBoard, name: "default" = "default") {
   const themeImages = _themes[name];
 
@@ -664,6 +680,10 @@ function _fixPotentiallyOldBoard(board: IBoard) {
 
   if (typeof board.audioType === "undefined") {
     (board as IBoard).audioType = BoardAudioType.InGame;
+  }
+
+  if (board.audioData && !Array.isArray(board.audioData)) {
+    (board as IBoard).audioData = [(board as any).audioData];
   }
 
   _migrateOldCustomEvents(board);

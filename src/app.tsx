@@ -1,7 +1,7 @@
 // This is the top level of the application, and includes the root React view.
 
 import { View, Action } from "./types";
-import { IBoard, ISpace, getBoards, getCurrentBoard, IEventInstance } from "./boards";
+import { IBoard, ISpace, getBoards, getCurrentBoard, IEventInstance, getAdditionalBackgroundCode, setAdditionalBackgroundCode } from "./boards";
 import * as React from "react";
 import { IEvent } from "./events/events";
 import { updateWindowTitle } from "./utils/browser";
@@ -31,13 +31,14 @@ import "./events/builtin/MP3/events.MP3";
 import "file-saver";
 import { DebugView } from "./views/debug";
 import { AudioViewer } from "./views/audio";
-import { AdditionalBgView } from "./views/additionalbgview";
+import { BasicCodeEditorView } from "./views/basiccodeeditorview";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
 import { showMessage } from "./appControl";
 import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
+import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -142,7 +143,12 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         mainView = <AudioViewer />;
         break;
       case View.ADDITIONAL_BGS:
-        mainView = <AdditionalBgView board={this.state.currentBoard} />;
+        mainView = <BasicCodeEditorView board={this.state.currentBoard}
+          title="Additional Background Configuration"
+          getExistingCode={() => getAdditionalBackgroundCode(this.state.currentBoard)}
+          getDefaultCode={lang => getDefaultAdditionalBgCode(lang)}
+          onSetCode={(code, lang) => setAdditionalBackgroundCode(this.state.currentBoard, code, lang)}
+          canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, this.state.currentBoard)} />;
         break;
     }
 

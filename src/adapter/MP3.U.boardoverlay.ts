@@ -8,10 +8,11 @@ import { GateParameterNames } from "../events/builtin/MP3/U/GateEvent3";
 import { getArrowRotationLimit } from "./boardinfo";
 import { $$hex } from "../utils/debug";
 import { hvqfs } from "../fs/hvqfs";
-import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
+import { getAdditionalBgAsmForOverlay } from "../events/additionalbg";
 import { getShuffleSeedData } from "./overlayutils";
+import { getAudioIndexAsmForOverlay } from "../events/getaudiochoice";
 
-export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
+export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
@@ -202,6 +203,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   });
 
   const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
+  const preppedAudioIndexCode = await getAudioIndexAsmForOverlay(board, audioIndices);
 
   return `
 .org 0x801059A0
@@ -272,8 +274,6 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 .definelabel GATE_COUNT,${gateEventInfos.length}
 .definelabel STAR_COUNT,${starIndices.length}
 .definelabel BOO_COUNT,${booIndices.length}
-
-.definelabel __PP64_INTERNAL_VAL_AUDIO_INDEX,${audioIndex || 0}
 
 main:
 addiu SP, SP, -0x18
@@ -2528,9 +2528,7 @@ jr    RA
 ${preppedAdditionalBgCode}
 
 ; A function that returns the audio index, to let custom events call to get the value.
-__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX:
-jr    RA
- li V0 __PP64_INTERNAL_VAL_AUDIO_INDEX
+${preppedAudioIndexCode}
 
 overlaycall2:
 addiu SP, SP, -0x18
@@ -2543,11 +2541,15 @@ jal __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
 jal   0x8004A520
  move    A0, V0
 
-li    V0, __PP64_INTERNAL_VAL_AUDIO_INDEX
+; On the chance that there are side effects of reordering this code, just call again.
+jal __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
+nop
+
 lui   AT, hi(CORE_800CE198)
 sh    V0, lo(CORE_800CE198)(AT)
 jal   0x800F8D6C
- li    A0, __PP64_INTERNAL_VAL_AUDIO_INDEX
+ move  A0, V0
+
 jal   InitCameras
  li    A0, 2
 jal   setup_routine

@@ -10,6 +10,7 @@ const commonRules = [
   getRule("GATESETUP"),
   getRule("OVERRECOMMENDEDSPACES", { max: 128 }),
   getRule("ADDITIONALBGCODEISSUE"),
+  getRule("GETAUDIOINDEXCODEISSUE"),
 ];
 
 export function getValidationRules(gameID: Game) {

@@ -21,7 +21,7 @@ import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/crea
 import { changeView, blockUI, boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
-import { saveAdditionalBgCode, additionalBgViewPromptExit } from "./views/additionalbgview";
+import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";
 import { saveAs } from "file-saver";
 import { isElectron } from "./utils/electron";
 
@@ -235,10 +235,10 @@ async function _handleAction(action: Action) {
       openFile("image/*", bgSelected);
       break;
     case Action.SAVE_ADDITIONALBG:
-      saveAdditionalBgCode();
+      saveBasicCodeEditorCode();
       break;
     case Action.ADDITIONALBG_BACK:
-      if (await additionalBgViewPromptExit()) {
+      if (await basicCodeViewPromptExit()) {
         changeView(View.EDITOR);
       }
       break;

@@ -4,10 +4,11 @@ import { distance } from "../utils/number";
 import { IBoardInfo } from "./boardinfobase";
 import { getSymbol } from "../symbols/symbols";
 import { hvqfs } from "../fs/hvqfs";
-import { getAdditionalBgAsmForOverlay } from "../events/prepAdditionalBg";
 import { getShuffleSeedData } from "./overlayutils";
+import { getAdditionalBgAsmForOverlay } from "../events/additionalbg";
+import { getAudioIndexAsmForOverlay } from "../events/getaudiochoice";
 
-export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndex: number): Promise<string> {
+export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
 
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
@@ -53,6 +54,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   });
 
   const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
+  const preppedAudioIndexCode = await getAudioIndexAsmForOverlay(board, audioIndices);
 
 return `
 .org 0x800F65E0
@@ -73,8 +75,6 @@ return `
 
 .definelabel STAR_COUNT,${starIndices.length}
 .definelabel BOO_COUNT,${booIndices.length}
-
-.definelabel __PP64_INTERNAL_VAL_AUDIO_INDEX,${audioIndex || 0}
 
 main:
   addiu SP, SP, -0x18
@@ -920,9 +920,7 @@ L800F717C:
 ${preppedAdditionalBgCode}
 
 ; A function that returns the audio index, to let custom events call to get the value.
-__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX:
-jr    RA
- li V0 __PP64_INTERNAL_VAL_AUDIO_INDEX
+${preppedAudioIndexCode}
 
 overlaycall2:
   addiu SP, SP, -0x18

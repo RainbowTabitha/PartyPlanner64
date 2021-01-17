@@ -5,6 +5,7 @@ import { Game } from "../types";
 const commonRules = [
   getRule("TOOMANYGATES", { limit: 0 }),
   getRule("ADDITIONALBGCODEISSUE"),
+  getRule("GETAUDIOINDEXCODEISSUE"),
   getRule("TOOMANYBOOS", { limit: 2 }),
   getRule("TOOMANYBOWSERS", { limit: 1 }),
   getRule("TOOMANYKOOPAS", { limit: 1 }),
