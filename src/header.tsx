@@ -153,6 +153,11 @@ const actions_additionalbg: IHeaderActionItem[] = [
   { "name": "Save", "icon": saveImage, "type": Action.SAVE_ADDITIONALBG, "details": "Save the code" },
 ];
 
+const actions_audioselectioncode: IHeaderActionItem[] = [
+  { "name": "Back to editor", "icon": backImage, "type": Action.AUDIOSELECTCODE_BACK, "details": "Return to the board editor" },
+  { "name": "Save", "icon": saveImage, "type": Action.SAVE_AUDIOSELECTCODE, "details": "Save the code" },
+];
+
 //const action_overflow = { "name": "", "icon": moreImage, "type": "MORE", "details": "More options" };
 const action_overflow: IHeaderActionItem = { "name": "", "icon": "", "type": "MORE" as any, "details": "More options" };
 
@@ -235,11 +240,17 @@ async function _handleAction(action: Action) {
       openFile("image/*", bgSelected);
       break;
     case Action.SAVE_ADDITIONALBG:
+    case Action.SAVE_AUDIOSELECTCODE:
       saveBasicCodeEditorCode();
       break;
     case Action.ADDITIONALBG_BACK:
       if (await basicCodeViewPromptExit()) {
         changeView(View.EDITOR);
+      }
+      break;
+    case Action.AUDIOSELECTCODE_BACK:
+      if (await basicCodeViewPromptExit()) {
+        changeView(View.DETAILS);
       }
       break;
     default:
@@ -357,6 +368,8 @@ function getActions(view: View, board: IBoard, romLoaded: boolean) {
       actions = actions_createevent;
     else if (view === View.ADDITIONAL_BGS)
       actions = actions_additionalbg;
+    else if (view === View.AUDIO_SELECTION_CODE)
+      actions = actions_audioselectioncode;
     else
       actions = actions_back;
   }

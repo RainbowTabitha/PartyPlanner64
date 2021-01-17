@@ -1,4 +1,4 @@
-import { BoardType } from "../types";
+import { BoardType, View } from "../types";
 import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType, IBoardAudioData } from "../boards";
 import * as React from "react";
 import { make8Bit } from "../utils/img/RGBA32";
@@ -6,7 +6,7 @@ import { MPEditor, MPEditorDisplayMode } from "../texteditor";
 import { openFile } from "../utils/input";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
-import { promptUser, refresh, showMessage } from "../appControl";
+import { changeView, promptUser, refresh, showMessage } from "../appControl";
 import { getImageData } from "../utils/img/getImageData";
 import { audio } from "../fs/audio";
 import { assert } from "../utils/debug";
@@ -17,8 +17,10 @@ import "../css/details.scss";
 import editImage from "../img/audio/edit.png";
 import audioImage from "../img/details/audio.png";
 import deleteImage from "../img/details/delete.png";
+import audioConfigImage from "../img/details/audioconfig.png";
+import { $setting, get } from "./settings";
 
-type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "br";
+type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "audioheader" | "br";
 
 interface IDetailsItemBase {
   type: DetailsType;
@@ -34,7 +36,7 @@ const _details_mp1: IDetailsItemBase[] = [
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
   { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
-  { type: "header", desc: "Background Music" },
+  { type: "audioheader", desc: "Background Music" },
   { type: "audio", id: "detailBoardAudio", desc: "Background music" },
   { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 128, height: 64 },
@@ -65,7 +67,7 @@ const _details_mp3: IDetailsItemBase[] = [
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
   { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
-  { type: "header", desc: "Background Music" },
+  { type: "audioheader", desc: "Background Music" },
   { type: "audio", id: "detailBoardAudio", desc: "Background music" },
   { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 64, height: 64 },
@@ -374,6 +376,15 @@ export class Details extends React.Component<IDetailsProps> {
           return (
             <h2 key={"header" + keyId++}>{detail.desc!}</h2>
           );
+        case "audioheader":
+          return (
+            <div key={"header" + keyId++} className="detailsAudioHeaderDiv">
+              <h2 className="detailsAudioHeader">
+                {detail.desc!}
+                <AudioSelectionConfigButton board={this.props.board} />
+              </h2>
+            </div>
+          );
         case "br":
           return (
             <br key={"br" + keyId++} />
@@ -669,6 +680,28 @@ function DetailsCustomAudioEntry(props: IDetailsCustomAudioEntry) {
         title="Remove audio track"
         alt="Remove audio track"
         tabIndex={0} />}
+    </div>
+  );
+}
+
+interface IAudioSelectionConfigButtonProps {
+  board: IBoard;
+}
+
+function AudioSelectionConfigButton(props: IAudioSelectionConfigButtonProps) {
+  if (boardIsROM(props.board) || romhandler.getGameVersion() === 2) {
+    return null;
+  }
+  if (!get($setting.uiAdvanced)) {
+    return null;
+  }
+
+  return (
+    <div className="audioSelectConfigButton"
+      title="Add custom code for choosing the music to play each turn"
+      tabIndex={0}
+      onClick={() => changeView(View.AUDIO_SELECTION_CODE)}>
+      <img src={audioConfigImage} alt="Configure audio selection" />
     </div>
   );
 }

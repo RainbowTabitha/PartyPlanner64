@@ -1,7 +1,7 @@
 // This is the top level of the application, and includes the root React view.
 
 import { View, Action } from "./types";
-import { IBoard, ISpace, getBoards, getCurrentBoard, IEventInstance, getAdditionalBackgroundCode, setAdditionalBackgroundCode } from "./boards";
+import { IBoard, ISpace, getBoards, getCurrentBoard, IEventInstance, getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode } from "./boards";
 import * as React from "react";
 import { IEvent } from "./events/events";
 import { updateWindowTitle } from "./utils/browser";
@@ -39,6 +39,7 @@ import { showMessage } from "./appControl";
 import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";
+import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "./events/getaudiochoice";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -149,6 +150,14 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
           getDefaultCode={lang => getDefaultAdditionalBgCode(lang)}
           onSetCode={(code, lang) => setAdditionalBackgroundCode(this.state.currentBoard, code, lang)}
           canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, this.state.currentBoard)} />;
+        break;
+      case View.AUDIO_SELECTION_CODE:
+        mainView = <BasicCodeEditorView board={this.state.currentBoard}
+          title="Background Music Selection Code"
+          getExistingCode={() => getAudioSelectCode(this.state.currentBoard)}
+          getDefaultCode={lang => getDefaultGetAudioCode(lang)}
+          onSetCode={(code, lang) => setAudioSelectCode(this.state.currentBoard, code, lang)}
+          canSaveAndExit={(code, lang) => testGetAudioCodeAllGames(code, lang, this.state.currentBoard)} />;
         break;
     }
 

@@ -48,14 +48,6 @@ export function getDefaultGetAudioCode(language: EventCodeLanguage): string {
   throw new Error(`Unrecognized event code language ${language}`);
 }
 
-function makeFakeGetAudioSyms(board: IBoard): number[] {
-  if (!board.audioData)
-    return [1]; // One for the in-game audio track.
-
-  let i = 0;
-  return board.audioData.map(_ => ++i);
-}
-
 export async function testGetAudioCodeAllGames(code: string, language: EventCodeLanguage, board: IBoard): Promise<string[]> {
   const possibleGameVersions = getGameVersionsToTestCompile(board);
 
@@ -158,6 +150,14 @@ export function prepGetAudioAsm(asm: string, audioIndices: number[]): string {
     .align 4
     .endfile
   `, true);
+}
+
+function makeFakeGetAudioSyms(board: IBoard): number[] {
+  if (!board.audioData || !board.audioData.length)
+    return [1]; // One for the in-game audio track.
+
+  let i = 0;
+  return board.audioData.map(_ => ++i);
 }
 
 function makeAudioSymbols(audioIndices: number[]): string[] {

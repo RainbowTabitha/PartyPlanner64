@@ -15,6 +15,7 @@ export enum View {
   DEBUG = 10,
   AUDIO = 11,
   ADDITIONAL_BGS = 12,
+  AUDIO_SELECTION_CODE = 13,
 }
 
 export enum Space {
@@ -84,6 +85,8 @@ export enum Action {
   SCREENSHOT = 14.1,
   SAVE_ADDITIONALBG = 14.2,
   ADDITIONALBG_BACK = 14.3,
+  SAVE_AUDIOSELECTCODE = 14.2,
+  AUDIOSELECTCODE_BACK = 14.3,
   ROM_SAVE = 15,
   SETTINGS = 15.1,
   ABOUT = 15.2,

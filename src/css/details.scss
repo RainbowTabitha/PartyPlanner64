@@ -126,6 +126,30 @@
   background-image: url("../img/details/star_hover_dark.png");
 }
 
+.detailsAudioHeader {
+  display: inline-block;
+}
+
+.audioSelectConfigButton {
+  height: 24px;
+  width: 24px;
+  opacity: 0.5;
+  cursor: pointer;
+  display: inline-block;
+  margin-left: 0.5em;
+  margin-bottom: 5px;
+  vertical-align: middle;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  img {
+    height: 24px;
+    width: 24px;
+  }
+}
+
 .audioDetailsRadioGroup {
   margin: 0.5em 0 1em 0;
 }
