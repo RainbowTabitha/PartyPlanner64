@@ -381,7 +381,7 @@ function _replaceMidi(table: number, index: number): void {
     const reader = new FileReader();
     reader.onload = error => {
       assert(reader.result instanceof ArrayBuffer);
-      const gameMidi = createGameMidi(reader.result as ArrayBuffer);
+      const gameMidi = createGameMidi(reader.result as ArrayBuffer, { loop: true });
       if (!gameMidi) {
         showMessage("Could not process midi for insertion into the game");
         return;
