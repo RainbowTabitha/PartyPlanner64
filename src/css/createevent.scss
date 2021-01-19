@@ -11,11 +11,8 @@
   }
 }
 
-.createeventcodemirror {
-  width: 640px;
-  height: 100%;
-}
-
+$codeMirrorWidth: 640px;
+$codeMirrorWidthBigger: 900px;
 $codeMirrorBackground: #f3ece8;
 $codeMirrorReadonlyBackground: #d1ccc9;
 
@@ -46,14 +43,9 @@ $codeMirrorReadonlyBackground: #d1ccc9;
   }
 }
 
-@media (max-width: 965px) {
-  .createeventcodemirror {
-    height: 500px;
-
-    .CodeMirror {
-      height: 500px;
-    }
-  }
+.createeventcodemirror {
+  width: $codeMirrorWidth;
+  height: 100%;
 }
 
 .createEventForm {
@@ -149,21 +141,14 @@ $codeMirrorReadonlyBackground: #d1ccc9;
   }
 }
 
-@media (max-width: 965px) {
-  .createEventForm {
-    margin-top: 1em;
-    padding: 0;
-    width: 610px;
-  }
-}
-
 .createEventDropdownContainer {
   min-width: 140px;
 }
 
 .createEventTabStrip {
-  width: 640px;
+  width: $codeMirrorWidth;
   height: 100%;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
 }
@@ -171,12 +156,6 @@ $codeMirrorReadonlyBackground: #d1ccc9;
 .createEventTabStripContent {
   flex: 1;
   min-height: 0;
-}
-
-@media (max-width: 965px) {
-  .createEventTabStrip {
-    height: 545px;
-  }
 }
 
 .createEventTabStripTabs {
@@ -210,5 +189,37 @@ $codeMirrorReadonlyBackground: #d1ccc9;
     cursor: default;
     border-top-width: 3px;
     padding-top: 0.45em;
+  }
+}
+
+@media (max-width: 965px) {
+  .createeventcodemirror {
+    height: 500px;
+    width: 100%;
+
+    .CodeMirror {
+      height: 500px;
+    }
+  }
+
+  .createEventTabStrip {
+    height: 545px;
+    width: 100%;
+  }
+
+  .createEventForm {
+    margin-top: 1em;
+    padding: 0;
+    width: 610px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .createeventcodemirror {
+    width: $codeMirrorWidthBigger;
+  }
+
+  .createEventTabStrip {
+    width: $codeMirrorWidthBigger;
   }
 }
