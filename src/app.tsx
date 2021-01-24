@@ -50,6 +50,7 @@ interface IPP64AppState {
   currentEvent: IEvent | null;
   currentEventIsBoardEvent: boolean;
   hoveredBoardEvent: IEventInstance | null;
+  overrideBg: string | null;
   romLoaded: boolean;
   currentAction: Action;
   selectedSpaces: ISpace[] | null;
@@ -75,6 +76,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     currentEvent: null,
     currentEventIsBoardEvent: false,
     hoveredBoardEvent: null,
+    overrideBg: null,
     romLoaded: false,
     currentAction: Action.MOVE,
     selectedSpaces: null,

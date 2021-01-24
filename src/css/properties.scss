@@ -242,8 +242,28 @@ $propertySectionHeight: 14px;
   line-height: 24px;
 }
 
+.propertiesActionButtonSpacer {
+  flex: 1;
+}
+
 .propertiesActionButtonRightAlign {
   margin-left: auto;
+}
+
+.propertiesActionButtonEyeBtn {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.25em;
+  background: url("../img/editor/boardproperties/eye.png") no-repeat;
+  background-position: center;
+  opacity: 0;
+}
+.propertiesActionButton:hover .propertiesActionButtonEyeBtn:not(.propertiesActionButtonEyeBtnShowing) {
+  opacity: 0.4;
+}
+.propertiesActionButtonEyeBtnShowing,
+.propertiesActionButton:hover .propertiesActionButtonEyeBtn:hover {
+  opacity: 1;
 }
 
 .propertiesActionButtonDeleteBtn {

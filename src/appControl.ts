@@ -18,6 +18,7 @@ export function currentBoardChanged(currentBoard: IBoard) {
     currentBoard: currentBoard,
     selectedSpaces: null,
     currentAction: Action.MOVE,
+    overrideBg: null,
     aiTree: null,
   });
 }
@@ -67,6 +68,14 @@ export function setHoveredBoardEvent(hoveredBoardEvent: IEventInstance | null) {
 
 export function getHoveredBoardEvent(): IEventInstance | null {
   return getAppInstance().state.hoveredBoardEvent;
+}
+
+export function setOverrideBg(overrideBg: string | null) {
+  getAppInstance().setState({ overrideBg });
+}
+
+export function getOverrideBg(): string | null {
+  return getAppInstance()?.state.overrideBg || null;
 }
 
 export function blockUI(blocked: boolean) {

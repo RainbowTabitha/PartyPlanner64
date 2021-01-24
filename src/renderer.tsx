@@ -14,6 +14,7 @@ import { getDistinctColor } from "./utils/colors";
 import { isDebug } from "./debug";
 import { takeScreeny } from "./screenshot";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
+import { getOverrideBg, setOverrideBg } from "./appControl";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
@@ -561,6 +562,8 @@ interface BoardBGProps {
 class BoardBG extends React.Component<BoardBGProps> {
   state = {}
 
+  private __img: HTMLImageElement | null = null;
+
   componentDidMount() {
     this.renderContent();
     _boardBG = this;
@@ -576,21 +579,22 @@ class BoardBG extends React.Component<BoardBGProps> {
 
   renderContent() {
     let board = this.props.board;
-    let bgImg = this.getImage();
-    let editor = bgImg.parentElement;
+    let bgImgEl = this.getImage();
+    let editor = bgImgEl.parentElement;
     let transformStyle = getEditorContentTransform(board, editor!);
-    bgImg.style.transform = transformStyle;
+    bgImgEl.style.transform = transformStyle;
 
     // Update the background image.
-    if ((bgImg as any)._src !== board.bg.src || bgImg.width !== board.bg.width || bgImg.height !== board.bg.height) {
-      bgImg.width = board.bg.width;
-      bgImg.height = board.bg.height;
-      this.setSource(board.bg.src, bgImg);
+    const imgSrcToUse = getOverrideBg() || board.bg.src;
+    if ((bgImgEl as any)._src !== imgSrcToUse || bgImgEl.width !== board.bg.width || bgImgEl.height !== board.bg.height) {
+      bgImgEl.width = board.bg.width;
+      bgImgEl.height = board.bg.height;
+      this.setSource(imgSrcToUse, bgImgEl);
     }
   }
 
   getImage() {
-    return ReactDOM.findDOMNode(this) as HTMLImageElement;
+    return this.__img!;
   }
 
   setSource(src: string, bgImg = this.getImage()) {
@@ -600,7 +604,7 @@ class BoardBG extends React.Component<BoardBGProps> {
 
   render() {
     return (
-      <img className="editor_bg" alt="" />
+      <img ref={img => this.__img = img} className="editor_bg" alt="Board Background" />
     );
   }
 };
@@ -611,6 +615,7 @@ let _currentFrame = -1;
 export function playAnimation() {
   if (!_animInterval) {
     _animInterval = setInterval(_animationStep, 800);
+    setOverrideBg(null);
   }
 }
 
@@ -622,7 +627,7 @@ export function stopAnimation() {
   _animInterval = null;
   _currentFrame = -1;
 
-  renderBG(); // Reset image
+  setOverrideBg(null);
 }
 
 function _animationStep() {
@@ -634,7 +639,7 @@ function _animationStep() {
   }
 
   else if (_currentFrame >= 0 && _currentFrame < animbgs.length) {
-    _boardBG.setSource(animbgs[_currentFrame]);
+    setOverrideBg(animbgs[_currentFrame]);
     _currentFrame++;
   }
   else {
@@ -642,7 +647,7 @@ function _animationStep() {
   }
 
   if (_currentFrame === -1) {
-    _boardBG.setSource(board.bg.src);
+    setOverrideBg(board.bg.src);
     _currentFrame++;
   }
 }
@@ -1134,9 +1139,6 @@ export function animationPlaying() {
 export const external = {
   getBGImage: function() {
     return _boardBG!.getImage();
-  },
-  setBGImage: function(src: string) {
-    _boardBG!.setSource(src);
   },
   renderConnections: _renderConnections,
   renderSpaces: _renderSpaces

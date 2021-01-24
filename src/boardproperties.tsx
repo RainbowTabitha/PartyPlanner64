@@ -1,5 +1,5 @@
 import * as React from "react";
-import { playAnimation, stopAnimation, animationPlaying, renderBG, external, render, highlightSpaces, renderConnections, renderSpaces, renderSelectedSpaces } from "./renderer";
+import { playAnimation, stopAnimation, animationPlaying, render, highlightSpaces, renderConnections, renderSpaces, renderSelectedSpaces } from "./renderer";
 import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
   supportsAnimationBackgrounds, supportsAdditionalBackgrounds,
   addAdditionalBG, removeAdditionalBG, boardIsROM, IEventInstance, addEventToBoard, removeEventFromBoard
@@ -7,7 +7,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
-import { changeView, promptUser, setHoveredBoardEvent } from "./appControl";
+import { changeView, getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 import { SectionHeading } from "./propertiesshared";
@@ -38,7 +38,8 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
         <BackgroundList list="animbg" board={board}
           title="Animation Backgrounds"
           onAddBackground={this.onAddAnimBG}
-          onRemoveBackground={this.onRemoveAnimBG}>
+          onRemoveBackground={this.onRemoveAnimBG}
+          onSetOverrideBackground={this.onSetOverrideBackground}>
           <AnimationPlayButton board={board} />
         </BackgroundList>
       );
@@ -53,7 +54,8 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
         <BackgroundList list="additionalbg" board={board}
           title="Additional Backgrounds"
           onAddBackground={this.onAddAdditionalBG}
-          onRemoveBackground={this.onRemoveAdditionalBG}>
+          onRemoveBackground={this.onRemoveAdditionalBG}
+          onSetOverrideBackground={this.onSetOverrideBackground}>
           <AdditionalBackgroundConfigButton />
         </BackgroundList>
       );
@@ -89,6 +91,11 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
 
   onRemoveAdditionalBG = (index: number) => {
     removeAdditionalBG(index, this.props.currentBoard)
+    this.forceUpdate();
+  }
+
+  onSetOverrideBackground = (bg: string | null) => {
+    setOverrideBg(bg);
     this.forceUpdate();
   }
 };
@@ -222,19 +229,24 @@ interface IBackgroundListProps {
   title: string;
   onAddBackground(bg: string): void;
   onRemoveBackground(index: number): void;
+  onSetOverrideBackground(bg: string | null): void;
 }
 
 class BackgroundList extends React.Component<IBackgroundListProps> {
   state = { }
 
   render() {
+    const overrideBg = getOverrideBg();
+
     let bgs = this.props.board[this.props.list] || [];
     let i = 0;
     let entries = bgs.map((bg: string) => {
       i++;
       return (
         <BackgroundListEntry bg={bg} text={"Background " + i} key={i} index={i-1}
-          onRemoveBackground={this.props.onRemoveBackground} />
+          showing={bg === overrideBg}
+          onRemoveBackground={this.props.onRemoveBackground}
+          onSetOverrideBackground={this.props.onSetOverrideBackground} />
       );
     });
 
@@ -265,45 +277,45 @@ interface IBackgroundListEntryProps {
   bg: string;
   index: number;
   text: string;
+  showing: boolean;
   onRemoveBackground(index: number): void;
+  onSetOverrideBackground(bg: string | null): void;
 }
 
 class BackgroundListEntry extends React.Component<IBackgroundListEntryProps> {
   state = { }
 
-  private __deleteBtn: HTMLDivElement | null = null;
-
-  onMouseDown = (event: React.MouseEvent) => {
-    if (event.target && event.target === this.__deleteBtn) {
-      return;
-    }
-
-    if (!animationPlaying()) {
-      external.setBGImage(this.props.bg);
-    }
-  }
-
-  restoreMainBG = () => {
-    if (!animationPlaying())
-      renderBG();
-  }
-
   onRemove = (event: React.MouseEvent) => {
     event.stopPropagation();
     this.props.onRemoveBackground(this.props.index);
+    if (this.props.showing) {
+      this.props.onSetOverrideBackground(null);
+    }
+  }
+
+  onEyeClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!animationPlaying()) {
+      this.props.onSetOverrideBackground(this.props.showing ? null : this.props.bg);
+    }
   }
 
   render() {
+    let eyeClassName = "propertiesActionButtonEyeBtn";
+    if (this.props.showing) {
+      eyeClassName += " propertiesActionButtonEyeBtnShowing";
+    }
     return (
-      <div className="propertiesActionButton"
-        onMouseDown={this.onMouseDown}
-        onMouseUp={this.restoreMainBG}
-        onMouseOut={this.restoreMainBG}>
+      <div className="propertiesActionButton">
         <img src={this.props.bg} className="propertiesActionButtonImg" width="24" height="24" alt="" />
         <span className="propertiesActionButtonSpan">{this.props.text}</span>
+        <span className="propertiesActionButtonSpacer" />
         <div role="button"
-          ref={btn => this.__deleteBtn = btn}
-          className="propertiesActionButtonDeleteBtn propertiesActionButtonRightAlign"
+          onClick={this.onEyeClick}
+          className={eyeClassName}
+          title="Show this background until dismissed"></div>
+        <div role="button"
+          className="propertiesActionButtonDeleteBtn"
           onClick={this.onRemove}
           title="Remove this background"></div>
       </div>
