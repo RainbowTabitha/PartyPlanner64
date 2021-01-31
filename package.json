@@ -49,7 +49,7 @@
     "midi-player-js": "^2.0.13",
     "mips-assembler": "^2.0.0",
     "mips-inst": "^3.0.0",
-    "node-sass": "^5.0.0",
+    "node-sass": "^4.14.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.0",
