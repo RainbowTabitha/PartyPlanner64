@@ -36,7 +36,7 @@ import { RGBA5551toRGBA32, RGBA5551fromRGBA32 } from "./RGBA5551";
 //   s16 origin_y;
 // }
 
-interface IImgInfo {
+export interface IImgInfo {
   width: number;
   height: number;
   src?: ArrayBuffer;

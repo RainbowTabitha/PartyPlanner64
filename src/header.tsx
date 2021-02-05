@@ -42,6 +42,7 @@ import rompatchImage from "./img/header/rompatch.png";
 import romoverwriteImage from "./img/header/romoverwrite.png";
 import audioImage from "./img/header/audio.png";
 import modelviewerImage from "./img/header/modelviewer.png";
+import spritesImage from "./img/header/sprites.png";
 //import stringseditorImage from "./img/header/stringseditor.png";
 import backImage from "./img/header/back.png";
 import addImage from "./img/header/add.png";
@@ -98,6 +99,7 @@ const actions_rom_romboard: IHeaderActionItem[] = [
   { "name": "Events", "icon": eventsImage, "type": Action.EVENTS, "details": "View and manage events", "advanced": true },
   { "name": "Patches", "icon": rompatchImage, "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
   { "name": "Model Viewer", "icon": modelviewerImage, "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
+  { "name": "Sprites", "icon": spritesImage, "type": Action.SPRITE_VIEWER, "details": "View sprite data in the ROM", advanced: true },
   //{ "name": "Strings", "icon": stringseditorImage, "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
   { "name": "Audio", "icon": audioImage, "type": Action.AUDIO, "details": "Game audio options", advanced: true },
   { "name": "Settings", "icon": settingsImage, "type": Action.SETTINGS, "details": "Editor settings" },
@@ -126,6 +128,7 @@ const actions_rom_normalboard: IHeaderActionItem[] = [
   { "name": "Events", "icon": eventsImage, "type": Action.EVENTS, "details": "View and manage events", "advanced": true },
   { "name": "Patches", "icon": rompatchImage, "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
   { "name": "Model Viewer", "icon": modelviewerImage, "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
+  { "name": "Sprites", "icon": spritesImage, "type": Action.SPRITE_VIEWER, "details": "View sprite data in the ROM", advanced: true },
   //{ "name": "Strings", "icon": stringseditorImage, "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
   { "name": "Audio", "icon": audioImage, "type": Action.AUDIO, "details": "Game audio options", advanced: true },
   { "name": "Settings", "icon": settingsImage, "type": Action.SETTINGS, "details": "Editor settings" },
@@ -208,6 +211,9 @@ async function _handleAction(action: Action) {
       break;
     case Action.MODEL_VIEWER:
       changeView(View.MODELS);
+      break;
+    case Action.SPRITE_VIEWER:
+      changeView(View.SPRITES);
       break;
     case Action.EVENTS:
       changeView(View.EVENTS);

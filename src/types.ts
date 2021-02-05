@@ -16,6 +16,7 @@ export enum View {
   AUDIO = 11,
   ADDITIONAL_BGS = 12,
   AUDIO_SELECTION_CODE = 13,
+  SPRITES = 14,
 }
 
 export enum Space {
@@ -76,6 +77,7 @@ export enum Action {
   BOARD_COPY = 13,
   MODEL_VIEWER = 13.3,
   STRINGS_EDITOR = 13.4,
+  SPRITE_VIEWER = 13.45,
   EVENTS = 13.5,
   CREATEEVENT = 13.6,
   BACK_TO_EVENTS = 13.7,

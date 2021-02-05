@@ -40,6 +40,7 @@ import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";
 import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "./events/getaudiochoice";
+import { SpriteView } from "./views/sprites";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -123,6 +124,9 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         break;
       case View.MODELS:
         mainView = <ModelViewer />;
+        break;
+      case View.SPRITES:
+        mainView = <SpriteView />;
         break;
       case View.EVENTS:
         mainView = <EventsView board={this.state.currentBoard} />;
