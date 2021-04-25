@@ -1863,6 +1863,86 @@ export default [{
       name: "bank_coin_total",
       desc: "Number of coins in bank" },
 {
+      addr: 2148326354, // 0x800CDBD2
+      type: "u8",
+      name: "p1_forced_dice_roll",
+      desc: " forces p1's normal roll" },
+{
+      addr: 2148326355, // 0x800CDBD3
+      type: "u8",
+      name: "p1_forced_dice_roll2",
+      desc: " forces p1's second roll when using a mushroom" },
+{
+      addr: 2148326356, // 0x800CDBD4
+      type: "u8",
+      name: "p1_forced_dice_roll3",
+      desc: " forces p1's third roll when using a golden mushroom" },
+{
+      addr: 2148326357, // 0x800CDBD5
+      type: "u8",
+      name: "p1_spaces_remaining",
+      desc: " controls the number above the player's head" },
+{
+      addr: 2148326430, // 0x800CDC1E
+      type: "u8",
+      name: "p2_forced_dice_roll",
+      desc: " forces p2's normal roll" },
+{
+      addr: 2148326431, // 0x800CDC1F
+      type: "u8",
+      name: "p2_forced_dice_roll2",
+      desc: " forces p2's second roll when using a mushroom" },
+{
+      addr: 2148326432, // 0x800CDC20
+      type: "u8",
+      name: "p2_forced_dice_roll3",
+      desc: " forces p2's third roll when using a golden mushroom" },
+{
+      addr: 2148326433, // 0x800CDC21
+      type: "u8",
+      name: "p2_spaces_remaining",
+      desc: " controls the number above the player's head" },
+{
+      addr: 2148326506, // 0x800CDC6A
+      type: "u8",
+      name: "p3_forced_dice_roll",
+      desc: " forces p3's normal roll" },
+{
+      addr: 2148326507, // 0x800CDC6B
+      type: "u8",
+      name: "p3_forced_dice_roll2",
+      desc: " forces p3's second roll when using a mushroom" },
+{
+      addr: 2148326508, // 0x800CDC6C
+      type: "u8",
+      name: "p3_forced_dice_roll3",
+      desc: " forces p3's third roll when using a golden mushroom" },
+{
+      addr: 2148326509, // 0x800CDC6D
+      type: "u8",
+      name: "p3_spaces_remaining",
+      desc: " controls the number above the player's head" },
+{
+      addr: 2148326582, // 0x800CDCB6
+      type: "u8",
+      name: "p4_forced_dice_roll",
+      desc: " forces p4's normal roll" },
+{
+      addr: 2148326583, // 0x800CDCB7
+      type: "u8",
+      name: "p4_forced_dice_roll2",
+      desc: " forces p4's second roll when using a mushroom" },
+{
+      addr: 2148326584, // 0x800CDCB8
+      type: "u8",
+      name: "p4_forced_dice_roll3",
+      desc: " forces p4's third roll when using a golden mushroom" },
+{
+      addr: 2148326585, // 0x800CDCB9
+      type: "u8",
+      name: "p4_spaces_remaining",
+      desc: " controls the number above the player's head" },
+{
       addr: 2148327877, // 0x800CE1C5
       type: "u8",
       name: "hidden_block_coins_space_index" },
@@ -2588,6 +2668,11 @@ export default [{
       name: "RefreshHUD",
       desc: "A0=player_index" },
 {
+      addr: 2148503900, // 0x800F915C
+      type: "code",
+      name: "SetCameraType",
+      desc: "A0=type" },
+{
       addr: 2148535712, // 0x80100DA0
       type: "data",
       name: "mini_ids_4p" },
@@ -2641,6 +2726,10 @@ export default [{
       name: "num_minis_in_roulette",
       desc: "Number of Mini-Games to populate the roulette with for each type (4p" },
 {
+      addr: 2148543576, // 0x80102C58
+      type: "u32",
+      name: "boo_function_pointer" },
+{
       addr: 2148553232, // 0x80105210
       type: "u16",
       name: "num_board_spaces" },
@@ -2665,6 +2754,46 @@ export default [{
       addr: 2148553392, // 0x801052B0
       type: "u32",
       name: "num_arrow_angles" },
+{
+      addr: 2148554736, // 0x801057F0
+      type: "u32",
+      name: "p1_hud_xpos",
+      desc: " float for p1's HUD x pos" },
+{
+      addr: 2148554740, // 0x801057F4
+      type: "u32",
+      name: "p1_hud_ypos",
+      desc: " float for p1's HUD y pos" },
+{
+      addr: 2148554844, // 0x8010585C
+      type: "u32",
+      name: "p2_hud_xpos",
+      desc: " see p1" },
+{
+      addr: 2148554848, // 0x80105860
+      type: "u32",
+      name: "p2_hud_ypos",
+      desc: " see p1" },
+{
+      addr: 2148554952, // 0x801058C8
+      type: "u32",
+      name: "p3_hud_xpos",
+      desc: " see p1" },
+{
+      addr: 2148554956, // 0x801058CC
+      type: "u32",
+      name: "p3_hud_ypos",
+      desc: " see p1" },
+{
+      addr: 2148555060, // 0x80105934
+      type: "u32",
+      name: "p4_hud_xpos",
+      desc: " see p1" },
+{
+      addr: 2148555064, // 0x80105938
+      type: "u32",
+      name: "p4_hud_ypos",
+      desc: " see p1" },
 {
       addr: 2148555168, // 0x801059A0
       type: "data",
