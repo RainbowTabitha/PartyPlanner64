@@ -100,7 +100,7 @@ export interface IMTNXObj {
 
 export interface ITrack {
   type: number;
-  dimension: number;
+  dimension: MTNXDimension;
   mystery1: any;
   mystery2: any;
   mystery3: any;

@@ -1,5 +1,4 @@
 import { FORM } from "../models/FORM";
-import { glTFAssetFromTHREE, exportGLB, exportGLTFZip } from "gltf-js-utils";
 import { get, $setting } from "./settings";
 import { $$log, $$hex } from "../utils/debug";
 import { FormToThreeJs } from "../models/FormToThreeJs";
@@ -10,17 +9,15 @@ import { MTNX } from "../models/MTNX";
 import * as THREE from "three";
 import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHelper";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GLTFExporter, GLTFExporterOptions } from "three/examples/jsm/exporters/GLTFExporter";
 import { MtnxToThreeJs } from "../models/MtnxToThreeJs";
 import { pad } from "../utils/string";
-import * as JSZipMod from "jszip";
 import { saveAs } from "file-saver";
 import { isDebug } from "../debug";
 
 import exportImage from "../img/model/export.png";
 
 import "../css/models.scss";
-
-const JSZip = JSZipMod.default;
 
 interface IModelViewerProps {
   // bgColor: number;
@@ -327,11 +324,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     }
     if (obj.material) {
       let materialArray;
-      if (/*obj.material instanceof THREE.MeshFaceMaterial || */
-        obj.material instanceof THREE.MultiMaterial) {
-        materialArray = obj.material.materials;
-      }
-      else if (obj.material instanceof Array) {
+      if (obj.material instanceof Array) {
         materialArray = obj.material;
       }
       if (materialArray) {
@@ -502,7 +495,9 @@ class ModelToolbar extends React.Component<IModelToolbarProps> {
         <div className="modelViewerToolbarSpacer" />
         <ModelExportObjButton
           selectedModelDir={this.props.selectedModelDir}
-          selectedModelFile={this.props.selectedModelFile} />
+          selectedModelFile={this.props.selectedModelFile}
+          selectedAnimDir={this.props.selectedAnimDir}
+          selectedAnimFile={this.props.selectedAnimFile} />
       </div>
     );
   }
@@ -804,43 +799,63 @@ class ModelFeatureSelect extends React.Component<IModelFeatureSelectProps> {
 interface IModelExportObjButtonProps {
   selectedModelDir: number | null;
   selectedModelFile: number | null;
+  selectedAnimDir: number | null;
+  selectedAnimFile: number | null;
 }
 
 class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
   state = {}
 
   render() {
+    let tooltip;
+    if (this.props.selectedAnimDir !== null) {
+      tooltip = "Export current model and animation to a glTF model file";
+    }
+    //else {
+      tooltip = "Export current model to a glTF model file";
+    //}
     return (
-      <Button onClick={this.export} css="btnModelExport">
+      <Button onClick={this.export} css="btnModelExport" title={tooltip}>
         <img src={exportImage} height="16" width="16" alt="" />
         glTF
       </Button>
     );
   }
 
-  export = () => {
+  export = async () => {
     const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
 
     const form = FORM.unpack(mainfs.get(dir!, file!))!;
-
     const converter = new FormToThreeJs();
+    const modelObj = await converter.createModel(form);
+    $$log("Exporting Three model object", modelObj);
 
-    converter.createModel(form).then((modelObj) => {
-      $$log("Exporting Three model object", modelObj);
+    let clip: THREE.AnimationClip | undefined;
+    // if (this.props.selectedAnimDir !== null) {
+    //   const [dir, file] = [this.props.selectedAnimDir, this.props.selectedAnimFile];
+    //   const mtnx = MTNX.unpack(mainfs.get(dir, file!))!;
+    //   const animConverter = new MtnxToThreeJs();
+    //   animConverter.form = form;
+    //   clip = animConverter.createClip(mtnx);
+    //   $$log("Exporting Three animation clip with model", clip);
+    // }
 
-      const asset = glTFAssetFromTHREE(modelObj);
-      $$log("Converted glTF asset", asset);
+    const binary = !!get($setting.modelUseGLB);
+    const exporterOpts: GLTFExporterOptions = {
+      binary,
+    };
+    if (clip) {
+      exporterOpts.animations = [clip];
+    }
 
-      if (get($setting.modelUseGLB)) {
-        exportGLB(asset).then((buffer: ArrayBuffer) => {
-          saveAs(new Blob([buffer]), `model-${dir}-${file}.glb`);
-        });
+    const exporter = new GLTFExporter();
+    exporter.parse(modelObj, (result: any) => {
+      if (binary) {
+        saveAs(new Blob([result as ArrayBuffer]), `model-${dir}-${file}.glb`);
       }
       else {
-        exportGLTFZip(asset, JSZip as JSZipMod).then((blob: Blob) => {
-          saveAs(blob, `model-${dir}-${file}.zip`);
-        });
+        saveAs(new Blob([JSON.stringify(result)]), `model-${dir}-${file}.gltf`);
       }
-    });
+    }, exporterOpts);
   }
 };

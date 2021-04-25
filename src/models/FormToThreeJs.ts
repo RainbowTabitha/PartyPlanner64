@@ -1,6 +1,7 @@
 import { IFormObj, FORM, IFAC1Parsed, IFAC1VertexEntry, IVTX1Vertex } from "./FORM";
 import * as THREE from "three";
 import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHelper";
+import { Face3, Geometry } from "three/examples/jsm/deprecated/Geometry";
 import { invertColor } from "../utils/image";
 import { $$hex, $$log } from "../utils/debug";
 import { arrayBufferToDataURL } from "../utils/arrays";
@@ -82,15 +83,20 @@ export class FormToThreeJs {
       else if (obj.objType === 0x3A) {
         const newObj = this._createObject3DFromOBJ1Entry(obj);
 
-        const geometry = new THREE.Geometry();
+        const geometry = new Geometry();
 
         for (let f = obj.faceIndex; f < obj.faceIndex + obj.faceCount; f++) {
           const face = form.FAC1[0].parsed.faces[f];
           this._populateGeometryWithFace(form, geometry, face);
         }
 
+        const bufferGeometry = geometry.toBufferGeometry();
+
+        // This is a hack - indexed geometry exports better with GLTFExporter currently.
+        bufferGeometry.setIndex(geometry.vertices.map((_v, i) => i));
+
         if (this.showTextures) {
-          const textureMesh = new THREE.Mesh(geometry, materials);
+          const textureMesh = new THREE.Mesh(bufferGeometry, materials);
           newObj.add(textureMesh);
         }
 
@@ -99,12 +105,12 @@ export class FormToThreeJs {
             color: invertColor(this.bgColor),
             linewidth: this.showTextures ? 2 : 1
           });
-          const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), wireframeMaterial);
+          const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(bufferGeometry), wireframeMaterial);
           newObj.add(wireframe);
         }
 
         if (this.showVertexNormals) {
-          const normalsHelper = new VertexNormalsHelper(new THREE.Mesh(geometry, materials), 8, 0x00FF00);
+          const normalsHelper = new VertexNormalsHelper(new THREE.Mesh(bufferGeometry, materials), 8, 0x00FF00);
           newObj.add(normalsHelper);
         }
 
@@ -192,7 +198,7 @@ export class FormToThreeJs {
     return sklObj;
   }
 
-  _populateGeometryWithFace(form: IFormObj, geometry: THREE.Geometry, face: IFAC1Parsed) {
+  _populateGeometryWithFace(form: IFormObj, geometry: Geometry, face: IFAC1Parsed) {
     if (!face.vtxEntries.length)
       return;
 
@@ -235,8 +241,8 @@ export class FormToThreeJs {
     }
   }
 
-  _addFace(geometry: THREE.Geometry, form: IFormObj, face: IFAC1Parsed, indices: number[], vtxEntries: IFAC1VertexEntry[]) {
-    const tri = new THREE.Face3(indices[0], indices[1], indices[2]);
+  _addFace(geometry: Geometry, form: IFormObj, face: IFAC1Parsed, indices: number[], vtxEntries: IFAC1VertexEntry[]) {
+    const tri = new Face3(indices[0], indices[1], indices[2]);
     tri.vertexNormals = this._makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
     tri.materialIndex = this._getMaterialIndex(face)!;
     tri.color = new THREE.Color(this._getColorBytes(form, face));
@@ -292,7 +298,7 @@ export class FormToThreeJs {
     return new THREE.MeshBasicMaterial({
       alphaTest: 0.5,
       map: texture,
-      transparent: true,
+      //transparent: true,
       vertexColors: true,
     });
   }

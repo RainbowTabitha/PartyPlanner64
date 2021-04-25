@@ -461,8 +461,8 @@ const dataViewMethods = [
   "setFloat64",
 ];
 dataViewMethods.forEach(methodName => {
-  const methodOrig = DataView.prototype[methodName];
-  DataView.prototype[methodName] = function(offset: number, value: number)
+  const methodOrig = (DataView.prototype as any)[methodName];
+  (DataView.prototype as any)[methodName] = function(offset: number, value: number)
   {
     if (typeof offset !== "number")
       throw new Error(`Invalid offset in ${methodName}`);
