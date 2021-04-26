@@ -3,6 +3,8 @@
 import { View, Action } from "./types";
 import { IBoard, ISpace, getBoards, getCurrentBoard, IEventInstance, getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode } from "./boards";
 import * as React from "react";
+import * as ReactDOM from "react-dom";
+import { Provider } from "react-redux";
 import { IEvent } from "./events/events";
 import { updateWindowTitle } from "./utils/browser";
 import { Editor } from "./renderer";
@@ -22,7 +24,6 @@ import { ToolWindow } from "./toolwindow";
 import { Toolbar } from "./toolbar";
 import { SpaceProperties } from "./spaceproperties";
 import { BoardProperties } from "./boardproperties";
-import * as ReactDOM from "react-dom";
 import "./utils/onbeforeunload";
 import "./events/builtin/events.common";
 import "./events/builtin/MP1/events.MP1";
@@ -35,17 +36,20 @@ import { BasicCodeEditorView } from "./views/basiccodeeditorview";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
-import { showMessage } from "./appControl";
+import { showMessage, blockUI, changeDecisionTree } from "./appControl";
 import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";
 import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "./events/getaudiochoice";
 import { SpriteView } from "./views/sprites";
+import { store } from "./app/store";
+import { selectCurrentView, setHideUpdateNotification } from "./app/appState";
+import { useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "./app/hooks";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
 interface IPP64AppState {
-  currentView: View;
   boards: IBoard[];
   currentBoard: IBoard;
   currentEvent: IEvent | null;
@@ -63,7 +67,6 @@ interface IPP64AppState {
   messageHTML: string;
   onBlockerFinished?(value?: string): void;
   updateExists: boolean;
-  updateHideNotification: boolean;
   notifications: React.ReactElement<Notification>[];
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
@@ -71,7 +74,6 @@ interface IPP64AppState {
 
 export class PP64App extends React.Component<{}, IPP64AppState> {
   state: IPP64AppState = {
-    currentView: View.EDITOR,
     boards: getBoards(),
     currentBoard: getCurrentBoard(),
     currentEvent: null,
@@ -88,7 +90,6 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     message: "",
     messageHTML: "",
     updateExists: false,
-    updateHideNotification: false,
     notifications: [],
     error: null,
     errorInfo: null,
@@ -100,155 +101,11 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         <ErrorDisplay error={this.state.error} errorInfo={this.state.errorInfo}
           onClearError={() => {
             this.setState({ error: null, errorInfo: null, blocked: false });
-          }}/>
+          }} />
       );
     }
 
-    updateWindowTitle(this.state.currentBoard.name);
-    let mainView;
-    switch (this.state.currentView) {
-      case View.EDITOR:
-        mainView = <Editor board={this.state.currentBoard}
-          selectedSpaces={this.state.selectedSpaces}
-          hoveredBoardEvent={this.state.hoveredBoardEvent}
-          telescoping={this.state.currentAction === Action.TELESCOPE} />;
-        break;
-      case View.DETAILS:
-        mainView = <Details board={this.state.currentBoard} />;
-        break;
-      case View.SETTINGS:
-        mainView = <Settings />;
-        break;
-      case View.ABOUT:
-        mainView = <About />;
-        break;
-      case View.MODELS:
-        mainView = <ModelViewer />;
-        break;
-      case View.SPRITES:
-        mainView = <SpriteView />;
-        break;
-      case View.EVENTS:
-        mainView = <EventsView board={this.state.currentBoard} />;
-        break;
-      case View.CREATEEVENT_ASM:
-        mainView = <CreateASMEventView />;
-        break;
-      case View.CREATEEVENT_C:
-        mainView = <CreateCEventView />;
-        break;
-      case View.STRINGS:
-        mainView = <StringsViewer />;
-        break;
-      case View.PATCHES:
-        mainView = <GamesharkView />;
-        break;
-      case View.DEBUG:
-        mainView = <DebugView />;
-        break;
-      case View.AUDIO:
-        mainView = <AudioViewer />;
-        break;
-      case View.ADDITIONAL_BGS:
-        mainView = <BasicCodeEditorView board={this.state.currentBoard}
-          title="Additional Background Configuration"
-          getExistingCode={() => getAdditionalBackgroundCode(this.state.currentBoard)}
-          getDefaultCode={lang => getDefaultAdditionalBgCode(lang)}
-          onSetCode={(code, lang) => setAdditionalBackgroundCode(this.state.currentBoard, code, lang)}
-          canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, this.state.currentBoard)} />;
-        break;
-      case View.AUDIO_SELECTION_CODE:
-        mainView = <BasicCodeEditorView board={this.state.currentBoard}
-          title="Background Music Selection Code"
-          getExistingCode={() => getAudioSelectCode(this.state.currentBoard)}
-          getDefaultCode={lang => getDefaultGetAudioCode(lang)}
-          onSetCode={(code, lang) => setAudioSelectCode(this.state.currentBoard, code, lang)}
-          canSaveAndExit={(code, lang) => testGetAudioCodeAllGames(code, lang, this.state.currentBoard)} />;
-        break;
-    }
-
-    let sidebar;
-    switch (this.state.currentView) {
-      case View.EDITOR:
-      case View.DETAILS:
-      case View.EVENTS:
-        sidebar = (
-          <div className="sidebar">
-            <BoardMenu
-              boards={this.state.boards} />
-          </div>
-        );
-        break;
-    }
-
-    let blocked;
-    if (this.state.blocked) {
-      blocked = <Blocker
-        message={this.state.message}
-        messageHTML={this.state.messageHTML}
-        prompt={this.state.prompt}
-        confirm={this.state.confirm}
-        onAccept={(value?: string) => {
-          showMessage();
-          if (this.state.onBlockerFinished) {
-            this.state.onBlockerFinished(value);
-          }
-        }}
-        onCancel={() => {
-          showMessage();
-          if (this.state.onBlockerFinished) {
-            this.state.onBlockerFinished();
-          }
-        }}
-        onForceClose={() => this.setState({ blocked: false })} />
-    }
-
-    let bodyClass = "body";
-    if (this.state.currentAction === Action.ERASE)
-      bodyClass += " eraser";
-
-    return (
-      <div className={bodyClass}>
-        <NotificationBar>
-          {this.getNotifications()}
-        </NotificationBar>
-        <Header view={this.state.currentView} romLoaded={this.state.romLoaded} board={this.state.currentBoard} />
-        <div className="content"
-          onKeyDownCapture={blocked ? killEvent : undefined}>
-          {sidebar}
-          <div className="main">
-            {mainView}
-            <div className="mainOverlay">
-              <ToolWindow name="Toolbox" position="TopRight"
-                visible={this.state.currentView === View.EDITOR}>
-                <Toolbar currentAction={this.state.currentAction}
-                  gameVersion={this.state.currentBoard.game}
-                  boardType={this.state.currentBoard.type} />
-              </ToolWindow>
-              <ToolWindow name="Space Properties" position="BottomRight"
-                visible={this.state.currentView === View.EDITOR}>
-                <SpaceProperties selectedSpaces={this.state.selectedSpaces}
-                  gameVersion={this.state.currentBoard.game}
-                  boardType={this.state.currentBoard.type} />
-              </ToolWindow>
-              <ToolWindow name="Board Properties" position="BottomLeft"
-                visible={this.state.currentView === View.EDITOR}>
-                <BoardProperties currentBoard={this.state.currentBoard} />
-              </ToolWindow>
-              {this.state.aiTree &&
-                <ToolWindow name="AI Decision Tree" position="TopLeft"
-                  visible={this.state.currentView === View.EDITOR}
-                  canClose onCloseClick={() => this.setState({ aiTree: null })}>
-                  <DecisionTreeEditor root={this.state.aiTree} />
-                </ToolWindow>
-              }
-            </div>
-            <div id="dragZone"></div>
-          </div>
-        </div>
-        {blocked}
-      </div>
-    );
+    return <PP64AppInternal {...this.state} />;
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -283,42 +140,224 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
   _onUpdateCheckHasUpdate = () => {
     this.setState({ updateExists: true });
   }
+};
 
-  getNotifications(): React.ReactElement<Notification>[] {
-    const notifications = this.state.notifications.slice();
+interface PP64AppInternalProps {
+  boards: IBoard[];
+  currentBoard: IBoard;
+  currentEvent: IEvent | null;
+  currentEventIsBoardEvent: boolean;
+  hoveredBoardEvent: IEventInstance | null;
+  overrideBg: string | null;
+  romLoaded: boolean;
+  currentAction: Action;
+  selectedSpaces: ISpace[] | null;
+  aiTree: IDecisionTreeNode[] | null;
+  blocked: boolean;
+  prompt: boolean;
+  confirm: boolean;
+  message: string;
+  messageHTML: string;
+  onBlockerFinished?(value?: string): void;
+  updateExists: boolean;
+  notifications: React.ReactElement<Notification>[];
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
+}
 
-    if (this.state.updateExists && !this.state.updateHideNotification) {
-      notifications.push(
-        <Notification key="update"
-          color={NotificationColor.Blue}
-          onClose={this._onUpdateNotificationClosed}>
-          An update is available.
-          <NotificationButton onClick={this._onUpdateNotificationInstallClicked}>
-            Install
-          </NotificationButton>
-        </Notification>
+function PP64AppInternal(props: PP64AppInternalProps) {
+  const currentView = useAppSelector(selectCurrentView);
+
+  updateWindowTitle(props.currentBoard.name);
+  let mainView;
+  switch (currentView) {
+    case View.EDITOR:
+      mainView = <Editor board={props.currentBoard}
+        selectedSpaces={props.selectedSpaces}
+        hoveredBoardEvent={props.hoveredBoardEvent}
+        telescoping={props.currentAction === Action.TELESCOPE} />;
+      break;
+    case View.DETAILS:
+      mainView = <Details board={props.currentBoard} />;
+      break;
+    case View.SETTINGS:
+      mainView = <Settings />;
+      break;
+    case View.ABOUT:
+      mainView = <About />;
+      break;
+    case View.MODELS:
+      mainView = <ModelViewer />;
+      break;
+    case View.SPRITES:
+      mainView = <SpriteView />;
+      break;
+    case View.EVENTS:
+      mainView = <EventsView board={props.currentBoard} />;
+      break;
+    case View.CREATEEVENT_ASM:
+      mainView = <CreateASMEventView />;
+      break;
+    case View.CREATEEVENT_C:
+      mainView = <CreateCEventView />;
+      break;
+    case View.STRINGS:
+      mainView = <StringsViewer />;
+      break;
+    case View.PATCHES:
+      mainView = <GamesharkView />;
+      break;
+    case View.DEBUG:
+      mainView = <DebugView />;
+      break;
+    case View.AUDIO:
+      mainView = <AudioViewer />;
+      break;
+    case View.ADDITIONAL_BGS:
+      mainView = <BasicCodeEditorView board={props.currentBoard}
+        title="Additional Background Configuration"
+        getExistingCode={() => getAdditionalBackgroundCode(props.currentBoard)}
+        getDefaultCode={lang => getDefaultAdditionalBgCode(lang)}
+        onSetCode={(code, lang) => setAdditionalBackgroundCode(props.currentBoard, code, lang)}
+        canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, props.currentBoard)} />;
+      break;
+    case View.AUDIO_SELECTION_CODE:
+      mainView = <BasicCodeEditorView board={props.currentBoard}
+        title="Background Music Selection Code"
+        getExistingCode={() => getAudioSelectCode(props.currentBoard)}
+        getDefaultCode={lang => getDefaultGetAudioCode(lang)}
+        onSetCode={(code, lang) => setAudioSelectCode(props.currentBoard, code, lang)}
+        canSaveAndExit={(code, lang) => testGetAudioCodeAllGames(code, lang, props.currentBoard)} />;
+      break;
+  }
+
+  let sidebar;
+  switch (currentView) {
+    case View.EDITOR:
+    case View.DETAILS:
+    case View.EVENTS:
+      sidebar = (
+        <div className="sidebar">
+          <BoardMenu
+            boards={props.boards} />
+        </div>
       );
-    }
-
-    return notifications;
+      break;
   }
 
-  _onUpdateNotificationClosed = () => {
-    this.setState({ updateHideNotification: true });
+  let blocked;
+  if (props.blocked) {
+    blocked = <Blocker
+      message={props.message}
+      messageHTML={props.messageHTML}
+      prompt={props.prompt}
+      confirm={props.confirm}
+      onAccept={(value?: string) => {
+        showMessage();
+        if (props.onBlockerFinished) {
+          props.onBlockerFinished(value);
+        }
+      }}
+      onCancel={() => {
+        showMessage();
+        if (props.onBlockerFinished) {
+          props.onBlockerFinished();
+        }
+      }}
+      onForceClose={() => blockUI(false)} />
   }
 
-  _onUpdateNotificationInstallClicked = () => {
-    this.setState({
-      updateHideNotification: true,
-      blocked: true,
-    });
+  let bodyClass = "body";
+  if (props.currentAction === Action.ERASE)
+    bodyClass += " eraser";
+
+  return (
+    <div className={bodyClass}>
+      <PP64NotificationBar notifications={props.notifications}
+        updateExists={props.updateExists} />
+      <Header view={currentView} romLoaded={props.romLoaded} board={props.currentBoard} />
+      <div className="content"
+        onKeyDownCapture={blocked ? killEvent : undefined}>
+        {sidebar}
+        <div className="main">
+          {mainView}
+          <div className="mainOverlay">
+            <ToolWindow name="Toolbox" position="TopRight"
+              visible={currentView === View.EDITOR}>
+              <Toolbar currentAction={props.currentAction}
+                gameVersion={props.currentBoard.game}
+                boardType={props.currentBoard.type} />
+            </ToolWindow>
+            <ToolWindow name="Space Properties" position="BottomRight"
+              visible={currentView === View.EDITOR}>
+              <SpaceProperties selectedSpaces={props.selectedSpaces}
+                gameVersion={props.currentBoard.game}
+                boardType={props.currentBoard.type} />
+            </ToolWindow>
+            <ToolWindow name="Board Properties" position="BottomLeft"
+              visible={currentView === View.EDITOR}>
+              <BoardProperties currentBoard={props.currentBoard} />
+            </ToolWindow>
+            {props.aiTree &&
+              <ToolWindow name="AI Decision Tree" position="TopLeft"
+                visible={currentView === View.EDITOR}
+                canClose onCloseClick={() => changeDecisionTree(null)}>
+                <DecisionTreeEditor root={props.aiTree} />
+              </ToolWindow>
+            }
+          </div>
+          <div id="dragZone"></div>
+        </div>
+      </div>
+      {blocked}
+    </div>
+  );
+}
+
+interface PP64NotificationBarProps {
+  updateExists: boolean;
+  notifications: React.ReactElement<Notification>[];
+}
+
+function PP64NotificationBar(props: PP64NotificationBarProps) {
+  const dispatch = useAppDispatch();
+
+  const onUpdateNotificationClosed = useCallback(() => {
+    dispatch(setHideUpdateNotification(true));
+  }, [dispatch]);
+
+  const onUpdateNotificationInstallClicked = useCallback(() => {
+    dispatch(setHideUpdateNotification(true));
+    blockUI(true);
 
     if (isElectron) {
       const ipcRenderer = (window as any).require("electron").ipcRenderer;
       ipcRenderer.send("update-check-doupdate");
     }
+  }, [dispatch]);
+
+  const updateHideNotification = useAppSelector(state => state.app.updateHideNotification);
+
+  const notifications = props.notifications.slice();
+  if (props.updateExists && !updateHideNotification) {
+    notifications.push(
+      <Notification key="update"
+        color={NotificationColor.Blue}
+        onClose={onUpdateNotificationClosed}>
+        An update is available.
+        <NotificationButton onClick={onUpdateNotificationInstallClicked}>
+          Install
+        </NotificationButton>
+      </Notification>
+    );
   }
-};
+
+  return (
+    <NotificationBar>
+      {notifications}
+    </NotificationBar>
+  );
+}
 
 // Capture errors that don't happen during rendering.
 window.onerror = function (msg, url, lineNo, columnNo, error) {
@@ -334,7 +373,12 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 };
 
 const body = document.getElementById("body");
-(window as any)._PP64instance = ReactDOM.render(<PP64App /> as any, body);
+ReactDOM.render(
+  <Provider store={store}>
+    <PP64App ref={app => (window as any)._PP64instance = app} />
+  </Provider>,
+  body
+);
 
 function _onError(app: PP64App, error: Error, errorInfo: React.ErrorInfo | null) {
   app.setState({
@@ -367,9 +411,9 @@ function ErrorDisplay(props: IErrorDisplayProps) {
       </p>
       <pre>{props.error.toString()}</pre>
       {props.error.stack ? <React.Fragment>
-          <div>Stack Error Details:</div>
-          <pre>{props.error.stack}</pre>
-        </React.Fragment>
+        <div>Stack Error Details:</div>
+        <pre>{props.error.stack}</pre>
+      </React.Fragment>
         : null
       }
       <div>Component Stack Error Details:</div>

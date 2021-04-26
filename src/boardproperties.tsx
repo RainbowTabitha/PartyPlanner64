@@ -7,7 +7,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
-import { changeView, getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./appControl";
+import { getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 import { SectionHeading } from "./propertiesshared";
@@ -20,6 +20,9 @@ import setbgImage from "./img/header/setbg.png";
 import editdetailsImage from "./img/header/editdetails.png";
 import deadendImage from "./img/editor/boardproperties/deadend.png";
 import animaddImage from "./img/toolbar/animadd.png";
+import { changeView } from "./app/appState";
+import { useAppDispatch } from "./app/hooks";
+import { useCallback } from "react";
 
 interface IBoardPropertiesProps {
   currentBoard: IBoard;
@@ -153,23 +156,21 @@ interface IEditDetailsProps {
   romBoard: boolean;
 }
 
-const EditDetails = class EditDetails extends React.Component<IEditDetailsProps> {
-  state = { }
+function EditDetails(props: IEditDetailsProps) {
+  const dispatch = useAppDispatch();
 
-  onEditDetails() {
-    changeView(View.DETAILS);
-  }
+  const onEditDetails = useCallback(() => {
+    dispatch(changeView(View.DETAILS));
+  }, [dispatch]);
 
-  render() {
-    let text = this.props.romBoard ? "View board details" : "Edit board details";
-    return (
-      <div className="propertiesActionButton" onClick={this.onEditDetails}>
-        <img src={editdetailsImage} className="propertiesActionButtonImg" width="24" height="24" alt="" />
-        <span className="propertiesActionButtonSpan">{text}</span>
-      </div>
-    );
-  }
-};
+  let text = props.romBoard ? "View board details" : "Edit board details";
+  return (
+    <div className="propertiesActionButton" onClick={onEditDetails}>
+      <img src={editdetailsImage} className="propertiesActionButtonImg" width="24" height="24" alt="" />
+      <span className="propertiesActionButtonSpan">{text}</span>
+    </div>
+  );
+}
 
 interface ICheckDeadEndsProps {
   board: IBoard;
@@ -400,11 +401,17 @@ class AnimationPlayButton extends React.Component<IAnimationPlayButtonProps, IAn
 
 
 function AdditionalBackgroundConfigButton() {
+  const dispatch = useAppDispatch();
+
+  const onClick = useCallback(() => {
+    dispatch(changeView(View.ADDITIONAL_BGS));
+  }, [dispatch]);
+
   const icon = "\u2699" // Gear
   return (
     <div className="bgListActionButton"
       title="Configure additional background usage"
-      onClick={() => changeView(View.ADDITIONAL_BGS)}>
+      onClick={onClick}>
       {icon}
     </div>
   );

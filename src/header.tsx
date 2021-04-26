@@ -18,7 +18,7 @@ import { render } from "./renderer";
 import { openFile } from "./utils/input";
 import { refreshEventsView } from "./views/eventsview";
 import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/createevent_shared";
-import { changeView, blockUI, boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
+import { blockUI, boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
 import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";
@@ -53,6 +53,8 @@ import boarderrorImage from "./img/header/boarderror.png";
 import loadingSquaresImage from "./img/assets/loadingsquares.gif";
 
 import "./css/header.scss";
+import { changeView } from "./app/appState";
+import { store } from "./app/store";
 
 interface IHeaderActionItem {
   name: string;
@@ -198,30 +200,30 @@ async function _handleAction(action: Action) {
       copyCurrentBoard();
       break;
     case Action.BOARD_DETAILS:
-      changeView(View.DETAILS);
+      store.dispatch(changeView(View.DETAILS));
       break;
     case Action.BOARD_EDITOR:
-      changeView(View.EDITOR);
+      store.dispatch(changeView(View.EDITOR));
       break;
     case Action.SETTINGS:
-      changeView(View.SETTINGS);
+      store.dispatch(changeView(View.SETTINGS));
       break;
     case Action.ABOUT:
-      changeView(View.ABOUT);
+      store.dispatch(changeView(View.ABOUT));
       break;
     case Action.MODEL_VIEWER:
-      changeView(View.MODELS);
+      store.dispatch(changeView(View.MODELS));
       break;
     case Action.SPRITE_VIEWER:
-      changeView(View.SPRITES);
+      store.dispatch(changeView(View.SPRITES));
       break;
     case Action.EVENTS:
-      changeView(View.EVENTS);
+      store.dispatch(changeView(View.EVENTS));
       break;
     case Action.BACK_TO_EVENTS:
       if (await createEventPromptExit()) {
         changeCurrentEvent(null);
-        changeView(View.EVENTS);
+        store.dispatch(changeView(View.EVENTS));
       }
       break;
     case Action.EVENT_LOAD:
@@ -231,16 +233,16 @@ async function _handleAction(action: Action) {
       saveEvent();
       break;
     case Action.STRINGS_EDITOR:
-      changeView(View.STRINGS);
+      store.dispatch(changeView(View.STRINGS));
       break;
     case Action.PATCHES:
-      changeView(View.PATCHES);
+      store.dispatch(changeView(View.PATCHES));
       break;
     case Action.DEBUG:
-      changeView(View.DEBUG);
+      store.dispatch(changeView(View.DEBUG));
       break;
     case Action.AUDIO:
-      changeView(View.AUDIO);
+      store.dispatch(changeView(View.AUDIO));
       break;
     case Action.SET_BG:
       openFile("image/*", bgSelected);
@@ -251,12 +253,12 @@ async function _handleAction(action: Action) {
       break;
     case Action.ADDITIONALBG_BACK:
       if (await basicCodeViewPromptExit()) {
-        changeView(View.EDITOR);
+        store.dispatch(changeView(View.EDITOR));
       }
       break;
     case Action.AUDIOSELECTCODE_BACK:
       if (await basicCodeViewPromptExit()) {
-        changeView(View.DETAILS);
+        store.dispatch(changeView(View.DETAILS));
       }
       break;
     default:
@@ -522,7 +524,10 @@ export const Header = class Header extends React.Component<IHeaderProps, IHeader
     let hasOverflow = this.state.overflow.length;
     let overflow = this.state.overflow.slice();
     let el = ReactDOM.findDOMNode(this) as HTMLElement;
-    let actionsEl = this.actionsEl!;
+    let actionsEl = this.actionsEl;
+    if (!actionsEl)
+      return;
+
     while (actionsEl.offsetWidth > (el.offsetWidth - 215 - (hasOverflow ? 0 : 80))) { // Cut out logo and more if existing
       let lastAction = actionsEl.children[actions.length - (hasOverflow ? 2 : 1)] as HTMLElement; // Skip more
       if (!lastAction)
@@ -923,11 +928,11 @@ function newEventDropdown(closeFn: Function) {
 
     switch (language) {
       case EventCodeLanguage.MIPS:
-        changeView(View.CREATEEVENT_ASM);
+        store.dispatch(changeView(View.CREATEEVENT_ASM));
         break;
 
       case EventCodeLanguage.C:
-        changeView(View.CREATEEVENT_C);
+        store.dispatch(changeView(View.CREATEEVENT_C));
         break;
 
       default:

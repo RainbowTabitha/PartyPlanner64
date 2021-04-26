@@ -1,16 +1,12 @@
 import { romhandler } from "./romhandler";
 import { IBoard, ISpace, IEventInstance } from "./boards";
-import { View, Action } from "./types";
+import { Action } from "./types";
 import { IEvent } from "./events/events";
 import { Notification } from "./components/notifications";
 import { IDecisionTreeNode } from "./ai/aitrees";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
-}
-
-export function changeView(view: View) {
-  getAppInstance().setState({ currentView: view });
 }
 
 export function currentBoardChanged(currentBoard: IBoard) {
