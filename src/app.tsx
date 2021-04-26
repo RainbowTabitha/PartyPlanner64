@@ -46,7 +46,7 @@ import { store } from "./app/store";
 import { selectCurrentView, setHideUpdateNotification } from "./app/appState";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
-import { blockUI, selectBlocked } from "./app/blocker";
+import { blockUI, selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./app/blocker";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -61,11 +61,6 @@ interface IPP64AppState {
   currentAction: Action;
   selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  prompt: boolean;
-  confirm: boolean;
-  message: string;
-  messageHTML: string;
-  onBlockerFinished?(value?: string): void;
   updateExists: boolean;
   notifications: React.ReactElement<Notification>[];
   error: Error | null;
@@ -84,10 +79,6 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     currentAction: Action.MOVE,
     selectedSpaces: null,
     aiTree: null,
-    prompt: false,
-    confirm: false,
-    message: "",
-    messageHTML: "",
     updateExists: false,
     notifications: [],
     error: null,
@@ -153,11 +144,6 @@ interface PP64AppInternalProps {
   currentAction: Action;
   selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  prompt: boolean;
-  confirm: boolean;
-  message: string;
-  messageHTML: string;
-  onBlockerFinished?(value?: string): void;
   updateExists: boolean;
   notifications: React.ReactElement<Notification>[];
   error: Error | null;
@@ -165,8 +151,6 @@ interface PP64AppInternalProps {
 }
 
 function PP64AppInternal(props: PP64AppInternalProps) {
-  const dispatch = useAppDispatch();
-
   const currentView = useAppSelector(selectCurrentView);
   const blocked = useAppSelector(selectBlocked);
 
@@ -247,28 +231,6 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       break;
   }
 
-  let blocker;
-  if (blocked) {
-    blocker = <Blocker
-      message={props.message}
-      messageHTML={props.messageHTML}
-      prompt={props.prompt}
-      confirm={props.confirm}
-      onAccept={(value?: string) => {
-        showMessage();
-        if (props.onBlockerFinished) {
-          props.onBlockerFinished(value);
-        }
-      }}
-      onCancel={() => {
-        showMessage();
-        if (props.onBlockerFinished) {
-          props.onBlockerFinished();
-        }
-      }}
-      onForceClose={() => dispatch(blockUI(false))} />
-  }
-
   let bodyClass = "body";
   if (props.currentAction === Action.ERASE)
     bodyClass += " eraser";
@@ -311,7 +273,7 @@ function PP64AppInternal(props: PP64AppInternalProps) {
           <div id="dragZone"></div>
         </div>
       </div>
-      {blocker}
+      <PP64Blocker />
     </div>
   );
 }
@@ -359,6 +321,41 @@ function PP64NotificationBar(props: PP64NotificationBarProps) {
       {notifications}
     </NotificationBar>
   );
+}
+
+function PP64Blocker() {
+  const dispatch = useAppDispatch();
+
+  const blocked = useAppSelector(selectBlocked);
+  const message = useAppSelector(selectMessage);
+  const messageHTML = useAppSelector(selectMessageHTML);
+  const prompt = useAppSelector(selectPrompt);
+  const confirm = useAppSelector(selectConfirm);
+  const onBlockerFinished = useAppSelector(selectOnBlockerFinished);
+
+
+  if (!blocked) {
+    return null;
+  }
+
+  return <Blocker
+    message={message}
+    messageHTML={messageHTML}
+    prompt={prompt}
+    confirm={confirm}
+    onAccept={(value?: string) => {
+      showMessage();
+      if (onBlockerFinished) {
+        onBlockerFinished(value);
+      }
+    }}
+    onCancel={() => {
+      showMessage();
+      if (onBlockerFinished) {
+        onBlockerFinished();
+      }
+    }}
+    onForceClose={() => dispatch(blockUI(false))} />
 }
 
 // Capture errors that don't happen during rendering.

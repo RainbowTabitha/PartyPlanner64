@@ -5,7 +5,7 @@ import { IEvent } from "./events/events";
 import { Notification } from "./components/notifications";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { store } from "./app/store";
-import { blockUI } from "./app/blocker";
+import { confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./app/blocker";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
@@ -76,26 +76,13 @@ export function getOverrideBg(): string | null {
   return getAppInstance()?.state.overrideBg || null;
 }
 
+
 export function showMessage(message?: string) {
-  store.dispatch(blockUI(!!message));
-  getAppInstance().setState({
-    prompt: false,
-    confirm: false,
-    message: message || "",
-    messageHTML: "",
-    onBlockerFinished: undefined,
-  });
+  store.dispatch(showMessageAction(message));
 }
 
 export function showMessageHTML(html: string) {
-  store.dispatch(blockUI(!!html));
-  getAppInstance().setState({
-    prompt: false,
-    confirm: false,
-    message: "",
-    messageHTML: html || "",
-    onBlockerFinished: undefined,
-  });
+  store.dispatch(showMessageHTMLAction(html));
 }
 
 export function confirmFromUser(message: string): Promise<boolean> {
@@ -103,16 +90,12 @@ export function confirmFromUser(message: string): Promise<boolean> {
   const promise = new Promise<boolean>((resolve) => {
     resolveFunction = resolve;
   });
-  store.dispatch(blockUI(true));
-  getAppInstance().setState({
-    prompt: false,
-    confirm: true,
-    message: message || "",
-    messageHTML: "",
-    onBlockerFinished: (value?: string) => {
+  store.dispatch(confirmFromUserAction({
+    message,
+    onConfirmed: (value?: string) => {
       resolveFunction(value !== undefined);
-    },
-  });
+    }
+  }));
   return promise;
 }
 
@@ -125,14 +108,7 @@ export function promptUser(message: string): Promise<string | undefined> {
   const promise = new Promise<string | undefined>((resolve) => {
     resolveFunction = resolve;
   });
-  store.dispatch(blockUI(true));
-  getAppInstance().setState({
-    prompt: true,
-    confirm: false,
-    message: message || "",
-    messageHTML: "",
-    onBlockerFinished: resolveFunction!,
-  });
+  store.dispatch(promptUserAction({ message, onSubmit: resolveFunction! }));
   return promise;
 }
 
