@@ -14,4 +14,4 @@ import "./css/properties.scss";
 import "./css/notifications.scss";
 import "./css/font.css";
 
-import "./app";
+import "./app/app";

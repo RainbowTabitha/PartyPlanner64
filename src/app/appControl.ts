@@ -8,7 +8,7 @@ import { store } from "./store";
 import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./blocker";
 import { changeViewAction } from "./appState";
 
-export function getAppInstance(): import("../app").PP64App {
+export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
 }
 
