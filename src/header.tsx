@@ -18,12 +18,14 @@ import { render } from "./renderer";
 import { openFile } from "./utils/input";
 import { refreshEventsView } from "./views/eventsview";
 import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/createevent_shared";
-import { blockUI, boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
+import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
 import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";
 import { saveAs } from "file-saver";
 import { isElectron } from "./utils/electron";
+import { blockUI, changeView } from "./app/appState";
+import { store } from "./app/store";
 
 import logoImage from "./img/header/logo.png";
 import romCartImage from "./img/header/romcart.png";
@@ -53,8 +55,6 @@ import boarderrorImage from "./img/header/boarderror.png";
 import loadingSquaresImage from "./img/assets/loadingsquares.gif";
 
 import "./css/header.scss";
-import { changeView } from "./app/appState";
-import { store } from "./app/store";
 
 interface IHeaderActionItem {
   name: string;
@@ -181,10 +181,10 @@ async function _handleAction(action: Action) {
       romLoadedChanged();
       break;
     case Action.ROM_SAVE:
-      blockUI(true);
+      store.dispatch(blockUI(true));
       setTimeout(() => {
         romhandler.saveROM();
-        blockUI(false);
+        store.dispatch(blockUI(false));
         _showEmulatorInstructionsNotification();
       }, 0);
       break;
@@ -271,11 +271,11 @@ function romSelected(event: any) {
   if (!file)
     return;
 
-  blockUI(true);
+  store.dispatch(blockUI(true));
   let reader = new FileReader();
   reader.onload = (e: any) => {
     if (!e.target.result) {
-      blockUI(false);
+      store.dispatch(blockUI(false));
       return;
     }
 
@@ -286,7 +286,7 @@ function romSelected(event: any) {
     promise.then(value => {
       romLoadedChanged();
       loadBoardsFromROM();
-      blockUI(false);
+      store.dispatch(blockUI(false));
       $$log("ROM loaded");
     }, reason => {
       console.error(reason);
@@ -749,7 +749,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       if (!adapter)
         return;
 
-      blockUI(true);
+      store.dispatch(blockUI(true));
 
       let currentBoard = getCurrentBoard();
       try {
@@ -776,7 +776,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
         "event_label": currentBoard.name,
       });
 
-      blockUI(false);
+      store.dispatch(blockUI(false));
     }
   }
 

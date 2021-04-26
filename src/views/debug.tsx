@@ -2,7 +2,6 @@ import * as React from "react";
 import { Button } from "../controls";
 import { openFile } from "../utils/input";
 import { print as printBuffer } from "../utils/arrays";
-import { blockUI } from "../appControl";
 import { romhandler } from "../romhandler";
 import {
   images, load as loadDump,
@@ -22,9 +21,11 @@ import { strings } from "../fs/strings";
 import { saveAs } from "file-saver";
 import { mainfs } from "../fs/mainfs";
 import { makeDivisibleBy } from "../utils/number";
+import { romToRAM } from "../utils/offsets";
+import { store } from "../app/store";
+import { blockUI } from "../app/appState";
 
 import "../css/debug.scss";
-import { romToRAM } from "../utils/offsets";
 
 interface IDebugViewState {
   sceneIndex: string;
@@ -438,13 +439,13 @@ function dumpSelected(event: any) {
 }
 
 function onExportFileDumpClick() {
-  blockUI(true);
+  store.dispatch(blockUI(true));
   createDump(dumpCreated);
 }
 
 function dumpCreated(blob: Blob) {
   saveAs(blob, `mp${romhandler.getGameVersion()}-files.zip`);
-  blockUI(false);
+  store.dispatch(blockUI(false));
 }
 
 /* eslint-disable no-extend-native */

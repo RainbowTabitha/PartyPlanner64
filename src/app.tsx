@@ -36,14 +36,14 @@ import { BasicCodeEditorView } from "./views/basiccodeeditorview";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
-import { showMessage, blockUI, changeDecisionTree } from "./appControl";
+import { showMessage, changeDecisionTree } from "./appControl";
 import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";
 import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "./events/getaudiochoice";
 import { SpriteView } from "./views/sprites";
 import { store } from "./app/store";
-import { selectCurrentView, setHideUpdateNotification } from "./app/appState";
+import { blockUI, selectBlocked, selectCurrentView, setHideUpdateNotification } from "./app/appState";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 
@@ -60,7 +60,6 @@ interface IPP64AppState {
   currentAction: Action;
   selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  blocked: boolean;
   prompt: boolean;
   confirm: boolean;
   message: string;
@@ -84,7 +83,6 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     currentAction: Action.MOVE,
     selectedSpaces: null,
     aiTree: null,
-    blocked: false,
     prompt: false,
     confirm: false,
     message: "",
@@ -100,7 +98,8 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
       return (
         <ErrorDisplay error={this.state.error} errorInfo={this.state.errorInfo}
           onClearError={() => {
-            this.setState({ error: null, errorInfo: null, blocked: false });
+            this.setState({ error: null, errorInfo: null });
+            store.dispatch(blockUI(false));
           }} />
       );
     }
@@ -153,7 +152,6 @@ interface PP64AppInternalProps {
   currentAction: Action;
   selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  blocked: boolean;
   prompt: boolean;
   confirm: boolean;
   message: string;
@@ -166,7 +164,10 @@ interface PP64AppInternalProps {
 }
 
 function PP64AppInternal(props: PP64AppInternalProps) {
+  const dispatch = useAppDispatch();
+
   const currentView = useAppSelector(selectCurrentView);
+  const blocked = useAppSelector(selectBlocked);
 
   updateWindowTitle(props.currentBoard.name);
   let mainView;
@@ -245,9 +246,9 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       break;
   }
 
-  let blocked;
-  if (props.blocked) {
-    blocked = <Blocker
+  let blocker;
+  if (blocked) {
+    blocker = <Blocker
       message={props.message}
       messageHTML={props.messageHTML}
       prompt={props.prompt}
@@ -264,7 +265,7 @@ function PP64AppInternal(props: PP64AppInternalProps) {
           props.onBlockerFinished();
         }
       }}
-      onForceClose={() => blockUI(false)} />
+      onForceClose={() => dispatch(blockUI(false))} />
   }
 
   let bodyClass = "body";
@@ -309,7 +310,7 @@ function PP64AppInternal(props: PP64AppInternalProps) {
           <div id="dragZone"></div>
         </div>
       </div>
-      {blocked}
+      {blocker}
     </div>
   );
 }
@@ -328,7 +329,7 @@ function PP64NotificationBar(props: PP64NotificationBarProps) {
 
   const onUpdateNotificationInstallClicked = useCallback(() => {
     dispatch(setHideUpdateNotification(true));
-    blockUI(true);
+    dispatch(blockUI(true));
 
     if (isElectron) {
       const ipcRenderer = (window as any).require("electron").ipcRenderer;

@@ -4,6 +4,8 @@ import { Action } from "./types";
 import { IEvent } from "./events/events";
 import { Notification } from "./components/notifications";
 import { IDecisionTreeNode } from "./ai/aitrees";
+import { store } from "./app/store";
+import { blockUI } from "./app/appState";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
@@ -74,13 +76,9 @@ export function getOverrideBg(): string | null {
   return getAppInstance()?.state.overrideBg || null;
 }
 
-export function blockUI(blocked: boolean) {
-  getAppInstance().setState({ blocked: !!blocked });
-}
-
 export function showMessage(message?: string) {
+  store.dispatch(blockUI(!!message));
   getAppInstance().setState({
-    blocked: !!message,
     prompt: false,
     confirm: false,
     message: message || "",
@@ -90,8 +88,8 @@ export function showMessage(message?: string) {
 }
 
 export function showMessageHTML(html: string) {
+  store.dispatch(blockUI(!!html));
   getAppInstance().setState({
-    blocked: !!html,
     prompt: false,
     confirm: false,
     message: "",
@@ -105,8 +103,8 @@ export function confirmFromUser(message: string): Promise<boolean> {
   const promise = new Promise<boolean>((resolve) => {
     resolveFunction = resolve;
   });
+  store.dispatch(blockUI(true));
   getAppInstance().setState({
-    blocked: true,
     prompt: false,
     confirm: true,
     message: message || "",
@@ -127,8 +125,8 @@ export function promptUser(message: string): Promise<string | undefined> {
   const promise = new Promise<string | undefined>((resolve) => {
     resolveFunction = resolve;
   });
+  store.dispatch(blockUI(true));
   getAppInstance().setState({
-    blocked: true,
     prompt: true,
     confirm: false,
     message: message || "",
