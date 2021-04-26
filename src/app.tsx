@@ -43,9 +43,10 @@ import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./even
 import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "./events/getaudiochoice";
 import { SpriteView } from "./views/sprites";
 import { store } from "./app/store";
-import { blockUI, selectBlocked, selectCurrentView, setHideUpdateNotification } from "./app/appState";
+import { selectCurrentView, setHideUpdateNotification } from "./app/appState";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
+import { blockUI, selectBlocked } from "./app/blocker";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 

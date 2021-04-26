@@ -5,7 +5,7 @@ import { IEvent } from "./events/events";
 import { Notification } from "./components/notifications";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { store } from "./app/store";
-import { blockUI } from "./app/appState";
+import { blockUI } from "./app/blocker";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;

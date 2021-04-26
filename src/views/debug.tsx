@@ -23,7 +23,7 @@ import { mainfs } from "../fs/mainfs";
 import { makeDivisibleBy } from "../utils/number";
 import { romToRAM } from "../utils/offsets";
 import { store } from "../app/store";
-import { blockUI } from "../app/appState";
+import { blockUI } from "../app/blocker";
 
 import "../css/debug.scss";
 

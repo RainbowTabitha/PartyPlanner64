@@ -24,7 +24,8 @@ import { addEventToLibrary } from "./events/EventLibrary";
 import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";
 import { saveAs } from "file-saver";
 import { isElectron } from "./utils/electron";
-import { blockUI, changeView } from "./app/appState";
+import { changeView } from "./app/appState";
+import { blockUI } from "./app/blocker";
 import { store } from "./app/store";
 
 import logoImage from "./img/header/logo.png";

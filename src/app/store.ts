@@ -1,9 +1,11 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
 import appStateReducer from "./appState";
+import blockerReducer from "./blocker";
 
 export const store = configureStore({
   reducer: {
     app: appStateReducer,
+    blocker: blockerReducer,
   },
 });
 
