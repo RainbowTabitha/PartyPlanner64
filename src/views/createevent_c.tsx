@@ -4,7 +4,7 @@ import { Game, EventExecutionType, getExecutionTypeName, getGameName, EventCodeL
 import { ICustomEvent, CustomAsmHelper, validateCustomEvent, createCustomEvent } from "../events/customevents";
 import { CodeMirrorWrapper } from "../components/codemirrorwrapper";
 import { IEventParameter } from "../events/events";
-import { getCurrentEvent, confirmFromUser, showMessage } from "../appControl";
+import { getCurrentEvent, confirmFromUser, showMessage } from "../app/appControl";
 import { TabStrip, Tab } from "../components/tabstrip";
 
 const _defaultEventC = `// NAME:

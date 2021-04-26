@@ -3,7 +3,7 @@ import { makeKeyClick } from "./utils/react";
 import { Action, BoardType } from "./types";
 import { $setting, get } from "./views/settings";
 import { currentBoardIsROM } from "./boards";
-import { changeCurrentAction } from "./appControl";
+import { changeCurrentAction } from "./app/appControl";
 
 import moveImage from "./img/toolbar/move.png";
 import lineImage from "./img/toolbar/line.png";

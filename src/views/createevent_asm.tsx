@@ -4,7 +4,7 @@ import { Game, EventExecutionType, getExecutionTypeName, getGameName, EventCodeL
 import { ICustomEvent, CustomAsmHelper } from "../events/customevents";
 import { CodeMirrorWrapper } from "../components/codemirrorwrapper";
 import { IEventParameter } from "../events/events";
-import { getCurrentEvent, confirmFromUser } from "../appControl";
+import { getCurrentEvent, confirmFromUser } from "../app/appControl";
 
 const _defaultEventAsm = `; NAME:
 ; GAMES:

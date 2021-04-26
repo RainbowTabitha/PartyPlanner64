@@ -36,7 +36,7 @@ import { BasicCodeEditorView } from "./views/basiccodeeditorview";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
-import { blockUI, showMessage, changeDecisionTree } from "./appControl";
+import { blockUI, showMessage, changeDecisionTree } from "./app/appControl";
 import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";

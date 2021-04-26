@@ -5,7 +5,7 @@ import { createCustomEvent } from "../events/customevents";
 import { getBoardEvent, getCurrentBoard, IEventInstance, IBoard } from "../boards";
 import { copyObject } from "../utils/obj";
 import { EventParameterType, EditorEventActivationType } from "../types";
-import { promptUser, showMessage } from "../appControl";
+import { promptUser, showMessage } from "../app/appControl";
 import { IColorQueue, makeColorQueue } from "../utils/colors";
 import { setEventParamDropHandler } from "../utils/drag";
 import { getImage } from "../images";

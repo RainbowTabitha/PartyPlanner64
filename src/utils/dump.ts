@@ -11,7 +11,7 @@ import { scenes } from "../fs/scenes";
 import { romhandler } from "../romhandler";
 import { FORM } from "../models/FORM";
 import { MTNX } from "../models/MTNX";
-import { showMessage } from "../appControl";
+import { showMessage } from "../app/appControl";
 import * as JSZipMod from "jszip";
 import { saveAs } from "file-saver";
 import { isFontPack, fontPackToRGBA32, isKnownFontPack } from "./img/FontPack";

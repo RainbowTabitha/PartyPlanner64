@@ -6,7 +6,7 @@ import { MPEditor, MPEditorDisplayMode } from "../texteditor";
 import { openFile } from "../utils/input";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
-import { changeView, promptUser, refresh, showMessage } from "../appControl";
+import { changeView, promptUser, refresh, showMessage } from "../app/appControl";
 import { getImageData } from "../utils/img/getImageData";
 import { audio } from "../fs/audio";
 import { assert } from "../utils/debug";

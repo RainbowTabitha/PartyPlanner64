@@ -3,7 +3,7 @@ import { join, copyRange } from "../utils/arrays";
 import * as React from "react";
 import { Parser } from "../patches/gameshark/parser";
 import { Compiler } from "../patches/gameshark/compiler";
-import { showMessage } from "../appControl";
+import { showMessage } from "../app/appControl";
 
 import "../css/patches.scss";
 

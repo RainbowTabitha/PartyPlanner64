@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { showMessage, getCurrentEventIsBoardEvent } from "../appControl";
+import { showMessage, getCurrentEventIsBoardEvent } from "../app/appControl";
 import { getCurrentBoard, includeEventInBoard } from "../boards";
 import { getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { createCustomEvent, validateCustomEvent } from "../events/customevents";

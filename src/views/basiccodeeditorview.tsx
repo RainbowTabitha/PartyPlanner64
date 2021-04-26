@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CodeMirrorWrapper } from "../components/codemirrorwrapper";
 import { ToggleGroup } from "../controls";
-import { showMessage, confirmFromUser } from "../appControl";
+import { showMessage, confirmFromUser } from "../app/appControl";
 import { IBoard, IBoardEvent } from "../boards";
 import { EventCodeLanguage } from "../types";
 

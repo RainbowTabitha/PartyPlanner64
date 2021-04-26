@@ -14,7 +14,7 @@ import { getDistinctColor } from "./utils/colors";
 import { isDebug } from "./debug";
 import { takeScreeny } from "./screenshot";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
-import { getOverrideBg, setOverrideBg } from "./appControl";
+import { getOverrideBg, setOverrideBg } from "./app/appControl";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;

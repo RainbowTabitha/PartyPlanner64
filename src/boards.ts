@@ -4,7 +4,7 @@ import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
 import { getEvent, IEventParameter, EventParameterValues } from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
-import { getAppInstance, boardsChanged, currentBoardChanged } from "./appControl";
+import { getAppInstance, boardsChanged, currentBoardChanged } from "./app/appControl";
 import { IDecisionTreeNode } from "./ai/aitrees";
 
 import defaultThemeBoardSelect from "./img/themes/default/boardselect.png";

@@ -1,14 +1,14 @@
-import { romhandler } from "./romhandler";
-import { IBoard, ISpace, IEventInstance } from "./boards";
-import { Action, View } from "./types";
-import { IEvent } from "./events/events";
-import { Notification } from "./components/notifications";
-import { IDecisionTreeNode } from "./ai/aitrees";
-import { store } from "./app/store";
-import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./app/blocker";
-import { changeViewAction } from "./app/appState";
+import { romhandler } from "../romhandler";
+import { IBoard, ISpace, IEventInstance } from "../boards";
+import { Action, View } from "../types";
+import { IEvent } from "../events/events";
+import { Notification } from "../components/notifications";
+import { IDecisionTreeNode } from "../ai/aitrees";
+import { store } from "./store";
+import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./blocker";
+import { changeViewAction } from "./appState";
 
-export function getAppInstance(): import("./app").PP64App {
+export function getAppInstance(): import("../app").PP64App {
   return (window as any)._PP64instance;
 }
 

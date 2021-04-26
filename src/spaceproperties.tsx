@@ -6,7 +6,7 @@ import { $setting, get } from "./views/settings";
 import { makeKeyClick, useForceUpdate } from "./utils/react";
 import { IEvent, createEventInstance } from "./events/events";
 import { render, renderConnections, renderSpaces } from "./renderer";
-import { changeDecisionTree } from "./appControl";
+import { changeDecisionTree } from "./app/appControl";
 import { Button } from "./controls";
 import { $$log } from "./utils/debug";
 

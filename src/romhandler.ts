@@ -12,7 +12,7 @@ import { applyHook } from "./patches/gameshark/hook";
 import { fixChecksum } from "./utils/CIC";
 import { $$log } from "./utils/debug";
 import { getROMAdapter } from "./adapter/adapters";
-import { showMessage } from "./appControl";
+import { showMessage } from "./app/appControl";
 import { reset } from "./views/gameshark";
 import { get, $setting } from "./views/settings";
 import { saveAs } from "file-saver";

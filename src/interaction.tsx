@@ -26,7 +26,7 @@ import {
 import { Action, Space, SpaceSubtype } from "./types";
 import { getEventParamDropHandler } from "./utils/drag";
 import { $$log, $$hex } from "./utils/debug";
-import { changeCurrentAction, getCurrentAction, changeSelectedSpaces, getSelectedSpaces } from "./appControl";
+import { changeCurrentAction, getCurrentAction, changeSelectedSpaces, getSelectedSpaces } from "./app/appControl";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
 
 let selectedSpaceIndices: { [index: number]: boolean } = {};

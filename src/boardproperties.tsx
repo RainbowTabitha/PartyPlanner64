@@ -8,7 +8,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
-import { changeView, getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./appControl";
+import { changeView, getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./app/appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 import { SectionHeading } from "./propertiesshared";

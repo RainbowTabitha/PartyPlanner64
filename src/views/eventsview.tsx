@@ -2,7 +2,7 @@ import { View, EventCodeLanguage } from "../types";
 import * as React from "react";
 import { getCustomEvents, IEvent } from "../events/events";
 import { ICustomEvent, createCustomEvent } from "../events/customevents";
-import { changeCurrentEvent, changeView, confirmFromUser } from "../appControl";
+import { changeCurrentEvent, changeView, confirmFromUser } from "../app/appControl";
 import { IBoard, excludeEventFromBoard, includeEventInBoard, getBoardEvent } from "../boards";
 import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { saveAs } from "file-saver";

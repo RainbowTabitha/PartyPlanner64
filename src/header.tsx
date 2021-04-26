@@ -18,7 +18,7 @@ import { render } from "./renderer";
 import { openFile } from "./utils/input";
 import { refreshEventsView } from "./views/eventsview";
 import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/createevent_shared";
-import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification, blockUI, changeView } from "./appControl";
+import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification, blockUI, changeView } from "./app/appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
 import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";

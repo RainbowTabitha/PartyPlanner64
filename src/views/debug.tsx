@@ -24,7 +24,7 @@ import { makeDivisibleBy } from "../utils/number";
 import { romToRAM } from "../utils/offsets";
 
 import "../css/debug.scss";
-import { blockUI } from "../appControl";
+import { blockUI } from "../app/appControl";
 
 interface IDebugViewState {
   sceneIndex: string;

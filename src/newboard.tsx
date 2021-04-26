@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BoardType } from "./types";
 import { Button, ToggleButton } from "./controls";
-import { showMessage } from "./appControl";
+import { showMessage } from "./app/appControl";
 import { isDebug } from "./debug";
 
 import defaultThemePreview from "./img/themes/default/preview.png";

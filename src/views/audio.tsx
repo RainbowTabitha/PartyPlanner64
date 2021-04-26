@@ -13,7 +13,7 @@ import { $setting, get } from "./settings";
 import { saveAs } from "file-saver";
 import { openFile } from "../utils/input";
 import { assert } from "../utils/debug";
-import { promptUser, showMessage } from "../appControl";
+import { promptUser, showMessage } from "../app/appControl";
 
 import exportImage from "../img/audio/export.png";
 import importImage from "../img/audio/import.png";
