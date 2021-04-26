@@ -23,7 +23,7 @@ export const blockerSlice = createSlice({
   name: "blocker",
   initialState,
   reducers: {
-    blockUI: (state, action: PayloadAction<boolean>) => {
+    blockUIAction: (state, action: PayloadAction<boolean>) => {
       state.blocked = action.payload;
     },
     showMessageAction: (state, action: PayloadAction<string | undefined>) => {
@@ -72,7 +72,7 @@ export const blockerSlice = createSlice({
 });
 
 export const {
-  blockUI,
+  blockUIAction,
   showMessageAction,
   showMessageHTMLAction,
   confirmFromUserAction,

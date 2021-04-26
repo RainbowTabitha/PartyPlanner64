@@ -6,11 +6,12 @@ import { MPEditor, MPEditorDisplayMode } from "../texteditor";
 import { openFile } from "../utils/input";
 import { arrayBufferToDataURL } from "../utils/arrays";
 import { getAdapter } from "../adapter/adapters";
-import { promptUser, refresh, showMessage } from "../appControl";
+import { changeView, promptUser, refresh, showMessage } from "../appControl";
 import { getImageData } from "../utils/img/getImageData";
 import { audio } from "../fs/audio";
 import { assert } from "../utils/debug";
 import { romhandler } from "../romhandler";
+import { $setting, get } from "./settings";
 
 import "../css/details.scss";
 
@@ -18,9 +19,6 @@ import editImage from "../img/audio/edit.png";
 import audioImage from "../img/details/audio.png";
 import deleteImage from "../img/details/delete.png";
 import audioConfigImage from "../img/details/audioconfig.png";
-import { $setting, get } from "./settings";
-import { changeView } from "../app/appState";
-import { useAppDispatch } from "../app/hooks";
 
 type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "audioheader" | "br";
 
@@ -691,8 +689,6 @@ interface IAudioSelectionConfigButtonProps {
 }
 
 function AudioSelectionConfigButton(props: IAudioSelectionConfigButtonProps) {
-  const dispatch = useAppDispatch();
-
   if (boardIsROM(props.board) || romhandler.getGameVersion() === 2) {
     return null;
   }
@@ -704,7 +700,7 @@ function AudioSelectionConfigButton(props: IAudioSelectionConfigButtonProps) {
     <div className="audioSelectConfigButton"
       title="Add custom code for choosing the music to play each turn"
       tabIndex={0}
-      onClick={() => dispatch(changeView(View.AUDIO_SELECTION_CODE))}>
+      onClick={() => changeView(View.AUDIO_SELECTION_CODE)}>
       <img src={audioConfigImage} alt="Configure audio selection" />
     </div>
   );

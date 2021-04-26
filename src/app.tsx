@@ -36,7 +36,7 @@ import { BasicCodeEditorView } from "./views/basiccodeeditorview";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { DecisionTreeEditor } from "./ai/aieditor";
 import { isElectron } from "./utils/electron";
-import { showMessage, changeDecisionTree } from "./appControl";
+import { blockUI, showMessage, changeDecisionTree } from "./appControl";
 import { Blocker } from "./components/blocker";
 import { killEvent } from "./utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "./events/additionalbg";
@@ -46,7 +46,7 @@ import { store } from "./app/store";
 import { selectCurrentView, setHideUpdateNotification } from "./app/appState";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
-import { blockUI, selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./app/blocker";
+import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./app/blocker";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -91,7 +91,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         <ErrorDisplay error={this.state.error} errorInfo={this.state.errorInfo}
           onClearError={() => {
             this.setState({ error: null, errorInfo: null });
-            store.dispatch(blockUI(false));
+            blockUI(false);
           }} />
       );
     }
@@ -292,7 +292,7 @@ function PP64NotificationBar(props: PP64NotificationBarProps) {
 
   const onUpdateNotificationInstallClicked = useCallback(() => {
     dispatch(setHideUpdateNotification(true));
-    dispatch(blockUI(true));
+    blockUI(true);
 
     if (isElectron) {
       const ipcRenderer = (window as any).require("electron").ipcRenderer;
@@ -324,8 +324,6 @@ function PP64NotificationBar(props: PP64NotificationBarProps) {
 }
 
 function PP64Blocker() {
-  const dispatch = useAppDispatch();
-
   const blocked = useAppSelector(selectBlocked);
   const message = useAppSelector(selectMessage);
   const messageHTML = useAppSelector(selectMessageHTML);
@@ -355,7 +353,7 @@ function PP64Blocker() {
         onBlockerFinished();
       }
     }}
-    onForceClose={() => dispatch(blockUI(false))} />
+    onForceClose={() => blockUI(false)} />
 }
 
 // Capture errors that don't happen during rendering.

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useCallback } from "react";
 import { playAnimation, stopAnimation, animationPlaying, render, highlightSpaces, renderConnections, renderSpaces, renderSelectedSpaces } from "./renderer";
 import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
   supportsAnimationBackgrounds, supportsAdditionalBackgrounds,
@@ -7,7 +8,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
-import { getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./appControl";
+import { changeView, getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 import { SectionHeading } from "./propertiesshared";
@@ -20,9 +21,6 @@ import setbgImage from "./img/header/setbg.png";
 import editdetailsImage from "./img/header/editdetails.png";
 import deadendImage from "./img/editor/boardproperties/deadend.png";
 import animaddImage from "./img/toolbar/animadd.png";
-import { changeView } from "./app/appState";
-import { useAppDispatch } from "./app/hooks";
-import { useCallback } from "react";
 
 interface IBoardPropertiesProps {
   currentBoard: IBoard;
@@ -157,11 +155,9 @@ interface IEditDetailsProps {
 }
 
 function EditDetails(props: IEditDetailsProps) {
-  const dispatch = useAppDispatch();
-
   const onEditDetails = useCallback(() => {
-    dispatch(changeView(View.DETAILS));
-  }, [dispatch]);
+    changeView(View.DETAILS);
+  }, []);
 
   let text = props.romBoard ? "View board details" : "Edit board details";
   return (
@@ -401,11 +397,9 @@ class AnimationPlayButton extends React.Component<IAnimationPlayButtonProps, IAn
 
 
 function AdditionalBackgroundConfigButton() {
-  const dispatch = useAppDispatch();
-
   const onClick = useCallback(() => {
-    dispatch(changeView(View.ADDITIONAL_BGS));
-  }, [dispatch]);
+    changeView(View.ADDITIONAL_BGS);
+  }, []);
 
   const icon = "\u2699" // Gear
   return (

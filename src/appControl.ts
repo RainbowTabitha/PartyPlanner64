@@ -1,14 +1,19 @@
 import { romhandler } from "./romhandler";
 import { IBoard, ISpace, IEventInstance } from "./boards";
-import { Action } from "./types";
+import { Action, View } from "./types";
 import { IEvent } from "./events/events";
 import { Notification } from "./components/notifications";
 import { IDecisionTreeNode } from "./ai/aitrees";
 import { store } from "./app/store";
-import { confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./app/blocker";
+import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./app/blocker";
+import { changeViewAction } from "./app/appState";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
+}
+
+export function changeView(view: View): void {
+  store.dispatch(changeViewAction(view));
 }
 
 export function currentBoardChanged(currentBoard: IBoard) {
@@ -76,6 +81,9 @@ export function getOverrideBg(): string | null {
   return getAppInstance()?.state.overrideBg || null;
 }
 
+export function blockUI(blocked: boolean): void {
+  store.dispatch(blockUIAction(blocked));
+}
 
 export function showMessage(message?: string) {
   store.dispatch(showMessageAction(message));

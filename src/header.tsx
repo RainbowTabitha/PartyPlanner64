@@ -18,15 +18,12 @@ import { render } from "./renderer";
 import { openFile } from "./utils/input";
 import { refreshEventsView } from "./views/eventsview";
 import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/createevent_shared";
-import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification } from "./appControl";
+import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification, blockUI, changeView } from "./appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
 import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";
 import { saveAs } from "file-saver";
 import { isElectron } from "./utils/electron";
-import { changeView } from "./app/appState";
-import { blockUI } from "./app/blocker";
-import { store } from "./app/store";
 
 import logoImage from "./img/header/logo.png";
 import romCartImage from "./img/header/romcart.png";
@@ -182,10 +179,10 @@ async function _handleAction(action: Action) {
       romLoadedChanged();
       break;
     case Action.ROM_SAVE:
-      store.dispatch(blockUI(true));
+      blockUI(true);
       setTimeout(() => {
         romhandler.saveROM();
-        store.dispatch(blockUI(false));
+        blockUI(false);
         _showEmulatorInstructionsNotification();
       }, 0);
       break;
@@ -201,30 +198,30 @@ async function _handleAction(action: Action) {
       copyCurrentBoard();
       break;
     case Action.BOARD_DETAILS:
-      store.dispatch(changeView(View.DETAILS));
+      changeView(View.DETAILS);
       break;
     case Action.BOARD_EDITOR:
-      store.dispatch(changeView(View.EDITOR));
+      changeView(View.EDITOR);
       break;
     case Action.SETTINGS:
-      store.dispatch(changeView(View.SETTINGS));
+      changeView(View.SETTINGS);
       break;
     case Action.ABOUT:
-      store.dispatch(changeView(View.ABOUT));
+      changeView(View.ABOUT);
       break;
     case Action.MODEL_VIEWER:
-      store.dispatch(changeView(View.MODELS));
+      changeView(View.MODELS);
       break;
     case Action.SPRITE_VIEWER:
-      store.dispatch(changeView(View.SPRITES));
+      changeView(View.SPRITES);
       break;
     case Action.EVENTS:
-      store.dispatch(changeView(View.EVENTS));
+      changeView(View.EVENTS);
       break;
     case Action.BACK_TO_EVENTS:
       if (await createEventPromptExit()) {
         changeCurrentEvent(null);
-        store.dispatch(changeView(View.EVENTS));
+        changeView(View.EVENTS);
       }
       break;
     case Action.EVENT_LOAD:
@@ -234,16 +231,16 @@ async function _handleAction(action: Action) {
       saveEvent();
       break;
     case Action.STRINGS_EDITOR:
-      store.dispatch(changeView(View.STRINGS));
+      changeView(View.STRINGS);
       break;
     case Action.PATCHES:
-      store.dispatch(changeView(View.PATCHES));
+      changeView(View.PATCHES);
       break;
     case Action.DEBUG:
-      store.dispatch(changeView(View.DEBUG));
+      changeView(View.DEBUG);
       break;
     case Action.AUDIO:
-      store.dispatch(changeView(View.AUDIO));
+      changeView(View.AUDIO);
       break;
     case Action.SET_BG:
       openFile("image/*", bgSelected);
@@ -254,12 +251,12 @@ async function _handleAction(action: Action) {
       break;
     case Action.ADDITIONALBG_BACK:
       if (await basicCodeViewPromptExit()) {
-        store.dispatch(changeView(View.EDITOR));
+        changeView(View.EDITOR);
       }
       break;
     case Action.AUDIOSELECTCODE_BACK:
       if (await basicCodeViewPromptExit()) {
-        store.dispatch(changeView(View.DETAILS));
+        changeView(View.DETAILS);
       }
       break;
     default:
@@ -272,11 +269,11 @@ function romSelected(event: any) {
   if (!file)
     return;
 
-  store.dispatch(blockUI(true));
+  blockUI(true);
   let reader = new FileReader();
   reader.onload = (e: any) => {
     if (!e.target.result) {
-      store.dispatch(blockUI(false));
+      blockUI(false);
       return;
     }
 
@@ -287,7 +284,7 @@ function romSelected(event: any) {
     promise.then(value => {
       romLoadedChanged();
       loadBoardsFromROM();
-      store.dispatch(blockUI(false));
+      blockUI(false);
       $$log("ROM loaded");
     }, reason => {
       console.error(reason);
@@ -750,7 +747,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       if (!adapter)
         return;
 
-      store.dispatch(blockUI(true));
+      blockUI(true);
 
       let currentBoard = getCurrentBoard();
       try {
@@ -777,7 +774,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
         "event_label": currentBoard.name,
       });
 
-      store.dispatch(blockUI(false));
+      blockUI(false);
     }
   }
 
@@ -929,11 +926,11 @@ function newEventDropdown(closeFn: Function) {
 
     switch (language) {
       case EventCodeLanguage.MIPS:
-        store.dispatch(changeView(View.CREATEEVENT_ASM));
+        changeView(View.CREATEEVENT_ASM);
         break;
 
       case EventCodeLanguage.C:
-        store.dispatch(changeView(View.CREATEEVENT_C));
+        changeView(View.CREATEEVENT_C);
         break;
 
       default:

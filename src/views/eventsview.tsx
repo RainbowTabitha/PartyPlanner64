@@ -2,10 +2,11 @@ import { View, EventCodeLanguage } from "../types";
 import * as React from "react";
 import { getCustomEvents, IEvent } from "../events/events";
 import { ICustomEvent, createCustomEvent } from "../events/customevents";
-import { changeCurrentEvent, confirmFromUser } from "../appControl";
+import { changeCurrentEvent, changeView, confirmFromUser } from "../appControl";
 import { IBoard, excludeEventFromBoard, includeEventInBoard, getBoardEvent } from "../boards";
 import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { saveAs } from "file-saver";
+import { stringComparer } from "../utils/string";
 
 import libraryImage from "../img/events/library.png";
 import deleteImage from "../img/events/delete.png";
@@ -18,9 +19,6 @@ import copytoboardImage from "../img/events/copytoboard.png";
 import copytoboard_destructiveImage from "../img/events/copytoboard_destructive.png";
 
 import "../css/events.scss";
-import { stringComparer } from "../utils/string";
-import { changeView } from "../app/appState";
-import { store } from "../app/store";
 
 let _eventsViewInstance: EventsView | null;
 
@@ -121,12 +119,12 @@ export class EventsView extends React.Component<IEventsViewProps, IEventsViewSta
 
   onEditEvent = (event: IEvent) => {
     changeCurrentEvent(event);
-    store.dispatch(changeView(_getViewForEvent(event)));
+    changeView(_getViewForEvent(event));
   }
 
   onEditBoardEvent = (event: IEvent) => {
     changeCurrentEvent(event, this.props.board);
-    store.dispatch(changeView(_getViewForEvent(event)));
+    changeView(_getViewForEvent(event));
   }
 
   onDeleteEvent = async (event: IEvent) => {

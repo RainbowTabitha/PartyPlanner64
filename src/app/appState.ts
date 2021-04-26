@@ -16,7 +16,7 @@ export const appStateSlice = createSlice({
   name: "appState",
   initialState,
   reducers: {
-    changeView: (state, action: PayloadAction<View>) => {
+    changeViewAction: (state, action: PayloadAction<View>) => {
       state.currentView = action.payload;
     },
     setHideUpdateNotification: (state, action: PayloadAction<boolean>) => {
@@ -26,7 +26,7 @@ export const appStateSlice = createSlice({
 });
 
 export const {
-  changeView,
+  changeViewAction,
   setHideUpdateNotification,
 } = appStateSlice.actions;
 

@@ -22,10 +22,9 @@ import { saveAs } from "file-saver";
 import { mainfs } from "../fs/mainfs";
 import { makeDivisibleBy } from "../utils/number";
 import { romToRAM } from "../utils/offsets";
-import { store } from "../app/store";
-import { blockUI } from "../app/blocker";
 
 import "../css/debug.scss";
+import { blockUI } from "../appControl";
 
 interface IDebugViewState {
   sceneIndex: string;
@@ -439,13 +438,13 @@ function dumpSelected(event: any) {
 }
 
 function onExportFileDumpClick() {
-  store.dispatch(blockUI(true));
+  blockUI(true);
   createDump(dumpCreated);
 }
 
 function dumpCreated(blob: Blob) {
   saveAs(blob, `mp${romhandler.getGameVersion()}-files.zip`);
-  store.dispatch(blockUI(false));
+  blockUI(false);
 }
 
 /* eslint-disable no-extend-native */
