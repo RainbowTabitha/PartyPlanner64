@@ -1,10 +1,9 @@
-import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType, EventParameterType } from "./types";
-import { getSavedBoards } from "./utils/localstorage";
+import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType } from "./types";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
-import { getEvent, IEventParameter, EventParameterValues } from "./events/events";
+import { getEvent, IEventParameter, EventParameterValues, IEvent } from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
-import { getAppInstance, boardsChanged, currentBoardChanged } from "./app/appControl";
+import { boardsChanged, currentBoardChanged, getAppInstance } from "./app/appControl";
 import { IDecisionTreeNode } from "./ai/aitrees";
 
 import defaultThemeBoardSelect from "./img/themes/default/boardselect.png";
@@ -16,6 +15,43 @@ import defaultThemeConversation from "./img/themes/default/conversation.png";
 import defaultThemeSplashscreen from "./img/themes/default/splashscreen.png";
 import defaultThemeBg from "./img/themes/default/bg.png";
 import defaultThemeBg2 from "./img/themes/default/bg2.png";
+import { store } from "./app/store";
+import {
+  addAdditionalBackgroundAction,
+  addAnimationBackgroundAction,
+  addBoardAction,
+  addConnectionAction,
+  addEventToBoardAction,
+  addEventToSpaceAction,
+  addSpaceAction,
+  clearBoardsFromROMAction,
+  copyCurrentBoardAction,
+  deleteBoardAction,
+  excludeEventFromBoardAction,
+  includeEventInBoardAction,
+  removeAdditionalBackgroundAction,
+  removeAnimationBackgroundAction,
+  removeEventFromBoardAction,
+  removeEventFromSpaceAction,
+  removeSpaceAction,
+  selectBoards,
+  selectCurrentBoard,
+  selectCurrentBoardIndex,
+  selectCurrentBoardIsROM,
+  selectROMBoards,
+  setAdditionalBackgroundCodeAction,
+  setAudioSelectCodeAction,
+  setBackgroundAction,
+  setBoardAudioAction,
+  setBoardDescriptionAction,
+  setBoardDifficultyAction,
+  setBoardNameAction,
+  setBoardOtherBgAction,
+  setCurrentBoardAction,
+  setSpaceHostsStarAction,
+  setSpaceRotationAction,
+} from "./app/boardState";
+import { assert } from "./utils/debug";
 
 const _themes = {
   default: {
@@ -42,7 +78,15 @@ export interface IBoard {
   events: { [name: string]: IBoardEvent | string };
   boardevents?: IEventInstance[];
   bg: IBoardBgDetails;
-  otherbg: any;
+  otherbg: {
+    boardselect?: string,
+    boardselecticon?: string,
+    boardlogo?: string,
+    boardlogotext?: string,
+    largescene?: string,
+    conversation?: string,
+    splashscreen?: string,
+  };
   animbg?: string[];
   additionalbg?: string[];
   additionalbgcode?: IBoardEvent | string;
@@ -112,10 +156,7 @@ export interface IEventInstance {
   custom?: boolean;
 }
 
-let currentBoard: number = 0;
-let currentBoardIsRom: boolean = false;
-
-function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardType.NORMAL): IBoard {
+export function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardType.NORMAL): IBoard {
   const board: any = {
     name: "Untitled",
     description: "Use your Star Power to finish\nthis board.",
@@ -242,319 +283,6 @@ function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardTy
   return board;
 }
 
-let boards: IBoard[];
-let romBoards: IBoard[] = [];
-
-let cachedBoards = getSavedBoards();
-if (cachedBoards && cachedBoards.length) {
-  boards = [];
-  // Go through addBoard to collect any custom events.
-  cachedBoards.forEach(board => addBoard(board));
-}
-else {
-  boards = [ _makeDefaultBoard(1) ];
-}
-
-/**
- * Adds a board to the board collection.
- * @param board The board to add. If not passed, a default board is generated.
- * @param opts.rom The board is from the ROM
- * @param opts.type Board type to use
- * @param opts.game Game version for the board
- * @returns The index of the inserted board.
- */
-export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: BoardType } = {}) {
-  if (!board)
-    board = _makeDefaultBoard(opts.game || 1, opts.type || BoardType.NORMAL);
-
-  const collection = opts.rom ? romBoards : boards;
-  if (opts.rom) {
-    board._rom = true;
-    collection.push(board);
-  }
-  else
-    collection.push(board);
-
-  _fixPotentiallyOldBoard(board);
-
-  const app = getAppInstance();
-  if (app)
-    boardsChanged(getBoards());
-
-  return collection.length - 1;
-}
-
-export function getCurrentBoard(forExport: boolean = false): IBoard {
-  let board;
-  if (currentBoardIsRom) {
-    board = romBoards[currentBoard];
-  }
-  else {
-    board = boards[currentBoard];
-  }
-  if (forExport)
-    board = stripPrivateProps(board);
-  return board;
-}
-
-export function indexOfBoard(board: IBoard) {
-  return boards.indexOf(board);
-}
-
-export function setCurrentBoard(index: number, isRom?: boolean) {
-  currentBoardIsRom = !!isRom;
-  currentBoard = index;
-  // FIXME: Circular dependency
-  currentBoardChanged(getCurrentBoard());
-}
-
-export function boardIsROM(board: IBoard) {
-    return !!board._rom;
-}
-
-/**
- * Tests if there is a connection from startIdx to endIdx.
- * If endIdx is "*"" or not passed, test if any connection is outbound from startIdx.
- */
-export function hasConnection(startIdx: number, endIdx: number | "*", board: IBoard = getCurrentBoard()) {
-  if (Array.isArray(board.links[startIdx])) {
-    if (endIdx === "*" || endIdx === undefined)
-      return true; // Asking if any connections exist out of startIdx
-    return (board.links[startIdx] as number[]).indexOf(endIdx) >= 0;
-  }
-  if (board.links[startIdx] !== undefined && board.links[startIdx] !== null) {
-    if (endIdx === "*" || endIdx === undefined)
-      return true;
-    return board.links[startIdx] === endIdx;
-  }
-  return false;
-}
-
-// Removes all connections to a certain space.
-function _removeConnections(spaceIdx: number, board: IBoard) {
-  if (!board.links)
-    return;
-
-  delete board.links[spaceIdx];
-  for (let startSpace in board.links) {
-    let value = board.links[startSpace];
-    if (Array.isArray(value)) {
-      let entry = value.indexOf(spaceIdx);
-      if (entry !== -1)
-        value.splice(entry, 1);
-      if (value.length === 1)
-        board.links[startSpace] = value[0];
-      else if (!value.length)
-        delete board.links[startSpace];
-    }
-    else if (value === spaceIdx) {
-      delete board.links[startSpace];
-    }
-  }
-}
-
-function _removeAssociations(spaceIdx: number, board: IBoard) {
-  forEachEventParameter(board, (parameter: IEventParameter, event: IEventInstance) => {
-    switch (parameter.type) {
-      case EventParameterType.Space:
-        if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
-          if (event.parameterValues[parameter.name] === spaceIdx) {
-            delete event.parameterValues[parameter.name];
-          }
-        }
-        break;
-
-      case EventParameterType.SpaceArray:
-        const parameterValue = event.parameterValues?.[parameter.name];
-        if (event.parameterValues && Array.isArray(parameterValue)) {
-          event.parameterValues[parameter.name] = parameterValue.filter(s => s !== spaceIdx);
-        }
-        break;
-    }
-  });
-}
-
-export function forEachEvent(board: IBoard, fn: (event: IEventInstance, space?: ISpace, spaceIndex?: number) => void) {
-  if (board.boardevents) {
-    // Reverse to allow deletion in callback.
-    for (let i = board.boardevents.length - 1; i >= 0; i--) {
-      const event = board.boardevents[i];
-      fn(event);
-    }
-  }
-
-  const spaces = board.spaces;
-  if (spaces && spaces.length) {
-    for (let s = 0; s < spaces.length; s++) {
-      const space = spaces[s];
-      if (space.events && space.events.length) {
-        for (let i = space.events.length - 1; i >= 0; i--) {
-          const event = space.events[i];
-          fn(event, space, s);
-        }
-      }
-    }
-  }
-}
-
-export function forEachEventParameter(board: IBoard, fn: (param: IEventParameter, event: IEventInstance, space?: ISpace) => void) {
-  forEachEvent(board, (eventInstance: IEventInstance, space?: ISpace) => {
-    const event = getEvent(eventInstance.id, board);
-    if (event.parameters) {
-      for (let p = 0; p < event.parameters.length; p++) {
-        const parameter = event.parameters[p];
-        fn(parameter, eventInstance, space);
-      }
-    }
-  });
-}
-
-// Removes any _ prefixed property from a board.
-function stripPrivateProps(obj: any = {}): any {
-  if (typeof obj !== "object")
-    return obj;
-
-  obj = JSON.parse(JSON.stringify(obj));
-  for (var prop in obj) {
-    if (!obj.hasOwnProperty(prop))
-      continue;
-    if (prop.charAt(0) === '_')
-      delete obj[prop];
-    if (typeof obj[prop] === "object" && obj[prop] !== null)
-      obj[prop] = stripPrivateProps(obj[prop]);
-  }
-  return obj;
-}
-
-/** Adds an event to be executed during specific moments. */
-export function addEventToBoard(board: IBoard, event: IEventInstance) {
-  if (!board.boardevents) {
-    board.boardevents = [];
-  }
-
-  board.boardevents.push(event);
-
-  if (event.custom) {
-    const customEvent = getEvent(event.id, board) as ICustomEvent;
-    includeEventInBoard(board, customEvent);
-  }
-}
-
-/** Removes an event from `boardevents`. */
-export function removeEventFromBoard(board: IBoard, event: IEventInstance) {
-  if (board.boardevents?.length) {
-    let eventIndex = board.boardevents.indexOf(event);
-    if (eventIndex !== -1) {
-      board.boardevents.splice(eventIndex, 1);
-    }
-  }
-}
-
-export function addEventToSpace(board: IBoard, space: ISpace, event: IEventInstance, toStart?: boolean) {
-  space.events = space.events || [];
-  if (event) {
-    if (toStart)
-      space.events.unshift(event);
-    else
-      space.events.push(event);
-
-    if (event.custom) {
-      const customEvent = getEvent(event.id, board) as ICustomEvent;
-      includeEventInBoard(board, customEvent);
-    }
-  }
-}
-
-export function removeEventFromSpace(space: ISpace, event: IEventInstance) {
-  if (!space || !event || !space.events)
-    return;
-
-  // Try to just splice a given reference.
-  let eventIndex = space.events.indexOf(event);
-  if (eventIndex !== -1) {
-    space.events.splice(eventIndex, 1);
-    return;
-  }
-
-  // Otherwise, try to search for essentially the same thing?
-}
-
-export function getBoardEvent(board: IBoard, eventId: string): IBoardEvent | null {
-  if (board.events) {
-    const boardEvent = board.events[eventId];
-    if (typeof boardEvent === "string") {
-      return { language: EventCodeLanguage.MIPS, code: boardEvent };
-    }
-    return boardEvent || null;
-  }
-  return null;
-}
-
-/** Includes an event in the collection of events kept within the board file. */
-export function includeEventInBoard(board: IBoard, event: ICustomEvent) {
-  if (!event.asm)
-    throw new Error(`Attempting to add event ${event.name} but it doesn't have code`);
-  board.events[event.name] = {
-    language: event.language!,
-    code: event.asm,
-  };
-}
-
-/** Removes an event from the collection of events stored in the board file. */
-export function excludeEventFromBoard(board: IBoard, eventId: string): void {
-  if (board.events) {
-    delete board.events[eventId];
-  }
-
-  forEachEvent(board, (event, space) => {
-    if (event.id === eventId) {
-      if (space) {
-        removeEventFromSpace(space, event);
-      }
-      else {
-        removeEventFromBoard(board, event);
-      }
-    }
-  });
-}
-
-export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
-  if (board.additionalbgcode) {
-    let additionalBgCode = board.additionalbgcode;
-    if (typeof additionalBgCode === "string") {
-      return { language: EventCodeLanguage.MIPS, code: additionalBgCode };
-    }
-    return additionalBgCode || null;
-  }
-  return null;
-}
-
-export function setAdditionalBackgroundCode(board: IBoard, code: string, language: EventCodeLanguage): void {
-  if (code) {
-    board.additionalbgcode = {
-      code, language
-    };
-  }
-  else {
-    delete board.additionalbgcode;
-  }
-}
-
-export function getAudioSelectCode(board: IBoard): IBoardEvent | null {
-  return board.audioSelectCode || null;
-}
-
-export function setAudioSelectCode(board: IBoard, code: string, language: EventCodeLanguage): void {
-  if (code) {
-    board.audioSelectCode = {
-      code, language
-    };
-  }
-  else {
-    delete board.audioSelectCode;
-  }
-}
-
 function applyTheme(board: IBoard, name: "default" = "default") {
   const themeImages = _themes[name];
 
@@ -581,6 +309,206 @@ function applyTheme(board: IBoard, name: "default" = "default") {
       board.bg.src = themeImages.bg2;
       break;
   }
+}
+
+/**
+ * Adds a board to the board collection.
+ * @param board The board to add. If not passed, a default board is generated.
+ * @param opts.rom The board is from the ROM
+ * @param opts.type Board type to use
+ * @param opts.game Game version for the board
+ * @returns The index of the inserted board.
+ */
+export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: BoardType } = {}) {
+  if (!board)
+    board = _makeDefaultBoard(opts.game || 1, opts.type || BoardType.NORMAL);
+
+  if (opts.rom) {
+    board._rom = true;
+  }
+
+  _fixPotentiallyOldBoard(board);
+
+  store.dispatch(addBoardAction({ board, rom: opts.rom }));
+
+  const app = getAppInstance();
+  if (app)
+    boardsChanged();
+  const storeData = store.getState().data;
+  const collection = opts.rom ? storeData.romBoards : storeData.boards;
+
+  return collection.length - 1;
+}
+
+export function getCurrentBoard(): IBoard {
+  let board = selectCurrentBoard(store.getState());
+  return board;
+}
+
+export function indexOfBoard(board: IBoard) {
+  return store.getState().data.boards.indexOf(board);
+}
+
+export function setCurrentBoard(index: number, isRom?: boolean) {
+  store.dispatch(setCurrentBoardAction({ index, rom: !!isRom }))
+
+  currentBoardChanged();
+}
+
+export function boardIsROM(board: IBoard) {
+    return !!board._rom;
+}
+
+/**
+ * Tests if there is a connection from startIdx to endIdx.
+ * If endIdx is "*"" or not passed, test if any connection is outbound from startIdx.
+ */
+export function hasConnection(startIdx: number, endIdx: number | "*", board: IBoard = getCurrentBoard()) {
+  if (Array.isArray(board.links[startIdx])) {
+    if (endIdx === "*" || endIdx === undefined)
+      return true; // Asking if any connections exist out of startIdx
+    return (board.links[startIdx] as number[]).indexOf(endIdx) >= 0;
+  }
+  if (board.links[startIdx] !== undefined && board.links[startIdx] !== null) {
+    if (endIdx === "*" || endIdx === undefined)
+      return true;
+    return board.links[startIdx] === endIdx;
+  }
+  return false;
+}
+
+interface ForEachEventCallback {
+  (event: IEventInstance, eventIndex: number, space?: ISpace, spaceIndex?: number): void;
+}
+
+export function forEachEvent(board: IBoard, fn: ForEachEventCallback) {
+  if (board.boardevents) {
+    // Reverse to allow deletion in callback.
+    for (let i = board.boardevents.length - 1; i >= 0; i--) {
+      const event = board.boardevents[i];
+      fn(event, i);
+    }
+  }
+
+  const spaces = board.spaces;
+  if (spaces && spaces.length) {
+    for (let s = 0; s < spaces.length; s++) {
+      const space = spaces[s];
+      if (space.events && space.events.length) {
+        for (let i = space.events.length - 1; i >= 0; i--) {
+          const event = space.events[i];
+          fn(event, i, space, s);
+        }
+      }
+    }
+  }
+}
+
+interface ForEachEventParameterCallback {
+  (param: IEventParameter, event: IEventInstance, eventIndex: number, space?: ISpace, spaceIndex?: number): void;
+}
+
+export function forEachEventParameter(board: IBoard, fn: ForEachEventParameterCallback) {
+  forEachEvent(board, (eventInstance, eventIndex, space, spaceIndex) => {
+    const event = getEvent(eventInstance.id, board);
+    assert(!!event);
+    if (event.parameters) {
+      for (let p = 0; p < event.parameters.length; p++) {
+        const parameter = event.parameters[p];
+        fn(parameter, eventInstance, eventIndex, space, spaceIndex);
+      }
+    }
+  });
+}
+
+/** Adds an event to be executed during specific moments. */
+export function addEventToBoard(event: IEventInstance) {
+  store.dispatch(addEventToBoardAction({ event }));
+}
+
+/** Removes an event from `boardevents`. */
+export function removeEventFromBoard(eventIndex: number) {
+  store.dispatch(removeEventFromBoardAction({ eventIndex }));
+}
+
+export function addEventToSpace(event: IEventInstance, toStart?: boolean) {
+  store.dispatch(addEventToSpaceAction({ event, toStart }));
+}
+
+export function addEventToSpaceInternal(
+  board: IBoard, space: ISpace, event: IEventInstance, toStart?: boolean,
+  getEventCallback?: (id: string, board: IBoard) => IEvent | undefined
+) {
+  space.events = space.events || [];
+  if (event) {
+    if (toStart)
+      space.events.unshift(event);
+    else
+      space.events.push(event);
+
+    if (event.custom) {
+      const getEventCb = getEventCallback ?? getEvent;
+      const customEvent = getEventCb(event.id, board) as ICustomEvent;
+      includeEventInBoardInternal(board, customEvent);
+    }
+  }
+}
+
+export function removeEventFromSpace(eventIndex: number) {
+  store.dispatch(removeEventFromSpaceAction({ eventIndex }));
+}
+
+export function getBoardEvent(board: IBoard, eventId: string): IBoardEvent | null {
+  if (board.events) {
+    const boardEvent = board.events[eventId];
+    if (typeof boardEvent === "string") {
+      return { language: EventCodeLanguage.MIPS, code: boardEvent };
+    }
+    return boardEvent || null;
+  }
+  return null;
+}
+
+/** Includes an event in the collection of events kept within the board file. */
+export function includeEventInBoard(event: ICustomEvent) {
+  store.dispatch(includeEventInBoardAction({ event }));
+}
+
+export function includeEventInBoardInternal(board: IBoard, event: ICustomEvent) {
+  if (!event.asm)
+    throw new Error(`Attempting to add event ${event.name} but it doesn't have code`);
+  board.events[event.name] = {
+    language: event.language!,
+    code: event.asm,
+  };
+}
+
+/** Removes an event from the collection of events stored in the board file. */
+export function excludeEventFromBoard(eventId: string): void {
+  store.dispatch(excludeEventFromBoardAction({ eventId }));
+}
+
+export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
+  if (board.additionalbgcode) {
+    let additionalBgCode = board.additionalbgcode;
+    if (typeof additionalBgCode === "string") {
+      return { language: EventCodeLanguage.MIPS, code: additionalBgCode };
+    }
+    return additionalBgCode || null;
+  }
+  return null;
+}
+
+export function setAdditionalBackgroundCode(code: string, language: EventCodeLanguage): void {
+  store.dispatch(setAdditionalBackgroundCodeAction({ code, language }));
+}
+
+export function getAudioSelectCode(board: IBoard): IBoardEvent | null {
+  return board.audioSelectCode || null;
+}
+
+export function setAudioSelectCode(code: string, language: EventCodeLanguage): void {
+  store.dispatch(setAudioSelectCodeAction({ code, language }));
 }
 
 export function getDeadEnds(board: IBoard) {
@@ -665,7 +593,7 @@ export function getDeadEnds(board: IBoard) {
   return deadEnds;
 }
 
-function _fixPotentiallyOldBoard(board: IBoard) {
+export function _fixPotentiallyOldBoard(board: IBoard): IBoard {
   if (!("game" in board)) {
     (board as IBoard).game = 1;
   }
@@ -676,6 +604,16 @@ function _fixPotentiallyOldBoard(board: IBoard) {
 
   if (!("events" in board)) {
     (board as IBoard).events = {};
+  }
+
+  for (const eventId in board.events) {
+    const eventData = board.events[eventId];
+    if (typeof eventData === "string") {
+      board.events[eventId] = {
+        code: eventData,
+        language: EventCodeLanguage.MIPS,
+      };
+    }
   }
 
   if (typeof board.audioType === "undefined") {
@@ -742,6 +680,8 @@ function _fixPotentiallyOldBoard(board: IBoard) {
         break;
     }
   }
+
+  return board;
 }
 
 function _migrateOldCustomEvents(board: IBoard) {
@@ -767,55 +707,47 @@ function _migrateOldCustomEvents(board: IBoard) {
 }
 
 export function getCurrentBoardIndex() {
-  return currentBoard;
+  return selectCurrentBoardIndex(store.getState());
 }
 
 export function currentBoardIsROM() {
-  return currentBoardIsRom;
+  return selectCurrentBoardIsROM(store.getState());
 }
 
 export function getBoardCount() {
-  return boards.length;
+  return selectBoards(store.getState()).length;
 }
 
 export function getBoards() {
-  return boards;
+  return selectBoards(store.getState());
 }
 
 export function getROMBoards() {
-  return romBoards;
+  return selectROMBoards(store.getState());
 }
 
-export function setBG(bg: any, board = getCurrentBoard()) {
-  board.bg.src = bg;
+export function setBG(bg: string) {
+  store.dispatch(setBackgroundAction({ bg }));
 }
 
-export function addAnimBG(bg: any, board = getCurrentBoard()) {
-  board.animbg = board.animbg || [];
-  board.animbg.push(bg);
+export function addAnimBG(bg: string) {
+  store.dispatch(addAnimationBackgroundAction({ bg }));
 }
 
-export function removeAnimBG(index: number, board = getCurrentBoard()) {
-  if (!board.animbg || board.animbg.length <= index || index < 0)
-    return;
-
-  board.animbg.splice(index, 1);
+export function removeAnimBG(index: number) {
+  store.dispatch(removeAnimationBackgroundAction({ index }));
 }
 
 export function supportsAnimationBackgrounds(board: IBoard): boolean {
   return board.game === 2;
 }
 
-export function addAdditionalBG(bg: any, board = getCurrentBoard()) {
-  board.additionalbg = board.additionalbg || [];
-  board.additionalbg.push(bg);
+export function addAdditionalBG(bg: string) {
+  store.dispatch(addAdditionalBackgroundAction({ bg }));
 }
 
-export function removeAdditionalBG(index: number, board = getCurrentBoard()) {
-  if (!board.additionalbg || board.additionalbg.length <= index || index < 0)
-    return;
-
-  board.additionalbg.splice(index, 1);
+export function removeAdditionalBG(index: number) {
+  store.dispatch(removeAdditionalBackgroundAction({ index }));
 }
 
 export function supportsAdditionalBackgrounds(board: IBoard): boolean {
@@ -823,58 +755,67 @@ export function supportsAdditionalBackgrounds(board: IBoard): boolean {
 }
 
 export function addDecisionTree(board: IBoard, spaceIndex: number, tree: IDecisionTreeNode[]): void {
-  board.spaces[spaceIndex].aiTree = tree;
+  // board.spaces[spaceIndex].aiTree = tree;
 }
 
-export function deleteBoard(boardIdx: number) {
-  if (isNaN(boardIdx) || boardIdx < 0 || boardIdx >= boards.length)
-    return;
-
-  if (boards.length === 1)
-    addBoard(); // Can never be empty.
-
-  boards.splice(boardIdx, 1);
-
-  if (currentBoard > boardIdx)
-    setCurrentBoard(currentBoard - 1);
-  else if (boards.length === 1)
-    setCurrentBoard(0); // We deleted the last remaining board
-  else if (currentBoard === boardIdx && currentBoard === boards.length)
-    setCurrentBoard(currentBoard - 1); // We deleted the end and current entry.
-
-  boardsChanged(getBoards());
-  currentBoardChanged(getCurrentBoard());
+export function deleteBoard(boardIndex: number) {
+  store.dispatch(deleteBoardAction({ boardIndex }));
+  boardsChanged();
+  currentBoardChanged();
 }
 
-export function copyCurrentBoard(): number {
-  let source;
-  if (currentBoardIsRom) {
-    source = romBoards[currentBoard];
+export function copyCurrentBoard(makeCurrent?: boolean): void {
+  store.dispatch(copyCurrentBoardAction({ makeCurrent }));
+  boardsChanged();
+}
+
+export function setBoardName(name: string): void {
+  store.dispatch(setBoardNameAction({ name }));
+}
+
+export function setBoardDescription(description: string): void {
+  store.dispatch(setBoardDescriptionAction({ description }));
+}
+
+export function setBoardDifficulty(difficulty: number): void {
+  store.dispatch(setBoardDifficultyAction({ difficulty }));
+}
+
+export function setBoardOtherBackground(name: keyof IBoard["otherbg"], value: string): void {
+  store.dispatch(setBoardOtherBgAction({ name, value }));
+}
+
+export function setHostsStar(spaceIndices: number[], hostsStar: boolean): void {
+  store.dispatch(setSpaceHostsStarAction({ spaceIndices, hostsStar }));
+}
+
+export interface IBoardAudioChanges {
+  audioType?: BoardAudioType;
+  gameAudioIndex?: number;
+  customAudioIndex?: number;
+  midiName?: string;
+  midiData?: string;
+  soundbankIndex?: number;
+  delete?: boolean;
+}
+
+export function setBoardAudio(audioChanges: IBoardAudioChanges): void {
+  store.dispatch(setBoardAudioAction({ audioChanges }));
+}
+
+export function addSpace(x: number, y: number, type: Space, subtype?: SpaceSubtype, board?: IBoard): number {
+  // Hack for callers not editing redux state.
+  if (board) {
+    return addSpaceInternal(x, y, type, subtype, board);
   }
   else {
-    source = boards[currentBoard];
+    const newIndex = getCurrentBoard().spaces.length;
+    store.dispatch(addSpaceAction({ x, y, type, subtype }));
+    return newIndex;
   }
-  let copy = copyObject(source);
-  delete copy._rom;
-  copy.name = "Copy of " + copy.name;
-
-  let insertionIndex;
-  if (currentBoardIsRom) {
-    insertionIndex = boards.length;
-    boards.push(copy);
-  }
-  else {
-    insertionIndex = currentBoard + 1;
-    boards.splice(insertionIndex, 0, copy);
-  }
-
-  boardsChanged(getBoards());
-
-  return insertionIndex;
 }
 
-export function addSpace(x: number, y: number, type: Space,
-  subtype?: SpaceSubtype, board: IBoard = getCurrentBoard()) {
+export function addSpaceInternal(x: number, y: number, type: Space, subtype: SpaceSubtype | undefined, board: IBoard): number {
   let newSpace: any = {
     x,
     y,
@@ -889,67 +830,12 @@ export function addSpace(x: number, y: number, type: Space,
   if (adapter)
     adapter.hydrateSpace(newSpace, board);
 
-  //for (let i = 0; i < board.spaces.length; i++) {
-    // FIXME: This was clearly not working.
-    // if (board.spaces === null) {
-    //   board.spaces[i] = newSpace;
-    //   return i;
-    // }
-  //}
-
   board.spaces.push(newSpace);
   return board.spaces.length - 1;
 }
 
-export function removeSpace(index: number, board: IBoard = getCurrentBoard()) {
-  if (index < 0 || index >= board.spaces.length)
-    return;
-
-  // Remove any attached connections.
-  _removeConnections(index, board);
-  _removeAssociations(index, board);
-
-  // Remove the actual space.
-  let oldSpaceLen = board.spaces.length;
-  board.spaces.splice(index, 1);
-
-  function _adjust(oldIdx: any) {
-    return parseInt(oldIdx) > parseInt(index as any) ? oldIdx - 1 : oldIdx;
-  }
-
-  // Update the links that are at a greater index.
-  let start, end;
-  for (let i = 0; i < oldSpaceLen; i++) {
-    if (!board.links.hasOwnProperty(i))
-      continue;
-
-    start = _adjust(i);
-    end = board.links[i];
-    if (start !== i)
-      delete board.links[i];
-    if (Array.isArray(end))
-      board.links[start] = end.map(_adjust);
-    else
-      board.links[start] = _adjust(end);
-  }
-
-  // Update space event parameter indices
-  forEachEventParameter(board, (parameter: IEventParameter, event: IEventInstance) => {
-    switch (parameter.type) {
-      case EventParameterType.Space:
-        if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
-          event.parameterValues[parameter.name] = _adjust(event.parameterValues[parameter.name]);
-        }
-        break;
-
-      case EventParameterType.SpaceArray:
-        const parameterValue = event.parameterValues?.[parameter.name];
-        if (event.parameterValues && Array.isArray(parameterValue)) {
-          event.parameterValues[parameter.name] = parameterValue.map(_adjust);
-        }
-        break;
-    }
-  });
+export function removeSpace(index: number) {
+  store.dispatch(removeSpaceAction({ index }));
 }
 
 export function getSpaceIndex(space: ISpace, board = getCurrentBoard()) {
@@ -994,7 +880,7 @@ export function getSpacesOfSubType(subtype: SpaceSubtype, board: IBoard = getCur
 /** Returns array of space indices of spaces with a given event. */
 export function getSpacesWithEvent(eventName: string, board: IBoard = getCurrentBoard()): number[] {
   const eventSpaces: number[] = [];
-  forEachEvent(board, (event, space, spaceIndex) => {
+  forEachEvent(board, (event, eventIndex, space, spaceIndex) => {
     if (space && event.id === eventName) {
       eventSpaces.push(spaceIndex!);
     }
@@ -1022,7 +908,10 @@ export function getConnections(spaceIndex: number, board: IBoard = getCurrentBoa
   if (spaceIndex < 0)
     return null;
 
-  board.links = board.links || {};
+  if (!board.links) {
+    return [];
+  };
+
   if (Array.isArray(board.links[spaceIndex]))
     return (board.links[spaceIndex] as number[]).slice(0);
 
@@ -1032,41 +921,36 @@ export function getConnections(spaceIndex: number, board: IBoard = getCurrentBoa
   return [];
 }
 
-export function addConnection(startIdx: number, endIdx: number, board = getCurrentBoard()) {
-  if (startIdx === endIdx || hasConnection(startIdx, endIdx, board))
+export function addConnectionInternal(startSpaceIndex: number, endSpaceIndex: number, board: IBoard): void {
+  if (startSpaceIndex === endSpaceIndex || hasConnection(startSpaceIndex, endSpaceIndex, board))
     return;
 
   board.links = board.links || {};
-  if (Array.isArray(board.links[startIdx]))
-    (board.links[startIdx] as number[]).push(endIdx);
-  else if (typeof board.links[startIdx] === "number")
-    board.links[startIdx] = [board.links[startIdx] as number, endIdx];
-  else if (endIdx >= 0)
-    board.links[startIdx] = endIdx;
+  if (Array.isArray(board.links[startSpaceIndex]))
+    (board.links[startSpaceIndex] as number[]).push(endSpaceIndex);
+  else if (typeof board.links[startSpaceIndex] === "number")
+    board.links[startSpaceIndex] = [board.links[startSpaceIndex] as number, endSpaceIndex];
+  else if (endSpaceIndex >= 0)
+    board.links[startSpaceIndex] = endSpaceIndex;
 }
 
-export function addAssociation(startIdx: number, endIdx: number, board: any = getCurrentBoard()) { // TODO: WHAT IS THIS
-  board.associations = board.associations || {};
-  let startIsSubtype = isNaN(board.spaces[startIdx].subtype);
-  let endIsSubtype = isNaN(board.spaces[endIdx].subtype);
-
-  // Cannot associate two subtype spaces or two regular spaces.
-  if (startIsSubtype === endIsSubtype)
-    return;
-}
-
-export function setSpaceRotation(spaceIdx: number, angleYAxisDeg: number, board = getCurrentBoard()) {
-  const space = board.spaces[spaceIdx];
-  if (!space) {
-    throw new Error("setSpaceRotation: Invalid space index " + spaceIdx);
+export function addConnection(startSpaceIndex: number, endSpaceIndex: number, board?: IBoard) {
+  if (board) {
+    // Hack: the places that do pass a board aren't modifying the redux store.
+    addConnectionInternal(startSpaceIndex, endSpaceIndex, board);
   }
+  else {
+    store.dispatch(addConnectionAction({ startSpaceIndex, endSpaceIndex }));
+  }
+}
 
-  space.rotation = Math.round(angleYAxisDeg);
+export function setSpaceRotation(spaceIndex: number, angleYAxisDeg: number) {
+  store.dispatch(setSpaceRotationAction({ spaceIndex, angleYAxisDeg }));
 }
 
 export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart?: boolean) {
   const space = board.spaces[spaceIdx];
-  addEventToSpace(board, space, event, toStart);
+  addEventToSpaceInternal(board, space, event, toStart);
 }
 
 export function loadBoardsFromROM() {
@@ -1075,17 +959,14 @@ export function loadBoardsFromROM() {
     return;
 
   let gameBoards = adapter.loadBoards();
-  for (let i = 0; i < gameBoards.length; i++) {
-    gameBoards[i]._rom = true;
-    romBoards.push(gameBoards[i]);
+  for (const gameBoard of gameBoards) {
+    gameBoard._rom = true;
+    store.dispatch(addBoardAction({ board: gameBoard, rom: true }));
   }
 
-  boardsChanged(getBoards());
+  boardsChanged();
 }
 
 export function clearBoardsFromROM() {
-  romBoards = [];
-
-  if (!boards.length)
-    addBoard(); // Can never be empty.
+  store.dispatch(clearBoardsFromROMAction());
 }

@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import { useState, useEffect } from "react";
 import { Screenshot } from "./screenshot";
 import { NewBoard } from "./newboard";
-import { setCurrentBoard, addBoard, clearBoardsFromROM, getCurrentBoard, loadBoardsFromROM, indexOfBoard, IBoard, boardIsROM, setBG, copyCurrentBoard, getBoards } from "./boards";
+import { setCurrentBoard, addBoard, clearBoardsFromROM, getCurrentBoard, loadBoardsFromROM, indexOfBoard, IBoard, boardIsROM, setBG, copyCurrentBoard } from "./boards";
 import { recordEvent } from "./utils/analytics";
 import { $$log } from "./utils/debug";
 import { getROMAdapter } from "./adapter/adapters";
@@ -14,9 +14,7 @@ import { equal } from "./utils/arrays";
 import { get, $setting } from "./views/settings";
 import { romhandler } from "./romhandler";
 import { createCustomEvent, validateCustomEvent } from "./events/customevents";
-import { render } from "./renderer";
 import { openFile } from "./utils/input";
-import { refreshEventsView } from "./views/eventsview";
 import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/createevent_shared";
 import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification, blockUI, changeView } from "./app/appControl";
 import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
@@ -174,7 +172,7 @@ async function _handleAction(action: Action) {
     case Action.ROM_UNLOAD:
       romhandler.clear();
       clearBoardsFromROM();
-      boardsChanged(getBoards());
+      boardsChanged();
       setCurrentBoard(0);
       romLoadedChanged();
       break;
@@ -190,7 +188,8 @@ async function _handleAction(action: Action) {
       openFile(".json", boardSelected);
       break;
     case Action.BOARD_SAVE:
-      let curBoard = getCurrentBoard(true);
+      let curBoard = getCurrentBoard();
+      curBoard = stripPrivateProps(curBoard);
       let boardBlob = new Blob([JSON.stringify(curBoard)]);
       saveAs(boardBlob, curBoard.name + ".json");
       break;
@@ -264,6 +263,23 @@ async function _handleAction(action: Action) {
   }
 }
 
+// Removes any _ prefixed property from a board.
+function stripPrivateProps(obj: any = {}): any {
+  if (typeof obj !== "object")
+    return obj;
+
+  obj = JSON.parse(JSON.stringify(obj));
+  for (var prop in obj) {
+    if (!obj.hasOwnProperty(prop))
+      continue;
+    if (prop.charAt(0) === '_')
+      delete obj[prop];
+    if (typeof obj[prop] === "object" && obj[prop] !== null)
+      obj[prop] = stripPrivateProps(obj[prop]);
+  }
+  return obj;
+}
+
 function romSelected(event: any) {
   const file = event.target.files[0];
   if (!file)
@@ -321,8 +337,7 @@ function bgSelected(event: any) {
 
   let reader = new FileReader();
   reader.onload = () => {
-    setBG(reader.result);
-    render();
+    setBG(reader.result as string);
   };
   reader.readAsDataURL(file);
 }
@@ -342,7 +357,6 @@ function eventFileSelected(event: any) {
         const customEvent = createCustomEvent(language, code);
         await validateCustomEvent(customEvent);
         addEventToLibrary(customEvent);
-        refreshEventsView();
       } catch (e) {
         showMessage("Event file load failed. " + e.toString());
         return;

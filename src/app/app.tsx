@@ -1,11 +1,10 @@
 // This is the top level of the application, and includes the root React view.
 
 import { View, Action } from "../types";
-import { IBoard, ISpace, getBoards, getCurrentBoard, IEventInstance, getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode } from "../boards";
+import { getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode } from "../boards";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { IEvent } from "../events/events";
 import { updateWindowTitle } from "../utils/browser";
 import { Editor } from "../renderer";
 import { Details } from "../views/details";
@@ -43,25 +42,17 @@ import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "../eve
 import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "../events/getaudiochoice";
 import { SpriteView } from "../views/sprites";
 import { store } from "./store";
-import { selectCurrentView, setHideUpdateNotification } from "./appState";
+import { selectCurrentAction, selectCurrentView, selectRomLoaded, selectUpdateExists, setHideUpdateNotification, setUpdateExistsAction } from "./appState";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./blocker";
+import { selectBoards, selectCurrentBoard } from "./boardState";
+import { BasicErrorBoundary } from "../components/BasicErrorBoundary";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
 interface IPP64AppState {
-  boards: IBoard[];
-  currentBoard: IBoard;
-  currentEvent: IEvent | null;
-  currentEventIsBoardEvent: boolean;
-  hoveredBoardEvent: IEventInstance | null;
-  overrideBg: string | null;
-  romLoaded: boolean;
-  currentAction: Action;
-  selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  updateExists: boolean;
   notifications: React.ReactElement<Notification>[];
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
@@ -69,17 +60,7 @@ interface IPP64AppState {
 
 export class PP64App extends React.Component<{}, IPP64AppState> {
   state: IPP64AppState = {
-    boards: getBoards(),
-    currentBoard: getCurrentBoard(),
-    currentEvent: null,
-    currentEventIsBoardEvent: false,
-    hoveredBoardEvent: null,
-    overrideBg: null,
-    romLoaded: false,
-    currentAction: Action.MOVE,
-    selectedSpaces: null,
     aiTree: null,
-    updateExists: false,
     notifications: [],
     error: null,
     errorInfo: null,
@@ -129,22 +110,12 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
   }
 
   _onUpdateCheckHasUpdate = () => {
-    this.setState({ updateExists: true });
+    store.dispatch(setUpdateExistsAction(true));
   }
 };
 
 interface PP64AppInternalProps {
-  boards: IBoard[];
-  currentBoard: IBoard;
-  currentEvent: IEvent | null;
-  currentEventIsBoardEvent: boolean;
-  hoveredBoardEvent: IEventInstance | null;
-  overrideBg: string | null;
-  romLoaded: boolean;
-  currentAction: Action;
-  selectedSpaces: ISpace[] | null;
   aiTree: IDecisionTreeNode[] | null;
-  updateExists: boolean;
   notifications: React.ReactElement<Notification>[];
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
@@ -153,18 +124,21 @@ interface PP64AppInternalProps {
 function PP64AppInternal(props: PP64AppInternalProps) {
   const currentView = useAppSelector(selectCurrentView);
   const blocked = useAppSelector(selectBlocked);
+  const boards = useAppSelector(selectBoards);
+  const currentBoard = useAppSelector(selectCurrentBoard);
+  const currentAction = useAppSelector(selectCurrentAction);
+  const updateExists = useAppSelector(selectUpdateExists);
+  const romLoaded = useAppSelector(selectRomLoaded);
 
-  updateWindowTitle(props.currentBoard.name);
+  updateWindowTitle(currentBoard.name);
+
   let mainView;
   switch (currentView) {
     case View.EDITOR:
-      mainView = <Editor board={props.currentBoard}
-        selectedSpaces={props.selectedSpaces}
-        hoveredBoardEvent={props.hoveredBoardEvent}
-        telescoping={props.currentAction === Action.TELESCOPE} />;
+      mainView = <Editor />;
       break;
     case View.DETAILS:
-      mainView = <Details board={props.currentBoard} />;
+      mainView = <Details board={currentBoard} />;
       break;
     case View.SETTINGS:
       mainView = <Settings />;
@@ -179,7 +153,11 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       mainView = <SpriteView />;
       break;
     case View.EVENTS:
-      mainView = <EventsView board={props.currentBoard} />;
+      mainView = (
+        <BasicErrorBoundary>
+          <EventsView />
+        </BasicErrorBoundary>
+      );
       break;
     case View.CREATEEVENT_ASM:
       mainView = <CreateASMEventView />;
@@ -200,20 +178,20 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       mainView = <AudioViewer />;
       break;
     case View.ADDITIONAL_BGS:
-      mainView = <BasicCodeEditorView board={props.currentBoard}
+      mainView = <BasicCodeEditorView board={currentBoard}
         title="Additional Background Configuration"
-        getExistingCode={() => getAdditionalBackgroundCode(props.currentBoard)}
+        getExistingCode={() => getAdditionalBackgroundCode(currentBoard)}
         getDefaultCode={lang => getDefaultAdditionalBgCode(lang)}
-        onSetCode={(code, lang) => setAdditionalBackgroundCode(props.currentBoard, code, lang)}
-        canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, props.currentBoard)} />;
+        onSetCode={(code, lang) => setAdditionalBackgroundCode(code, lang)}
+        canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, currentBoard)} />;
       break;
     case View.AUDIO_SELECTION_CODE:
-      mainView = <BasicCodeEditorView board={props.currentBoard}
+      mainView = <BasicCodeEditorView board={currentBoard}
         title="Background Music Selection Code"
-        getExistingCode={() => getAudioSelectCode(props.currentBoard)}
+        getExistingCode={() => getAudioSelectCode(currentBoard)}
         getDefaultCode={lang => getDefaultGetAudioCode(lang)}
-        onSetCode={(code, lang) => setAudioSelectCode(props.currentBoard, code, lang)}
-        canSaveAndExit={(code, lang) => testGetAudioCodeAllGames(code, lang, props.currentBoard)} />;
+        onSetCode={(code, lang) => setAudioSelectCode(code, lang)}
+        canSaveAndExit={(code, lang) => testGetAudioCodeAllGames(code, lang, currentBoard)} />;
       break;
   }
 
@@ -225,21 +203,21 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       sidebar = (
         <div className="sidebar">
           <BoardMenu
-            boards={props.boards} />
+            boards={boards} />
         </div>
       );
       break;
   }
 
   let bodyClass = "body";
-  if (props.currentAction === Action.ERASE)
+  if (currentAction === Action.ERASE)
     bodyClass += " eraser";
 
   return (
     <div className={bodyClass}>
       <PP64NotificationBar notifications={props.notifications}
-        updateExists={props.updateExists} />
-      <Header view={currentView} romLoaded={props.romLoaded} board={props.currentBoard} />
+        updateExists={updateExists} />
+      <Header view={currentView} romLoaded={romLoaded} board={currentBoard} />
       <div className="content"
         onKeyDownCapture={blocked ? killEvent : undefined}>
         {sidebar}
@@ -248,19 +226,19 @@ function PP64AppInternal(props: PP64AppInternalProps) {
           <div className="mainOverlay">
             <ToolWindow name="Toolbox" position="TopRight"
               visible={currentView === View.EDITOR}>
-              <Toolbar currentAction={props.currentAction}
-                gameVersion={props.currentBoard.game}
-                boardType={props.currentBoard.type} />
+              <Toolbar currentAction={currentAction}
+                gameVersion={currentBoard.game}
+                boardType={currentBoard.type} />
             </ToolWindow>
             <ToolWindow name="Space Properties" position="BottomRight"
               visible={currentView === View.EDITOR}>
-              <SpaceProperties selectedSpaces={props.selectedSpaces}
-                gameVersion={props.currentBoard.game}
-                boardType={props.currentBoard.type} />
+              <SpaceProperties
+                gameVersion={currentBoard.game}
+                boardType={currentBoard.type} />
             </ToolWindow>
             <ToolWindow name="Board Properties" position="BottomLeft"
               visible={currentView === View.EDITOR}>
-              <BoardProperties currentBoard={props.currentBoard} />
+              <BoardProperties currentBoard={currentBoard} />
             </ToolWindow>
             {props.aiTree &&
               <ToolWindow name="AI Decision Tree" position="TopLeft"

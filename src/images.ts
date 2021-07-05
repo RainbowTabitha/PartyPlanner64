@@ -1,4 +1,5 @@
-import { render } from "./renderer";
+import { store } from "./app/store";
+import { setImagesLoadedAction } from "./app/appState";
 
 import toadImg from "./img/editor/toad.png";
 import mstarImg from "./img/editor/mstar.png";
@@ -97,7 +98,7 @@ function _onImageLoaded() {
   _imagesToLoad = _imagesToLoad - 1;
   if (!_imagesToLoad) {
     //$$log("All images loaded, rendering again.");
-    render();
+    store.dispatch(setImagesLoadedAction(true));
   }
 }
 

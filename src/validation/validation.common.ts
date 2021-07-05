@@ -230,7 +230,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
 
   async function testEvent(event: IEventInstance): Promise<void> {
     try {
-      const customEvent = getEvent(event.id, board);
+      const customEvent = getEvent(event.id, board)!;
       const boardEvent = getBoardEvent(board, event.id)!;
       await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
         game: gameID,
@@ -283,7 +283,7 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
   const missingParams = Object.create(null);
 
   function testParameters(event: IEventInstance): void {
-    const customEvent = getEvent(event.id, board);
+    const customEvent = getEvent(event.id, board)!;
     const parameters = customEvent.parameters;
     if (parameters && parameters.length) {
       for (const parameter of parameters) {

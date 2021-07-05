@@ -1,5 +1,5 @@
 import { AdapterBase } from "./AdapterBase";
-import { ISpace, addEventToSpace, IBoard, getDeadSpaceIndex } from "../boards";
+import { ISpace, addEventToSpaceInternal, IBoard, getDeadSpaceIndex } from "../boards";
 import { Space, SpaceSubtype, GameVersion } from "../types";
 import { createEventInstance } from "../events/events";
 import { parse as parseInst } from "mips-inst";
@@ -39,7 +39,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       space.star = true;
     }
     else if (space.type === Space.CHANCE) {
-      addEventToSpace(board, space, createEventInstance(ChanceTime));
+      addEventToSpaceInternal(board, space, createEventInstance(ChanceTime));
     }
   }
 
@@ -121,58 +121,58 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     switch (boardIndex) {
       case 0: // DK board
         bgPromises = bgPromises.concat([
-          this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Conversation
-          this._writeBackground(bgIndex + 3, board.otherbg.conversation, 320, 240), // Treasure thing...
+          this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2, board.otherbg.conversation!, 320, 240), // Conversation
+          this._writeBackground(bgIndex + 3, board.otherbg.conversation!, 320, 240), // Treasure thing...
           // Pause bg
           this._writeBackground(bgIndex + 5, board.bg.src, 320, 240), // End game overview map
-          this._writeBackground(bgIndex + 6, board.otherbg.splashscreen, 320, 240), // Splashscreen bg
+          this._writeBackground(bgIndex + 6, board.otherbg.splashscreen!, 320, 240), // Splashscreen bg
         ]);
         break;
 
       case 1: // Peach board
         bgPromises = bgPromises.concat([
-          this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2, board.otherbg.conversation, 320, 240), // Mini-Game results, Boo?
-          this._writeBackground(bgIndex + 3, board.otherbg.conversation, 320, 240), // Conversation
-          this._writeBackground(bgIndex + 4, board.otherbg.conversation, 320, 240), // Visit Toad
-          this._writeBackground(bgIndex + 5, board.otherbg.conversation, 320, 240),
-          this._writeBackground(bgIndex + 6, board.otherbg.largescene, 320, 240), // Third end game cutscene bg
+          this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2, board.otherbg.conversation!, 320, 240), // Mini-Game results, Boo?
+          this._writeBackground(bgIndex + 3, board.otherbg.conversation!, 320, 240), // Conversation
+          this._writeBackground(bgIndex + 4, board.otherbg.conversation!, 320, 240), // Visit Toad
+          this._writeBackground(bgIndex + 5, board.otherbg.conversation!, 320, 240),
+          this._writeBackground(bgIndex + 6, board.otherbg.largescene!, 320, 240), // Third end game cutscene bg
           // Pause bg
           this._writeBackground(bgIndex + 8, board.bg.src, 320, 240), // First end game cutscene bg
           this._writeBackground(bgIndex + 9, board.bg.src, 320, 240), // Second end game cutscene bg
-          this._writeBackground(bgIndex + 10, board.otherbg.splashscreen, 320, 240), // Splashscreen
+          this._writeBackground(bgIndex + 10, board.otherbg.splashscreen!, 320, 240), // Splashscreen
         ]);
         break;
 
       case 2: // Yoshi board
         bgPromises = bgPromises.concat([
           // 18: bgDir
-          this._writeBackground(bgIndex + 1 /* 19 */, board.otherbg.largescene, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2 /* 20 */, board.otherbg.conversation, 320, 240), // Conversation, Boo, Koopa
-          this._writeBackground(bgIndex + 3 /* 21 */, board.otherbg.conversation, 320, 240), // Conversation
-          this._writeBackground(bgIndex + 4 /* 22 */, board.otherbg.conversation, 320, 240), // Conversation, Toad
-          this._writeBackground(bgIndex + 5 /* 23 */, board.otherbg.conversation, 320, 240), // Conversation, Bowser
+          this._writeBackground(bgIndex + 1 /* 19 */, board.otherbg.largescene!, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2 /* 20 */, board.otherbg.conversation!, 320, 240), // Conversation, Boo, Koopa
+          this._writeBackground(bgIndex + 3 /* 21 */, board.otherbg.conversation!, 320, 240), // Conversation
+          this._writeBackground(bgIndex + 4 /* 22 */, board.otherbg.conversation!, 320, 240), // Conversation, Toad
+          this._writeBackground(bgIndex + 5 /* 23 */, board.otherbg.conversation!, 320, 240), // Conversation, Bowser
           this._writeBackground(bgIndex + 6 /* 24 */, board.bg.src, 320, 240), //
           // 25: Pause bg
-          this._writeBackground(bgIndex + 8 /* 26 */, board.otherbg.splashscreen, 320, 240), // Splashscreen
+          this._writeBackground(bgIndex + 8 /* 26 */, board.otherbg.splashscreen!, 320, 240), // Splashscreen
         ]);
         break;
 
       case 3: // Wario board
         bgPromises = bgPromises.concat([
           // 27: bgDir
-          this._writeBackground(bgIndex + 1 /* 28 */, board.otherbg.largescene, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2 /* 29 */, board.otherbg.conversation, 320, 240), // Conversation, Koopa
-          this._writeBackground(bgIndex + 3 /* 30 */, board.otherbg.conversation, 320, 240), // Conversation, Bowser, Boo
-          this._writeBackground(bgIndex + 4 /* 31 */, board.otherbg.conversation, 320, 240), //
-          this._writeBackground(bgIndex + 5 /* 32 */, board.otherbg.conversation, 320, 240), // Conversation, Bowser, Toad
+          this._writeBackground(bgIndex + 1 /* 28 */, board.otherbg.largescene!, 320, 240), // Game start, end
+          this._writeBackground(bgIndex + 2 /* 29 */, board.otherbg.conversation!, 320, 240), // Conversation, Koopa
+          this._writeBackground(bgIndex + 3 /* 30 */, board.otherbg.conversation!, 320, 240), // Conversation, Bowser, Boo
+          this._writeBackground(bgIndex + 4 /* 31 */, board.otherbg.conversation!, 320, 240), //
+          this._writeBackground(bgIndex + 5 /* 32 */, board.otherbg.conversation!, 320, 240), // Conversation, Bowser, Toad
           this._writeBackground(bgIndex + 6 /* 33 */, board.bg.src, 320, 240), //
-          this._writeBackground(bgIndex + 7 /* 34 */, board.otherbg.conversation, 320, 240), //
-          this._writeBackground(bgIndex + 8 /* 35 */, board.otherbg.conversation, 320, 240), //
+          this._writeBackground(bgIndex + 7 /* 34 */, board.otherbg.conversation!, 320, 240), //
+          this._writeBackground(bgIndex + 8 /* 35 */, board.otherbg.conversation!, 320, 240), //
           // 36: Pause bg
-          this._writeBackground(bgIndex + 10 /* 37 */, board.otherbg.conversation, 320, 240), //
-          this._writeBackground(bgIndex + 11 /* 38 */, board.otherbg.splashscreen, 320, 240), // Splashscreen
+          this._writeBackground(bgIndex + 10 /* 37 */, board.otherbg.conversation!, 320, 240), //
+          this._writeBackground(bgIndex + 11 /* 38 */, board.otherbg.splashscreen!, 320, 240), // Splashscreen
         ]);
         break;
     }
@@ -191,7 +191,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       let events = space.events || [];
       let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
       if (!hasStarChance)
-        addEventToSpace(board, space, createEventInstance(StarChanceEvent));
+        addEventToSpaceInternal(board, space, createEventInstance(StarChanceEvent));
     }
   }
 
@@ -390,7 +390,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
 
     // We need to write the image onto a canvas to get the RGBA32 values.
     let [width, height] = [128, 64];
-    const imgData = await getImageData(board.otherbg.boardselect, width, height);
+    const imgData = await getImageData(board.otherbg.boardselect!, width, height);
 
     // First, turn the image back into 4 BMP tiles
     let boardSelectImgTiles = toTiles(imgData.data, 2, 2, (width / 2) * 4, height / 2);
@@ -490,7 +490,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
         clearTimeout(failTimer);
         resolve();
       };
-      srcImage.src = board.otherbg.boardlogo;
+      srcImage.src = board.otherbg.boardlogo!;
     });
   }
 

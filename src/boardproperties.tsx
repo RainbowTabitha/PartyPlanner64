@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback } from "react";
-import { playAnimation, stopAnimation, animationPlaying, render, highlightSpaces, renderConnections, renderSpaces, renderSelectedSpaces } from "./renderer";
+import { playAnimation, stopAnimation, animationPlaying } from "./renderer";
 import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
   supportsAnimationBackgrounds, supportsAdditionalBackgrounds,
   addAdditionalBG, removeAdditionalBG, boardIsROM, IEventInstance, addEventToBoard, removeEventFromBoard
@@ -8,7 +8,7 @@ import { addAnimBG, removeAnimBG, setBG, IBoard, getDeadEnds,
 import { openFile } from "./utils/input";
 import { BoardType, View, EditorEventActivationType } from "./types";
 import { $$log } from "./utils/debug";
-import { changeView, getOverrideBg, promptUser, setHoveredBoardEvent, setOverrideBg } from "./app/appControl";
+import { changeView, highlightSpaces, promptUser, setHoveredBoardEvent, setOverrideBg } from "./app/appControl";
 import { $setting, get } from "./views/settings";
 import { isDebug } from "./debug";
 import { SectionHeading } from "./propertiesshared";
@@ -21,6 +21,9 @@ import setbgImage from "./img/header/setbg.png";
 import editdetailsImage from "./img/header/editdetails.png";
 import deadendImage from "./img/editor/boardproperties/deadend.png";
 import animaddImage from "./img/toolbar/animadd.png";
+import { store } from "./app/store";
+import { setBoardEventActivationTypeAction, setBoardEventEventParameterAction } from "./app/boardState";
+import { useAppSelector, useCurrentBoard } from "./app/hooks";
 
 interface IBoardPropertiesProps {
   currentBoard: IBoard;
@@ -36,7 +39,7 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
     let animationBGList;
     if (supportsAnimationBackgrounds(board)) {
       animationBGList = (
-        <BackgroundList list="animbg" board={board}
+        <BackgroundList list="animbg"
           title="Animation Backgrounds"
           onAddBackground={this.onAddAnimBG}
           onRemoveBackground={this.onRemoveAnimBG}
@@ -52,7 +55,7 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
       const hasBgs = board.additionalbg && board.additionalbg.length;
       const hasBgCode = !!board.additionalbgcode;
       additionalBGList = (advanced || hasBgs || hasBgCode) && (
-        <BackgroundList list="additionalbg" board={board}
+        <BackgroundList list="additionalbg"
           title="Additional Backgrounds"
           onAddBackground={this.onAddAdditionalBG}
           onRemoveBackground={this.onRemoveAdditionalBG}
@@ -76,22 +79,22 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
   }
 
   onAddAnimBG = (bg: string) => {
-    addAnimBG(bg, this.props.currentBoard)
+    addAnimBG(bg);
     this.forceUpdate();
   }
 
   onRemoveAnimBG = (index: number) => {
-    removeAnimBG(index, this.props.currentBoard)
+    removeAnimBG(index);
     this.forceUpdate();
   }
 
   onAddAdditionalBG = (bg: string) => {
-    addAdditionalBG(bg, this.props.currentBoard)
+    addAdditionalBG(bg);
     this.forceUpdate();
   }
 
   onRemoveAdditionalBG = (index: number) => {
-    removeAdditionalBG(index, this.props.currentBoard)
+    removeAdditionalBG(index);
     this.forceUpdate();
   }
 
@@ -120,8 +123,7 @@ const BGSelect = class BGSelect extends React.Component<IBGSelectProps> {
 
     let reader = new FileReader();
     reader.onload = error => {
-      setBG(reader.result);
-      render();
+      setBG(reader.result as string);
     };
     reader.readAsDataURL(file);
   }
@@ -221,54 +223,50 @@ class CheckDeadEnds extends React.Component<ICheckDeadEndsProps> {
 };
 
 interface IBackgroundListProps {
-  board: IBoard;
-  list: keyof IBoard;
+  list: "animbg" | "additionalbg";
   title: string;
   onAddBackground(bg: string): void;
   onRemoveBackground(index: number): void;
   onSetOverrideBackground(bg: string | null): void;
 }
 
-class BackgroundList extends React.Component<IBackgroundListProps> {
-  state = { }
+const BackgroundList: React.FC<IBackgroundListProps> = (props) => {
+  const board = useCurrentBoard();
+  const overrideBg = useAppSelector(state => state.app.overrideBg);
 
-  render() {
-    const overrideBg = getOverrideBg();
-
-    let bgs = this.props.board[this.props.list] || [];
-    let i = 0;
-    let entries = bgs.map((bg: string) => {
-      i++;
-      return (
-        <BackgroundListEntry bg={bg} text={"Background " + i} key={i} index={i-1}
-          showing={bg === overrideBg}
-          onRemoveBackground={this.props.onRemoveBackground}
-          onSetOverrideBackground={this.props.onSetOverrideBackground} />
-      );
-    });
-
-    const romBoard = boardIsROM(this.props.board);
-
-    let addButton;
-    if (!romBoard) {
-      addButton = <AddBackgroundButton onAddBackground={this.props.onAddBackground} />;
-    }
-
-    if (!addButton && !entries.length) {
-      return null;
-    }
-
+  let bgs = board[props.list] || [];
+  let i = 0;
+  let entries = bgs.map(bg => {
+    i++;
     return (
-      <div className="propertiesAnimationBGList">
-        <SectionHeading text={this.props.title}>
-          {this.props.children}
-        </SectionHeading>
-        {entries}
-        {addButton}
-      </div>
+      <BackgroundListEntry bg={bg} text={"Background " + i} key={i} index={i-1}
+        showing={bg === overrideBg}
+        onRemoveBackground={props.onRemoveBackground}
+        onSetOverrideBackground={props.onSetOverrideBackground} />
     );
+  });
+
+  const romBoard = boardIsROM(board);
+
+  let addButton;
+  if (!romBoard) {
+    addButton = <AddBackgroundButton onAddBackground={props.onAddBackground} />;
   }
-};
+
+  if (!addButton && !entries.length) {
+    return null;
+  }
+
+  return (
+    <div className="propertiesAnimationBGList">
+      <SectionHeading text={props.title}>
+        {props.children}
+      </SectionHeading>
+      {entries}
+      {addButton}
+    </div>
+  );
+}
 
 interface IBackgroundListEntryProps {
   bg: string;
@@ -463,44 +461,36 @@ const BoardEventList: React.FC<IBoardEventListProps> = props => {
     const eventInstance = createEventInstance(event, {
       activationType: EditorEventActivationType.BEFORE_PLAYER_TURN
     });
-    addEventToBoard(props.board, eventInstance);
-    render();
+    addEventToBoard(eventInstance);
     forceUpdate();
   }
 
-  function onEventDeleted(event: IEventInstance) {
-    removeEventFromBoard(props.board, event);
-    render();
+  function onEventDeleted(event: IEventInstance, eventIndex: number) {
+    removeEventFromBoard(eventIndex);
     forceUpdate();
   }
 
-  function onEventMouseEnter(event: IEventInstance) {
-    setHoveredBoardEvent(event);
+  function onEventMouseEnter(event: IEventInstance, eventIndex: number) {
+    setHoveredBoardEvent(eventIndex);
   }
 
   function onEventMouseLeave(event: IEventInstance) {
-    setHoveredBoardEvent(null);
+    setHoveredBoardEvent(-1);
   }
 
-  function onEventActivationTypeToggle(event: IEventInstance) {
+  function onEventActivationTypeToggle(event: IEventInstance, eventIndex: number) {
     const availableTypes = getAvailableBoardActivationTypes(props.board);
     const curTypeIndex = availableTypes.indexOf(event.activationType);
     if (curTypeIndex === -1) {
       throw new Error(`Unexpected board event activation type ${event.activationType}`);
     }
 
-    const nextType = availableTypes[(curTypeIndex + 1) % availableTypes.length];
-    event.activationType = nextType;
+    const activationType = availableTypes[(curTypeIndex + 1) % availableTypes.length];
+    store.dispatch(setBoardEventActivationTypeAction({ eventIndex, activationType }))
   }
 
-  function onEventParameterSet(event: IEventInstance, name: string, value: number | boolean) {
-    if (!event.parameterValues) {
-      event.parameterValues = {};
-    }
-    event.parameterValues[name] = value;
-    renderConnections();
-    renderSpaces();
-    renderSelectedSpaces();
+  function onEventParameterSet(event: IEventInstance, eventIndex: number, name: string, value: number | boolean) {
+    store.dispatch(setBoardEventEventParameterAction({ eventIndex, name, value }));
   }
 
   return (

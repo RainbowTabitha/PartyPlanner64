@@ -1,12 +1,12 @@
 import { romhandler } from "../romhandler";
-import { IBoard, ISpace, IEventInstance } from "../boards";
 import { Action, View } from "../types";
 import { IEvent } from "../events/events";
 import { Notification } from "../components/notifications";
 import { IDecisionTreeNode } from "../ai/aitrees";
 import { store } from "./store";
 import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./blocker";
-import { changeViewAction } from "./appState";
+import { changeCurrentActionAction, changeViewAction, setOverrideBgAction, setRomLoadedAction } from "./appState";
+import { setTemporaryUIConnections, changeCurrentEventAction, clearSelectedSpacesAction, EventType, selectCurrentBoard, selectCurrentEvent, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpacesAction, SpaceIndexMap } from "./boardState";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
@@ -16,69 +16,105 @@ export function changeView(view: View): void {
   store.dispatch(changeViewAction(view));
 }
 
-export function currentBoardChanged(currentBoard: IBoard) {
+export function currentBoardChanged() {
+  changeCurrentAction(Action.MOVE);
+  setOverrideBg(null);
   getAppInstance().setState({
-    currentBoard: currentBoard,
-    selectedSpaces: null,
-    currentAction: Action.MOVE,
-    overrideBg: null,
     aiTree: null,
   });
 }
 
-export function boardsChanged(boards: IBoard[]) {
-  getAppInstance().setState({ boards, aiTree: null }); // : getBoards()
+export function boardsChanged() {
+  getAppInstance().setState({ aiTree: null });
 }
 
 export function romLoadedChanged() {
-  getAppInstance().setState({ romLoaded: romhandler.romIsLoaded() });
+  store.dispatch(setRomLoadedAction(romhandler.romIsLoaded()));
 }
 
 export function changeCurrentAction(action: Action) {
-  getAppInstance().setState({ currentAction: action });
+  store.dispatch(changeCurrentActionAction(action));
 }
 
 export function getCurrentAction() {
-  return getAppInstance().state.currentAction;
+  return store.getState().app.currentAction;
 }
 
-export function changeSelectedSpaces(selectedSpaces: ISpace[]) {
-  getAppInstance().setState({ selectedSpaces, aiTree: null });
+export function clearSelectedSpaces() {
+  store.dispatch(clearSelectedSpacesAction());
+}
+
+export function changeSelectedSpaces(selectedSpaceIndices: number[]) {
+  store.dispatch(setSelectedSpacesAction(selectedSpaceIndices));
+}
+
+export function getSelectedSpaceIndices(): SpaceIndexMap {
+  return store.getState().data.selectedSpaceIndices;
+}
+
+export function getValidSelectedSpaceIndices(): number[] {
+  const state = store.getState();
+  const curBoard = selectCurrentBoard(state);
+  const selectedSpaceIndices = getSelectedSpaceIndices();
+  const selectedIndices = [];
+  for (let index in selectedSpaceIndices) {
+    let space = curBoard.spaces[index];
+
+    // TODO: There can be bad indices in the set when switching between boards.
+    if (space) {
+      selectedIndices.push(parseInt(index, 10));
+    }
+  }
+  return selectedIndices;
 }
 
 export function getSelectedSpaces() {
-  return getAppInstance().state.selectedSpaces;
+  const state = store.getState();
+  const curBoard = selectCurrentBoard(state);
+  const selectedSpaceIndices = getValidSelectedSpaceIndices();
+  const selectedSpaces = [];
+  for (let index of selectedSpaceIndices) {
+    let space = curBoard.spaces[index];
+    selectedSpaces.push(space);
+  }
+  return selectedSpaces;
 }
 
-export function changeCurrentEvent(event: IEvent | null, board?: IBoard) {
-  getAppInstance().setState({
-    currentEvent: event,
-    currentEventIsBoardEvent: !!board,
-  });
+export function highlightSpaces(spaceIndices: number[]): void {
+  store.dispatch(setHighlightedSpacesAction({ spaceIndices }));
 }
 
-export function getCurrentEvent() {
-  return getAppInstance().state.currentEvent;
+export function drawConnection(x1: number, y1: number, x2: number, y2: number) {
+  store.dispatch(setTemporaryUIConnections({ connections: [
+    [x1, y1, x2, y2]
+  ]}));
+}
+
+export function changeCurrentEvent(eventId: string | null, isBoard?: boolean) {
+  let eventType = EventType.None;
+  if (eventId) {
+    eventType = isBoard ? EventType.Board : EventType.Library;
+  }
+  store.dispatch(changeCurrentEventAction({
+    id: eventId,
+    type: eventType,
+  }));
+}
+
+export function getCurrentEvent(): IEvent | null {
+  return selectCurrentEvent(store.getState());
 }
 
 export function getCurrentEventIsBoardEvent(): boolean {
-  return getAppInstance().state.currentEventIsBoardEvent;
+  return store.getState().data.currentEventType === EventType.Board;
 }
 
-export function setHoveredBoardEvent(hoveredBoardEvent: IEventInstance | null) {
-  getAppInstance().setState({ hoveredBoardEvent });
-}
-
-export function getHoveredBoardEvent(): IEventInstance | null {
-  return getAppInstance().state.hoveredBoardEvent;
+export function setHoveredBoardEvent(hoveredBoardEventIndex: number) {
+  store.dispatch(setHoveredBoardEventIndexAction({ eventIndex: hoveredBoardEventIndex }));
 }
 
 export function setOverrideBg(overrideBg: string | null) {
-  getAppInstance().setState({ overrideBg });
-}
-
-export function getOverrideBg(): string | null {
-  return getAppInstance()?.state.overrideBg || null;
+  store.dispatch(setOverrideBgAction(overrideBg));
 }
 
 export function blockUI(blocked: boolean): void {

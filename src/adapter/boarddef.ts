@@ -170,7 +170,7 @@ function _writeSpaces(boardDefBuffer: ArrayBuffer, spaces: ISpace[]) {
   spaces.forEach((space) => {
     boardDefView.setUint32(curOffset, space.type);
     boardDefView.setFloat32(curOffset + 4, space.x);
-    boardDefView.setFloat32(curOffset + 8, space.z);
+    boardDefView.setFloat32(curOffset + 8, space.z || 0);
     boardDefView.setFloat32(curOffset + 12, space.y);
     curOffset += 16;
   });

@@ -70,6 +70,7 @@ function _getSettingDefault(id: string) {
   const setting = _getSetting(id);
   if (setting && setting.type !== "section")
     return setting.default;
+  return false;
 }
 
 class SettingsManager {
@@ -83,35 +84,47 @@ class SettingsManager {
     this._tempSettings = {};
   }
   getSetting(name: string) {
-    if (!Cookies.enabled) {
-      // Allow changing settings for at least the session without cookies.
-      if (this._tempSettings.hasOwnProperty(name))
-        return this._tempSettings[name];
-      return this._tempSettings[name] = _getSettingDefault(name);
+    // Allow changing settings for at least the session without cookies.
+    if (this._tempSettings.hasOwnProperty(name)) {
+      return this._tempSettings[name];
     }
 
-    let val = Cookies.get(name);
-    if (val === undefined) // Never set, use default.
-      return _getSettingDefault(name);
-    return JSON.parse(val);
+    let value: boolean;
+    if (Cookies.enabled) {
+      let val = Cookies.get(name);
+      if (val === undefined) {
+        value = _getSettingDefault(name);
+      }
+      else {
+        value = JSON.parse(val) as boolean;
+      }
+    }
+    else {
+      value = _getSettingDefault(name);
+    }
+
+    this._tempSettings[name] = value;
+    return value;
   }
 
   setSetting(name: string, value: any) {
-    if (!Cookies.enabled) {
-      this._tempSettings[name] = value;
-      return;
+    this._tempSettings[name] = value;
+    if (Cookies.enabled) {
+      Cookies.set(name, JSON.stringify(value));
     }
-
-    Cookies.set(name, JSON.stringify(value));
   }
 
   reset() {
-    _settings.forEach((setting) => {
-      if (setting.type === "section")
-        return;
-      if (setting.id)
-        Cookies.expire(setting.id);
-    });
+    this._tempSettings = {};
+
+    if (Cookies.enabled) {
+      _settings.forEach((setting) => {
+        if (setting.type === "section")
+          return;
+        if (setting.id)
+          Cookies.expire(setting.id);
+      });
+    }
   }
 }
 const _settingsManager = new SettingsManager();

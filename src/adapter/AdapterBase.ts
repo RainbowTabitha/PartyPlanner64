@@ -3,7 +3,7 @@ import { getBoardInfos, getBoardInfoByIndex } from "./boardinfo";
 import { hvqfs } from "../fs/hvqfs";
 import { mainfs } from "../fs/mainfs";
 import { audio } from "../fs/audio";
-import { IBoard, addEventByIndex, getConnections, addEventToSpace, getSpacesOfSubType, ISpace, IEventInstance, getDeadSpace, getDeadSpaceIndex, BoardAudioType } from "../boards";
+import { IBoard, addEventByIndex, getConnections, getSpacesOfSubType, ISpace, IEventInstance, getDeadSpace, getDeadSpaceIndex, BoardAudioType, addEventToSpaceInternal } from "../boards";
 import { copyObject } from "../utils/obj";
 import { determineChains, padChains, create as createBoardDef, parse as parseBoardDef } from "./boarddef";
 import { BoardType, EventActivationType, SpaceSubtype, getEventActivationTypeFromEditorType, EditorEventActivationType } from "../types";
@@ -286,7 +286,7 @@ export abstract class AdapterBase {
     for (let spaceIdx = 0; spaceIdx < board.spaces.length; spaceIdx++) {
       let space = board.spaces[spaceIdx];
 
-      const spacePoint = new THREE.Vector3(space.x, space.y, space.z);
+      const spacePoint = new THREE.Vector3(space.x, space.y, space.z || 0);
       if (board.game === 2 || board.game === 3) {
         spacePoint.x *= (bg.scaleFactor / 1.2);
         spacePoint.y *= (bg.scaleFactor / 1.2);
@@ -629,7 +629,7 @@ export abstract class AdapterBase {
       let events = space.events || [];
       let hasStarEvent = events.some(e => { return e.id === "STAR" }); // Pretty unlikely
       if (!hasStarEvent)
-        addEventToSpace(board, space, createEventInstance(StarEvent));
+        addEventToSpaceInternal(board, space, createEventInstance(StarEvent));
     }
   }
 
@@ -678,11 +678,11 @@ export abstract class AdapterBase {
           gateNextChain: [nextChainIndex, nextChainSpaceIndex],
         },
       });
-      addEventToSpace(board, entrySpace, gateEvent);
-      addEventToSpace(board, exitSpace, gateEvent);
+      addEventToSpaceInternal(board, entrySpace, gateEvent);
+      addEventToSpaceInternal(board, exitSpace, gateEvent);
 
       // Need an additional event to close the gate.
-      addEventToSpace(board, space, createEventInstance(GateClose, {
+      addEventToSpaceInternal(board, space, createEventInstance(GateClose, {
         parameterValues: {
           gateIndex,
         },
@@ -974,6 +974,7 @@ export abstract class AdapterBase {
         }
 
         const event = getEvent(eventInstance.id, board);
+        assert(!!event);
         eventAsms.push(
           prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
         );
@@ -1020,6 +1021,7 @@ export abstract class AdapterBase {
         }
 
         const event = getEvent(eventInstance.id, board);
+        assert(!!event);
         eventAsms.push(
           prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
         );

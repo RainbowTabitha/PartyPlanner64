@@ -1,12 +1,10 @@
 import { IEvent, IEventWriteInfo, IEventParameter } from "./events";
-import { getSavedEvents } from "../utils/localstorage";
 import { $$log } from "../utils/debug";
 import { copyRange } from "../utils/arrays";
 import { getGameName, Game, getExecutionTypeByName, EventParameterTypes, EventParameterType, EventCodeLanguage, EditorEventActivationType } from "../types";
 import { assemble } from "mips-assembler";
 import { prepAsm } from "./prepAsm";
 import { IEventInstance } from "../boards";
-import { addEventToLibrary } from "./EventLibrary";
 import { compile } from "../utils/c-compiler";
 import { prepC } from "./prepC";
 
@@ -253,25 +251,4 @@ export async function writeCustomEvent(dataView: DataView, spaceEvent: IEventIns
   $$log(preppedAsm);
   copyRange(dataView, bytes, 0, 0, bytes.byteLength);
   return [info.offset!, bytes.byteLength, symMap["main"] || 0];
-}
-
-// Yes, right here, load cached events...
-const cachedEvents = getSavedEvents();
-if (cachedEvents && cachedEvents.length) {
-  cachedEvents.forEach((eventObj: IEvent) => {
-    if (!eventObj || !(eventObj as ICustomEvent).asm)
-      return;
-    try {
-      const customEventObj = eventObj as ICustomEvent;
-      const customEvent = createCustomEvent(
-        customEventObj.language || EventCodeLanguage.MIPS,
-        customEventObj.asm
-      );
-      addEventToLibrary(customEvent);
-    }
-    catch (e) {
-      // Just let the error slide, event format changed or something?
-      console.error("Error reading cached event: " + e.toString());
-    }
-  });
 }

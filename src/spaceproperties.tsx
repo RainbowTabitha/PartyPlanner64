@@ -1,12 +1,11 @@
 import * as React from "react";
 import { BoardType, SpaceSubtype, Space, EditorEventActivationType, GameVersion } from "./types";
-import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard, IEventInstance } from "./boards";
+import { ISpace, addEventToSpace, removeEventFromSpace, getCurrentBoard, IEventInstance, setHostsStar } from "./boards";
 import { EventsList } from "./components/EventList";
 import { $setting, get } from "./views/settings";
 import { makeKeyClick, useForceUpdate } from "./utils/react";
 import { IEvent, createEventInstance } from "./events/events";
-import { render, renderConnections, renderSpaces } from "./renderer";
-import { changeDecisionTree } from "./app/appControl";
+import { changeDecisionTree, getValidSelectedSpaceIndices } from "./app/appControl";
 import { Button } from "./controls";
 import { $$log } from "./utils/debug";
 
@@ -55,104 +54,96 @@ import powerupImage from "./img/toolbar/powerup.png";
 import startblueImage from "./img/toolbar/startblue.png";
 import startredImage from "./img/toolbar/startred.png";
 import { SectionHeading } from "./propertiesshared";
+import { useCallback } from "react";
+import { useSelectedSpaceIndices, useSelectedSpaces } from "./app/hooks";
+import { setSpaceEventActivationTypeAction, setSpaceEventEventParameterAction, setSpacePositionsAction, setSpaceTypeAction } from "./app/boardState";
+import { store } from "./app/store";
 
 interface ISpacePropertiesProps {
   boardType: BoardType;
   gameVersion: GameVersion;
-  selectedSpaces: ISpace[] | null;
 }
 
-export class SpaceProperties extends React.Component<ISpacePropertiesProps> {
-  state = { }
+export function SpaceProperties(props: ISpacePropertiesProps) {
+  const forceUpdate = useForceUpdate();
 
-  onTypeChanged = (type: Space, subtype?: SpaceSubtype) => {
-    const selectedSpaces = this.props.selectedSpaces!;
-    for (const space of selectedSpaces) {
-      if (type !== undefined) {
-        space.type = type;
-        if (space.rotation) {
-          delete space.rotation;
-        }
-      }
-      if (subtype !== undefined)
-        space.subtype = subtype;
-      else
-        delete space.subtype;
-    }
-    render();
-    this.forceUpdate();
-  }
+  const selectedSpaceIndices = useSelectedSpaceIndices();
+  const spaces = useSelectedSpaces();
 
-  onStarCheckChanged = (checked: boolean) => {
-    const selectedSpaces = this.props.selectedSpaces!;
-    for (const space of selectedSpaces) {
-      space.star = !!checked;
-    }
-    render();
-    this.forceUpdate();
-  }
+  const onTypeChanged = useCallback((type: Space, subtype?: SpaceSubtype) => {
+    store.dispatch(setSpaceTypeAction({
+      spaceIndices: selectedSpaceIndices,
+      type,
+      subtype,
+    }));
+    forceUpdate();
+  }, [selectedSpaceIndices, forceUpdate]);
 
-  render() {
-    const spaces = this.props.selectedSpaces;
-    if (!spaces || !spaces.length) {
-      return (
-        <div className="propertiesEmptyText">No space selected.</div>
-      );
-    }
+  const onStarCheckChanged = useCallback((checked: boolean) => {
+    setHostsStar(getValidSelectedSpaceIndices(), !!checked);
+    forceUpdate();
+  }, [forceUpdate]);
 
-    const multipleSelections = spaces.length > 1;
-
-    const curSpace = spaces[0];
-    const gameVersion = this.props.gameVersion;
-    const boardType = this.props.boardType;
-    const isDuel = boardType === BoardType.DUEL;
-    const spaceToggleTypes = _getSpaceTypeToggles(gameVersion, boardType);
-    const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion, boardType);
-
-    let currentType: Space | undefined = curSpace.type;
-    let currentSubtype = curSpace.subtype;
-    let hostsStarChecked = curSpace.star || false;
-    let hostsStarIndeterminate = false;
-    if (multipleSelections) {
-      // Only show a type as selected if all spaces are the same.
-      for (const space of spaces) {
-        if (!space)
-          continue;
-        if (space.type !== currentType)
-          currentType = undefined;
-        if (space.subtype !== currentSubtype)
-          currentSubtype = undefined;
-        if (space.star !== hostsStarChecked)
-          hostsStarIndeterminate = true;
-      }
-    }
-
+  if (!spaces || !spaces.length) {
     return (
-      <div className="properties">
-        <div className="propertiesPadded">
-          {!multipleSelections && <SpaceCoords space={curSpace} />}
-          <SpaceTypeToggle toggleTypes={spaceToggleTypes}
-            type={currentType}
-            subtype={currentSubtype}
-            typeChanged={this.onTypeChanged} />
-          <SpaceTypeToggle toggleTypes={spaceToggleSubTypes}
-            type={currentType}
-            subtype={currentSubtype}
-            typeChanged={this.onTypeChanged} />
-          {!isDuel && <SpaceStarCheckbox checked={hostsStarChecked}
-            indeterminate={hostsStarIndeterminate}
-            onStarCheckChanged={this.onStarCheckChanged} />}
-          <SpaceDecisionTreeButton space={curSpace} />
-        </div>
-        {!multipleSelections &&
-          <SpaceEventList selectedSpace={curSpace} />}
-      </div>
+      <div className="propertiesEmptyText">No space selected.</div>
     );
   }
+
+  const multipleSelections = spaces.length > 1;
+
+  const curSpace = spaces[0];
+  const curSpaceIndex = getValidSelectedSpaceIndices()[0];
+  const gameVersion = props.gameVersion;
+  const boardType = props.boardType;
+  const isDuel = boardType === BoardType.DUEL;
+  const spaceToggleTypes = _getSpaceTypeToggles(gameVersion, boardType);
+  const spaceToggleSubTypes = _getSpaceSubTypeToggles(gameVersion, boardType);
+
+  let currentType: Space | undefined = curSpace.type;
+  let currentSubtype = curSpace.subtype;
+  let hostsStarChecked = curSpace.star || false;
+  let hostsStarIndeterminate = false;
+  if (multipleSelections) {
+    // Only show a type as selected if all spaces are the same.
+    for (const space of spaces) {
+      if (!space)
+        continue;
+      if (space.type !== currentType)
+        currentType = undefined;
+      if (space.subtype !== currentSubtype)
+        currentSubtype = undefined;
+      if (!!space.star !== hostsStarChecked)
+        hostsStarIndeterminate = true;
+    }
+  }
+
+  return (
+    <div className="properties">
+      <div className="propertiesPadded">
+        {!multipleSelections && <SpaceCoords space={curSpace} spaceIndex={curSpaceIndex} />}
+        <SpaceTypeToggle toggleTypes={spaceToggleTypes}
+          type={currentType}
+          subtype={currentSubtype}
+          typeChanged={onTypeChanged} />
+        <SpaceTypeToggle toggleTypes={spaceToggleSubTypes}
+          type={currentType}
+          subtype={currentSubtype}
+          typeChanged={onTypeChanged} />
+        {!isDuel && <SpaceStarCheckbox checked={hostsStarChecked}
+          indeterminate={hostsStarIndeterminate}
+          onStarCheckChanged={onStarCheckChanged} />}
+        <SpaceDecisionTreeButton space={curSpace} />
+      </div>
+      {!multipleSelections &&
+        <SpaceEventList selectedSpace={curSpace} />}
+    </div>
+  );
 };
 
 interface ISpaceCoordsProps {
   space: ISpace;
+  spaceIndex: number;
 }
 
 class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
@@ -166,7 +157,12 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
       return;
     if (!this.state.oldX)
       this.setState({ oldX: this.props.space.x });
-    (this as any).props.space.x = isBlank ? "" : newX;
+    store.dispatch(setSpacePositionsAction({
+      spaceIndices: [this.props.spaceIndex],
+      coords: [{
+        x: isBlank ? 0 : newX
+      }]
+    }));
     this.forceUpdate();
   }
 
@@ -178,28 +174,37 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
       return;
     if (!this.state.oldY)
       this.setState({ oldY: this.props.space.y });
-    (this as any).props.space.y = isBlank ? "" : newY;
+    store.dispatch(setSpacePositionsAction({
+      spaceIndices: [this.props.spaceIndex],
+      coords: [{
+        y: isBlank ? 0 : newY
+      }]
+    }));
     this.forceUpdate();
   }
 
-  onChangeRotation = (event: any) => {
-    let newRot = parseInt(event.target.value, 10);
-    let isBlank = event.target.value === "";
-    if ((!isBlank && isNaN(newRot)) || newRot < 0 || newRot > 360)
-      return;
-    if (!this.state.oldRot)
-      this.setState({ oldRot: this.props.space.rotation });
-    if (!newRot)
-      delete this.props.space.rotation;
-    else
-      this.props.space.rotation = newRot;
-    this.forceUpdate();
-  }
+  // onChangeRotation = (event: any) => {
+  //   let newRot = parseInt(event.target.value, 10);
+  //   let isBlank = event.target.value === "";
+  //   if ((!isBlank && isNaN(newRot)) || newRot < 0 || newRot > 360)
+  //     return;
+  //   if (!this.state.oldRot)
+  //     this.setState({ oldRot: this.props.space.rotation });
+  //   if (!newRot)
+  //     delete this.props.space.rotation;
+  //   else
+  //     this.props.space.rotation = newRot;
+  //   this.forceUpdate();
+  // }
 
   onCoordSet = () => {
-    this.props.space.x = this.props.space.x || 0;
-    this.props.space.y = this.props.space.y || 0;
-    render();
+    store.dispatch(setSpacePositionsAction({
+      spaceIndices: [this.props.spaceIndex],
+      coords: [{
+        x: this.props.space.x || 0,
+        y: this.props.space.y || 0,
+      }]
+    }));
     this.setState({ oldX: undefined, oldY: undefined, oldRot: undefined });
     this.forceUpdate();
   }
@@ -217,13 +222,13 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
     // const isArrow = space.type === Space.ARROW;
 
     return (
-      <React.Fragment>
+      <>
         <div className="spaceCoordRow">
           <span className="coordLabel">X:</span>
-          <input className="coordInput" type="text" value={space.x} onChange={this.onChangeX}
+          <input className="coordInput" type="number" value={space.x} onChange={this.onChangeX}
             onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
           <span className="coordLabel">Y:</span>
-          <input className="coordInput" type="text" value={space.y} onChange={this.onChangeY}
+          <input className="coordInput" type="number" value={space.y} onChange={this.onChangeY}
             onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
         </div>
         {/* {isArrow &&
@@ -233,7 +238,7 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
                 onBlur={this.onCoordSet} onKeyUp={this.onKeyUp} />
           </div>
         } */}
-      </React.Fragment>
+      </>
     );
   }
 };
@@ -522,32 +527,29 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = props => {
     const spaceEvent = createEventInstance(event, {
       activationType: getDefaultActivationType(space)
     });
-    addEventToSpace(getCurrentBoard(), space, spaceEvent);
-    render();
+    addEventToSpace(spaceEvent);
     forceUpdate();
   }
 
-  function onEventDeleted(event: IEventInstance) {
-    const space = props.selectedSpace;
-    removeEventFromSpace(space, event);
-    render();
+  function onEventDeleted(event: IEventInstance, eventIndex: number) {
+    removeEventFromSpace(eventIndex);
     forceUpdate();
   }
 
-  function onEventActivationTypeToggle(event: IEventInstance) {
+  function onEventActivationTypeToggle(event: IEventInstance, eventIndex: number) {
+    let activationType: EditorEventActivationType;
     if (event.activationType === EditorEventActivationType.WALKOVER)
-      event.activationType = EditorEventActivationType.LANDON;
+      activationType = EditorEventActivationType.LANDON;
     else
-      event.activationType = EditorEventActivationType.WALKOVER;
+      activationType = EditorEventActivationType.WALKOVER;
+
+    store.dispatch(setSpaceEventActivationTypeAction({ eventIndex, activationType }));
   }
 
-  function onEventParameterSet(event: IEventInstance, name: string, value: number | boolean) {
-    if (!event.parameterValues) {
-      event.parameterValues = {};
-    }
-    event.parameterValues[name] = value;
-    renderConnections();
-    renderSpaces();
+  function onEventParameterSet(event: IEventInstance, eventIndex: number, name: string, value: number | boolean) {
+    store.dispatch(setSpaceEventEventParameterAction({
+      eventIndex, name, value
+    }));
   }
 
   return (

@@ -143,7 +143,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 
   _spacesWithGateEvents.forEach(spaceIndex => {
     const gateEventSpace = board.spaces[spaceIndex];
-    forEachEvent(board, (event, space) => {
+    forEachEvent(board, (event, eventIndex, space) => {
       if (event.id !== Gate.id) {
         return;
       }

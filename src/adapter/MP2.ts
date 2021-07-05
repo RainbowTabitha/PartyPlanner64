@@ -1,5 +1,5 @@
 import { AdapterBase } from "./AdapterBase";
-import { IBoard, ISpace, addEventToSpace } from "../boards";
+import { IBoard, ISpace, addEventToSpaceInternal } from "../boards";
 import { animationfs } from "../fs/animationfs";
 import { Space } from "../types";
 import { createEventInstance } from "../events/events";
@@ -61,7 +61,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     let bgPromises = [
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
       this._writeAnimationBackgrounds(boardInfo.animBgSet!, board.bg.width, board.bg.height, board.bg.src, board.animbg),
-      this._writeBackground(bgIndex + 2, board.otherbg.largescene, 320, 240), // Game start, end
+      this._writeBackground(bgIndex + 2, board.otherbg.largescene!, 320, 240), // Game start, end
       this._writeOverviewBackground(bgIndex + 6, board.bg.src), // Overview map
       this.onWriteBoardSelectImg(board, boardInfo), // The board select image
       this._writeBoardSelectIcon(board, boardInfo), // The board select icon
@@ -77,7 +77,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
   hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.BANK) {
-      addEventToSpace(board, space, createEventInstance(BankEvent));
+      addEventToSpaceInternal(board, space, createEventInstance(BankEvent));
     }
   }
 
@@ -385,7 +385,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         clearTimeout(failTimer);
         resolve();
       };
-      srcImage.src = board.otherbg.boardselect;
+      srcImage.src = board.otherbg.boardselect!;
     });
   }
 
@@ -429,7 +429,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         newBoardSelectIconImage.onload = function() {
           resolve();
         };
-        newBoardSelectIconImage.src = boardSelectIconSrc;
+        newBoardSelectIconImage.src = boardSelectIconSrc!;
       });
 
       let iconPromises = [blankBackPromise, newIconPromise];
@@ -564,7 +564,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         clearTimeout(failTimer);
         resolve();
       };
-      srcImage.src = board.otherbg.boardlogo;
+      srcImage.src = board.otherbg.boardlogo!;
 
       // Just blank out the pause logo, it is not worth replacing.
       let pauseLogoImg = boardInfo.img.pauseLogoImg;

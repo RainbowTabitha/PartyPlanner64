@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ISpace, getCurrentBoard } from "./boards";
 import { Space, SpaceSubtype, BoardType } from "./types";
-import { render, updateRightClickMenu } from "./renderer";
+import { updateRightClickMenu } from "./renderer";
 import { $setting, get } from "./views/settings";
 
 import blueImage from "./img/toolbar/blue.png";
@@ -48,11 +48,15 @@ import gameguyduelImage from "./img/toolbar/gameguyduel.png";
 import powerupImage from "./img/toolbar/powerup.png";
 import startblueImage from "./img/toolbar/startblue.png";
 import startredImage from "./img/toolbar/startred.png";
+import { getValidSelectedSpaceIndices } from "./app/appControl";
+import { setSpacePositionsAction, setSpaceTypeAction } from "./app/boardState";
+import { store } from "./app/store";
 
 let _globalHandler: any;
 
 interface IRightClickMenuProps {
   space?: ISpace | null;
+  spaceIndex: number;
 }
 
 interface IRightClickMenuState {
@@ -84,7 +88,7 @@ export class RightClickMenu extends React.Component<IRightClickMenuProps, IRight
     // But also let the canvas handlers decide what happens if they are clicked.
     if (this.elementIsWithin(event.target) || event.target.tagName.toUpperCase() === "CANVAS")
       return;
-    updateRightClickMenu(null);
+    updateRightClickMenu(-1);
   }
 
   handleClick = (event: any) => {
@@ -97,17 +101,8 @@ export class RightClickMenu extends React.Component<IRightClickMenuProps, IRight
   }
 
   onTypeChanged = (type: Space, subtype?: SpaceSubtype) => {
-    if (type !== undefined) {
-      this.props.space!.type = type;
-      if (this.props.space!.rotation) {
-        delete this.props.space!.rotation;
-      }
-    }
-    if (subtype !== undefined)
-      this.props.space!.subtype = subtype;
-    else
-      delete this.props.space!.subtype;
-    render();
+    const spaceIndices = getValidSelectedSpaceIndices();
+    store.dispatch(setSpaceTypeAction({ spaceIndices, type, subtype }));
     this.forceUpdate();
   }
 
@@ -131,7 +126,12 @@ export class RightClickMenu extends React.Component<IRightClickMenuProps, IRight
       return;
     if (!this.state.oldX)
       this.setState({ oldX: this.props.space!.x });
-    (this as any).props.space.x = isBlank ? "" : newX;
+    store.dispatch(setSpacePositionsAction({
+      spaceIndices: [this.props.spaceIndex],
+      coords: [{
+        x: isBlank ? 0 : newX
+      }]
+    }));
     this.forceUpdate();
   }
 
@@ -143,14 +143,23 @@ export class RightClickMenu extends React.Component<IRightClickMenuProps, IRight
       return;
     if (!this.state.oldY)
       this.setState({ oldY: this.props.space!.y });
-    (this as any).props.space.y = isBlank ? "" : newY;
+    store.dispatch(setSpacePositionsAction({
+      spaceIndices: [this.props.spaceIndex],
+      coords: [{
+        y: isBlank ? 0 : newY
+      }]
+    }));
     this.forceUpdate();
   }
 
   onCoordSet = (event?: any) => {
-    this.props.space!.x = this.props.space!.x || 0;
-    this.props.space!.y = this.props.space!.y || 0;
-    render();
+    store.dispatch(setSpacePositionsAction({
+      spaceIndices: [this.props.spaceIndex],
+      coords: [{
+        x: this.props.space!.x || 0,
+        y: this.props.space!.y || 0,
+      }]
+    }));
     this.setState({ oldX: undefined, oldY: undefined });
     this.forceUpdate();
   }

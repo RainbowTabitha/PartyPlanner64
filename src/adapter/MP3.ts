@@ -1,5 +1,5 @@
 import { AdapterBase } from "./AdapterBase";
-import { IBoard, ISpace, addEventToSpace, getConnections, addEventByIndex } from "../boards";
+import { IBoard, ISpace, getConnections, addEventByIndex, addEventToSpaceInternal } from "../boards";
 import { Space, BoardType, SpaceSubtype, EventExecutionType, EditorEventActivationType, getEventActivationTypeFromEditorType } from "../types";
 import { $$log } from "../utils/debug";
 import { createEventInstance } from "../events/events";
@@ -92,7 +92,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     let bgIndex = boardInfo.bgDir;
     let bgPromises = [
       this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
-      this._writeBackground(bgIndex + 1, board.otherbg.largescene, 320, 240), // Game start, end
+      this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
       this._writeBackground(bgIndex + 2, board.bg.src, 320, 240), // Overview map
       this._writeAdditionalBackgrounds(board),
       this.onWriteBoardSelectImg(board, boardInfo),
@@ -135,7 +135,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.BANK) {
-      addEventToSpace(board, space, createEventInstance(BankEvent));
+      addEventToSpaceInternal(board, space, createEventInstance(BankEvent));
     }
   }
 
@@ -643,7 +643,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         clearTimeout(failTimer);
         resolve();
       };
-      srcImage.src = board.otherbg.boardselect;
+      srcImage.src = board.otherbg.boardselect!;
     });
   }
 
@@ -689,7 +689,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         clearTimeout(failTimer);
         resolve();
       };
-      srcImage.src = board.otherbg.boardlogo;
+      srcImage.src = board.otherbg.boardlogo!;
 
       // Just blank out the pause logo, it is not worth replacing.
       let pauseLogoImg = boardInfo.img.pauseLogoImg;
@@ -740,7 +740,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         clearTimeout(failTimer);
         resolve();
       };
-      srcImage.src = board.otherbg.boardlogotext;
+      srcImage.src = board.otherbg.boardlogotext!;
     });
   }
 

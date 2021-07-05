@@ -3,7 +3,6 @@ import { getROMBoards, IBoard, boardIsROM, setCurrentBoard, deleteBoard, copyCur
 import * as React from "react";
 import { showDragZone, setDropHandler, hideDragZone } from "./utils/drag";
 import { makeKeyClick } from "./utils/react";
-import { render } from "./renderer";
 import { MPEditor, MPEditorDisplayMode } from "./texteditor";
 
 import * as basicContext from "basiccontext";
@@ -76,7 +75,6 @@ const Board = class Board extends React.Component<IBoardProps> {
         return;
       hideDragZone();
       deleteBoard(boardIdx);
-      render();
     });
   }
 
@@ -96,7 +94,6 @@ const Board = class Board extends React.Component<IBoardProps> {
 
   onDeleteBoard = () => {
     deleteBoard(this.props.index);
-    render();
   }
 
   onCopyBoard = () => {

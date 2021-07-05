@@ -1,5 +1,5 @@
 import { BoardType, View } from "../types";
-import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType, IBoardAudioData } from "../boards";
+import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType, IBoardAudioData, setBoardName, setBoardDescription, setBoardDifficulty, setBoardOtherBackground, setBoardAudio, IBoardAudioChanges } from "../boards";
 import * as React from "react";
 import { make8Bit } from "../utils/img/RGBA32";
 import { MPEditor, MPEditorDisplayMode } from "../texteditor";
@@ -140,81 +140,39 @@ function _getValue(id: string | undefined, props: IDetailsProps) {
 function _setValue(id: string, value: any, board: IBoard) {
   switch (id) {
     case "detailBoardName":
-      board.name = value;
+      setBoardName(value);
       refresh();
       break;
     case "detailBoardDesc":
-      board.description = value;
+      setBoardDescription(value);
       break;
     case "detailBoardDifficulty":
-      board.difficulty = value;
+      setBoardDifficulty(value);
       break;
     case "detailBoardSelectImg":
-      board.otherbg.boardselect = value;
+      setBoardOtherBackground("boardselect", value);
       break;
     case "detailBoardSelectIcon":
-      board.otherbg.boardselecticon = value;
+      setBoardOtherBackground("boardselecticon", value);
       break;
     case "detailBoardLogoImg":
-      board.otherbg.boardlogo = value;
+      setBoardOtherBackground("boardlogo", value);
       break;
     case "detailBoardLogoTextImg":
-      board.otherbg.boardlogotext = value;
+      setBoardOtherBackground("boardlogotext", value);
       break;
     case "detailBoardLargeSceneBg":
-      board.otherbg.largescene = value;
+      setBoardOtherBackground("largescene", value);
       break;
     case "detailBoardConversationBg":
-      board.otherbg.conversation = value;
+      setBoardOtherBackground("conversation", value);
       break;
     case "detailBoardSplashscreenBg":
-      board.otherbg.splashscreen = value;
+      setBoardOtherBackground("splashscreen", value);
       break;
     case "detailBoardAudio":
-      const audioChanges = value as IDetailsAudioChanges;
-      if ("audioType" in audioChanges) {
-        board.audioType = audioChanges.audioType!;
-        switch (audioChanges.audioType) {
-          case BoardAudioType.Custom:
-            if (!board.audioData) {
-              board.audioData = [];
-            }
-            break;
-        }
-      }
-      if (typeof audioChanges.gameAudioIndex === "number") {
-        board.audioIndex = audioChanges.gameAudioIndex;
-      }
-
-      const customAudioIndex = audioChanges.customAudioIndex;
-      if (typeof customAudioIndex === "number") {
-        assert(Array.isArray(board.audioData));
-        assert(customAudioIndex <= board.audioData.length);
-
-        if (customAudioIndex === board.audioData.length) {
-          board.audioData.push({
-            name: "(select a midi file)",
-            data: "",
-            soundbankIndex: 0
-          });
-        }
-
-        if (audioChanges.delete) {
-          assert(customAudioIndex < board.audioData.length);
-          board.audioData.splice(customAudioIndex, 1);
-        }
-        else {
-          if (audioChanges.midiName) {
-            board.audioData[customAudioIndex].name = audioChanges.midiName;
-          }
-          if (audioChanges.midiData) {
-            board.audioData[customAudioIndex].data = audioChanges.midiData;
-          }
-          if (typeof audioChanges.soundbankIndex === "number") {
-            board.audioData[customAudioIndex].soundbankIndex = audioChanges.soundbankIndex;
-          }
-        }
-      }
+      const audioChanges = value as IBoardAudioChanges;
+      setBoardAudio(audioChanges);
       refresh();
       break;
   }
@@ -346,7 +304,7 @@ export class Details extends React.Component<IDetailsProps> {
             <div className="detailRichTextContainer" key={detail.id}>
               <label htmlFor={detail.id}>{detail.desc}</label>
               <MPEditor id={detail.id}
-                value={value}
+                value={value as string}
                 showToolbar={!readonly}
                 displayMode={displayMode}
                 maxlines={detail.maxlines || 0}
@@ -357,13 +315,13 @@ export class Details extends React.Component<IDetailsProps> {
         case "image":
           return (
             <DetailsImage id={detail.id!} desc={detail.desc!} readonly={readonly}
-              value={value} key={detail.id} onImageSelected={this.onValueChange}
+              value={value as string} key={detail.id} onImageSelected={this.onValueChange}
               width={detail.width!} height={detail.height!} />
           );
         case "audio":
           return (
             <DetailsAudio id={detail.id!} desc={detail.desc!} readonly={readonly}
-              value={value} key={detail.id}
+              value={value as number} key={detail.id}
               onAudioSelected={this.onValueChange}
               onAudioDeleted={(id, index) => this.onValueChange(id, { customAudioIndex: index, delete: true })}/>
           );
@@ -485,22 +443,12 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
   }
 };
 
-interface IDetailsAudioChanges {
-  audioType?: BoardAudioType;
-  gameAudioIndex?: number;
-  customAudioIndex?: number;
-  midiName?: string;
-  midiData?: string;
-  soundbankIndex?: number;
-  delete?: boolean;
-}
-
 interface IDetailsAudioProps {
   id: string;
   desc: string;
   readonly: boolean;
   value: number;
-  onAudioSelected(id: string, changes: IDetailsAudioChanges): any;
+  onAudioSelected(id: string, changes: IBoardAudioChanges): any;
   onAudioDeleted(id: string, customAudioIndex: number): void;
 }
 

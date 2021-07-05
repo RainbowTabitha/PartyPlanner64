@@ -6,6 +6,8 @@ import { external } from "./renderer";
 import { setDebug, isDebug } from "./debug";
 
 import "./css/screenshot.scss";
+import { store } from "./app/store";
+import { getImageData } from "./utils/img/getImageData";
 
 interface ITakeScreenyOpts {
   renderConnections?: boolean;
@@ -15,7 +17,7 @@ interface ITakeScreenyOpts {
 }
 
 /** Takes a screenshot of the current board. */
-export function takeScreeny(opts: ITakeScreenyOpts = {}) {
+export async function takeScreeny(opts: ITakeScreenyOpts = {}) {
   const curBoard = getCurrentBoard();
   const screenCtx = createContext(curBoard.bg.width, curBoard.bg.height);
 
@@ -23,8 +25,9 @@ export function takeScreeny(opts: ITakeScreenyOpts = {}) {
   screenCtx.fillStyle = "black";
   screenCtx.fillRect(0, 0, curBoard.bg.width, curBoard.bg.height);
 
-  const bgImage = external.getBGImage();
-  screenCtx.drawImage(bgImage, 0, 0, curBoard.bg.width, curBoard.bg.height);
+  const bgImageSrc = getCurrentBackgroundSrc();
+  const bgImage = await getImageData(bgImageSrc, curBoard.bg.width, curBoard.bg.height);
+  screenCtx.putImageData(bgImage, 0, 0);
 
   // Disable debug temporarily for the render
   let origDebug = isDebug();
@@ -69,8 +72,8 @@ export const Screenshot = class Screenshot extends React.Component<IScreenshotPr
     renderBadges: true,
   }
 
-  takeScreenshot = () => {
-    let { dataUri, blobPromise } = takeScreeny({
+  takeScreenshot = async () => {
+    const { dataUri, blobPromise } = await takeScreeny({
       renderConnections: this.state.renderConnections,
       renderCharacters: this.state.renderCharacters,
       renderHiddenSpaces: this.state.renderHiddenSpaces,
@@ -134,3 +137,8 @@ const Checkbox = class Checkbox extends React.Component<ICheckboxProps> {
     );
   }
 };
+
+function getCurrentBackgroundSrc(): string {
+  const state = store.getState();
+  return state.app.overrideBg || getCurrentBoard().bg.src;
+}

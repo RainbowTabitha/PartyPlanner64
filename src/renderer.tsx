@@ -1,12 +1,11 @@
-import * as ReactDOM from "react-dom";
 import * as React from "react";
-import { useRef, useCallback, useEffect } from "react";
-import { ISpace, IBoard, getConnections, getSpaceIndex, getCurrentBoard, forEachEventParameter, IEventInstance } from "./boards";
-import { BoardType, Space, SpaceSubtype, GameVersion, EventParameterType, isArrayEventParameterType } from "./types";
+import { useRef, useCallback, useEffect, useImperativeHandle, forwardRef, useState, useMemo, useContext, useLayoutEffect } from "react";
+import { ISpace, IBoard, getConnections, getCurrentBoard, forEachEventParameter, IEventInstance } from "./boards";
+import { BoardType, Space, SpaceSubtype, GameVersion, EventParameterType, isArrayEventParameterType, Action } from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
 import { getImage } from "./images";
-import { $$hex, $$log } from "./utils/debug";
+import { $$hex, $$log, assert } from "./utils/debug";
 import { RightClickMenu } from "./rightclick";
 import { attachToCanvas, detachFromCanvas } from "./interaction";
 import { getEvent } from "./events/events";
@@ -14,58 +13,63 @@ import { getDistinctColor } from "./utils/colors";
 import { isDebug } from "./debug";
 import { takeScreeny } from "./screenshot";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
-import { getOverrideBg, setOverrideBg } from "./app/appControl";
+import { setOverrideBg } from "./app/appControl";
+import { useAppSelector, useCurrentBoard } from "./app/hooks";
+import { selectCurrentBoard, selectSelectedSpaceIndices, SpaceIndexMap } from "./app/boardState";
+import { isEmpty } from "./utils/obj";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
-
-function getEditorContentTransform(board: IBoard, editor: HTMLElement) {
-  let board_offset_x = Math.floor((editor.offsetWidth - board.bg.width) / 2);
-  board_offset_x = Math.max(0, board_offset_x);
-  let board_offset_y = Math.floor((editor.offsetHeight - board.bg.height) / 2);
-  board_offset_y = Math.max(0, board_offset_y);
-
-  return `translateX(${board_offset_x}px) translateY(${board_offset_y}px)`;
-}
 
 function _renderConnections(lineCanvas: Canvas, lineCtx: CanvasContext, board: IBoard, clear: boolean = true) {
   if (clear)
     lineCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
 
   // Draw connecting lines.
-  const links = board.links = board.links || {};
-  for (let startSpace in links) {
-    const x1 = board.spaces[startSpace].x;
-    const y1 = board.spaces[startSpace].y;
+  const links = board.links;
+  if (links) {
+    for (let startSpace in links) {
+      const x1 = board.spaces[startSpace].x;
+      const y1 = board.spaces[startSpace].y;
 
-    const endLinks = getConnections(parseInt(startSpace), board)!;
-    let x2, y2;
-    let bidirectional = false;
-    for (let i = 0; i < endLinks.length; i++) {
-      x2 = board.spaces[endLinks[i]].x;
-      y2 = board.spaces[endLinks[i]].y;
-      bidirectional = _isConnectedTo(links, endLinks[i], startSpace);
-      if (bidirectional && parseInt(startSpace) > endLinks[i])
-        continue;
-      _drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
+      const endLinks = getConnections(parseInt(startSpace), board)!;
+      let x2, y2;
+      let bidirectional = false;
+      for (let i = 0; i < endLinks.length; i++) {
+        x2 = board.spaces[endLinks[i]].x;
+        y2 = board.spaces[endLinks[i]].y;
+        bidirectional = _isConnectedTo(links, endLinks[i], startSpace);
+        if (bidirectional && parseInt(startSpace) > endLinks[i])
+          continue;
+        _drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
+      }
     }
   }
 }
 
 function _renderAssociations(
-  canvas: Canvas, context: CanvasContext,
-  board: IBoard, selectedSpaces?: ISpace[] | null
+  canvas: Canvas,
+  context: CanvasContext,
+  board: IBoard,
+  selectedSpacesIndices?: SpaceIndexMap
 ) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!selectedSpaces || selectedSpaces.length !== 1)
+  if (!selectedSpacesIndices)
     return;
+
+  const selectedIndices = Object.keys(selectedSpacesIndices).map(s => parseInt(s, 10));
+  if (selectedIndices.length !== 1) {
+    return;
+  }
+
+  const selectedSpaceIndex = selectedIndices[0];
 
   // Draw associated spaces in event params.
   let lastEvent: IEventInstance;
   let associationNum = 0;
-  forEachEventParameter(board, (parameter, event, space) => {
-    if (selectedSpaces[0] !== space)
+  forEachEventParameter(board, (parameter, event, eventIndex, space, spaceIndex) => {
+    if (selectedSpaceIndex !== spaceIndex)
       return; // Only draw associations for the selected space.
 
     // Reset coloring for each event.
@@ -96,7 +100,7 @@ function _renderAssociations(
           return; // Probably shouldn't happen.
 
         const dotsColor = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.5)`;
-        drawAssociation(context, space.x, space.y, associatedSpace.x, associatedSpace.y, dotsColor);
+        drawAssociation(context, space!.x, space!.y, associatedSpace.x, associatedSpace.y, dotsColor);
         associationNum++;
       });
     }
@@ -129,13 +133,12 @@ function _renderSpaces(spaceCanvas: Canvas, spaceCtx: CanvasContext, board: IBoa
     let space = board.spaces[index];
     if (space === null)
       continue;
-    space.z = space.z || 0;
 
-    drawSpace(spaceCtx, space, board, opts);
+    drawSpace(spaceCtx, board, space, index, opts);
   }
 }
 
-function drawSpace(spaceCtx: CanvasContext, space: ISpace, board: IBoard, opts: ISpaceRenderOpts = {}) {
+function drawSpace(spaceCtx: CanvasContext, board: IBoard, space: ISpace, spaceIndex: number, opts: ISpaceRenderOpts = {}) {
   const game = board.game || 1;
   const boardType = board.type || BoardType.NORMAL;
   const x = space.x;
@@ -309,16 +312,15 @@ function drawSpace(spaceCtx: CanvasContext, space: ISpace, board: IBoard, opts: 
   if (isDebug()) {
     // Draw the space's index.
     spaceCtx.save();
-    let index = getSpaceIndex(space);
     spaceCtx.fillStyle = "white";
     spaceCtx.strokeStyle = "black";
     spaceCtx.lineWidth = 2;
     spaceCtx.font = "bold 6pt Courier New";
     spaceCtx.textAlign = "center";
-    let text = index.toString();
+    let text = spaceIndex.toString();
     spaceCtx.strokeText(text, x, y - 2);
     spaceCtx.fillText(text, x, y - 2);
-    text = $$hex(index);
+    text = $$hex(spaceIndex);
     spaceCtx.strokeText(text, x, y + 8);
     spaceCtx.fillText(text, x, y + 8);
     spaceCtx.restore();
@@ -437,14 +439,14 @@ function drawAssociation(lineCtx: CanvasContext,
 }
 
 /** Adds a glow around the selected spaces in the editor. */
-function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, spaces?: ISpace[] | null) {
+function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, board: IBoard, spaceIndices: SpaceIndexMap | null) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!spaces || !spaces.length)
+  if (!spaceIndices || isEmpty(spaceIndices))
     return;
 
-  for (let i = 0; i < spaces.length; i++) {
-    const space = spaces[i];
+  for (const spaceIndex in spaceIndices) {
+    const space = board.spaces[parseInt(spaceIndex, 10)];
     if (space) {
       context.save();
       context.beginPath();
@@ -489,6 +491,7 @@ function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, even
   const radius = currentBoard.game === 3 ? 18 : 12;
 
   const event = getEvent(eventInstance.id, currentBoard);
+  assert(!!event);
   if (event.parameters) {
     let associationNum = 0;
     for (const parameter of event.parameters) {
@@ -553,60 +556,29 @@ function __determineSpaceEventImg(space: ISpace, board: IBoard) {
   return getImage("eventImg");
 }
 
-let _boardBG: BoardBG | null;
+const BoardBG: React.FC = () => {
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  const [editorWidth, editorHeight] = useContext(EditorSizeContext);
+  const boardBgSrc = useAppSelector(state => selectCurrentBoard(state).bg.src);
+  const overrideBg = useAppSelector(state => state.app.overrideBg);
 
-interface BoardBGProps {
-  board: IBoard;
-}
+  const imgEl = useRef<HTMLImageElement | null>(null);
 
-class BoardBG extends React.Component<BoardBGProps> {
-  state = {}
-
-  private __img: HTMLImageElement | null = null;
-
-  componentDidMount() {
-    this.renderContent();
-    _boardBG = this;
-  }
-
-  componentWillUnmount() {
-    _boardBG = null;
-  }
-
-  componentDidUpdate() {
-    this.renderContent();
-  }
-
-  renderContent() {
-    let board = this.props.board;
-    let bgImgEl = this.getImage();
-    let editor = bgImgEl.parentElement;
-    let transformStyle = getEditorContentTransform(board, editor!);
+  useEffect(() => {
+    const bgImgEl = imgEl.current!;
+    const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
     bgImgEl.style.transform = transformStyle;
-
-    // Update the background image.
-    const imgSrcToUse = getOverrideBg() || board.bg.src;
-    if ((bgImgEl as any)._src !== imgSrcToUse || bgImgEl.width !== board.bg.width || bgImgEl.height !== board.bg.height) {
-      bgImgEl.width = board.bg.width;
-      bgImgEl.height = board.bg.height;
-      this.setSource(imgSrcToUse, bgImgEl);
+    if (bgImgEl.width !== boardWidth || bgImgEl.height !== boardHeight) {
+      bgImgEl.width = boardWidth;
+      bgImgEl.height = boardHeight;
     }
-  }
+  }, [boardWidth, boardHeight, editorWidth, editorHeight]);
 
-  getImage() {
-    return this.__img!;
-  }
+  const imgSrcToUse = overrideBg || boardBgSrc;
 
-  setSource(src: string, bgImg = this.getImage()) {
-    bgImg.src = src;
-    (bgImg as any)._src = src; // src can change after setting, and trick the renderContent check.
-  }
-
-  render() {
-    return (
-      <img ref={img => this.__img = img} className="editor_bg" alt="Board Background" />
-    );
-  }
+  return (
+    <img ref={imgEl} className="editor_bg" alt="Board Background" src={imgSrcToUse} />
+  );
 };
 
 let _animInterval: any;
@@ -633,7 +605,7 @@ export function stopAnimation() {
 function _animationStep() {
   const board = getCurrentBoard();
   const animbgs = board.animbg;
-  if (!_boardBG || !animbgs || !animbgs.length) {
+  if (!animbgs || !animbgs.length) {
     stopAnimation();
     return;
   }
@@ -652,267 +624,206 @@ function _animationStep() {
   }
 }
 
-let _boardLines: BoardLines | null;
+const BoardLines = () => {
+  const canvasRef = useRef<Canvas>(null);
 
-interface BoardLinesProps {
-  board: IBoard;
-}
+  const board = useCurrentBoard();
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  const tempConnections = useAppSelector(state => state.data.temporaryConnections);
 
-class BoardLines extends React.Component<BoardLinesProps> {
-  state = {}
+  useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
-  componentDidMount() {
-    this.renderContent();
-    _boardLines = this;
-  }
-
-  componentWillUnmount() {
-    _boardLines = null;
-  }
-
-  componentDidUpdate() {
-    this.renderContent();
-  }
-
-  renderContent() {
+  useEffect(() => {
     // Update lines connecting spaces
-    let lineCanvas = ReactDOM.findDOMNode(this) as Canvas;
-    let editor = lineCanvas.parentElement!;
-    let board = this.props.board;
-    let transformStyle = getEditorContentTransform(board, editor);
-    lineCanvas.style.transform = transformStyle;
-    if (lineCanvas.width !== board.bg.width || lineCanvas.height !== board.bg.height) {
-      lineCanvas.width = board.bg.width;
-      lineCanvas.height = board.bg.height;
-    }
-    _renderConnections(lineCanvas, lineCanvas.getContext("2d")!, board);
-  }
+    const lineCanvas = canvasRef.current!;
+    const context = lineCanvas.getContext("2d")!;
+    _renderConnections(lineCanvas, context, board, true);
 
-  render() {
-    return (
-      <canvas className="editor_line_canvas"></canvas>
-    );
-  }
+    if (tempConnections) {
+      for (const tempConnection of tempConnections) {
+        const [x1, y1, x2, y2] = tempConnection;
+        _drawConnection(context, x1, y1, x2, y2, false);
+      }
+    }
+  }, [board, tempConnections]);
+
+  return (
+    <canvas ref={canvasRef} className="editor_line_canvas"></canvas>
+  );
 };
 
-let _boardAssociations: BoardLines | null;
+const BoardAssociations = () => {
+  const canvasRef = useRef<Canvas>(null);
 
-interface BoardAssociationsProps {
-  board: IBoard;
-  selectedSpaces?: ISpace[] | null;
-}
+  const currentBoard = useCurrentBoard();
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  const selectedSpaceIndices = useAppSelector(selectSelectedSpaceIndices);
 
-class BoardAssociations extends React.Component<BoardAssociationsProps> {
-  state = {}
+  useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
-  componentDidMount() {
-    this.renderContent();
-    _boardAssociations = this;
-  }
-
-  componentWillUnmount() {
-    _boardAssociations = null;
-  }
-
-  componentDidUpdate() {
-    this.renderContent();
-  }
-
-  renderContent() {
+  useEffect(() => {
     // Update space parameter association lines
-    let assocCanvas = ReactDOM.findDOMNode(this) as Canvas;
-    let editor = assocCanvas.parentElement!;
-    let board = this.props.board;
-    let transformStyle = getEditorContentTransform(board, editor);
-    assocCanvas.style.transform = transformStyle;
-    if (assocCanvas.width !== board.bg.width || assocCanvas.height !== board.bg.height) {
-      assocCanvas.width = board.bg.width;
-      assocCanvas.height = board.bg.height;
-    }
-    _renderAssociations(assocCanvas, assocCanvas.getContext("2d")!, board, this.props.selectedSpaces);
-  }
+    const assocCanvas = canvasRef.current!;
+    _renderAssociations(assocCanvas, assocCanvas.getContext("2d")!, currentBoard, selectedSpaceIndices);
+  }, [currentBoard, selectedSpaceIndices]);
 
-  render() {
-    return (
-      <canvas className="editor_association_canvas"></canvas>
-    );
-  }
+  return (
+    <canvas ref={canvasRef} className="editor_association_canvas"></canvas>
+  );
 };
 
-let _boardSelectedSpaces: BoardSelectedSpaces | null;
+const BoardSelectedSpaces = () => {
+  const canvasRef = useRef<Canvas>(null);
 
-interface BoardSelectedSpacesProps {
-  board: IBoard;
-  selectedSpaces?: ISpace[] | null;
-  hoveredBoardEvent?: IEventInstance | null;
-}
+  const currentBoard = useCurrentBoard();
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  const selectedSpaceIndices = useAppSelector(selectSelectedSpaceIndices);
 
-class BoardSelectedSpaces extends React.Component<BoardSelectedSpacesProps> {
-  state = {}
+  const highlightedSpaceIndices = useAppSelector(state => state.data.highlightedSpaceIndices);
 
-  componentDidMount() {
-    this.renderContent();
-    _boardSelectedSpaces = this;
-  }
+  const hoveredBoardEventIndex = useAppSelector(state => state.data.hoveredBoardEventIndex);
 
-  componentWillUnmount() {
-    _boardSelectedSpaces = null;
-  }
+  useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
-  componentDidUpdate() {
-    this.renderContent();
-  }
-
-  renderContent() {
+  useEffect(() => {
     // Update the current space indication
-    const selectedSpacesCanvas = ReactDOM.findDOMNode(this) as Canvas;
-    const editor = selectedSpacesCanvas.parentElement!;
-    const board = this.props.board;
-    const transformStyle = getEditorContentTransform(board, editor);
-    selectedSpacesCanvas.style.transform = transformStyle;
-    if (selectedSpacesCanvas.width !== board.bg.width || selectedSpacesCanvas.height !== board.bg.height) {
-      selectedSpacesCanvas.width = board.bg.width;
-      selectedSpacesCanvas.height = board.bg.height;
-    }
-
+    const selectedSpacesCanvas = canvasRef.current!;
     const context = selectedSpacesCanvas.getContext("2d")!;
-    _renderSelectedSpaces(selectedSpacesCanvas, context, this.props.selectedSpaces);
+    _renderSelectedSpaces(selectedSpacesCanvas, context, currentBoard, selectedSpaceIndices);
 
-    if (this.props.hoveredBoardEvent) {
-      _highlightBoardEventSpaces(selectedSpacesCanvas, context, this.props.hoveredBoardEvent);
+    if (highlightedSpaceIndices) {
+      _highlightSpaces(selectedSpacesCanvas, context, highlightedSpaceIndices);
     }
-  }
 
-  highlightSpaces(spaces: number[]) {
-    const selectedSpacesCanvas = ReactDOM.findDOMNode(this) as Canvas;
-    _highlightSpaces(selectedSpacesCanvas, selectedSpacesCanvas.getContext("2d")!, spaces);
-  }
+    if (hoveredBoardEventIndex >= 0) {
+      const hoveredBoardEvent = currentBoard.boardevents?.[hoveredBoardEventIndex];
+      if (hoveredBoardEvent) {
+        _highlightBoardEventSpaces(selectedSpacesCanvas, context, hoveredBoardEvent);
+      }
+    }
+  }, [currentBoard, selectedSpaceIndices, highlightedSpaceIndices, hoveredBoardEventIndex]);
 
-  render() {
-    return (
-      <canvas className="editor_current_space_canvas"></canvas>
-    );
-  }
+  return (
+    <canvas ref={canvasRef} className="editor_current_space_canvas"></canvas>
+  );
 };
 
-let _boardSpaces: BoardSpaces | null;
+const BoardSpaces = () => {
+  const canvasRef = useRef<Canvas>(null);
 
-interface BoardSpacesProps {
-  board: IBoard;
-}
+  const board = useCurrentBoard();
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  const imagesLoaded = useAppSelector(state => state.app.imagesLoaded);
 
-class BoardSpaces extends React.Component<BoardSpacesProps> {
-  state = {}
+  useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
-  private __canvas: HTMLCanvasElement | null = null;
-
-  componentDidMount() {
-    attachToCanvas(this.__canvas!);
-
-    this.renderContent();
-    _boardSpaces = this;
-  }
-
-  componentWillUnmount() {
-    detachFromCanvas(this.__canvas!);
-    _boardSpaces = null;
-  }
-
-  componentDidUpdate() {
-    this.renderContent();
-  }
-
-  renderContent() {
+  useEffect(() => {
     // Update spaces
-    const spaceCanvas = ReactDOM.findDOMNode(this) as Canvas;
-    const editor = spaceCanvas.parentElement!;
-    const board = this.props.board;
-    const transformStyle = getEditorContentTransform(board, editor);
-    spaceCanvas.style.transform = transformStyle;
-    if (spaceCanvas.width !== board.bg.width || spaceCanvas.height !== board.bg.height) {
-      spaceCanvas.width = board.bg.width;
-      spaceCanvas.height = board.bg.height;
+    const spaceCanvas = canvasRef.current!;
+    if (imagesLoaded) {
+      _renderSpaces(spaceCanvas, spaceCanvas.getContext("2d")!, board);
     }
-    _renderSpaces(spaceCanvas, spaceCanvas.getContext("2d")!, board);
-  }
+  }, [board, imagesLoaded]);
 
-  render() {
-    return (
-      <canvas className="editor_space_canvas" tabIndex={-1}
-        ref={(el => this.__canvas = el)}
-        onDragOver={undefined}></canvas>
-    );
-  }
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      attachToCanvas(canvas);
+      return () => detachFromCanvas(canvas);
+    }
+  }, []);
 
-  /** Draws the box as the user drags to select spaces. */
-  drawSelectionBox = (xs: number, ys: number, xf: number, yf: number) => {
-    const spaceCanvas = ReactDOM.findDOMNode(this) as Canvas;
-    const ctx = spaceCanvas.getContext("2d")!;
-    ctx.save();
-    ctx.beginPath();
-    ctx.fillStyle = "rgba(47, 70, 95, 0.5)";
-    ctx.strokeStyle = "rgba(47, 70, 95, 1)";
-    ctx.fillRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
-    ctx.strokeRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
-    ctx.restore();
-  }
+  return (
+    <canvas className="editor_space_canvas" tabIndex={-1}
+      ref={canvasRef}
+      onDragOver={undefined}></canvas>
+  );
 };
 
-// Right-click menu overlay
-let _boardOverlay: BoardOverlay | null;
+const BoardSelectionBox = () => {
+  const canvasRef = useRef<Canvas>(null);
 
-interface BoardOverlayProps {
-  board: IBoard;
-}
+  const hasBoxDrawn = useRef<boolean>(false);
+  const selectionBoxCoords = useAppSelector(state => state.data.selectionBoxCoords);
 
-interface BoardOverlayState {
-  rightClickSpace: ISpace | null;
-}
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    if (selectionBoxCoords || (!selectionBoxCoords && hasBoxDrawn.current)) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasBoxDrawn.current = false;
+    }
 
-class BoardOverlay extends React.Component<BoardOverlayProps> {
-  state: BoardOverlayState = {
-    rightClickSpace: null
-  }
+    if (selectionBoxCoords) {
+      const [xs, ys, xf, yf] = selectionBoxCoords;
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = "rgba(47, 70, 95, 0.5)";
+      ctx.strokeStyle = "rgba(47, 70, 95, 1)";
+      ctx.fillRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
+      ctx.strokeRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
+      ctx.restore();
+      hasBoxDrawn.current = true;
+    }
+  }, [selectionBoxCoords]);
 
-  componentDidMount() {
-    this.renderContent();
-    _boardOverlay = this;
-  }
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
-  componentWillUnmount() {
-    _boardOverlay = null;
-  }
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      attachToCanvas(canvas);
+      return () => detachFromCanvas(canvas);
+    }
+  }, []);
 
-  componentDidUpdate() {
-    this.renderContent();
-  }
+  return (
+    <canvas className="editor_space_canvas" tabIndex={-1}
+      ref={canvasRef}
+      onDragOver={undefined}></canvas>
+  );
+};
 
-  renderContent() {
-    let overlay = ReactDOM.findDOMNode(this) as HTMLElement;
-    let editor = overlay.parentElement!;
-    let transformStyle = getEditorContentTransform(this.props.board, editor);
+const BoardOverlay = forwardRef<BoardOverlayRef>((props, ref) => {
+  const [rightClickSpace, setRightClickSpace] = useState(-1);
+
+  const overlayDiv = useRef<HTMLDivElement>(null);
+  const [boardWidth, boardHeight] = useBoardDimensions();
+  const [editorWidth, editorHeight] = useContext(EditorSizeContext);
+
+  const renderContent = useCallback(() => {
+    const overlay = overlayDiv.current!;
+    const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
     overlay.style.transform = transformStyle;
-  }
+  }, [boardWidth, boardHeight, editorWidth, editorHeight]);
 
-  setRightClickMenu(space: ISpace | null) {
-    this.setState({ rightClickSpace: space });
-  }
+  const setRightClickMenu = useCallback((spaceIndex: number) => {
+    setRightClickSpace(spaceIndex);
+  }, []);
 
-  rightClickOpen() {
-    return !!this.state.rightClickSpace;
-  }
+  const rightClickOpen = useCallback(() => {
+    return rightClickSpace >= 0;
+  }, [rightClickSpace]);
 
-  render() {
-    let menu;
-    if (this.rightClickOpen())
-      menu = <RightClickMenu space={this.state.rightClickSpace} />;
-    return (
-      <div className="editor_menu_overlay">
-        {menu}
-      </div>
-    );
-  }
-};
+  useImperativeHandle(ref, () => ({
+    renderContent,
+    setRightClickMenu,
+    rightClickOpen
+  }), [renderContent, setRightClickMenu, rightClickOpen]);
+
+  useEffect(() => {
+    renderContent();
+  });
+
+  const currentBoard = useCurrentBoard();
+  const space = currentBoard.spaces[rightClickSpace] || null;
+  return (
+    <div ref={overlayDiv} className="editor_menu_overlay">
+      {rightClickOpen() && <RightClickMenu space={space} spaceIndex={rightClickSpace} />}
+    </div>
+  );
+});
 
 const N64_SCREEN_WIDTH = 320;
 const N64_SCREEN_HEIGHT = 240;
@@ -948,32 +859,27 @@ function addRecommendedBoundaryLine(board: IBoard, canvas: Canvas): void {
   context.strokeRect(N64_WIDTH_ZOOMED / 2, N64_HEIGHT_ZOOMED / 2, width - N64_WIDTH_ZOOMED, height - N64_HEIGHT_ZOOMED);
 }
 
-interface ITelescopeViewerProps {
-  board: IBoard;
-}
-
-const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
+const TelescopeViewer: React.FC = () => {
   const canvasRef = useRef<Canvas | null>(null);
   const screenshotCanvasRef = useRef<Canvas | null>(null);
 
+  const board = useCurrentBoard();
+  const [boardWidth, boardHeight] = useBoardDimensions();
+
+  useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
+
   useEffect(() => {
     const canvas = canvasRef.current!;
-    const editor = canvas.parentElement!;
-    const transformStyle = getEditorContentTransform(props.board, editor);
-    canvas.style.transform = transformStyle;
-    if (canvas.width !== props.board.bg.width || canvas.height !== props.board.bg.height) {
-      canvas.width = props.board.bg.width;
-      canvas.height = props.board.bg.height;
-    }
-
-    addRecommendedBoundaryLine(props.board, canvas);
-  }, [props.board]);
+    addRecommendedBoundaryLine(board, canvas);
+  }, [board]);
 
   useEffect(() => {
-    screenshotCanvasRef.current = takeScreeny({ renderCharacters: true }).canvas;
-
-    addRecommendedBoundaryLine(props.board, screenshotCanvasRef.current!);
-  }, [props.board]);
+    (async () => {
+      const screenshotResult = await takeScreeny({ renderCharacters: true });
+      screenshotCanvasRef.current = screenshotResult.canvas;
+      addRecommendedBoundaryLine(board, screenshotCanvasRef.current!);
+    })();
+  }, [board]);
 
   const onMouseMove = useCallback((ev: React.MouseEvent<Canvas>) => {
     const canvas = canvasRef.current!;
@@ -985,8 +891,8 @@ const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
     }
 
     const [clickX, clickY] = getMouseCoordsOnCanvas(canvas, ev.clientX, ev.clientY);
-    const { width, height } = props.board.bg;
-    const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(props.board.game);
+    const { width, height } = board.bg;
+    const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(board.game);
 
     // The cutout from the board image, bounded like the game camera is.
     let sx = Math.max(0, clickX - (N64_WIDTH_ZOOMED / 2));
@@ -1019,15 +925,15 @@ const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
     context.fillRect(width - vertBarWidth, 0, vertBarWidth, height); // right
     context.fillRect(0, height - horzBarHeight, width, horzBarHeight); // bottom
     context.fillRect(0, 0, vertBarWidth, height); // left
-  }, [props.board]);
+  }, [board]);
 
   const onMouseLeave = useCallback(() => {
     const canvas = canvasRef.current!;
     const context = canvas.getContext("2d")!;
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    addRecommendedBoundaryLine(props.board, canvas);
-  }, [props.board]);
+    addRecommendedBoundaryLine(board, canvas);
+  }, [board]);
 
   return (
     <canvas ref={canvasRef}
@@ -1037,99 +943,65 @@ const TelescopeViewer: React.FC<ITelescopeViewerProps> = (props) => {
   );
 };
 
-interface IEditorProps {
-  board: IBoard;
-  selectedSpaces: ISpace[] | null;
-  hoveredBoardEvent?: IEventInstance | null;
-  telescoping?: boolean;
+interface BoardOverlayRef {
+  setRightClickMenu(spaceIndex: number): void;
+  rightClickOpen(): boolean;
 }
 
-export const Editor = class Editor extends React.Component<IEditorProps> {
-  state = {}
+let _boardOverlay: BoardOverlayRef | null;
 
-  componentDidMount() {
-    window.addEventListener("resize", render, false);
-  }
+const EditorSizeContext = React.createContext([0, 0]);
 
-  componentWillUnmount() {
-    window.removeEventListener("resize", render);
-  }
+export const Editor: React.FC = () => {
+  const editorRef = useRef<HTMLDivElement | null>(null);
 
-  componentDidUpdate() {}
+  const [editorWidth, setEditorWidth] = useState(0);
+  const [editorHeight, setEditorHeight] = useState(0);
 
-  render() {
-    const { board, selectedSpaces, telescoping } = this.props;
-    return (
-      <div className="editor">
-        <BoardBG board={board} />
-        <BoardLines board={board} />
-        <BoardAssociations board={board}
-          selectedSpaces={selectedSpaces} />
-        <BoardSelectedSpaces board={board}
-          selectedSpaces={selectedSpaces}
-          hoveredBoardEvent={this.props.hoveredBoardEvent}/>
-        <BoardSpaces board={board} />
-        <BoardOverlay board={board} />
-        {telescoping && <TelescopeViewer board={board} />}
-      </div>
-    );
-  }
+  const editorSize = useMemo(() => {
+    return [editorWidth, editorHeight];
+  }, [editorWidth, editorHeight]);
+
+  const editorWidthChanged = useCallback(() => {
+    const editorDiv = editorRef.current;
+    if (editorDiv) {
+      setEditorWidth(editorDiv.offsetWidth);
+      setEditorHeight(editorDiv.offsetHeight);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("resize", editorWidthChanged, false);
+    editorWidthChanged();
+    return () => window.removeEventListener("resize", editorWidthChanged);
+  }, [editorWidthChanged]);
+
+  const telescoping = useAppSelector(state => state.app.currentAction === Action.TELESCOPE);
+
+  return (
+    <div ref={editorRef} className="editor">
+      <EditorSizeContext.Provider value={editorSize}>
+        <BoardBG />
+        <BoardLines />
+        <BoardAssociations />
+        <BoardSelectedSpaces />
+        <BoardSpaces />
+        <BoardSelectionBox />
+        <BoardOverlay ref={c => _boardOverlay = c} />
+        {telescoping && <TelescopeViewer />}
+      </EditorSizeContext.Provider>
+    </div>
+  );
 };
 
-export function render() {
-  if (_boardBG)
-    _boardBG.renderContent();
-  if (_boardLines)
-    _boardLines.renderContent();
-  if (_boardAssociations)
-    _boardAssociations.renderContent();
-  if (_boardSelectedSpaces)
-    _boardSelectedSpaces.renderContent();
-  if (_boardSpaces)
-    _boardSpaces.renderContent();
-}
-export function renderBG() {
-  if (_boardBG)
-    _boardBG.renderContent();
-}
-export function renderConnections() {
-  if (_boardLines)
-    _boardLines.renderContent();
-  if (_boardAssociations)
-    _boardAssociations.renderContent();
-}
-export function renderSelectedSpaces() {
-  if (_boardSelectedSpaces)
-    _boardSelectedSpaces.renderContent();
-}
-export function renderSpaces() {
-  if (_boardSpaces)
-    _boardSpaces.renderContent();
-}
-export function updateRightClickMenu(space: ISpace | null) {
+export function updateRightClickMenu(spaceIndex: number) {
   if (_boardOverlay)
-    _boardOverlay.setRightClickMenu(space);
+    _boardOverlay.setRightClickMenu(spaceIndex);
 }
 export function rightClickOpen() {
   if (_boardOverlay)
     return _boardOverlay.rightClickOpen();
   return false;
-}
-export function drawConnection(x1: number, y1: number, x2: number, y2: number) {
-  if (!_boardLines)
-    return;
-  let lineCtx = (ReactDOM.findDOMNode(_boardLines) as Canvas).getContext("2d")!;
-  _drawConnection(lineCtx, x1, y1, x2, y2);
-}
-
-export function highlightSpaces(spaces: number[]) {
-  if (_boardSelectedSpaces)
-    _boardSelectedSpaces.highlightSpaces(spaces);
-}
-
-export function drawSelectionBox(xs: number, ys: number, xf: number, yf: number) {
-  if (_boardSpaces)
-  _boardSpaces.drawSelectionBox(xs, ys, xf, yf);
 }
 
 export function animationPlaying() {
@@ -1137,9 +1009,35 @@ export function animationPlaying() {
 }
 
 export const external = {
-  getBGImage: function() {
-    return _boardBG!.getImage();
-  },
   renderConnections: _renderConnections,
   renderSpaces: _renderSpaces
 };
+
+function getEditorContentTransform(boardWidth: number, boardHeight: number, editorWidth: number, editorHeight: number): string {
+  let board_offset_x = Math.floor((editorWidth - boardWidth) / 2);
+  board_offset_x = Math.max(0, board_offset_x);
+  let board_offset_y = Math.floor((editorHeight - boardHeight) / 2);
+  board_offset_y = Math.max(0, board_offset_y);
+
+  return `translateX(${board_offset_x}px) translateY(${board_offset_y}px)`;
+}
+
+function useDimensionsOnCanvas(canvasRef: React.RefObject<Canvas>, boardWidth: number, boardHeight: number) {
+  const [editorWidth, editorHeight] = useContext(EditorSizeContext);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current!;
+    const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
+    canvas.style.transform = transformStyle;
+    if (canvas.width !== boardWidth || canvas.height !== boardHeight) {
+      canvas.width = boardWidth;
+      canvas.height = boardHeight;
+    }
+  }, [canvasRef, boardWidth, boardHeight, editorWidth, editorHeight]);
+}
+
+function useBoardDimensions() {
+  const width = useAppSelector(state => selectCurrentBoard(state).bg.width);
+  const height = useAppSelector(state => selectCurrentBoard(state).bg.height);
+  return useMemo(() => [width, height], [width, height]);
+}

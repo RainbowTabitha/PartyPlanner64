@@ -18,16 +18,18 @@ import eventbeforeplayerturnImage from "../img/editor/boardproperties/eventbefor
 import eventbeforedicerollImage from "../img/editor/boardproperties/eventbeforediceroll.png";
 import targetImage from "../img/events/target.png";
 import { assert } from "../utils/debug";
+import { useForceUpdate } from "../utils/react";
+import { useCallback } from "react";
 
 interface IEventsListProps {
   events?: IEventInstance[];
   board: IBoard;
   onEventAdded(event: any): void;
-  onEventDeleted(event: IEventInstance): void;
-  onEventActivationTypeToggle(event: IEventInstance): void;
-  onEventParameterSet(event: IEventInstance, name: string, value: any): void;
-  onEventMouseEnter?(event: IEventInstance): void;
-  onEventMouseLeave?(event: IEventInstance): void;
+  onEventDeleted(event: IEventInstance, eventIndex: number): void;
+  onEventActivationTypeToggle(event: IEventInstance, eventIndex: number): void;
+  onEventParameterSet(event: IEventInstance, eventIndex: number, name: string, value: any): void;
+  onEventMouseEnter?(event: IEventInstance, eventIndex: number): void;
+  onEventMouseLeave?(event: IEventInstance, eventIndex: number): void;
 }
 
 interface IEventsListState {
@@ -38,9 +40,11 @@ export class EventsList extends React.Component<IEventsListProps, IEventsListSta
   render() {
     const events = this.props.events || [];
     let id = 0;
-    const entries = events.map((event: IEventInstance) => {
+    const entries = events.map((event, eventIndex) => {
       return (
-        <EventEntry event={event} key={`${event.id}-${id++}`}
+        <EventEntry key={`${event.id}-${id++}`}
+          event={event}
+          eventIndex={eventIndex}
           board={this.props.board}
           onEventDeleted={this.onDelete}
           onEventActivationTypeToggle={this.props.onEventActivationTypeToggle}
@@ -58,105 +62,106 @@ export class EventsList extends React.Component<IEventsListProps, IEventsListSta
     );
   }
 
-  private onDelete = (event: IEventInstance) => {
+  private onDelete = (event: IEventInstance, eventIndex: number) => {
     // First simulate mouse leave
     if (this.props.onEventMouseLeave && this.state.hoveredEvent === event) {
       this.setState({ hoveredEvent: null });
-      this.props.onEventMouseLeave(event);
+      this.props.onEventMouseLeave(event, eventIndex);
     }
 
-    this.props.onEventDeleted(event);
+    this.props.onEventDeleted(event, eventIndex);
   }
 
-  private onMouseEnter = (event: IEventInstance) => {
+  private onMouseEnter = (event: IEventInstance, eventIndex: number) => {
     this.setState({ hoveredEvent: event });
 
     if (this.props.onEventMouseEnter) {
-      this.props.onEventMouseEnter(event);
+      this.props.onEventMouseEnter(event, eventIndex);
     }
   }
 
-  private onMouseLeave = (event: IEventInstance) => {
+  private onMouseLeave = (event: IEventInstance, eventIndex: number) => {
     this.setState({ hoveredEvent: null });
 
     if (this.props.onEventMouseLeave) {
-      this.props.onEventMouseLeave(event);
+      this.props.onEventMouseLeave(event, eventIndex);
     }
   }
 };
 
 interface IEventEntryProps {
   event: IEventInstance;
+  eventIndex: number;
   board: IBoard;
-  onEventDeleted(event: IEventInstance): void;
-  onEventActivationTypeToggle(event: IEventInstance): void;
-  onEventParameterSet(event: IEventInstance, name: string, value: number): void;
-  onEventMouseEnter?(event: IEventInstance): void;
-  onEventMouseLeave?(event: IEventInstance): void;
+  onEventDeleted(event: IEventInstance, eventIndex: number): void;
+  onEventActivationTypeToggle(event: IEventInstance, eventIndex: number): void;
+  onEventParameterSet(event: IEventInstance, eventIndex: number, name: string, value: number): void;
+  onEventMouseEnter?(event: IEventInstance, eventIndex: number): void;
+  onEventMouseLeave?(event: IEventInstance, eventIndex: number): void;
 }
 
-class EventEntry extends React.Component<IEventEntryProps> {
-  onEventDeleted = () => {
-    this.props.onEventDeleted(this.props.event);
-  }
+const EventEntry: React.FC<IEventEntryProps> = props => {
+  const forceUpdate = useForceUpdate();
 
-  onEventActivationTypeToggle = () => {
-    this.props.onEventActivationTypeToggle(this.props.event);
-    this.forceUpdate();
-  }
+  const onEventDeleted = useCallback(() => {
+    props.onEventDeleted(props.event, props.eventIndex);
+  }, [props.onEventDeleted, props.event, props.eventIndex]); // eslint-disable-line
 
-  onEventParameterSet = (name: string, value: any) => {
-    this.props.onEventParameterSet(this.props.event, name, value);
-    this.forceUpdate();
-  }
+  const onEventActivationTypeToggle = useCallback(() => {
+    props.onEventActivationTypeToggle(props.event, props.eventIndex);
+    forceUpdate();
+  }, [props.onEventActivationTypeToggle, props.event, props.eventIndex, forceUpdate]); // eslint-disable-line
 
-  onEventMouseEnter = () => {
-    if (this.props.onEventMouseEnter) {
-      this.props.onEventMouseEnter(this.props.event);
+  const onEventParameterSet = useCallback((name: string, value: any) => {
+    props.onEventParameterSet(props.event, props.eventIndex, name, value);
+    forceUpdate();
+  }, [props.onEventParameterSet, props.event, props.eventIndex, forceUpdate]); // eslint-disable-line
+
+  const onEventMouseEnter = useCallback(() => {
+    if (props.onEventMouseEnter) {
+      props.onEventMouseEnter(props.event, props.eventIndex);
     }
-  }
+  }, [props.onEventMouseEnter, props.event, props.eventIndex]); // eslint-disable-line
 
-  onEventMouseLeave = () => {
-    if (this.props.onEventMouseLeave) {
-      this.props.onEventMouseLeave(this.props.event);
+  const onEventMouseLeave = useCallback(() => {
+    if (props.onEventMouseLeave) {
+      props.onEventMouseLeave(props.event, props.eventIndex);
     }
-  }
+  }, [props.onEventMouseLeave, props.event, props.eventIndex]); // eslint-disable-line
 
-  render() {
-    let eventInstance = this.props.event;
-    const event = getEvent(eventInstance.id, this.props.board);
-    if (!event)
-      return null;
-    let name = event.name || eventInstance.id;
+  let eventInstance = props.event;
+  const event = getEvent(eventInstance.id, props.board);
+  if (!event)
+    return null;
+  let name = event.name || eventInstance.id;
 
-    let parameterButtons;
-    if (event.parameters) {
-      parameterButtons = (
-        <EventParameterButtons
-          parameters={event.parameters}
-          eventInstance={eventInstance}
-          onEventParameterSet={this.onEventParameterSet} />
-      );
-    }
-
-    return (
-      <div className="eventEntry"
-        onMouseEnter={this.onEventMouseEnter}
-        onMouseLeave={this.onEventMouseLeave}>
-        <div className="eventEntryHeader">
-          <span className="eventEntryName" title={name}>{name}</span>
-          <div role="button" className="eventEntryDelete" onClick={this.onEventDeleted}
-            title="Remove this event"></div>
-        </div>
-        <div className="eventEntryOptions">
-          <EventActivationTypeToggle
-            activationType={eventInstance.activationType}
-            onEventActivationTypeToggle={this.onEventActivationTypeToggle} />
-          {parameterButtons}
-        </div>
-      </div>
+  let parameterButtons;
+  if (event.parameters) {
+    parameterButtons = (
+      <EventParameterButtons
+        parameters={event.parameters}
+        eventInstance={eventInstance}
+        onEventParameterSet={onEventParameterSet} />
     );
   }
+
+  return (
+    <div className="eventEntry"
+      onMouseEnter={onEventMouseEnter}
+      onMouseLeave={onEventMouseLeave}>
+      <div className="eventEntryHeader">
+        <span className="eventEntryName" title={name}>{name}</span>
+        <div role="button" className="eventEntryDelete" onClick={onEventDeleted}
+          title="Remove this event"></div>
+      </div>
+      <div className="eventEntryOptions">
+        <EventActivationTypeToggle
+          activationType={eventInstance.activationType}
+          onEventActivationTypeToggle={onEventActivationTypeToggle} />
+        {parameterButtons}
+      </div>
+    </div>
+  );
 };
 
 interface IEventParameterButtonsProps {
@@ -380,7 +385,7 @@ interface IEventSpaceParameterButtonProps {
   parameterValue: any;
   parameterArrayIndex?: number;
   colorQueue: IColorQueue;
-  onEventParameterSet(name: string, value: number): any;
+  onEventParameterSet(name: string, value: number | number[]): any;
 }
 
 class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButtonProps> {
@@ -451,9 +456,10 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
     if (spaceIndex >= 0) {
       const isArrayEntry = typeof this.props.parameterArrayIndex === "number";
       if (isArrayEntry) {
-        const arr = this.props.parameterValue || [];
-        arr[this.props.parameterArrayIndex!] = spaceIndex;
-        this.props.onEventParameterSet(this.props.parameter.name, arr);
+        const oldArr = this.props.parameterValue || [];
+        const newArr = [...oldArr];
+        newArr[this.props.parameterArrayIndex!] = spaceIndex;
+        this.props.onEventParameterSet(this.props.parameter.name, newArr);
       }
       else {
         this.props.onEventParameterSet(this.props.parameter.name, spaceIndex);
@@ -462,12 +468,14 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
   }
 
   onDeleteButtonClicked = () => {
-    const isArrayEntry = typeof this.props.parameterArrayIndex === "number";
+    const parameterArrayIndex = this.props.parameterArrayIndex;
+    const isArrayEntry = typeof parameterArrayIndex === "number";
     assert(isArrayEntry);
-    let arr = this.props.parameterValue || [];
-    if (arr.length) {
-      arr.splice(this.props.parameterArrayIndex, 1);
-      this.props.onEventParameterSet(this.props.parameter.name, arr);
+    const oldArr = this.props.parameterValue || [];
+    if (oldArr.length) {
+      const newArr = [...oldArr];
+      newArr.splice(parameterArrayIndex!, 1);
+      this.props.onEventParameterSet(this.props.parameter.name, newArr);
     }
   }
 

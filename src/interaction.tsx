@@ -1,14 +1,8 @@
 import {
-  renderSpaces,
-  drawSelectionBox,
-  renderConnections,
-  renderSelectedSpaces,
   rightClickOpen,
   updateRightClickMenu,
-  render,
-  drawConnection
 } from "./renderer";
-import { pointFallsWithin, lineDistance, determineAngle, radiansToDegrees } from "./utils/number";
+import { pointFallsWithin, determineAngle, radiansToDegrees } from "./utils/number";
 import {
   getCurrentBoard,
   ISpace,
@@ -20,16 +14,22 @@ import {
   getSpaceIndex,
   addConnection,
   setSpaceRotation,
-  setCurrentBoard,
-  copyCurrentBoard
+  copyCurrentBoard,
+  setHostsStar
 } from "./boards";
 import { Action, Space, SpaceSubtype } from "./types";
 import { getEventParamDropHandler } from "./utils/drag";
 import { $$log, $$hex } from "./utils/debug";
-import { changeCurrentAction, getCurrentAction, changeSelectedSpaces, getSelectedSpaces } from "./app/appControl";
+import { changeCurrentAction, changeSelectedSpaces, clearSelectedSpaces, drawConnection, getCurrentAction,
+  getSelectedSpaceIndices, getSelectedSpaces, getValidSelectedSpaceIndices } from "./app/appControl";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
+import { addSelectedSpaceAction,
+  eraseConnectionsAction,
+  removeSpacesAction,
+  setSelectedSpaceAction, setSelectionBoxCoordsAction, setSpacePositionsAction, setSpaceSubtypeAction, setTemporaryUIConnections } from "./app/boardState";
+import { store } from "./app/store";
+import { isEmpty } from "./utils/obj";
 
-let selectedSpaceIndices: { [index: number]: boolean } = {};
 let spaceWasMouseDownedOn = false;
 let startX = -1;
 let startY = -1;
@@ -71,9 +71,8 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
   // ROM boards cannot be edited, so create a copy right now and switch to it.
   if (currentBoardIsROM() && spaceWasClicked) {
     changeCurrentAction(Action.MOVE); // Avoid destructive actions like delete.
-    _clearSelectedSpaces();
-    const insertionIndex = copyCurrentBoard();
-    setCurrentBoard(insertionIndex);
+    clearSelectedSpaces();
+    copyCurrentBoard(true);
   }
 
   const curAction = getCurrentAction();
@@ -88,7 +87,7 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
         }
       }
       else {
-        _clearSelectedSpaces();
+        clearSelectedSpaces();
       }
       break;
     case Action.ADD_OTHER:
@@ -130,7 +129,7 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
         }
       }
       else if (!ctrlKey) {
-        _clearSelectedSpaces();
+        clearSelectedSpaces();
       }
       break;
     case Action.LINE:
@@ -140,15 +139,15 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
         _setSelectedSpace(clickedSpaceIndex);
       }
       else {
-        _clearSelectedSpaces();
+        clearSelectedSpaces();
       }
       break;
     case Action.ERASE:
-      _clearSelectedSpaces();
+      clearSelectedSpaces();
       break;
   }
 
-  const selectedSpaces = _getSelectedSpaces();
+  const selectedSpaces = getSelectedSpaces();
   const curBoard = getCurrentBoard();
   const clickedSpace = curBoard.spaces[clickedSpaceIndex];
 
@@ -158,11 +157,10 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
         let space = selectedSpaces[0];
 
         // Draw a line from the start space to the current location.
-        renderConnections();
         drawConnection(space.x, space.y, clickX, clickY);
 
         if (rightClickOpen()) {
-          updateRightClickMenu(null);
+          updateRightClickMenu(-1);
         }
       }
       break;
@@ -176,11 +174,9 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
           const selectedSpaceIndex = getSpaceIndex(space, curBoard);
           addConnection(selectedSpaceIndex, clickedSpaceIndex);
           _setSelectedSpace(clickedSpaceIndex);
-          renderConnections();
         }
         else {
           // Draw a line from the start space to the current location.
-          renderConnections();
           drawConnection(space.x, space.y, clickX, clickY);
         }
       }
@@ -192,8 +188,7 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
     case Action.ERASE:
       if (clickedSpaceIndex !== -1 && _canRemoveSpaceAtIndex(curBoard, clickedSpaceIndex)) {
         removeSpace(clickedSpaceIndex);
-        changeSelectedSpaces([]);
-        render();
+        clearSelectedSpaces();
       }
       else {
         _eraseLines(clickX, clickY); // Try to slice some lines!
@@ -221,9 +216,7 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
     case Action.ADD_DUEL_POWERUP:
     case Action.ADD_DUEL_START_BLUE:
     case Action.ADD_DUEL_START_RED:
-      if (_addSpace(curAction, clickX, clickY, clickedSpace, false, ctrlKey)) {
-        _addSelectedSpace(clickedSpaceIndex !== -1 ? clickedSpaceIndex : curBoard.spaces.length - 1);
-      }
+      _addSpace(curAction, clickX, clickY, clickedSpaceIndex, false, ctrlKey);
       break;
 
     case Action.MARK_STAR:
@@ -236,19 +229,14 @@ function _onEditorDown(canvas: HTMLCanvasElement, clientX: number, clientY: numb
     case Action.ADD_BANKCOIN_SUBTYPE:
     case Action.ADD_ITEMSHOP_SUBTYPE:
       if (clickedSpaceIndex === -1) {
-        if (_addSpace(curAction, clickX, clickY, clickedSpace, false, ctrlKey)) {
-          _addSelectedSpace(curBoard.spaces.length - 1);
-          if (curAction === Action.MARK_STAR) {
-            _toggleHostsStar(selectedSpaces);
-          }
-        }
+        _addSpace(curAction, clickX, clickY, clickedSpaceIndex, false, ctrlKey);
       }
       break;
 
     case Action.MOVE:
     default:
       if (rightClickOpen()) {
-        updateRightClickMenu(selectedSpaces[0]);
+        updateRightClickMenu(getValidSelectedSpaceIndices()[0]);
       }
       break;
   }
@@ -295,7 +283,8 @@ function _onEditorMove(clickX: number, clickY: number) {
   clickY = Math.round(clickY);
 
   const curAction = getCurrentAction();
-  const selectedSpaces = _getSelectedSpaces();
+  const selectedSpaceIndices = getValidSelectedSpaceIndices();
+  const selectedSpaces = getSelectedSpaces();
   const curBoard = getCurrentBoard();
   const clickedSpaceIndex = _getClickedSpace(clickX, clickY);
 
@@ -305,11 +294,10 @@ function _onEditorMove(clickX: number, clickY: number) {
         let space = selectedSpaces[0];
 
         // Draw a line from the start space to the current location.
-        renderConnections();
         drawConnection(space.x, space.y, clickX, clickY);
 
         if (rightClickOpen()) {
-          updateRightClickMenu(null);
+          updateRightClickMenu(-1);
         }
       }
       break;
@@ -324,11 +312,9 @@ function _onEditorMove(clickX: number, clickY: number) {
           const selectedSpaceIndex = getSpaceIndex(space, curBoard);
           addConnection(selectedSpaceIndex, clickedSpaceIndex);
           _setSelectedSpace(clickedSpaceIndex);
-          renderConnections();
         }
         else {
           // Draw a line from the start space to the current location.
-          renderConnections();
           drawConnection(space.x, space.y, clickX, clickY);
         }
       }
@@ -345,7 +331,6 @@ function _onEditorMove(clickX: number, clickY: number) {
           const selectedSpaceIndex = getSpaceIndex(space, curBoard);
           //$$log(`Space ${selectedSpaceIndex} rotated ${angleYAxisDeg} degrees`);
           setSpaceRotation(selectedSpaceIndex, angleYAxisDeg);
-          renderSpaces();
         }
       }
       break;
@@ -353,8 +338,7 @@ function _onEditorMove(clickX: number, clickY: number) {
     case Action.ERASE:
       if (clickedSpaceIndex !== -1 && _canRemoveSpaceAtIndex(curBoard, clickedSpaceIndex)) {
         removeSpace(clickedSpaceIndex);
-        changeSelectedSpaces([]);
-        render();
+        clearSelectedSpaces();
       }
       else {
         _eraseLines(clickX, clickY); // Try to slice some lines!
@@ -399,19 +383,29 @@ function _onEditorMove(clickX: number, clickY: number) {
         const deltaX = clickX - lastX;
         const deltaY = clickY - lastY;
 
-        selectedSpaces.forEach(space => {
-          const newX = Math.round(space.x) + deltaX;
-          space.x = Math.max(0, Math.min(newX, curBoard.bg.width));
+        const indicesToUpdate = [];
+        const coordsToUpdate = [];
 
-          const newY = Math.round(space.y) + deltaY;
-          space.y = Math.max(0, Math.min(newY, curBoard.bg.height));
-        });
+        for (const spaceIndex of selectedSpaceIndices) {
+          const space = curBoard.spaces[spaceIndex];
+          if (space) {
+            indicesToUpdate.push(spaceIndex);
 
-        renderConnectionsOnTimeout();
-        renderSpacesOnTimeout();
+            const newX = Math.round(space.x) + deltaX;
+            const newY = Math.round(space.y) + deltaY;
+            coordsToUpdate.push({
+              x: Math.max(0, Math.min(newX, curBoard.bg.width)),
+              y: Math.max(0, Math.min(newY, curBoard.bg.height))
+            });
+          }
+        }
+
+        if (indicesToUpdate.length) {
+          store.dispatch(setSpacePositionsAction({ spaceIndices: indicesToUpdate, coords: coordsToUpdate }));
+        }
 
         if (rightClickOpen()) {
-          updateRightClickMenu(selectedSpaces[0]);
+          updateRightClickMenu(selectedSpaceIndices[0]);
         }
       }
       if (doingSelectionBox) {
@@ -446,25 +440,29 @@ function _onEditorUp() {
     return;
 
   const curAction = getCurrentAction();
-  if (!spaceWasMouseDownedOn && curAction === Action.MOVE) {
-    // Clear the selection we were drawing.
-    renderSpaces();
-  }
-
-  if (!_hasAnySelectedSpace())
-    return;
-
-  const selectedSpaces = _getSelectedSpaces();
-  if (curAction === Action.LINE) {
-    let endSpaceIdx = _getClickedSpace(lastX, lastY);
-    // FIXME: indexOf cannot succeed
-    if (endSpaceIdx !== -1 && selectedSpaces.indexOf(endSpaceIdx as any) === -1) {
-      for (let index in selectedSpaceIndices) {
-        addConnection(parseInt(index), endSpaceIdx);
+  switch (curAction) {
+    case Action.MOVE:
+      if (!spaceWasMouseDownedOn) {
+        // Clear the selection we were drawing.
+        _clearSelectionBox();
       }
-    }
+      break;
 
-    renderConnections();
+    case Action.LINE:
+      const selectedSpaceIndices = getValidSelectedSpaceIndices();
+      const endSpaceIdx = _getClickedSpace(lastX, lastY);
+      if (endSpaceIdx !== -1) {
+        for (let index of selectedSpaceIndices) {
+          addConnection(index, endSpaceIdx);
+        }
+      }
+
+      _clearTemporaryConnections();
+      break;
+
+    case Action.LINE_STICKY:
+      _clearTemporaryConnections();
+      break;
   }
 }
 
@@ -475,8 +473,6 @@ function onEditorClick(event: MouseEvent) {
 
   const moved = Math.abs(startX - lastX) > 5 || Math.abs(startY - lastY) > 5;
   const movedAtAll = Math.abs(startX - lastX) > 0 || Math.abs(startY - lastY) > 0;
-
-  const selectedSpaces = _getSelectedSpaces();
 
   startX = lastX = -1;
   startY = lastY = -1;
@@ -520,7 +516,7 @@ function onEditorClick(event: MouseEvent) {
     case Action.ADD_DUEL_START_RED:
       if (!movedAtAll && !ctrlKey) {
         if (!clickedSpace) {
-          _clearSelectedSpaces();
+          clearSelectedSpaces();
         }
         else {
           _setSelectedSpace(clickedSpaceIdx);
@@ -538,13 +534,11 @@ function onEditorClick(event: MouseEvent) {
     case Action.ADD_ITEMSHOP_SUBTYPE:
       // Toggle the subtype only at the moment of mouse up, if we didn't move.
       if (spaceWasMouseDownedOn) {
-        if (_addSpace(curAction, clickX, clickY, clickedSpace, moved, ctrlKey)) {
-          _addSelectedSpace(clickedSpaceIdx !== -1 ? clickedSpaceIdx : curBoard.spaces.length - 1);
-        }
+        _addSpace(curAction, clickX, clickY, clickedSpaceIdx, moved, ctrlKey);
       }
       if (!movedAtAll && !ctrlKey) {
         if (!clickedSpace) {
-          _clearSelectedSpaces();
+          clearSelectedSpaces();
         }
         else {
           _setSelectedSpace(clickedSpaceIdx);
@@ -554,13 +548,13 @@ function onEditorClick(event: MouseEvent) {
 
     case Action.MARK_STAR:
       if (!moved) {
-        _toggleHostsStar(selectedSpaces);
+        _toggleHostsStar(getValidSelectedSpaceIndices());
       }
       break;
 
     case Action.LINE:
     case Action.LINE_STICKY:
-      renderConnections();
+      _clearTemporaryConnections();
       break;
 
     case Action.ERASE:
@@ -577,8 +571,8 @@ function onEditorRightClick(event: MouseEvent) {
   event.preventDefault();
   event.stopPropagation();
 
-  const selectedSpaces = _getSelectedSpaces();
-  const space = selectedSpaces.length !== 1 ? null : selectedSpaces[0];
+  const selectedSpaceIndices = getValidSelectedSpaceIndices();
+  const space = selectedSpaceIndices.length !== 1 ? -1 : selectedSpaceIndices[0];
   updateRightClickMenu(space);
 };
 
@@ -589,7 +583,7 @@ function onEditorDrop(event: DragEvent) {
     return;
 
   if (rightClickOpen())
-    updateRightClickMenu(null);
+    updateRightClickMenu(-1);
 
   if (!event.dataTransfer)
     return;
@@ -608,11 +602,8 @@ function onEditorDrop(event: DragEvent) {
 
   if (typeof data === "object") {
     if (data.action) {
-      _clearSelectedSpaces();
-
-      const curBoard = getCurrentBoard();
-      const curSpace = droppedOnSpaceIdx === -1 ? null : curBoard.spaces[droppedOnSpaceIdx];
-      _addSpace(data.action.type, clickX, clickY, curSpace, false, false);
+      clearSelectedSpaces();
+      _addSpace(data.action.type, clickX, clickY, droppedOnSpaceIdx, false, false);
     }
     else if (data.isEventParamDrop) {
       const handler = getEventParamDropHandler();
@@ -628,61 +619,66 @@ function onEditorKeyDown(event: KeyboardEvent) {
   if (!selectedSpaces || !selectedSpaces.length)
     return;
 
+  const selectedSpaceIndices = getValidSelectedSpaceIndices();
   const board = getCurrentBoard();
 
-  if (event.keyCode === 38) { // up arrow
-    selectedSpaces.forEach(space => {
-      space.y = Math.max(space.y - 1, 0);
-    });
-    changeSelectedSpaces(selectedSpaces);
-  }
-  else if (event.keyCode === 40) { // down arrow
-    selectedSpaces.forEach(space => {
-      space.y = Math.min(space.y + 1, board.bg.height);
-    });
-    changeSelectedSpaces(selectedSpaces);
-  }
-  else if (event.keyCode === 37) { // left arrow
-    selectedSpaces.forEach(space => {
-      space.x = Math.max(space.x - 1, 0);
-    });
-    changeSelectedSpaces(selectedSpaces);
-  }
-  else if (event.keyCode === 39) { // right arrow
-    selectedSpaces.forEach(space => {
-      space.x = Math.min(space.x + 1, board.bg.width);
-    });
-    changeSelectedSpaces(selectedSpaces);
-  }
-  else if (event.keyCode === 46) { // delete
-    // If any characters are on the spaces, first press just deletes them.
-    // If there are no characters, selected spaces are deleted.
-    let onlySubtype = false
-    selectedSpaces.forEach(space => {
-      if (space.subtype !== undefined) {
-        onlySubtype = true;
-      }
-    });
-    selectedSpaces.forEach(space => {
-      // Delete the character(s) off first.
-      if (onlySubtype) {
+  switch (event.key) {
+    case "Up":
+    case "ArrowUp":
+      _updateSpaceCoords(selectedSpaceIndices, board, (space) => ({
+        y: Math.max(space.y - 1, 0)
+      }));
+      break;
+
+    case "Down":
+    case "ArrowDown":
+      _updateSpaceCoords(selectedSpaceIndices, board, (space) => ({
+        y: Math.min(space.y + 1, board.bg.height)
+      }));
+      break;
+
+    case "Left":
+    case "ArrowLeft":
+      _updateSpaceCoords(selectedSpaceIndices, board, (space) => ({
+        x: Math.max(space.x - 1, 0)
+      }));
+      break;
+
+    case "Right":
+    case "ArrowRight":
+      _updateSpaceCoords(selectedSpaceIndices, board, (space) => ({
+        x: Math.min(space.x + 1, board.bg.width)
+      }));
+      break;
+
+    case "Delete":
+      // If any characters are on the spaces, first press just deletes them.
+      // If there are no characters, selected spaces are deleted.
+      let onlySubtype = false
+      selectedSpaces.forEach(space => {
         if (space.subtype !== undefined) {
-          delete space.subtype;
+          onlySubtype = true;
         }
+      });
+
+      if (onlySubtype) {
+        // Delete the character(s) off first.
+        store.dispatch(setSpaceSubtypeAction({ spaceIndices: selectedSpaceIndices, subtype: undefined }));
       }
       else {
-        let index = getSpaceIndex(space, board);
-        if (_canRemoveSpaceAtIndex(board, index)) {
-          removeSpace(index, board);
+        const spaceIndicesToRemove: number[] = [];
+        selectedSpaceIndices.forEach(spaceIndex => {
+          if (_canRemoveSpaceAtIndex(board, spaceIndex)) {
+            spaceIndicesToRemove.push(spaceIndex);
+          }
+        });
+        if (spaceIndicesToRemove.length > 0) {
+          store.dispatch(removeSpacesAction({ spaceIndices: spaceIndicesToRemove }));
         }
+
+        clearSelectedSpaces();
       }
-    });
-    if (onlySubtype) {
-      changeSelectedSpaces(selectedSpaces);
-    }
-    else {
-      _clearSelectedSpaces();
-    }
+      break;
   }
 }
 
@@ -702,77 +698,21 @@ function onEditorMouseOut(event: MouseEvent) {
   }
 }
 
-let _renderConnectionsTimer: any;
-function renderConnectionsOnTimeout() {
-  if (!_renderConnectionsTimer) {
-    _renderConnectionsTimer = setTimeout(_renderConnectionsTimeoutFn, 10);
-  }
-}
-function _renderConnectionsTimeoutFn() {
-  renderConnections();
-  _renderConnectionsTimer = null;
-}
-
-let _renderSpacesTimer: any;
-function renderSpacesOnTimeout() {
-  if (!_renderSpacesTimer) {
-    _renderSpacesTimer = setTimeout(_renderSpacesTimeoutFn, 10);
-  }
-}
-function _renderSpacesTimeoutFn() {
-  renderSpaces();
-  renderSelectedSpaces();
-  _renderSpacesTimer = null;
-}
-
-function _clearSelectedSpaces() {
-  selectedSpaceIndices = {};
-  changeSelectedSpaces([]);
-}
-
-function _changeSelectedSpaces() {
-  changeSelectedSpaces(_getSelectedSpaces());
-}
-
-function _getSelectedSpaces() {
-  const curBoard = getCurrentBoard();
-  const selectedSpaces = [];
-  for (let index in selectedSpaceIndices) {
-    let space = curBoard.spaces[index];
-
-    // TODO: There can be bad indices in the set when switching between boards.
-    if (space) {
-      selectedSpaces.push(space);
-    }
-  }
-  return selectedSpaces;
-}
-
 function _hasAnySelectedSpace() {
-  for (let index in selectedSpaceIndices) {
-    return true;
-  }
-  return false;
+  return !isEmpty(getSelectedSpaceIndices());
 }
 
 function _spaceIsSelected(spaceIndex: number) {
+  const selectedSpaceIndices = store.getState().data.selectedSpaceIndices;
   return !!selectedSpaceIndices[spaceIndex];
 }
 
-function _addSelectedSpace(spaceIndex: number, skipUpdate?: boolean) {
-  if (!selectedSpaceIndices) {
-    selectedSpaceIndices = {};
-  }
-  selectedSpaceIndices[spaceIndex] = true;
-  if (!skipUpdate)
-    _changeSelectedSpaces();
+function _addSelectedSpace(spaceIndex: number) {
+  store.dispatch(addSelectedSpaceAction(spaceIndex));
 }
 
 function _setSelectedSpace(spaceIndex: number) {
-  selectedSpaceIndices = {
-    [spaceIndex]: true,
-  };
-  _changeSelectedSpaces();
+  store.dispatch(setSelectedSpaceAction(spaceIndex));
 }
 
 function _getSpaceRadius() {
@@ -813,163 +753,165 @@ function _canRemoveSpaceAtIndex(board: IBoard, spaceIndex: number) {
   return true;
 }
 
-function _addSpace(action: Action, x: number, y: number, clickedSpace?: ISpace | null, moved?: boolean, ctrlKey?: boolean) {
+function _addSpace(action: Action, x: number, y: number, clickedSpaceIndex: number, moved?: boolean, ctrlKey?: boolean) {
+  const clickedSpace = getCurrentBoard().spaces[clickedSpaceIndex];
+
   let spaceType = _getSpaceTypeFromAction(action);
   let spaceSubType = _getSpaceSubTypeFromAction(action);
   let shouldChangeSelection = false;
   if (clickedSpace) {
     // If we are clicking a space, the only "add" action could be to toggle subtype.
     if (spaceSubType !== undefined && !moved) {
-      if (clickedSpace.type !== Space.OTHER && spaceSubType === SpaceSubtype.GATE) {
-        // Don't add gate to non-invisible space.
+      if (clickedSpace.subtype === spaceSubType) {
+        store.dispatch(setSpaceSubtypeAction({
+          spaceIndices: [clickedSpaceIndex],
+          subtype: undefined,
+        }));
       }
-      else if (clickedSpace.subtype === spaceSubType)
-        delete clickedSpace.subtype;
-      else
-        clickedSpace.subtype = spaceSubType;
+      else if (_canSetSubtypeOnSpaceType(clickedSpace.type, spaceSubType)) {
+        store.dispatch(setSpaceSubtypeAction({
+          spaceIndices: [clickedSpaceIndex],
+          subtype: spaceSubType,
+        }));
+      }
 
-      changeSelectedSpaces([clickedSpace]);
+      changeSelectedSpaces([clickedSpaceIndex]);
       shouldChangeSelection = true;
     }
   }
   else {
-    const curBoard = getCurrentBoard();
     const newSpaceIdx = addSpace(x, y, spaceType, spaceSubType);
-    const newSpace = curBoard.spaces[newSpaceIdx];
-
     if (ctrlKey) {
-      const selectedSpaces = getSelectedSpaces() || [];
-      selectedSpaces.push(newSpace);
-      changeSelectedSpaces(selectedSpaces);
+      _addSelectedSpace(newSpaceIdx);
     }
     else {
-      changeSelectedSpaces([newSpace]);
+      changeSelectedSpaces([newSpaceIdx]);
     }
     shouldChangeSelection = true;
   }
 
-  renderSpaces();
   return shouldChangeSelection;
 }
 
-function _toggleHostsStar(selectedSpaces?: ISpace[]) {
-  if (!selectedSpaces || !selectedSpaces.length)
+function _canSetSubtypeOnSpaceType(type: Space, subtype: SpaceSubtype): boolean {
+  if (type !== Space.OTHER && subtype === SpaceSubtype.GATE) {
+    // Don't add gate to non-invisible space.
+    return false;
+  }
+  return true;
+}
+
+type SpaceCoordUpdater = (space: ISpace) => { x?: number, y?: number, z?: number };
+
+function _updateSpaceCoords(spaceIndices: number[], board: IBoard, updater: SpaceCoordUpdater) {
+  const indicesToUpdate = [];
+  const coordsToUpdate = [];
+  for (const spaceIndex of spaceIndices) {
+    const space = board.spaces[spaceIndex];
+    if (space) {
+      indicesToUpdate.push(spaceIndex);
+      coordsToUpdate.push(updater(space));
+    }
+  }
+  if (indicesToUpdate.length) {
+    store.dispatch(setSpacePositionsAction({ spaceIndices: indicesToUpdate, coords: coordsToUpdate }));
+  }
+}
+
+function _toggleHostsStar(selectedSpacesIndices: number[]) {
+  if (!selectedSpacesIndices.length)
     return;
 
-  selectedSpaces.forEach(space => {
-    space.star = !space.star;
-  });
+  // If any space does not have star hosting, we add to all.
+  // Otherwise remove from all.
+  let adding = false;
+  const board = getCurrentBoard();
+  for (const spaceIndex of selectedSpacesIndices) {
+    const space = board.spaces[spaceIndex];
+    if (!space.star) {
+      adding = true;
+      break;
+    }
+  }
 
-  renderSpaces();
-  changeSelectedSpaces(selectedSpaces); // Refresh because .star changed
+  setHostsStar(selectedSpacesIndices, adding);
+}
+
+function _clearTemporaryConnections(): void {
+  store.dispatch(setTemporaryUIConnections({ connections: null }));
 }
 
 function _eraseLines(x: number, y: number) {
-  let board = getCurrentBoard();
-  let spaces = board.spaces;
-  let links = board.links;
-  let somethingErased = false;
-  for (let startIdx in links) {
-    let startSpace = spaces[startIdx];
-    let endSpace;
-    let endLinks = links[startIdx];
-    if (Array.isArray(endLinks)) {
-      let i = 0;
-      while (i < endLinks.length) {
-        endSpace = spaces[endLinks[i]];
-        if (_shouldEraseLine(startSpace, endSpace, x, y)) {
-          endLinks.splice(i, 1);
-          somethingErased = true;
-        }
-        else i++;
-      }
-      if (endLinks.length === 1)
-        links[startIdx] = endLinks = endLinks[0];
-      else if (!endLinks.length)
-        delete links[startIdx];
-    }
-    else {
-      endSpace = spaces[endLinks];
-      if (_shouldEraseLine(startSpace, endSpace, x, y)) {
-        delete links[startIdx];
-        somethingErased = true;
-      }
-    }
+  store.dispatch(eraseConnectionsAction({ x, y }));
+}
+
+function _getSpaceTypeFromAction(action: Action): Space {
+  switch (action) {
+    case Action.ADD_BLUE: return Space.BLUE;
+    case Action.ADD_RED: return Space.RED;
+    case Action.ADD_HAPPENING: return Space.HAPPENING;
+    case Action.ADD_STAR: return Space.STAR;
+    case Action.ADD_BLACKSTAR: return Space.BLACKSTAR;
+    case Action.ADD_MINIGAME: return Space.MINIGAME;
+    case Action.ADD_CHANCE: return Space.CHANCE;
+    case Action.ADD_START: return Space.START;
+    case Action.ADD_SHROOM: return Space.SHROOM;
+    case Action.ADD_BOWSER: return Space.BOWSER;
+    case Action.ADD_ITEM: return Space.ITEM;
+    case Action.ADD_BATTLE: return Space.BATTLE;
+    case Action.ADD_BANK: return Space.BANK;
+    case Action.ADD_ARROW: return Space.ARROW;
+    case Action.ADD_GAMEGUY: return Space.GAMEGUY;
+    case Action.ADD_DUEL_BASIC: return Space.DUEL_BASIC;
+    case Action.ADD_DUEL_REVERSE: return Space.DUEL_REVERSE;
+    case Action.ADD_DUEL_POWERUP: return Space.DUEL_POWERUP;
+    case Action.ADD_DUEL_START_BLUE: return Space.DUEL_START_BLUE;
+    case Action.ADD_DUEL_START_RED: return Space.DUEL_START_RED;
+    default: return Space.OTHER;
   }
-  if (somethingErased)
-    renderConnections();
 }
 
-function _shouldEraseLine(startSpace: ISpace, endSpace: ISpace, targetX: number, targetY: number) {
-  if (targetX > startSpace.x && targetX > endSpace.x)
-    return false;
-  if (targetX < startSpace.x && targetX < endSpace.x)
-    return false;
-  if (targetY > startSpace.y && targetY > endSpace.y)
-    return false;
-  if (targetY < startSpace.y && targetY < endSpace.y)
-    return false;
-  return lineDistance(targetX, targetY, startSpace.x, startSpace.y, endSpace.x, endSpace.y) <= 4;
-}
-
-function _getSpaceTypeFromAction(action: Action) {
-  let spaceType = Space.OTHER;
-  if (action === Action.ADD_BLUE) spaceType = Space.BLUE;
-  else if (action === Action.ADD_RED) spaceType = Space.RED;
-  else if (action === Action.ADD_HAPPENING) spaceType = Space.HAPPENING;
-  else if (action === Action.ADD_STAR) spaceType = Space.STAR;
-  else if (action === Action.ADD_BLACKSTAR) spaceType = Space.BLACKSTAR;
-  else if (action === Action.ADD_MINIGAME) spaceType = Space.MINIGAME;
-  else if (action === Action.ADD_CHANCE) spaceType = Space.CHANCE;
-  else if (action === Action.ADD_START) spaceType = Space.START;
-  else if (action === Action.ADD_SHROOM) spaceType = Space.SHROOM;
-  else if (action === Action.ADD_BOWSER) spaceType = Space.BOWSER;
-  else if (action === Action.ADD_ITEM) spaceType = Space.ITEM;
-  else if (action === Action.ADD_BATTLE) spaceType = Space.BATTLE;
-  else if (action === Action.ADD_BANK) spaceType = Space.BANK;
-  else if (action === Action.ADD_ARROW) spaceType = Space.ARROW;
-  else if (action === Action.ADD_GAMEGUY) spaceType = Space.GAMEGUY;
-  else if (action === Action.ADD_DUEL_BASIC) spaceType = Space.DUEL_BASIC;
-  else if (action === Action.ADD_DUEL_REVERSE) spaceType = Space.DUEL_REVERSE;
-  else if (action === Action.ADD_DUEL_POWERUP) spaceType = Space.DUEL_POWERUP;
-  else if (action === Action.ADD_DUEL_START_BLUE) spaceType = Space.DUEL_START_BLUE;
-  else if (action === Action.ADD_DUEL_START_RED) spaceType = Space.DUEL_START_RED;
-  return spaceType;
-}
-
-function _getSpaceSubTypeFromAction(action: Action) {
-  let spaceSubType;
-  if (action === Action.ADD_TOAD_CHARACTER) spaceSubType = SpaceSubtype.TOAD;
-  else if (action === Action.ADD_BOWSER_CHARACTER) spaceSubType = SpaceSubtype.BOWSER;
-  else if (action === Action.ADD_KOOPA_CHARACTER) spaceSubType = SpaceSubtype.KOOPA;
-  else if (action === Action.ADD_BOO_CHARACTER) spaceSubType = SpaceSubtype.BOO;
-  else if (action === Action.ADD_BANK_SUBTYPE) spaceSubType = SpaceSubtype.BANK;
-  else if (action === Action.ADD_BANKCOIN_SUBTYPE) spaceSubType = SpaceSubtype.BANKCOIN;
-  else if (action === Action.ADD_ITEMSHOP_SUBTYPE) spaceSubType = SpaceSubtype.ITEMSHOP;
-  else if (action === Action.MARK_GATE) spaceSubType = SpaceSubtype.GATE;
-  return spaceSubType;
+function _getSpaceSubTypeFromAction(action: Action): SpaceSubtype | undefined {
+  switch (action) {
+    case Action.ADD_TOAD_CHARACTER: return SpaceSubtype.TOAD;
+    case Action.ADD_BOWSER_CHARACTER: return SpaceSubtype.BOWSER;
+    case Action.ADD_KOOPA_CHARACTER: return SpaceSubtype.KOOPA;
+    case Action.ADD_BOO_CHARACTER: return SpaceSubtype.BOO;
+    case Action.ADD_BANK_SUBTYPE: return SpaceSubtype.BANK;
+    case Action.ADD_BANKCOIN_SUBTYPE: return SpaceSubtype.BANKCOIN;
+    case Action.ADD_ITEMSHOP_SUBTYPE: return SpaceSubtype.ITEMSHOP;
+    case Action.MARK_GATE: return SpaceSubtype.GATE;
+    default: return undefined;
+  }
 }
 
 function _updateSelectionAndBox(curX: number, curY: number) {
   if (startX === -1 || startY === -1)
     return;
 
-  _clearSelectedSpaces();
+  clearSelectedSpaces();
   const curBoard = getCurrentBoard();
   const spaces = curBoard.spaces;
+  const selectedSpaceIndices = [];
   for (let i = 0; i < spaces.length; i++) {
     const space = spaces[i];
     if (pointFallsWithin(space.x, space.y, startX, startY, curX, curY)) {
-      _addSelectedSpace(i, true);
+      selectedSpaceIndices.push(i);
     }
   }
-  _changeSelectedSpaces();
+  changeSelectedSpaces(selectedSpaceIndices);
 
-  drawSelectionBox(startX, startY, curX, curY);
+  _setSelectionBox(startX, startY, curX, curY);
+}
+
+function _setSelectionBox(startX: number, startY: number, curX: number, curY: number): void {
+  store.dispatch(setSelectionBoxCoordsAction({
+    selectionCoords: [startX, startY, curX, curY]
+  }));
 }
 
 function _clearSelectionBox() {
-  renderSpaces(); // It's on the space canvas, so just re-render.
+  store.dispatch(setSelectionBoxCoordsAction({ selectionCoords: null }));
 }
 
 function preventDefault(event: Event) { event.preventDefault(); }
