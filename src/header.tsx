@@ -162,8 +162,6 @@ const actions_audioselectioncode: IHeaderActionItem[] = [
 //const action_overflow = { "name": "", "icon": moreImage, "type": "MORE", "details": "More options" };
 const action_overflow: IHeaderActionItem = { "name": "", "icon": "", "type": "MORE" as any, "details": "More options" };
 
-let _emulatorNotice: React.ReactElement<Notification> | null = null;
-
 async function _handleAction(action: Action) {
   switch(action) {
     case Action.ROM_LOAD:
@@ -412,26 +410,22 @@ function getActions(view: View, board: IBoard, romLoaded: boolean) {
 }
 
 function _showEmulatorInstructionsNotification() {
-  if (!_emulatorNotice) {
-    const removeNotificationHandler = () => {
-      if (_emulatorNotice) {
-        removeNotification(_emulatorNotice);
-        _emulatorNotice = null;
-      }
-    }
-    _emulatorNotice = (
-      <Notification key="romSaveNotice"
-        color={NotificationColor.Green}
-        onClose={removeNotificationHandler}>
-        Before trying the game, review{" "}
-        <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup" target="_blank" rel="noopener noreferrer">emulator setup instructions</a>.
-        <NotificationButton onClick={removeNotificationHandler}>
-          Got it
-        </NotificationButton>
-      </Notification>
-    );
-    addNotification(_emulatorNotice);
+  const emulatorNoticeKey = "romSaveNotice";
+  const removeNotificationHandler = () => {
+    removeNotification(emulatorNoticeKey);
   }
+
+  addNotification(
+    <Notification key={emulatorNoticeKey}
+      color={NotificationColor.Green}
+      onClose={removeNotificationHandler}>
+      Before trying the game, review{" "}
+      <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup" target="_blank" rel="noopener noreferrer">emulator setup instructions</a>.
+      <NotificationButton onClick={removeNotificationHandler}>
+        Got it
+      </NotificationButton>
+    </Notification>
+  );
 }
 
 interface IHeaderProps {

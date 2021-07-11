@@ -5,7 +5,7 @@ import { Notification } from "../components/notifications";
 import { IDecisionTreeNode } from "../ai/aitrees";
 import { store } from "./store";
 import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./blocker";
-import { changeCurrentActionAction, changeViewAction, setOverrideBgAction, setRomLoadedAction } from "./appState";
+import { addNotificationAction, changeCurrentActionAction, changeViewAction, removeNotificationAction, setOverrideBgAction, setRomLoadedAction } from "./appState";
 import { setTemporaryUIConnections, changeCurrentEventAction, clearSelectedSpacesAction, EventType, selectCurrentBoard, selectCurrentEvent, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpacesAction, SpaceIndexMap } from "./boardState";
 
 export function getAppInstance(): import("./app").PP64App {
@@ -161,16 +161,11 @@ export function refresh() {
 }
 
 export function addNotification(notification: React.ReactElement<Notification>) {
-  const notifications = getAppInstance().state.notifications.slice();
-  notifications.push(notification);
-  getAppInstance().setState({ notifications });
+  store.dispatch(addNotificationAction({ notification: notification as any }));
 }
 
-export function removeNotification(notification: React.ReactElement<Notification>) {
-  const notifications = getAppInstance().state.notifications.slice();
-  const index = notifications.indexOf(notification);
-  notifications.splice(index, 1);
-  getAppInstance().setState({ notifications });
+export function removeNotification(notificationKey: string) {
+  store.dispatch(removeNotificationAction({ notificationKey }));
 }
 
 export function changeDecisionTree(tree: IDecisionTreeNode[] | null): void {

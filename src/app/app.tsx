@@ -42,7 +42,7 @@ import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "../eve
 import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "../events/getaudiochoice";
 import { SpriteView } from "../views/sprites";
 import { store } from "./store";
-import { selectCurrentAction, selectCurrentView, selectRomLoaded, selectUpdateExists, setHideUpdateNotification, setUpdateExistsAction } from "./appState";
+import { selectCurrentAction, selectCurrentView, selectNotifications, selectRomLoaded, selectUpdateExists, setHideUpdateNotification, setUpdateExistsAction } from "./appState";
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./blocker";
@@ -53,7 +53,6 @@ import { BasicErrorBoundary } from "../components/BasicErrorBoundary";
 
 interface IPP64AppState {
   aiTree: IDecisionTreeNode[] | null;
-  notifications: React.ReactElement<Notification>[];
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
 }
@@ -61,7 +60,6 @@ interface IPP64AppState {
 export class PP64App extends React.Component<{}, IPP64AppState> {
   state: IPP64AppState = {
     aiTree: null,
-    notifications: [],
     error: null,
     errorInfo: null,
   }
@@ -116,7 +114,6 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 
 interface PP64AppInternalProps {
   aiTree: IDecisionTreeNode[] | null;
-  notifications: React.ReactElement<Notification>[];
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
 }
@@ -127,7 +124,6 @@ function PP64AppInternal(props: PP64AppInternalProps) {
   const boards = useAppSelector(selectBoards);
   const currentBoard = useAppSelector(selectCurrentBoard);
   const currentAction = useAppSelector(selectCurrentAction);
-  const updateExists = useAppSelector(selectUpdateExists);
   const romLoaded = useAppSelector(selectRomLoaded);
 
   updateWindowTitle(currentBoard.name);
@@ -215,8 +211,7 @@ function PP64AppInternal(props: PP64AppInternalProps) {
 
   return (
     <div className={bodyClass}>
-      <PP64NotificationBar notifications={props.notifications}
-        updateExists={updateExists} />
+      <PP64NotificationBar />
       <Header view={currentView} romLoaded={romLoaded} board={currentBoard} />
       <div className="content"
         onKeyDownCapture={blocked ? killEvent : undefined}>
@@ -256,12 +251,7 @@ function PP64AppInternal(props: PP64AppInternalProps) {
   );
 }
 
-interface PP64NotificationBarProps {
-  updateExists: boolean;
-  notifications: React.ReactElement<Notification>[];
-}
-
-function PP64NotificationBar(props: PP64NotificationBarProps) {
+function PP64NotificationBar() {
   const dispatch = useAppDispatch();
 
   const onUpdateNotificationClosed = useCallback(() => {
@@ -280,8 +270,10 @@ function PP64NotificationBar(props: PP64NotificationBarProps) {
 
   const updateHideNotification = useAppSelector(state => state.app.updateHideNotification);
 
-  const notifications = props.notifications.slice();
-  if (props.updateExists && !updateHideNotification) {
+  const updateExists = useAppSelector(selectUpdateExists);
+  const notifications = useAppSelector(selectNotifications).slice();
+
+  if (updateExists && !updateHideNotification) {
     notifications.push(
       <Notification key="update"
         color={NotificationColor.Blue}
