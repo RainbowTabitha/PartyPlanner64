@@ -26,6 +26,7 @@ import { getMouseCoordsOnCanvas } from "./utils/canvas";
 import { addSelectedSpaceAction,
   eraseConnectionsAction,
   removeSpacesAction,
+  selectSelectedSpaceIndices,
   setSelectedSpaceAction, setSelectionBoxCoordsAction, setSpacePositionsAction, setSpaceSubtypeAction, setTemporaryUIConnections } from "./app/boardState";
 import { store } from "./app/store";
 import { isEmpty } from "./utils/obj";
@@ -703,7 +704,7 @@ function _hasAnySelectedSpace() {
 }
 
 function _spaceIsSelected(spaceIndex: number) {
-  const selectedSpaceIndices = store.getState().data.selectedSpaceIndices;
+  const selectedSpaceIndices = selectSelectedSpaceIndices(store.getState());
   return !!selectedSpaceIndices[spaceIndex];
 }
 

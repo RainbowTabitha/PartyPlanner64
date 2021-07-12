@@ -15,7 +15,7 @@ import { takeScreeny } from "./screenshot";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
 import { setOverrideBg } from "./app/appControl";
 import { useAppSelector, useCurrentBoard } from "./app/hooks";
-import { selectCurrentBoard, selectSelectedSpaceIndices, SpaceIndexMap } from "./app/boardState";
+import { selectCurrentBoard, selectHighlightedSpaceIndices, selectHoveredBoardEventIndex, selectSelectedSpaceIndices, selectSelectionBoxCoords, selectTemporaryConnections, SpaceIndexMap } from "./app/boardState";
 import { isEmpty } from "./utils/obj";
 
 type Canvas = HTMLCanvasElement;
@@ -629,7 +629,7 @@ const BoardLines = () => {
 
   const board = useCurrentBoard();
   const [boardWidth, boardHeight] = useBoardDimensions();
-  const tempConnections = useAppSelector(state => state.data.temporaryConnections);
+  const tempConnections = useAppSelector(selectTemporaryConnections);
 
   useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
@@ -679,9 +679,9 @@ const BoardSelectedSpaces = () => {
   const [boardWidth, boardHeight] = useBoardDimensions();
   const selectedSpaceIndices = useAppSelector(selectSelectedSpaceIndices);
 
-  const highlightedSpaceIndices = useAppSelector(state => state.data.highlightedSpaceIndices);
+  const highlightedSpaceIndices = useAppSelector(selectHighlightedSpaceIndices);
 
-  const hoveredBoardEventIndex = useAppSelector(state => state.data.hoveredBoardEventIndex);
+  const hoveredBoardEventIndex = useAppSelector(selectHoveredBoardEventIndex);
 
   useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
@@ -744,7 +744,7 @@ const BoardSelectionBox = () => {
   const canvasRef = useRef<Canvas>(null);
 
   const hasBoxDrawn = useRef<boolean>(false);
-  const selectionBoxCoords = useAppSelector(state => state.data.selectionBoxCoords);
+  const selectionBoxCoords = useAppSelector(selectSelectionBoxCoords);
 
   useEffect(() => {
     const canvas = canvasRef.current!;

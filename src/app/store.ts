@@ -1,14 +1,34 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
+import undoable, { excludeAction, groupByActionTypes } from 'redux-undo';
 import appStateReducer from "./appState";
-import boardStateReducer from "./boardState";
+import boardStateReducer, { addEventToLibraryAction, clearSelectedSpacesAction, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpaceAction, setSelectedSpacesAction, setSelectionBoxCoordsAction, setSpacePositionsAction, setSpaceRotationAction, setTemporaryUIConnections } from "./boardState";
 import blockerReducer from "./blocker";
 import { boardStateMiddleware } from "./middleware";
+
+const undoableBoardStateReducer = undoable(boardStateReducer, {
+  ignoreInitialState: true,
+  debug: true,
+  groupBy: groupByActionTypes([
+    setSpacePositionsAction.type,
+    setSpaceRotationAction.type,
+  ]),
+  filter: excludeAction([
+    addEventToLibraryAction.type,
+    clearSelectedSpacesAction.type,
+    setSelectedSpaceAction.type,
+    setSelectedSpacesAction.type,
+    setSelectionBoxCoordsAction.type,
+    setHighlightedSpacesAction.type,
+    setHoveredBoardEventIndexAction.type,
+    setTemporaryUIConnections.type,
+  ])
+});
 
 export const store = configureStore({
   reducer: {
     app: appStateReducer,
     blocker: blockerReducer,
-    data: boardStateReducer,
+    data: undoableBoardStateReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -21,7 +41,10 @@ export const store = configureStore({
         ],
         ignoredPaths: [
           "blocker.onBlockerFinished",
-          "data.eventLibrary",
+          "data.present.eventLibrary",
+          "data.past",
+          "data.future",
+          "data._latestUnfiltered",
         ],
       },
     }).concat(boardStateMiddleware),

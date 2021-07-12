@@ -175,9 +175,9 @@ function makeBgSymbols(defaultBgIndex: number, additionalBgIndices?: number[]): 
 /** Surrounds the additional bg C code with the necessary symbols. */
 export function prepAdditionalBgC(code: string, defaultBgIndex: number, additionalBgIndices?: number[]): string {
   return `
-    #define PickBackground __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
-    ${makeBgDefines(defaultBgIndex, additionalBgIndices).join("\n")}
-    ${code}
+#define PickBackground __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
+${makeBgDefines(defaultBgIndex, additionalBgIndices).join("\n")}
+${code}
   `;
 }
 

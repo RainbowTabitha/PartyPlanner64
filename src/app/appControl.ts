@@ -6,7 +6,8 @@ import { IDecisionTreeNode } from "../ai/aitrees";
 import { store } from "./store";
 import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./blocker";
 import { addNotificationAction, changeCurrentActionAction, changeViewAction, removeNotificationAction, setOverrideBgAction, setRomLoadedAction } from "./appState";
-import { setTemporaryUIConnections, changeCurrentEventAction, clearSelectedSpacesAction, EventType, selectCurrentBoard, selectCurrentEvent, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpacesAction, SpaceIndexMap } from "./boardState";
+import { setTemporaryUIConnections, changeCurrentEventAction, clearSelectedSpacesAction, EventType, selectCurrentBoard, selectCurrentEvent, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpacesAction, SpaceIndexMap, selectCurrentEventType, selectSelectedSpaceIndices } from "./boardState";
+import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 export function getAppInstance(): import("./app").PP64App {
   return (window as any)._PP64instance;
@@ -14,6 +15,7 @@ export function getAppInstance(): import("./app").PP64App {
 
 export function changeView(view: View): void {
   store.dispatch(changeViewAction(view));
+  clearUndoHistory();
 }
 
 export function currentBoardChanged() {
@@ -22,6 +24,7 @@ export function currentBoardChanged() {
   getAppInstance().setState({
     aiTree: null,
   });
+  clearUndoHistory();
 }
 
 export function boardsChanged() {
@@ -30,6 +33,7 @@ export function boardsChanged() {
 
 export function romLoadedChanged() {
   store.dispatch(setRomLoadedAction(romhandler.romIsLoaded()));
+  clearUndoHistory();
 }
 
 export function changeCurrentAction(action: Action) {
@@ -49,7 +53,7 @@ export function changeSelectedSpaces(selectedSpaceIndices: number[]) {
 }
 
 export function getSelectedSpaceIndices(): SpaceIndexMap {
-  return store.getState().data.selectedSpaceIndices;
+  return selectSelectedSpaceIndices(store.getState());
 }
 
 export function getValidSelectedSpaceIndices(): number[] {
@@ -106,7 +110,7 @@ export function getCurrentEvent(): IEvent | null {
 }
 
 export function getCurrentEventIsBoardEvent(): boolean {
-  return store.getState().data.currentEventType === EventType.Board;
+  return selectCurrentEventType(store.getState()) === EventType.Board;
 }
 
 export function setHoveredBoardEvent(hoveredBoardEventIndex: number) {
@@ -170,4 +174,16 @@ export function removeNotification(notificationKey: string) {
 
 export function changeDecisionTree(tree: IDecisionTreeNode[] | null): void {
   getAppInstance().setState({ aiTree: tree });
+}
+
+export function undo(): void {
+  store.dispatch(ReduxUndoActionCreators.undo());
+}
+
+export function redo(): void {
+  store.dispatch(ReduxUndoActionCreators.redo())
+}
+
+export function clearUndoHistory(): void {
+  store.dispatch(ReduxUndoActionCreators.clearHistory())
 }

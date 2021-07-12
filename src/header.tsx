@@ -751,7 +751,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
     if (!this.hasErrors() && !this.props.unavailable && !this.props.forcedDisabled) {
       this.props.closeCallback();
 
-      let adapter = getROMAdapter();
+      const adapter = getROMAdapter();
       if (!adapter)
         return;
 

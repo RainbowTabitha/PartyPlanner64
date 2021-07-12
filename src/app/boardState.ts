@@ -361,6 +361,9 @@ export const boardStateSlice = createSlice({
       const board = getCurrentBoard(state);
 
       addConnectionInternal(startSpaceIndex, endSpaceIndex, board);
+
+      // Otherwise this may show up in undo/redo states.
+      state.temporaryConnections = null;
     },
     eraseConnectionsAction: (state, action: PayloadAction<{
       x: number,
@@ -691,41 +694,52 @@ export const {
   setSpaceEventEventParameterAction,
 } = boardStateSlice.actions;
 
-export const selectBoards = (state: RootState) => state.data.boards;
+export const selectData = (state: RootState) => state.data.present;
 
-export const selectROMBoards = (state: RootState) => state.data.romBoards;
+export const selectBoards = (state: RootState) => state.data.present.boards;
+
+export const selectROMBoards = (state: RootState) => state.data.present.romBoards;
 
 export const selectCurrentBoardIndex = (state: RootState) => {
-  return state.data.currentBoardIndex;
+  return state.data.present.currentBoardIndex;
 }
 
 export const selectCurrentBoardIsROM = (state: RootState) => {
-  return state.data.currentBoardIsROM;
+  return state.data.present.currentBoardIsROM;
 }
 
 export const selectCurrentBoard = (state: RootState) => {
-  if (state.data.currentBoardIsROM) {
-    return state.data.romBoards[state.data.currentBoardIndex];
+  if (state.data.present.currentBoardIsROM) {
+    return state.data.present.romBoards[state.data.present.currentBoardIndex];
   }
-  return state.data.boards[state.data.currentBoardIndex];
+  return state.data.present.boards[state.data.present.currentBoardIndex];
 }
 
-export const selectSelectedSpaceIndices = (state: RootState) => state.data.selectedSpaceIndices;
+export const selectSelectionBoxCoords = (state: RootState) => state.data.present.selectionBoxCoords;
+export const selectHoveredBoardEventIndex = (state: RootState) => state.data.present.hoveredBoardEventIndex;
+export const selectHighlightedSpaceIndices = (state: RootState) => state.data?.present?.highlightedSpaceIndices;
+export const selectTemporaryConnections = (state: RootState) => state.data.present.temporaryConnections;
+
+export const selectSelectedSpaceIndices = (state: RootState) => state.data.present.selectedSpaceIndices;
 
 export const selectCurrentEvent = (state: RootState) => {
-  assert(!!state.data.currentEventId);
-  switch (state.data.currentEventType) {
+  assert(!!state.data.present.currentEventId);
+  switch (state.data.present.currentEventType) {
     case EventType.Board:
-      const boardEvent = selectCurrentBoard(state).events[state.data.currentEventId];
+      const boardEvent = selectCurrentBoard(state).events[state.data.present.currentEventId];
       assert(typeof boardEvent !== "string");
       return createCustomEvent(boardEvent.language, boardEvent.code);
     case EventType.Library:
-      return state.data.eventLibrary[state.data.currentEventId];
+      return state.data.present.eventLibrary[state.data.present.currentEventId];
     case EventType.None:
     default:
       return null;
   }
 }
+
+export const selectCurrentEventType = (state: RootState) => state.data.present.currentEventType;
+
+export const selectEventLibrary = (state: RootState) => state.data.present.eventLibrary;
 
 function removeSpace(index: number, board: IBoard): boolean {
   if (index < 0 || index >= board.spaces.length)

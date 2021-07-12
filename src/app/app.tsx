@@ -35,7 +35,7 @@ import { BasicCodeEditorView } from "../views/basiccodeeditorview";
 import { IDecisionTreeNode } from "../ai/aitrees";
 import { DecisionTreeEditor } from "../ai/aieditor";
 import { isElectron } from "../utils/electron";
-import { blockUI, showMessage, changeDecisionTree } from "./appControl";
+import { blockUI, showMessage, changeDecisionTree, undo, redo } from "./appControl";
 import { Blocker } from "../components/blocker";
 import { killEvent } from "../utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "../events/additionalbg";
@@ -48,6 +48,7 @@ import { useAppDispatch, useAppSelector } from "./hooks";
 import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./blocker";
 import { selectBoards, selectCurrentBoard } from "./boardState";
 import { BasicErrorBoundary } from "../components/BasicErrorBoundary";
+import { useHotkeys } from "react-hotkeys-hook";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -127,6 +128,7 @@ function PP64AppInternal(props: PP64AppInternalProps) {
   const romLoaded = useAppSelector(selectRomLoaded);
 
   updateWindowTitle(currentBoard.name);
+  usePP64Hotkeys();
 
   let mainView;
   switch (currentView) {
@@ -249,6 +251,27 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       <PP64Blocker />
     </div>
   );
+}
+
+function usePP64Hotkeys(): void {
+  const currentView = useAppSelector(selectCurrentView);
+  const blocked = useAppSelector(selectBlocked);
+
+  const allowUndoRedo = !blocked && currentView === View.EDITOR;
+
+  useHotkeys("ctrl+z", (event, handler) => {
+    undo();
+  }, {
+    enabled: allowUndoRedo,
+    enableOnTags: ["INPUT", "SELECT"],
+  });
+
+  useHotkeys("ctrl+y", (event, handler) => {
+    redo();
+  }, {
+    enabled: allowUndoRedo,
+    enableOnTags: ["INPUT", "SELECT"],
+  });
 }
 
 function PP64NotificationBar() {

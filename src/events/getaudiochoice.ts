@@ -171,9 +171,9 @@ function makeAudioSymbols(audioIndices: number[]): string[] {
 /** Surrounds the get audio C code with the necessary symbols. */
 export function prepGetAudioC(code: string, audioIndices: number[]): string {
   return `
-    #define PickAudioIndex __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
-    ${makeGetAudioDefines(audioIndices).join("\n")}
-    ${code}
+#define PickAudioIndex __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
+${makeGetAudioDefines(audioIndices).join("\n")}
+${code}
   `;
 }
 

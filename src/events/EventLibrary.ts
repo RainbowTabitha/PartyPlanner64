@@ -1,4 +1,4 @@
-import { addEventToLibraryAction, EventMap, removeEventFromLibraryAction } from "../app/boardState";
+import { addEventToLibraryAction, EventMap, removeEventFromLibraryAction, selectEventLibrary } from "../app/boardState";
 import { useAppSelector } from "../app/hooks";
 import { store } from "../app/store";
 import { IEvent } from "./events";
@@ -13,13 +13,13 @@ export function removeEventFromLibrary(eventId: string) {
 }
 
 export function getEventFromLibrary(id: string): IEvent | undefined {
-  return store.getState().data.eventLibrary[id];
+  return selectEventLibrary(store.getState())[id];
 }
 
 export function getEventsInLibrary(): EventMap {
-  return store.getState().data.eventLibrary;
+  return selectEventLibrary(store.getState());
 }
 
 export function useLibraryEvents(): EventMap {
-  return useAppSelector(state => state.data.eventLibrary);
+  return useAppSelector(selectEventLibrary);
 }

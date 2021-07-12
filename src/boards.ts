@@ -3,7 +3,7 @@ import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
 import { getEvent, IEventParameter, EventParameterValues, IEvent } from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
-import { boardsChanged, currentBoardChanged, getAppInstance } from "./app/appControl";
+import { boardsChanged, clearUndoHistory, currentBoardChanged, getAppInstance } from "./app/appControl";
 import { IDecisionTreeNode } from "./ai/aitrees";
 
 import defaultThemeBoardSelect from "./img/themes/default/boardselect.png";
@@ -38,6 +38,7 @@ import {
   selectCurrentBoard,
   selectCurrentBoardIndex,
   selectCurrentBoardIsROM,
+  selectData,
   selectROMBoards,
   setAdditionalBackgroundCodeAction,
   setAudioSelectCodeAction,
@@ -334,7 +335,7 @@ export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 
   const app = getAppInstance();
   if (app)
     boardsChanged();
-  const storeData = store.getState().data;
+  const storeData = selectData(store.getState());
   const collection = opts.rom ? storeData.romBoards : storeData.boards;
 
   return collection.length - 1;
@@ -346,7 +347,7 @@ export function getCurrentBoard(): IBoard {
 }
 
 export function indexOfBoard(board: IBoard) {
-  return store.getState().data.boards.indexOf(board);
+  return selectBoards(store.getState()).indexOf(board);
 }
 
 export function setCurrentBoard(index: number, isRom?: boolean) {
@@ -965,6 +966,7 @@ export function loadBoardsFromROM() {
   }
 
   boardsChanged();
+  clearUndoHistory();
 }
 
 export function clearBoardsFromROM() {
