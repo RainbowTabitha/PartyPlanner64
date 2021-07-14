@@ -1,10 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { addConnectionInternal, addEventToSpaceInternal, addSpaceInternal, BoardAudioType, forEachEvent, forEachEventParameter, getBoardEvent, IBoard, IBoardAudioChanges, IEventInstance, includeEventInBoardInternal, ISpace, _fixPotentiallyOldBoard, _makeDefaultBoard } from "../boards";
+import { addConnectionInternal, addEventToSpaceInternal, addSpaceInternal, BoardAudioType, forEachEvent, forEachEventParameter, getBoardEvent, IBoard, IBoardAudioChanges, IEventInstance, includeEventInBoardInternal, ISpace, _makeDefaultBoard } from "../boards";
 import { createCustomEvent, ICustomEvent } from "../events/customevents";
 import { EventParameterValue, IEvent, IEventParameter } from "../events/events";
 import { EditorEventActivationType, EventCodeLanguage, EventParameterType, Space, SpaceSubtype } from "../types";
 import { assert } from "../utils/debug";
-import { getSavedBoards, getSavedEvents } from "../utils/localstorage";
 import { lineDistance } from "../utils/number";
 import { copyObject } from "../utils/obj";
 import { RootState } from "./store";
@@ -52,38 +51,17 @@ const initialState: BoardState = {
   hoveredBoardEventIndex: -1,
 };
 
-let cachedBoards = getSavedBoards();
-if (cachedBoards && cachedBoards.length) {
-  initialState.boards = cachedBoards.map(board => _fixPotentiallyOldBoard(board));
-}
-else {
-  initialState.boards = [ _makeDefaultBoard(1) ];
-}
-
-const cachedEvents = getSavedEvents();
-if (cachedEvents && cachedEvents.length) {
-  cachedEvents.forEach((eventObj: IEvent) => {
-    if (!eventObj || !(eventObj as ICustomEvent).asm)
-      return;
-    try {
-      const customEventObj = eventObj as ICustomEvent;
-      const customEvent = createCustomEvent(
-        customEventObj.language || EventCodeLanguage.MIPS,
-        customEventObj.asm
-      );
-      initialState.eventLibrary[customEvent.id] = customEvent;
-    }
-    catch (e) {
-      // Just let the error slide, event format changed or something?
-      console.error("Error reading cached event: " + e.toString());
-    }
-  });
-}
-
 export const boardStateSlice = createSlice({
   name: "boardState",
   initialState,
   reducers: {
+    setBoardsAction: (state, action: PayloadAction<{
+      boards: IBoard[], // ref ok
+    }>) => {
+      let { boards } = action.payload;
+
+      state.boards = boards;
+    },
     addBoardAction: (state, action: PayloadAction<{
       board: IBoard, // ref ok
       rom?: boolean,
@@ -637,6 +615,7 @@ export const boardStateSlice = createSlice({
 });
 
 export const {
+  setBoardsAction,
   addBoardAction,
   deleteBoardAction,
   setCurrentBoardAction,

@@ -1,7 +1,7 @@
 // This is the top level of the application, and includes the root React view.
 
-import { View, Action } from "../types";
-import { getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode } from "../boards";
+import { View, Action, EventCodeLanguage } from "../types";
+import { getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode, _fixPotentiallyOldBoard, _makeDefaultBoard } from "../boards";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
@@ -35,7 +35,7 @@ import { BasicCodeEditorView } from "../views/basiccodeeditorview";
 import { IDecisionTreeNode } from "../ai/aitrees";
 import { DecisionTreeEditor } from "../ai/aieditor";
 import { isElectron } from "../utils/electron";
-import { blockUI, showMessage, changeDecisionTree, undo, redo } from "./appControl";
+import { blockUI, showMessage, changeDecisionTree, undo, redo, clearUndoHistory } from "./appControl";
 import { Blocker } from "../components/blocker";
 import { killEvent } from "../utils/react";
 import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "../events/additionalbg";
@@ -46,9 +46,12 @@ import { selectCurrentAction, selectCurrentView, selectNotifications, selectRomL
 import { useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./blocker";
-import { selectBoards, selectCurrentBoard } from "./boardState";
+import { addEventToLibraryAction, selectBoards, selectCurrentBoard, setBoardsAction } from "./boardState";
 import { BasicErrorBoundary } from "../components/BasicErrorBoundary";
 import { useHotkeys } from "react-hotkeys-hook";
+import { getSavedBoards, getSavedEvents } from "../utils/localstorage";
+import { IEvent } from "../events/events";
+import { createCustomEvent, ICustomEvent } from "../events/customevents";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -56,6 +59,7 @@ interface IPP64AppState {
   aiTree: IDecisionTreeNode[] | null;
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
+  initialized: boolean;
 }
 
 export class PP64App extends React.Component<{}, IPP64AppState> {
@@ -63,6 +67,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     aiTree: null,
     error: null,
     errorInfo: null,
+    initialized: false,
   }
 
   render() {
@@ -74,6 +79,11 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
             blockUI(false);
           }} />
       );
+    }
+
+    if (!this.state.initialized) {
+      initializeState();
+      this.setState({ initialized: true });
     }
 
     return <PP64AppInternal {...this.state} />;
@@ -361,6 +371,40 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
     }
   }
 };
+
+function initializeState(): void {
+  let boards;
+  const cachedBoards = getSavedBoards();
+  if (cachedBoards && cachedBoards.length) {
+    boards = cachedBoards.map(board => _fixPotentiallyOldBoard(board));
+  }
+  else {
+    boards = [ _makeDefaultBoard(1) ];
+  }
+  store.dispatch(setBoardsAction({ boards }));
+
+  const cachedEvents = getSavedEvents();
+  if (cachedEvents && cachedEvents.length) {
+    cachedEvents.forEach((eventObj: IEvent) => {
+      if (!eventObj || !(eventObj as ICustomEvent).asm)
+        return;
+      try {
+        const customEventObj = eventObj as ICustomEvent;
+        const customEvent = createCustomEvent(
+          customEventObj.language || EventCodeLanguage.MIPS,
+          customEventObj.asm
+        );
+        store.dispatch(addEventToLibraryAction({ event: customEvent }));
+      }
+      catch (e) {
+        // Just let the error slide, event format changed or something?
+        console.error("Error reading cached event: " + e.toString());
+      }
+    });
+  }
+
+  clearUndoHistory();
+}
 
 const body = document.getElementById("body");
 ReactDOM.render(
