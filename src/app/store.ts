@@ -6,7 +6,7 @@ import blockerReducer from "./blocker";
 import { boardStateMiddleware } from "./middleware";
 
 const undoableBoardStateReducer = undoable(boardStateReducer, {
-  ignoreInitialState: true,
+  ignoreInitialState: false, // breaks after clear history
   debug: false,
   groupBy: groupByActionTypes([
     setSpacePositionsAction.type,

@@ -723,13 +723,14 @@ export const selectTemporaryConnections = (state: RootState) => state.data.prese
 export const selectSelectedSpaceIndices = (state: RootState) => state.data.present.selectedSpaceIndices;
 
 export const selectCurrentEvent = (state: RootState) => {
-  assert(!!state.data.present.currentEventId);
   switch (state.data.present.currentEventType) {
     case EventType.Board:
+      assert(!!state.data.present.currentEventId);
       const boardEvent = selectCurrentBoard(state).events[state.data.present.currentEventId];
       assert(typeof boardEvent !== "string");
       return createCustomEvent(boardEvent.language, boardEvent.code);
     case EventType.Library:
+      assert(!!state.data.present.currentEventId);
       return state.data.present.eventLibrary[state.data.present.currentEventId];
     case EventType.None:
     default:
