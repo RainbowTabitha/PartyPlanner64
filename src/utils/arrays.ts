@@ -175,3 +175,14 @@ export function intersection(a: any[], b: any[], equalityFn = (a: any, b: any) =
 
   return output;
 }
+
+/**
+ * Creates an array filled with `count` entries of `value`.
+ */
+export function createFilledArray<T>(value: T, count: number): T[] {
+  const arr = new Array<T>(count);
+  for (let i = 0; i < count; i++) {
+    arr[i] = value;
+  }
+  return arr;
+}

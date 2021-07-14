@@ -277,7 +277,7 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
         }
         try {
           asm = await CustomAsmHelper.testCustomEvent(EventCodeLanguage.C, this.state.code, this.state.parameters, {
-            game: event.supportedGames[0] // Pick one game randomly I guess
+            game: event.supportedGames[0], // Pick one game randomly I guess
           }) as string;
         }
         catch (e) {

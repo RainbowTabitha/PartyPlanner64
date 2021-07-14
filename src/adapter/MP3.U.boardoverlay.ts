@@ -7,8 +7,7 @@ import { BankEvent, BooEvent, ItemShopEvent, Gate } from "../events/builtin/even
 import { GateParameterNames } from "../events/builtin/MP3/U/GateEvent3";
 import { getArrowRotationLimit } from "./boardinfo";
 import { $$hex } from "../utils/debug";
-import { hvqfs } from "../fs/hvqfs";
-import { getAdditionalBgAsmForOverlay } from "../events/additionalbg";
+import { getAdditionalBgAsmForOverlay, getBoardAdditionalBgHvqIndices } from "../events/additionalbg";
 import { getShuffleSeedData } from "./overlayutils";
 import { getAudioIndexAsmForOverlay } from "../events/getaudiochoice";
 
@@ -197,11 +196,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 
   const mirageStarEnabled = false; // Hard code to false for now.
 
-  // This runs before we've written the additional bgs, but we can predict the directories.
-  const additionalBgIndices = board.additionalbg && board.additionalbg.map((bg, i) => {
-    return hvqfs.getDirectoryCount() + i
-  });
-
+  const additionalBgIndices = getBoardAdditionalBgHvqIndices(board);
   const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
   const preppedAudioIndexCode = await getAudioIndexAsmForOverlay(board, audioIndices);
 

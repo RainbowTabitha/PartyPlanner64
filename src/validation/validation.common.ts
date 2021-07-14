@@ -234,6 +234,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
       const boardEvent = getBoardEvent(board, event.id)!;
       await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
         game: gameID,
+        board,
       });
     }
     catch (e) {

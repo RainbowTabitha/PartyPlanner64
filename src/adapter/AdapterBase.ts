@@ -832,6 +832,7 @@ export abstract class AdapterBase {
         let info = {
           boardIndex,
           board,
+          boardInfo,
           curSpaceIndex: i,
           curSpace: space,
           chains,
@@ -881,6 +882,7 @@ export abstract class AdapterBase {
           let info = {
             boardIndex,
             board,
+            boardInfo,
             curSpaceIndex: index,
             curSpace: null,
             chains,
@@ -959,6 +961,7 @@ export abstract class AdapterBase {
         let info = {
           boardIndex,
           board,
+          boardInfo,
           curSpaceIndex: i,
           curSpace: space,
           chains,
@@ -1006,6 +1009,7 @@ export abstract class AdapterBase {
         let info = {
           boardIndex,
           board,
+          boardInfo,
           curSpaceIndex: index,
           curSpace: null,
           chains,
@@ -1402,8 +1406,8 @@ export abstract class AdapterBase {
         curBankSpaceIndexOffset += 2;
       }
     }
-    for (let b = 0; b < boardInfo.bankCoinArrOffset.length; b++) {
-      let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset[b];
+    for (let b = 0; b < boardInfo.bankCoinArrOffset!.length; b++) {
+      let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset![b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
         let bankCoinSpace = sceneView.getUint16(curBankCoinSpaceIndexOffset);
         if (board.spaces[bankCoinSpace])
@@ -1430,8 +1434,8 @@ export abstract class AdapterBase {
     }
 
     let bankCoinSpaces = getSpacesOfSubType(SpaceSubtype.BANKCOIN, board);
-    for (let b = 0; b < boardInfo.bankCoinArrOffset.length; b++) {
-      let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset[b];
+    for (let b = 0; b < boardInfo.bankCoinArrOffset!.length; b++) {
+      let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset![b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
         let bankCoinSpace = bankCoinSpaces[i] === undefined ? getDeadSpaceIndex(board) : bankCoinSpaces[i];
         sceneView.setUint16(curBankCoinSpaceIndexOffset, bankCoinSpace!);
@@ -1445,8 +1449,8 @@ export abstract class AdapterBase {
       return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    for (let b = 0; b < boardInfo.itemShopArrOffset.length; b++) {
-      let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset[b];
+    for (let b = 0; b < boardInfo.itemShopArrOffset!.length; b++) {
+      let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset![b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
         let itemShopSpace = sceneView.getUint16(curItemShopSpaceIndexOffset);
         if (board.spaces[itemShopSpace])
@@ -1462,8 +1466,8 @@ export abstract class AdapterBase {
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let itemShopSpaces = getSpacesOfSubType(SpaceSubtype.ITEMSHOP, board);
-    for (let b = 0; b < boardInfo.itemShopArrOffset.length; b++) {
-      let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset[b];
+    for (let b = 0; b < boardInfo.itemShopArrOffset!.length; b++) {
+      let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset![b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
         let ItemShopSpace = itemShopSpaces[i] === undefined ? getDeadSpaceIndex(board) : itemShopSpaces[i];
         sceneView.setUint16(curItemShopSpaceIndexOffset, ItemShopSpace!);

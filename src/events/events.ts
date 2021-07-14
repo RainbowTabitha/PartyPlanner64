@@ -6,6 +6,7 @@ import { romhandler } from "../romhandler";
 import { ICustomEvent, writeCustomEvent, createCustomEvent } from "./customevents";
 import { getEventFromLibrary, getEventsInLibrary, useLibraryEvents } from "./EventLibrary";
 import { useMemo } from "react";
+import { IBoardInfo } from "../adapter/boardinfobase";
 
 export interface IEvent {
   readonly id: string;
@@ -154,6 +155,7 @@ export function useCustomEvents(): ICustomEvent[] {
 export interface IEventWriteInfo {
   boardIndex: number;
   board: IBoard;
+  boardInfo: IBoardInfo;
   curSpaceIndex: number;
   curSpace: ISpace | null;
   chains: number[][];

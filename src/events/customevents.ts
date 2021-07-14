@@ -1,12 +1,13 @@
 import { IEvent, IEventWriteInfo, IEventParameter } from "./events";
 import { $$log } from "../utils/debug";
-import { copyRange } from "../utils/arrays";
+import { copyRange, createFilledArray } from "../utils/arrays";
 import { getGameName, Game, getExecutionTypeByName, EventParameterTypes, EventParameterType, EventCodeLanguage, EditorEventActivationType } from "../types";
 import { assemble } from "mips-assembler";
 import { prepAsm } from "./prepAsm";
 import { IEventInstance } from "../boards";
 import { compile } from "../utils/c-compiler";
 import { prepC } from "./prepC";
+import { dummyBoardInfo } from "../adapter/boardinfobase";
 
 export interface ICustomEvent extends IEvent {
   asm: string;
@@ -134,6 +135,10 @@ export const CustomAsmHelper = {
     const customEvent = createCustomEvent(EventCodeLanguage.MIPS, asm);
     const preppedAsm = prepAsm(asm, customEvent, { parameterValues } as IEventInstance, Object.assign({
       addr: 0,
+      boardInfo: dummyBoardInfo,
+      board: {
+        additionalbg: createFilledArray("", 20), // 20 is just some very high number; we don't know how many they need.
+      },
       testCompile: true,
     }, info) as IEventWriteInfo);
     const bytes = assemble(preppedAsm) as ArrayBuffer;
@@ -144,7 +149,15 @@ export const CustomAsmHelper = {
     const parameterValues = _makeFakeParameterValues(parameters);
 
     const customEvent = createCustomEvent(EventCodeLanguage.C, code);
-    const preppedC = prepC(code, customEvent, { parameterValues } as IEventInstance, { testCompile: true, ...(info as IEventWriteInfo)});
+    const preppedC = prepC(code, customEvent, { parameterValues } as IEventInstance, {
+      testCompile: true,
+      boardInfo: dummyBoardInfo,
+      board: {
+        additionalbg: createFilledArray("", 20),
+      },
+      ...(info as any)
+    } as IEventWriteInfo);
+    $$log(preppedC);
 
     const asm = await compile(preppedC);
     $$log(asm);
@@ -217,7 +230,9 @@ export async function validateCustomEvent(event: ICustomEvent): Promise<boolean>
   for (let i = 0; i < supportedGames.length; i++) {
     const game = supportedGames[i];
     try {
-      await CustomAsmHelper.testCustomEvent(language!, code, parameters, { game });
+      await CustomAsmHelper.testCustomEvent(language!, code, parameters, {
+        game,
+      });
     }
     catch (e) {
       const errorMsg = "Failed a test compile/assembly for " + getGameName(game)

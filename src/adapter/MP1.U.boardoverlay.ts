@@ -3,9 +3,8 @@ import { SpaceSubtype, Game } from "../types";
 import { distance } from "../utils/number";
 import { IBoardInfo } from "./boardinfobase";
 import { getSymbol } from "../symbols/symbols";
-import { hvqfs } from "../fs/hvqfs";
 import { getShuffleSeedData } from "./overlayutils";
-import { getAdditionalBgAsmForOverlay } from "../events/additionalbg";
+import { getAdditionalBgAsmForOverlay, getBoardAdditionalBgHvqIndices } from "../events/additionalbg";
 import { getAudioIndexAsmForOverlay } from "../events/getaudiochoice";
 
 export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]): Promise<string> {
@@ -49,9 +48,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   }
 
   // This runs before we've written the additional bgs, but we can predict the directories.
-  const additionalBgIndices = board.additionalbg && board.additionalbg.map((bg, i) => {
-    return hvqfs.getDirectoryCount() + i
-  });
+  const additionalBgIndices = getBoardAdditionalBgHvqIndices(board);
 
   const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
   const preppedAudioIndexCode = await getAudioIndexAsmForOverlay(board, audioIndices);

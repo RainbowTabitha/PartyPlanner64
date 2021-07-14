@@ -7,6 +7,7 @@ import { prepGenericAsm } from "./prepAsm";
 import { scopeLabelsStaticByDefault } from "./prepAsm";
 import { getAdditionalBackgroundCode, IBoard } from "../boards";
 import { romhandler } from "../romhandler";
+import { hvqfs } from "../fs/hvqfs";
 
 /** Default assembly code used for background selection. */
 export const defaultAdditionalBgAsm = `; Customize the background used each turn!
@@ -119,7 +120,7 @@ function getGameVersionsToTestCompile(board: IBoard): Game[] {
   }
 }
 
-export async function getAdditionalBgAsmForOverlay(board: IBoard, bgDir: number, additionalBgIndices: number[] | undefined) {
+export async function getAdditionalBgAsmForOverlay(board: IBoard, bgDir: number, additionalBgIndices: number[] | undefined | null) {
   const bgCode = getAdditionalBackgroundCode(board);
   if (!bgCode) {
     return prepAdditionalBgAsm(defaultAdditionalBgAsm, bgDir, additionalBgIndices);
@@ -147,7 +148,7 @@ export async function getAdditionalBgAsmForOverlay(board: IBoard, bgDir: number,
 }
 
 /** Surrounds the additional bg code with the necessary bg symbols. */
-export function prepAdditionalBgAsm(asm: string, defaultBgIndex: number, additionalBgIndices?: number[]): string {
+export function prepAdditionalBgAsm(asm: string, defaultBgIndex: number, additionalBgIndices?: number[] | null): string {
   return scopeLabelsStaticByDefault(`
     .beginfile ; Scopes static labels
     __PP64_INTERNAL_ADDITIONAL_BG_CHOICE:
@@ -158,7 +159,7 @@ export function prepAdditionalBgAsm(asm: string, defaultBgIndex: number, additio
   `, true);
 }
 
-function makeBgSymbols(defaultBgIndex: number, additionalBgIndices?: number[]): string[] {
+function makeBgSymbols(defaultBgIndex: number, additionalBgIndices?: number[] | null): string[] {
   const syms = [
     `.definelabel DEFAULT_BG,${defaultBgIndex}`
   ];
@@ -173,15 +174,16 @@ function makeBgSymbols(defaultBgIndex: number, additionalBgIndices?: number[]): 
 }
 
 /** Surrounds the additional bg C code with the necessary symbols. */
-export function prepAdditionalBgC(code: string, defaultBgIndex: number, additionalBgIndices?: number[]): string {
+export function prepAdditionalBgC(code: string, defaultBgIndex: number, additionalBgIndices?: number[] | null): string {
   return `
 #define PickBackground __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
-${makeBgDefines(defaultBgIndex, additionalBgIndices).join("\n")}
+${makeAdditionalBgDefines(defaultBgIndex, additionalBgIndices).join("\n")}
 ${code}
   `;
 }
 
-function makeBgDefines(defaultBgIndex: number, additionalBgIndices?: number[]): string[] {
+/** Creates defines for additional bg symbols. */
+export function makeAdditionalBgDefines(defaultBgIndex: number, additionalBgIndices?: number[] | null): string[] {
   const syms = [
     `#define DEFAULT_BG ${defaultBgIndex}`
   ];
@@ -193,4 +195,17 @@ function makeBgDefines(defaultBgIndex: number, additionalBgIndices?: number[]): 
   }
 
   return syms;
+}
+
+/** Assumes a call before the HVQ additional bgs have been written. */
+export function getBoardAdditionalBgHvqIndices(board: IBoard | undefined | null): number[] | null {
+  if (board?.additionalbg) {
+    return board.additionalbg.map((bg, i) => {
+      if (romhandler.romIsLoaded()) {
+        return hvqfs.getDirectoryCount() + i;
+      }
+      return i; // Must be a test compile.
+    });
+  }
+  return null;
 }

@@ -63,9 +63,9 @@ export interface IBoardInfo {
   toadSpaceArrOffset?: number | number[];
   audioIndexOffset?: number;
   bankArrOffset?: number[];
-  bankCoinArrOffset: number[];
+  bankCoinArrOffset?: number[];
   bankCount?: number;
-  itemShopArrOffset: number[];
+  itemShopArrOffset?: number[];
   itemShopCount?: number;
   arrowRotStartOffset?: number;
   arrowRotEndOffset?: number;
@@ -86,3 +86,11 @@ export function createBoardInfo(id: string, props?: Partial<IBoardInfo>): IBoard
   _boardInfos[id] = boardInfo;
   return boardInfo;
 }
+
+export const dummyBoardInfo: IBoardInfo = {
+  name: "Test Info",
+  boardDefFile: 1,
+  bgDir: 1,
+  str: {},
+  img: {},
+};

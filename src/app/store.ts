@@ -41,6 +41,7 @@ export const store = configureStore({
           "payload.notification",
         ],
         ignoredPaths: [
+          "app.notifications",
           "blocker.onBlockerFinished",
           "data.present.eventLibrary",
           "data.past",
