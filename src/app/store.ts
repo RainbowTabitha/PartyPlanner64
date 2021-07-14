@@ -7,7 +7,7 @@ import { boardStateMiddleware } from "./middleware";
 
 const undoableBoardStateReducer = undoable(boardStateReducer, {
   ignoreInitialState: true,
-  debug: true,
+  debug: false,
   groupBy: groupByActionTypes([
     setSpacePositionsAction.type,
     setSpaceRotationAction.type,
@@ -38,6 +38,7 @@ export const store = configureStore({
           "payload.event.write",
           "payload.onConfirmed",
           "payload.onSubmit",
+          "payload.notification",
         ],
         ignoredPaths: [
           "blocker.onBlockerFinished",
