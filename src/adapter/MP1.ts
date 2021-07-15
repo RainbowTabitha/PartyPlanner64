@@ -20,6 +20,7 @@ import { StarChanceEvent } from "../events/builtin/MP1/U/StarChanceEvent1";
 import { getImageData } from "../utils/img/getImageData";
 import { getSoundEffectMapMP1 } from "./MP1.U.soundeffects";
 import { getEventsInLibrary } from "../events/EventLibrary";
+import { EventMap } from "../app/boardState";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: GameVersion = 1;
@@ -35,12 +36,12 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   public writeFullOverlay: boolean = true;
 
   // Gives a new space the default things it would need.
-  hydrateSpace(space: ISpace, board: IBoard) {
+  hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.STAR) {
       space.star = true;
     }
     else if (space.type === Space.CHANCE) {
-      addEventToSpaceInternal(board, space, createEventInstance(ChanceTime), false, getEventsInLibrary());
+      addEventToSpaceInternal(board, space, createEventInstance(ChanceTime), false, eventLibrary);
     }
   }
 

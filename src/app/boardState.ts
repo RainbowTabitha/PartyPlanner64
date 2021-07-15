@@ -304,7 +304,7 @@ export const boardStateSlice = createSlice({
     }>) => {
       let { x, y, type, subtype } = action.payload;
       const board = getCurrentBoard(state);
-      addSpaceInternal(x, y, type, subtype, board);
+      addSpaceInternal(x, y, type, subtype, board, state.eventLibrary);
     },
     removeSpaceAction: (state, action: PayloadAction<{
       index: number,

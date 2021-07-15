@@ -54,6 +54,7 @@ import {
   setSpaceRotationAction,
 } from "./app/boardState";
 import { assert } from "./utils/debug";
+import { getEventsInLibrary } from "./events/EventLibrary";
 
 const _themes = {
   default: {
@@ -806,7 +807,7 @@ export function setBoardAudio(audioChanges: IBoardAudioChanges): void {
 export function addSpace(x: number, y: number, type: Space, subtype?: SpaceSubtype, board?: IBoard): number {
   // Hack for callers not editing redux state.
   if (board) {
-    return addSpaceInternal(x, y, type, subtype, board);
+    return addSpaceInternal(x, y, type, subtype, board, getEventsInLibrary());
   }
   else {
     const newIndex = getCurrentBoard().spaces.length;
@@ -815,7 +816,7 @@ export function addSpace(x: number, y: number, type: Space, subtype?: SpaceSubty
   }
 }
 
-export function addSpaceInternal(x: number, y: number, type: Space, subtype: SpaceSubtype | undefined, board: IBoard): number {
+export function addSpaceInternal(x: number, y: number, type: Space, subtype: SpaceSubtype | undefined, board: IBoard, eventLibrary: EventMap): number {
   let newSpace: any = {
     x,
     y,
@@ -828,7 +829,7 @@ export function addSpaceInternal(x: number, y: number, type: Space, subtype: Spa
 
   let adapter = getAdapter(board.game || 1);
   if (adapter)
-    adapter.hydrateSpace(newSpace, board);
+    adapter.hydrateSpace(newSpace, board, eventLibrary);
 
   board.spaces.push(newSpace);
   return board.spaces.length - 1;

@@ -37,6 +37,7 @@ import bootsplashImage from "../img/bootsplash.png";
 import { getImageData } from "../utils/img/getImageData";
 import { createGameMidi } from "../audio/midi";
 import { getEventsInLibrary } from "../events/EventLibrary";
+import { EventMap } from "../app/boardState";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -253,7 +254,7 @@ export abstract class AdapterBase {
   }
 
   // Gives a new space the default things it would need.
-  hydrateSpace(space: ISpace, board: IBoard) {
+  hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     throw new Error("hydrateSpace not implemented");
   }
 

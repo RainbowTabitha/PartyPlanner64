@@ -24,6 +24,7 @@ import { getSoundEffectMapMP3 } from "./MP3.U.soundeffects";
 import genericgateImage from "../img/assets/genericgate.png";
 import { getImageData } from "../utils/img/getImageData";
 import { getEventsInLibrary } from "../events/EventLibrary";
+import { EventMap } from "../app/boardState";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -134,9 +135,9 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     }
   }
 
-  hydrateSpace(space: ISpace, board: IBoard) {
+  hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.BANK) {
-      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, getEventsInLibrary());
+      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, eventLibrary);
     }
   }
 

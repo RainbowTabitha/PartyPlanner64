@@ -16,7 +16,7 @@ import { BankEvent } from "../events/builtin/events.common";
 
 import mp2boardselectblank1Image from "../img/details/mp2boardselectblank1.png";
 import { getImageData } from "../utils/img/getImageData";
-import { getEventsInLibrary } from "../events/EventLibrary";
+import { EventMap } from "../app/boardState";
 
 export const MP2 = new class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
@@ -76,9 +76,9 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   onWriteEvents(board: IBoard) {
   }
 
-  hydrateSpace(space: ISpace, board: IBoard) {
+  hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.BANK) {
-      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, getEventsInLibrary());
+      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, eventLibrary);
     }
   }
 
