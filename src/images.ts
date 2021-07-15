@@ -40,6 +40,81 @@ import spaceHappeningDuel3 from "./img/editor/spaces/happeningduel3.png";
 
 import targetImg from "./img/events/target.png";
 
+// Toolbar images
+import blueImage from "./img/toolbar/blue.png";
+import blue3Image from "./img/toolbar/blue3.png";
+import redImage from "./img/toolbar/red.png";
+import red3Image from "./img/toolbar/red3.png";
+import happeningImage from "./img/toolbar/happening.png";
+import happening3Image from "./img/toolbar/happening3.png";
+import chanceImage from "./img/toolbar/chance.png";
+import chance2Image from "./img/toolbar/chance2.png";
+import chance3Image from "./img/toolbar/chance3.png";
+import bowserImage from "./img/toolbar/bowser.png";
+import bowser3Image from "./img/toolbar/bowser3.png";
+import minigameImage from "./img/toolbar/minigame.png";
+import shroomImage from "./img/toolbar/shroom.png";
+import otherImage from "./img/toolbar/other.png";
+import starImage from "./img/toolbar/star.png";
+import blackstarImage from "./img/toolbar/blackstar.png";
+import arrowImage from "./img/toolbar/arrow.png";
+import startImage from "./img/toolbar/start.png";
+import itemImage from "./img/toolbar/item.png";
+import item3Image from "./img/toolbar/item3.png";
+import battleImage from "./img/toolbar/battle.png";
+import battle3Image from "./img/toolbar/battle3.png";
+import bankImage from "./img/toolbar/bank.png";
+import bank3Image from "./img/toolbar/bank3.png";
+import gameguyImage from "./img/toolbar/gameguy.png";
+import banksubtypeImage from "./img/toolbar/banksubtype.png";
+import banksubtype2Image from "./img/toolbar/banksubtype2.png";
+import bankcoinsubtypeImage from "./img/toolbar/bankcoinsubtype.png";
+import itemshopsubtypeImage from "./img/toolbar/itemshopsubtype.png";
+import itemshopsubtype2Image from "./img/toolbar/itemshopsubtype2.png";
+import toadImage from "./img/toolbar/toad.png";
+import mstarImage from "./img/toolbar/mstar.png";
+import booImage from "./img/toolbar/boo.png";
+import bowsercharacterImage from "./img/toolbar/bowsercharacter.png";
+import koopaImage from "./img/toolbar/koopa.png";
+
+export const ToolbarImages = {
+  blueImage,
+  blue3Image,
+  redImage,
+  red3Image,
+  happeningImage,
+  happening3Image,
+  chanceImage,
+  chance2Image,
+  chance3Image,
+  bowserImage,
+  bowser3Image,
+  minigameImage,
+  shroomImage,
+  otherImage,
+  starImage,
+  blackstarImage,
+  arrowImage,
+  startImage,
+  itemImage,
+  item3Image,
+  battleImage,
+  battle3Image,
+  bankImage,
+  bank3Image,
+  gameguyImage,
+  banksubtypeImage,
+  banksubtype2Image,
+  bankcoinsubtypeImage,
+  itemshopsubtypeImage,
+  itemshopsubtype2Image,
+  toadImage,
+  mstarImage,
+  booImage,
+  bowsercharacterImage,
+  koopaImage,
+};
+
 // This is just kind of a goofy thing that makes sure we load all the images
 // that are part of rendering, and then triggers a re-render when they load.
 
@@ -110,6 +185,6 @@ for (let name in _imageTemp) {
 }
 _imageTemp = null;
 
-export function getImage(name: string) {
+export function getImage(name: string): HTMLImageElement {
   return _images[name];
 }

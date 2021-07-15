@@ -4,12 +4,12 @@
   max-width: 665px; // 775px;
   padding: 1em;
 
-  .detailsSpan, label, h2 {
+  .detailsSpan, label, h2, td {
     color: #EEEEEE;
   }
 }
 
-.detailTextContainer, .detailImgContainer, .detailRichTextContainer, .audioDetailsContainer, .difficultyDetailsContainer {
+.detailTextContainer, .detailImgContainer, .detailRichTextContainer, .audioDetailsContainer, .difficultyDetailsContainer, .boardStatsContainer {
   display: inline-block;
   margin: 5px 10px 5px 0;
   vertical-align: top;
@@ -20,6 +20,11 @@
 }
 
 .audioDetailsContainer {
+  width: 100%;
+  max-width: 638px;
+}
+
+.boardStatsContainer {
   width: 100%;
 }
 
@@ -202,5 +207,31 @@
 
   &:hover {
     opacity: 1;
+  }
+}
+
+.boardStatsContainer table {
+  border-spacing: 2px;
+  table-layout: fixed;
+  width: 100%;
+  max-width: 550px;
+}
+
+.boardStatsSpaceImage {
+  height: 24px;
+  width: 24px;
+}
+
+.boardStatsImageCell {
+  text-align: center;
+}
+
+.boardStatsCountCell {
+  text-align: center;
+}
+
+@media (min-width: 1800px) {
+  #detailsForm {
+    max-width: 1000px;
   }
 }

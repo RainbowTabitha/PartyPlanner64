@@ -12,6 +12,7 @@ import { audio } from "../fs/audio";
 import { assert } from "../utils/debug";
 import { romhandler } from "../romhandler";
 import { $setting, get } from "./settings";
+import { DetailsBoardStats } from "./details/stats";
 
 import "../css/details.scss";
 
@@ -20,7 +21,7 @@ import audioImage from "../img/details/audio.png";
 import deleteImage from "../img/details/delete.png";
 import audioConfigImage from "../img/details/audioconfig.png";
 
-type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "audioheader" | "br";
+type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "audioheader" | "stats" | "br";
 
 interface IDetailsItemBase {
   type: DetailsType;
@@ -45,6 +46,8 @@ const _details_mp1: IDetailsItemBase[] = [
   { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
   { type: "image", id: "detailBoardConversationBg", desc: "Conversation background", width: 320, height: 240  },
   { type: "image", id: "detailBoardSplashscreenBg", desc: "Splashscreen background", width: 320, height: 240  },
+  { type: "header", desc: "Stats" },
+  { type: "stats" },
 ];
 
 const _details_mp2: IDetailsItemBase[] = [
@@ -60,6 +63,8 @@ const _details_mp2: IDetailsItemBase[] = [
   { type: "image", id: "detailBoardLogoImg", desc: "Board logo", width: 260, height: 120 },
   { type: "br" },
   { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
+  { type: "header", desc: "Stats" },
+  { type: "stats" },
 ];
 
 const _details_mp3: IDetailsItemBase[] = [
@@ -75,6 +80,8 @@ const _details_mp3: IDetailsItemBase[] = [
   { type: "image", id: "detailBoardLogoTextImg", desc: "Board logo text", width: 226, height: 36 },
   { type: "br" },
   { type: "image", id: "detailBoardLargeSceneBg", desc: "Large scene background", width: 320, height: 240  },
+  { type: "header", desc: "Stats" },
+  { type: "stats" },
 ];
 
 const _details_mp3_duel: IDetailsItemBase[] = [
@@ -329,6 +336,10 @@ export class Details extends React.Component<IDetailsProps> {
           return (
             <DetailsDifficulty id={detail.id!} desc={detail.desc!} readonly={readonly}
               value={value} key={detail.id} onDifficultySelected={this.onValueChange} />
+          );
+        case "stats":
+          return (
+            <DetailsBoardStats key={"stats" + keyId++} />
           );
         case "header":
           return (
