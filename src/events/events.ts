@@ -7,6 +7,7 @@ import { ICustomEvent, writeCustomEvent, createCustomEvent } from "./customevent
 import { getEventFromLibrary, getEventsInLibrary, useLibraryEvents } from "./EventLibrary";
 import { useMemo } from "react";
 import { IBoardInfo } from "../adapter/boardinfobase";
+import { EventMap } from "../app/boardState";
 
 export interface IEvent {
   readonly id: string;
@@ -59,12 +60,12 @@ function _supportedGamesMatch(supportedGames: Game[], gameVersion: number) {
 }
 
 /** Gets an event, either from the board's set or the global library. */
-export function getEvent(eventId: string, board: IBoard): IEvent | undefined {
+export function getEvent(eventId: string, board: IBoard, eventLibrary: EventMap): IEvent | undefined {
   if (board && board.events && !!getBoardEvent(board, eventId)) {
     const boardEvent = getBoardEvent(board, eventId);
     return createCustomEvent(boardEvent!.language, boardEvent!.code);
   }
-  return getEventFromLibrary(eventId);
+  return eventLibrary[eventId];
 }
 
 /** Creates an event instance (the object stored in the board json for a given event) */

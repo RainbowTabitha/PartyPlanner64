@@ -36,6 +36,7 @@ import { isDebug } from "../debug";
 import bootsplashImage from "../img/bootsplash.png";
 import { getImageData } from "../utils/img/getImageData";
 import { createGameMidi } from "../audio/midi";
+import { getEventsInLibrary } from "../events/EventLibrary";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -546,7 +547,7 @@ export abstract class AdapterBase {
         if (eventInfo && eventInfo !== true) {
           eventInfo.activationType = listEntry.activationType;
           eventInfo.executionType = listEntry.executionType;
-          addEventByIndex(board, curSpaceIndex, eventInfo);
+          addEventByIndex(board, curSpaceIndex, eventInfo, false, getEventsInLibrary());
 
           //console.log(`Found event 0x${asmOffset.toString(16)} (${eventInfo.name})`);
         }
@@ -608,7 +609,7 @@ export abstract class AdapterBase {
       }
 
       if (event) {
-        addEventByIndex(board, lastSpace, event, true);
+        addEventByIndex(board, lastSpace, event, true, getEventsInLibrary());
       }
     }
 
@@ -629,7 +630,7 @@ export abstract class AdapterBase {
       let events = space.events || [];
       let hasStarEvent = events.some(e => { return e.id === "STAR" }); // Pretty unlikely
       if (!hasStarEvent)
-        addEventToSpaceInternal(board, space, createEventInstance(StarEvent));
+        addEventToSpaceInternal(board, space, createEventInstance(StarEvent), false, getEventsInLibrary());
     }
   }
 
@@ -678,15 +679,15 @@ export abstract class AdapterBase {
           gateNextChain: [nextChainIndex, nextChainSpaceIndex],
         },
       });
-      addEventToSpaceInternal(board, entrySpace, gateEvent);
-      addEventToSpaceInternal(board, exitSpace, gateEvent);
+      addEventToSpaceInternal(board, entrySpace, gateEvent, false, getEventsInLibrary());
+      addEventToSpaceInternal(board, exitSpace, gateEvent, false, getEventsInLibrary());
 
       // Need an additional event to close the gate.
       addEventToSpaceInternal(board, space, createEventInstance(GateClose, {
         parameterValues: {
           gateIndex,
         },
-      }));
+      }), false, getEventsInLibrary());
 
       // There is also a listing of the entry/exit spaces, probably used by the gate animation.
       // if (boardInfo.gateNeighborsOffset) {
@@ -976,7 +977,7 @@ export abstract class AdapterBase {
           throw new Error(`Event ${eventInstance.id} did not return a string to assemble`);
         }
 
-        const event = getEvent(eventInstance.id, board);
+        const event = getEvent(eventInstance.id, board, getEventsInLibrary());
         assert(!!event);
         eventAsms.push(
           prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)
@@ -1024,7 +1025,7 @@ export abstract class AdapterBase {
           throw new Error(`Event ${eventInstance.id} did not return a string to assemble`);
         }
 
-        const event = getEvent(eventInstance.id, board);
+        const event = getEvent(eventInstance.id, board, getEventsInLibrary());
         assert(!!event);
         eventAsms.push(
           prepSingleEventAsm(eventAsm, event, eventInstance, info, !staticsWritten[eventInstance.id], e)

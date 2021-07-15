@@ -20,6 +20,8 @@ import targetImage from "../img/events/target.png";
 import { assert } from "../utils/debug";
 import { useForceUpdate } from "../utils/react";
 import { useCallback } from "react";
+import { useAppSelector } from "../app/hooks";
+import { selectEventLibrary } from "../app/boardState";
 
 interface IEventsListProps {
   events?: IEventInstance[];
@@ -129,8 +131,10 @@ const EventEntry: React.FC<IEventEntryProps> = props => {
     }
   }, [props.onEventMouseLeave, props.event, props.eventIndex]); // eslint-disable-line
 
+  const eventLibrary = useAppSelector(selectEventLibrary);
+
   let eventInstance = props.event;
-  const event = getEvent(eventInstance.id, props.board);
+  const event = getEvent(eventInstance.id, props.board, eventLibrary);
   if (!event)
     return null;
   let name = event.name || eventInstance.id;

@@ -17,6 +17,7 @@ import { setOverrideBg } from "./app/appControl";
 import { useAppSelector, useCurrentBoard } from "./app/hooks";
 import { selectCurrentBoard, selectHighlightedSpaceIndices, selectHoveredBoardEventIndex, selectSelectedSpaceIndices, selectSelectionBoxCoords, selectTemporaryConnections, SpaceIndexMap } from "./app/boardState";
 import { isEmpty } from "./utils/obj";
+import { getEventsInLibrary } from "./events/EventLibrary";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
@@ -64,11 +65,12 @@ function _renderAssociations(
   }
 
   const selectedSpaceIndex = selectedIndices[0];
+  const eventLibrary = getEventsInLibrary();
 
   // Draw associated spaces in event params.
   let lastEvent: IEventInstance;
   let associationNum = 0;
-  forEachEventParameter(board, (parameter, event, eventIndex, space, spaceIndex) => {
+  forEachEventParameter(board, eventLibrary, (parameter, event, eventIndex, space, spaceIndex) => {
     if (selectedSpaceIndex !== spaceIndex)
       return; // Only draw associations for the selected space.
 
@@ -488,9 +490,10 @@ function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number
 
 function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, eventInstance: IEventInstance) {
   const currentBoard = getCurrentBoard();
+  const eventLibrary = getEventsInLibrary();
   const radius = currentBoard.game === 3 ? 18 : 12;
 
-  const event = getEvent(eventInstance.id, currentBoard);
+  const event = getEvent(eventInstance.id, currentBoard, eventLibrary);
   assert(!!event);
   if (event.parameters) {
     let associationNum = 0;
@@ -537,7 +540,7 @@ function __determineSpaceEventImg(space: ISpace, board: IBoard) {
   if (space.events && space.events.length) {
     for (let i = 0; i < space.events.length; i++) {
       const spaceEvent = space.events[i];
-      const event = getEvent(spaceEvent.id, board);
+      const event = getEvent(spaceEvent.id, board, getEventsInLibrary());
       if (!event)
         return getImage("eventErrorImg");
       if (event.parameters) {

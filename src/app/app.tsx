@@ -82,8 +82,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     }
 
     if (!this.state.initialized) {
-      initializeState();
-      this.setState({ initialized: true });
+      return null; // Init in componentDidMount
     }
 
     return <PP64AppInternal {...this.state} />;
@@ -103,6 +102,11 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
       catch (e) {
         console.error("Auto update failed in componentDidMount: ", e);
       }
+    }
+
+    if (!this.state.initialized) {
+      initializeState();
+      this.setState({ initialized: true });
     }
   }
 

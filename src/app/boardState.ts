@@ -311,7 +311,7 @@ export const boardStateSlice = createSlice({
     }>) => {
       let { index } = action.payload;
       const currentBoard = getCurrentBoard(state);
-      removeSpace(index, currentBoard);
+      removeSpace(state, currentBoard, index);
     },
     removeSpacesAction: (state, action: PayloadAction<{
       spaceIndices: number[],
@@ -320,7 +320,7 @@ export const boardStateSlice = createSlice({
       const currentBoard = getCurrentBoard(state);
       for (let i = 0; i < spaceIndices.length; i++) {
         const spaceIndex = spaceIndices[i];
-        if (removeSpace(spaceIndex, currentBoard)) {
+        if (removeSpace(state, currentBoard, spaceIndex)) {
           // Adjust indices, since deleting index N affects the indices after N.
           for (let j = i + 1; j < spaceIndices.length; j++) {
             if (spaceIndices[j] > spaceIndex) {
@@ -579,8 +579,7 @@ export const boardStateSlice = createSlice({
       const { event, toStart } = action.payload;
       const board = getCurrentBoard(state);
       const selectedSpace = getCurrentSingleSelectedSpace(state);
-      addEventToSpaceInternal(board, selectedSpace, event, toStart,
-        (id, board) => getEvent(state, id, board));
+      addEventToSpaceInternal(board, selectedSpace, event, toStart || false, state.eventLibrary);
     },
     removeEventFromSpaceAction: (state, action: PayloadAction<{
       eventIndex: number,
@@ -721,13 +720,13 @@ export const selectCurrentEventType = (state: RootState) => state.data.present.c
 
 export const selectEventLibrary = (state: RootState) => state.data.present.eventLibrary;
 
-function removeSpace(index: number, board: IBoard): boolean {
+function removeSpace(state: BoardState, board: IBoard, index: number): boolean {
   if (index < 0 || index >= board.spaces.length)
     return false;
 
   // Remove any attached connections.
   _removeConnections(index, board);
-  _removeAssociations(index, board);
+  _removeAssociations(index, board, state.eventLibrary);
 
   // Remove the actual space.
   let oldSpaceLen = board.spaces.length;
@@ -754,7 +753,7 @@ function removeSpace(index: number, board: IBoard): boolean {
   }
 
   // Update space event parameter indices
-  forEachEventParameter(board, (parameter: IEventParameter, event: IEventInstance) => {
+  forEachEventParameter(board, state.eventLibrary, (parameter: IEventParameter, event: IEventInstance) => {
     switch (parameter.type) {
       case EventParameterType.Space:
         if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {
@@ -843,8 +842,8 @@ function _shouldEraseLine(startSpace: ISpace, endSpace: ISpace, targetX: number,
   return lineDistance(targetX, targetY, startSpace.x, startSpace.y, endSpace.x, endSpace.y) <= 4;
 }
 
-function _removeAssociations(spaceIdx: number, board: IBoard) {
-  forEachEventParameter(board, (parameter: IEventParameter, event: IEventInstance) => {
+function _removeAssociations(spaceIdx: number, board: IBoard, eventLibrary: EventMap) {
+  forEachEventParameter(board, eventLibrary, (parameter: IEventParameter, event: IEventInstance) => {
     switch (parameter.type) {
       case EventParameterType.Space:
         if (event.parameterValues && event.parameterValues.hasOwnProperty(parameter.name)) {

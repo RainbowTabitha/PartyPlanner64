@@ -9,6 +9,7 @@ import { dataUrlToArrayBuffer } from "../utils/arrays";
 import { createGameMidi } from "../audio/midi";
 import { audio } from "../fs/audio";
 import { testGetAudioCodeWithGame } from "../events/getaudiochoice";
+import { getEventsInLibrary } from "../events/EventLibrary";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
 HasStart.fails = function(board: IBoard, args: any) {
@@ -171,7 +172,7 @@ UnrecognizedEvents.fails = function(board: IBoard, args: any) {
     if (!space || !space.events)
       return;
     space.events.forEach(spaceEvent => {
-      if (!getEvent(spaceEvent.id, board))
+      if (!getEvent(spaceEvent.id, board, getEventsInLibrary()))
         unrecognizedEvents[spaceEvent.id] = true;
     });
   });
@@ -199,7 +200,7 @@ UnsupportedEvents.fails = function(board: IBoard, args: any) {
     if (!space || !space.events)
       return;
     space.events.forEach(spaceEvent => {
-      const event = getEvent(spaceEvent.id, board);
+      const event = getEvent(spaceEvent.id, board, getEventsInLibrary());
       if (!event) {
         return; // Let the other rule handle this.
       }
@@ -230,7 +231,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
 
   async function testEvent(event: IEventInstance): Promise<void> {
     try {
-      const customEvent = getEvent(event.id, board)!;
+      const customEvent = getEvent(event.id, board, getEventsInLibrary())!;
       const boardEvent = getBoardEvent(board, event.id)!;
       await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
         game: gameID,
@@ -284,7 +285,7 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
   const missingParams = Object.create(null);
 
   function testParameters(event: IEventInstance): void {
-    const customEvent = getEvent(event.id, board)!;
+    const customEvent = getEvent(event.id, board, getEventsInLibrary())!;
     const parameters = customEvent.parameters;
     if (parameters && parameters.length) {
       for (const parameter of parameters) {

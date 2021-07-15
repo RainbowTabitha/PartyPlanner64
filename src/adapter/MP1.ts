@@ -19,6 +19,7 @@ import { ChanceTime } from "../events/builtin/MP1/U/ChanceTimeEvent1";
 import { StarChanceEvent } from "../events/builtin/MP1/U/StarChanceEvent1";
 import { getImageData } from "../utils/img/getImageData";
 import { getSoundEffectMapMP1 } from "./MP1.U.soundeffects";
+import { getEventsInLibrary } from "../events/EventLibrary";
 
 export const MP1 = new class MP1Adapter extends AdapterBase {
   public gameVersion: GameVersion = 1;
@@ -39,7 +40,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       space.star = true;
     }
     else if (space.type === Space.CHANCE) {
-      addEventToSpaceInternal(board, space, createEventInstance(ChanceTime));
+      addEventToSpaceInternal(board, space, createEventInstance(ChanceTime), false, getEventsInLibrary());
     }
   }
 
@@ -191,7 +192,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       let events = space.events || [];
       let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
       if (!hasStarChance)
-        addEventToSpaceInternal(board, space, createEventInstance(StarChanceEvent));
+        addEventToSpaceInternal(board, space, createEventInstance(StarChanceEvent), false, getEventsInLibrary());
     }
   }
 

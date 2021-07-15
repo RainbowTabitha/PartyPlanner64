@@ -23,6 +23,7 @@ import { getSoundEffectMapMP3 } from "./MP3.U.soundeffects";
 
 import genericgateImage from "../img/assets/genericgate.png";
 import { getImageData } from "../utils/img/getImageData";
+import { getEventsInLibrary } from "../events/EventLibrary";
 
 export const MP3 = new class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
@@ -135,7 +136,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   hydrateSpace(space: ISpace, board: IBoard) {
     if (space.type === Space.BANK) {
-      addEventToSpaceInternal(board, space, createEventInstance(BankEvent));
+      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, getEventsInLibrary());
     }
   }
 
@@ -312,7 +313,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
             },
           });
         }
-        addEventByIndex(board, lastSpace, event, true);
+        addEventByIndex(board, lastSpace, event, true, getEventsInLibrary());
       }
       else if (endLinks.length > 0) {
         event = createEventInstance(ChainMerge3, {
@@ -321,7 +322,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
             prevSpace, // For MP3
           },
         });
-        addEventByIndex(board, lastSpace, event, true);
+        addEventByIndex(board, lastSpace, event, true, getEventsInLibrary());
       }
 
       // See if we need a reverse split event, reverse chain merge, or safety chain merge.
@@ -387,7 +388,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
             },
             executionType: EventExecutionType.DIRECT, // Notable difference
           });
-          addEventByIndex(board, firstSpace, event, true);
+          addEventByIndex(board, firstSpace, event, true, getEventsInLibrary());
         }
         else if (pointingSpaces.length === 1) { // Build a reverse merge
           event = createEventInstance(ChainMerge3, {
@@ -397,7 +398,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
               prevSpace: secondSpace, // The 2nd space of this chain, which would have been previous when going reverse.
             },
           });
-          addEventByIndex(board, firstSpace, event, true);
+          addEventByIndex(board, firstSpace, event, true, getEventsInLibrary());
         }
       }
       else {
@@ -420,7 +421,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
             },
           });
           event.activationType = EditorEventActivationType.BEGINORWALKOVER;
-          addEventByIndex(board, firstSpace, event, true);
+          addEventByIndex(board, firstSpace, event, true, getEventsInLibrary());
         }
       }
     }

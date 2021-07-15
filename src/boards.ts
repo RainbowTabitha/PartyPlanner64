@@ -1,7 +1,7 @@
 import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType } from "./types";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
-import { getEvent, IEventParameter, EventParameterValues, IEvent } from "./events/events";
+import { getEvent, IEventParameter, EventParameterValues } from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
 import { boardsChanged, clearUndoHistory, currentBoardChanged, getAppInstance } from "./app/appControl";
 import { IDecisionTreeNode } from "./ai/aitrees";
@@ -27,6 +27,7 @@ import {
   clearBoardsFromROMAction,
   copyCurrentBoardAction,
   deleteBoardAction,
+  EventMap,
   excludeEventFromBoardAction,
   includeEventInBoardAction,
   removeAdditionalBackgroundAction,
@@ -409,9 +410,9 @@ interface ForEachEventParameterCallback {
   (param: IEventParameter, event: IEventInstance, eventIndex: number, space?: ISpace, spaceIndex?: number): void;
 }
 
-export function forEachEventParameter(board: IBoard, fn: ForEachEventParameterCallback) {
+export function forEachEventParameter(board: IBoard, eventLibrary: EventMap, fn: ForEachEventParameterCallback) {
   forEachEvent(board, (eventInstance, eventIndex, space, spaceIndex) => {
-    const event = getEvent(eventInstance.id, board);
+    const event = getEvent(eventInstance.id, board, eventLibrary);
     assert(!!event);
     if (event.parameters) {
       for (let p = 0; p < event.parameters.length; p++) {
@@ -437,8 +438,7 @@ export function addEventToSpace(event: IEventInstance, toStart?: boolean) {
 }
 
 export function addEventToSpaceInternal(
-  board: IBoard, space: ISpace, event: IEventInstance, toStart?: boolean,
-  getEventCallback?: (id: string, board: IBoard) => IEvent | undefined
+  board: IBoard, space: ISpace, event: IEventInstance, toStart: boolean, eventLibrary: EventMap
 ) {
   space.events = space.events || [];
   if (event) {
@@ -448,8 +448,7 @@ export function addEventToSpaceInternal(
       space.events.push(event);
 
     if (event.custom) {
-      const getEventCb = getEventCallback ?? getEvent;
-      const customEvent = getEventCb(event.id, board) as ICustomEvent;
+      const customEvent = getEvent(event.id, board, eventLibrary) as ICustomEvent;
       includeEventInBoardInternal(board, customEvent);
     }
   }
@@ -949,9 +948,9 @@ export function setSpaceRotation(spaceIndex: number, angleYAxisDeg: number) {
   store.dispatch(setSpaceRotationAction({ spaceIndex, angleYAxisDeg }));
 }
 
-export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart?: boolean) {
+export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart: boolean, eventLibrary: EventMap) {
   const space = board.spaces[spaceIdx];
-  addEventToSpaceInternal(board, space, event, toStart);
+  addEventToSpaceInternal(board, space, event, toStart, eventLibrary);
 }
 
 export function loadBoardsFromROM() {
