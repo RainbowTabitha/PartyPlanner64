@@ -13,7 +13,7 @@ import { scenes, ISceneInfo } from "../fs/scenes";
 import { findCalls, getRegSetAddress } from "../utils/MIPS";
 import { SpaceEventTable } from "./eventtable";
 import { SpaceEventList } from "./eventlist";
-import { createEventInstance, write as writeEvent, parse as parseEvent, getEvent } from "../events/events";
+import { createEventInstance, write as writeEvent, parse as parseEvent, getEvent, IEventWriteInfo } from "../events/events";
 import { toU32, stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
 import { makeDivisibleBy, distance } from "../utils/number";
 import { parse as parseInst } from "mips-inst";
@@ -193,7 +193,7 @@ export abstract class AdapterBase {
       boardInfo.onWriteEvents(boardCopy);
     if (this.onWriteEvents)
       this.onWriteEvents(boardCopy);
-    await this._writeEvents(boardCopy, boardInfo, boardIndex, chains, eventSyms);
+    await this._writeEvents(boardCopy, boardInfo, boardIndex, chains, eventSyms, audioIndices);
 
     this._clearOtherBoardNames(boardIndex);
     this._stashBoardIntoRom(board, boardInfo); // Don't use the boardCopy here
@@ -734,13 +734,13 @@ export abstract class AdapterBase {
   }
 
   // Write out all of the events ASM.
-  async _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
+  async _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string, audioIndices: number[]) {
     if (boardInfo.mainfsEventFile) {
       if (this.gameVersion !== 2) { // If events use non-string old write format
-        await this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms);
+        await this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms, audioIndices);
       }
       else {
-        await this._writeEventsNew(board, boardInfo, boardIndex, chains);
+        await this._writeEventsNew(board, boardInfo, boardIndex, chains, audioIndices);
       }
 
       if (!this.writeFullOverlay) {
@@ -749,7 +749,7 @@ export abstract class AdapterBase {
     }
   }
 
-  async _writeEventsNew(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][]) {
+  async _writeEventsNew(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], audioIndices: number[]) {
     if (!boardInfo.mainfsEventFile)
       throw new Error(`No MainFS file specified to place board ASM for board ${boardIndex}.`);
 
@@ -831,10 +831,11 @@ export abstract class AdapterBase {
         let event = space.events[e];
 
         let temp = eventTemp[event.id] || {};
-        let info = {
+        let info: IEventWriteInfo = {
           boardIndex,
           board,
           boardInfo,
+          audioIndices,
           curSpaceIndex: i,
           curSpace: space,
           chains,
@@ -881,10 +882,11 @@ export abstract class AdapterBase {
         for (let e = 0; e < events.length; e++) {
           const event = events[e];
           let temp = eventTemp[event.id] || {};
-          let info = {
+          let info: IEventWriteInfo = {
             boardIndex,
             board,
             boardInfo,
+            audioIndices,
             curSpaceIndex: index,
             curSpace: null,
             chains,
@@ -937,7 +939,7 @@ export abstract class AdapterBase {
     //saveAs(new Blob([eventBuffer]), "eventBuffer");
   }
 
-  async _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string) {
+  async _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string, audioIndices: number[]) {
     if (!boardInfo.mainfsEventFile)
       throw new Error(`No MainFS file specified to place board ASM for board ${boardIndex}.`);
 
@@ -960,10 +962,11 @@ export abstract class AdapterBase {
         eventList.add(activationType, eventInstance.executionType || (eventInstance as any).mystery, 0);
 
         let temp = eventTemp[eventInstance.id] || {};
-        let info = {
+        let info: IEventWriteInfo = {
           boardIndex,
           board,
           boardInfo,
+          audioIndices,
           curSpaceIndex: i,
           curSpace: space,
           chains,
@@ -1008,10 +1011,11 @@ export abstract class AdapterBase {
         list.add(activationType, eventInstance.executionType, 0);
 
         let temp = eventTemp[eventInstance.id] || {};
-        let info = {
+        let info: IEventWriteInfo = {
           boardIndex,
           board,
           boardInfo,
+          audioIndices,
           curSpaceIndex: index,
           curSpace: null,
           chains,

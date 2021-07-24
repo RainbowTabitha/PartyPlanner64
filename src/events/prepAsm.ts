@@ -144,7 +144,7 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
     parameters.forEach(parameter => {
       const parameterValue = parameterValues[parameter.name];
       switch (parameter.type) {
-        case EventParameterType.Boolean:
+      case EventParameterType.Boolean:
           parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue ? 1 : 0}`);
           break;
 

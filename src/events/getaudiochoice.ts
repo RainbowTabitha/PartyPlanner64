@@ -71,7 +71,7 @@ export async function testGetAudioCodeAllGames(code: string, language: EventCode
 export async function testGetAudioCodeWithGame(code: string, language: EventCodeLanguage, board: IBoard, game: Game): Promise<string[]> {
   let failures: string[] = [];
 
-  const fakeAudioIndices = makeFakeGetAudioSyms(board);
+  const fakeAudioIndices = makeFakeGetAudioIndices(board);
 
   if (language === EventCodeLanguage.C) {
     const cWithDefines = prepGetAudioC(code, fakeAudioIndices);
@@ -152,7 +152,7 @@ export function prepGetAudioAsm(asm: string, audioIndices: number[]): string {
   `, true);
 }
 
-function makeFakeGetAudioSyms(board: IBoard): number[] {
+export function makeFakeGetAudioIndices(board: IBoard): number[] {
   if (!board.audioData || !board.audioData.length)
     return [1]; // One for the in-game audio track.
 
@@ -172,12 +172,17 @@ function makeAudioSymbols(audioIndices: number[]): string[] {
 export function prepGetAudioC(code: string, audioIndices: number[]): string {
   return `
 #define PickAudioIndex __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
-${makeGetAudioDefines(audioIndices).join("\n")}
+${makeAudioDefines(audioIndices).join("\n")}
 ${code}
   `;
 }
 
-function makeGetAudioDefines(audioIndices: number[]): string[] {
+/** Creates defines for music tracks. */
+export function makeAudioDefines(audioIndices: number[] | null | undefined): string[] {
+  if (!audioIndices) {
+    return [];
+  }
+
   const syms = audioIndices.map((audioIndex, i) => {
     return `#define MUSIC_TRACK_INDEX_${i + 1} ${audioIndex}`;
   });

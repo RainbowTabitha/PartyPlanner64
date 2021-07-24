@@ -135,6 +135,7 @@ export const CustomAsmHelper = {
     const customEvent = createCustomEvent(EventCodeLanguage.MIPS, asm);
     const preppedAsm = prepAsm(asm, customEvent, { parameterValues } as IEventInstance, Object.assign({
       addr: 0,
+      audioIndices: createFilledArray(1, 20),
       boardInfo: dummyBoardInfo,
       board: {
         additionalbg: createFilledArray("", 20), // 20 is just some very high number; we don't know how many they need.
@@ -151,6 +152,7 @@ export const CustomAsmHelper = {
     const customEvent = createCustomEvent(EventCodeLanguage.C, code);
     const preppedC = prepC(code, customEvent, { parameterValues } as IEventInstance, {
       testCompile: true,
+      audioIndices: createFilledArray(1, 20),
       boardInfo: dummyBoardInfo,
       board: {
         additionalbg: createFilledArray("", 20),

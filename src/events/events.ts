@@ -157,6 +157,7 @@ export interface IEventWriteInfo {
   boardIndex: number;
   board: IBoard;
   boardInfo: IBoardInfo;
+  audioIndices: number[];
   curSpaceIndex: number;
   curSpace: ISpace | null;
   chains: number[][];

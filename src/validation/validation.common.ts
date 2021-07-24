@@ -8,7 +8,7 @@ import { testAdditionalBgCodeWithGame } from "../events/additionalbg";
 import { dataUrlToArrayBuffer } from "../utils/arrays";
 import { createGameMidi } from "../audio/midi";
 import { audio } from "../fs/audio";
-import { testGetAudioCodeWithGame } from "../events/getaudiochoice";
+import { makeFakeGetAudioIndices, testGetAudioCodeWithGame } from "../events/getaudiochoice";
 import { getEventsInLibrary } from "../events/EventLibrary";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
@@ -235,6 +235,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
       const boardEvent = getBoardEvent(board, event.id)!;
       await CustomAsmHelper.testCustomEvent(boardEvent.language, boardEvent.code, customEvent.parameters, {
         game: gameID,
+        audioIndices: makeFakeGetAudioIndices(board),
         board,
       });
     }

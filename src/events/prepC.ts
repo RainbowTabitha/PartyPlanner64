@@ -3,15 +3,18 @@ import { IEventInstance } from "../boards";
 import { EventParameterType, Game } from "../types";
 import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
 import { getBoardAdditionalBgHvqIndices, makeAdditionalBgDefines } from "./additionalbg";
+import { makeAudioDefines } from "./getaudiochoice";
 
 /**
  * Takes event C code, and makes it able to compile (in isolation)
  */
 export function prepC(code: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo) {
   const parameterDefines = makeParameterSymbolDefines(event, spaceEvent, info);
+  const audioDefines = makeAudioDefines(info.audioIndices);
   const bgDefines = makeAdditionalBgDefines(info.boardInfo.bgDir, getBoardAdditionalBgHvqIndices(info.board));
   const codeWithDefines = [
     ...parameterDefines,
+    ...audioDefines,
     ...bgDefines,
     code,
   ].join("\n");
