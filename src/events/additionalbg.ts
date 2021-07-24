@@ -152,14 +152,14 @@ export function prepAdditionalBgAsm(asm: string, defaultBgIndex: number, additio
   return scopeLabelsStaticByDefault(`
     .beginfile ; Scopes static labels
     __PP64_INTERNAL_ADDITIONAL_BG_CHOICE:
-    ${makeBgSymbols(defaultBgIndex, additionalBgIndices).join("\n")}
+    ${makeBgSymbolLabels(defaultBgIndex, additionalBgIndices).join("\n")}
     ${asm}
     .align 4
     .endfile
   `, true);
 }
 
-function makeBgSymbols(defaultBgIndex: number, additionalBgIndices?: number[] | null): string[] {
+export function makeBgSymbolLabels(defaultBgIndex: number, additionalBgIndices?: number[] | null): string[] {
   const syms = [
     `.definelabel DEFAULT_BG,${defaultBgIndex}`
   ];

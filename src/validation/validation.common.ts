@@ -12,7 +12,7 @@ import { makeFakeGetAudioIndices, testGetAudioCodeWithGame } from "../events/get
 import { getEventsInLibrary } from "../events/EventLibrary";
 
 const HasStart = createRule("HASSTART", "Has start space", ValidationLevel.ERROR);
-HasStart.fails = function(board: IBoard, args: any) {
+HasStart.fails = function({ board }, args: any) {
   let curIdx = getStartSpaceIndex(board);
   if (curIdx < 0)
     return "No start space found on board.";
@@ -20,7 +20,7 @@ HasStart.fails = function(board: IBoard, args: any) {
 };
 
 const GameVersionMatch = createRule("GAMEVERSION", "Game version mismatch", ValidationLevel.ERROR);
-GameVersionMatch.fails = function(board: IBoard, args: any) {
+GameVersionMatch.fails = function({ board }, args: any) {
   let romGame = romhandler.getGameVersion();
   if (romGame !== board.game)
     return `Board is for MP${board.game}, but ROM is MP${romGame}`;
@@ -28,7 +28,7 @@ GameVersionMatch.fails = function(board: IBoard, args: any) {
 };
 
 const DeadEnd = createRule("DEADEND", "No dead ends", ValidationLevel.WARNING);
-DeadEnd.fails = function(board: IBoard, args: any) {
+DeadEnd.fails = function({ board }, args: any) {
   const deadEnds = getDeadEnds(board);
 
   const startIndex = getStartSpaceIndex(board);
@@ -45,23 +45,27 @@ DeadEnd.fails = function(board: IBoard, args: any) {
 };
 
 const TooManySpaces = createRule("TOOMANYSPACES", "Too many spaces", ValidationLevel.ERROR);
-TooManySpaces.fails = function(board: IBoard, args: any) {
+TooManySpaces.fails = function({ board }, args: any) {
   if (board.spaces.length > 0xFFFF)
     return "There is a hard limit of 65535 spaces.";
   return false;
 };
 
 const OverRecommendedSpaces = createRule("OVERRECOMMENDEDSPACES", "Over recommended spaces", ValidationLevel.WARNING);
-OverRecommendedSpaces.fails = function(board: IBoard, args: any) {
+OverRecommendedSpaces.fails = function({ board }, args: any) {
   const spaceCount = board.spaces.length;
   if (spaceCount > args.max)
     return `${spaceCount} spaces present, more than ${args.max} spaces can be unstable.`;
   return false;
 };
 
+interface IRuleWithLimit {
+  limit?: number
+}
+
 const _makeTooManyOfSubtypeRule = function(subtype: SpaceSubtype, name: string) {
-  let rule = createRule(`TOOMANY${name.toUpperCase().replace(/\s+/g, "")}`, `Too many ${name}`, ValidationLevel.ERROR);
-  rule.fails = function(board, args = {}) {
+  let rule = createRule<IRuleWithLimit>(`TOOMANY${name.toUpperCase().replace(/\s+/g, "")}`, `Too many ${name}`, ValidationLevel.ERROR);
+  rule.fails = function({ board }, args = {}) {
     let limit = args.limit || 0;
     let count = board.spaces.filter(space => {
       return space && space.subtype === subtype;
@@ -92,7 +96,7 @@ interface IBadStarCountProps {
 }
 
 const BadStarCount = createRule("BADSTARCOUNT", "Bad star count", ValidationLevel.ERROR);
-BadStarCount.fails = function(board: IBoard, args: IBadStarCountProps) {
+BadStarCount.fails = function({ board }, args: IBadStarCountProps) {
   const count = _getStarSpaceCount(board);
 
   const disallowed = args.disallowed || {};
@@ -116,7 +120,7 @@ BadStarCount.fails = function(board: IBoard, args: IBadStarCountProps) {
 };
 
 const WarnNoStarSpaces = createRule("WARNNOSTARSPACES", "No star spaces", ValidationLevel.WARNING);
-WarnNoStarSpaces.fails = function(board: IBoard, args: any = {}) {
+WarnNoStarSpaces.fails = function({ board }, args: any = {}) {
   const count = _getStarSpaceCount(board);
   if (count === 0) {
     return `There are no star spaces, this may be unintentional.`;
@@ -124,9 +128,13 @@ WarnNoStarSpaces.fails = function(board: IBoard, args: any = {}) {
   return false;
 };
 
+interface IRuleWithBounds {
+  low?: number;
+}
+
 const _makeTooFewOfSpaceTypeRule = function(type: Space, name: string) {
-  let rule = createRule(`TOOFEW${name.toUpperCase().replace(/\s+/g, "")}SPACES`, `Too few ${name} spaces`, ValidationLevel.ERROR);
-  rule.fails = function(board, args = {}) {
+  let rule = createRule<IRuleWithBounds>(`TOOFEW${name.toUpperCase().replace(/\s+/g, "")}SPACES`, `Too few ${name} spaces`, ValidationLevel.ERROR);
+  rule.fails = function({ board }, args = {}) {
     let low = args.low || 0;
     let count = board.spaces.filter(space => {
       return space && space.type === type;
@@ -141,7 +149,7 @@ _makeTooFewOfSpaceTypeRule(Space.BLUE, "Blue");
 _makeTooFewOfSpaceTypeRule(Space.RED, "Red");
 
 const TooManyOfEvent = createRule("TOOMANYOFEVENT", "Too many of event", ValidationLevel.ERROR);
-TooManyOfEvent.fails = function(board: IBoard, args: any) {
+TooManyOfEvent.fails = function({ board }, args: any) {
   let count = 0;
   board.spaces.forEach(space => {
     if (!space || !space.events)
@@ -166,7 +174,7 @@ TooManyOfEvent.fails = function(board: IBoard, args: any) {
 };
 
 const UnrecognizedEvents = createRule("UNRECOGNIZEDEVENTS", "Unrecognized events", ValidationLevel.ERROR);
-UnrecognizedEvents.fails = function(board: IBoard, args: any) {
+UnrecognizedEvents.fails = function({ board }, args: any) {
   let unrecognizedEvents = Object.create(null);
   board.spaces.forEach(space => {
     if (!space || !space.events)
@@ -193,7 +201,7 @@ UnrecognizedEvents.fails = function(board: IBoard, args: any) {
 };
 
 const UnsupportedEvents = createRule("UNSUPPORTEDEVENTS", "Unsupported events", ValidationLevel.ERROR);
-UnsupportedEvents.fails = function(board: IBoard, args: any) {
+UnsupportedEvents.fails = function({ board }, args: any) {
   let unsupportedEvents = Object.create(null);
   let gameID = romhandler.getROMGame()!;
   board.spaces.forEach(space => {
@@ -225,7 +233,7 @@ UnsupportedEvents.fails = function(board: IBoard, args: any) {
 };
 
 const FailingCustomEvents = createRule("CUSTOMEVENTFAIL", "Custom event errors", ValidationLevel.ERROR);
-FailingCustomEvents.fails = async function(board: IBoard, args: any) {
+FailingCustomEvents.fails = async function({ board, boardInfo }, args: any) {
   let failingEvents = Object.create(null);
   let gameID = romhandler.getROMGame()!;
 
@@ -237,6 +245,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
         game: gameID,
         audioIndices: makeFakeGetAudioIndices(board),
         board,
+        boardInfo,
       });
     }
     catch (e) {
@@ -282,7 +291,7 @@ FailingCustomEvents.fails = async function(board: IBoard, args: any) {
 };
 
 const BadCustomEventParameters = createRule("CUSTOMEVENTBADPARAMS", "Custom event parameter issues", ValidationLevel.ERROR);
-BadCustomEventParameters.fails = function(board: IBoard, args: any) {
+BadCustomEventParameters.fails = function({ board }, args: any) {
   const missingParams = Object.create(null);
 
   function testParameters(event: IEventInstance): void {
@@ -337,7 +346,7 @@ BadCustomEventParameters.fails = function(board: IBoard, args: any) {
 };
 
 const TooManyPathOptions = createRule("TOOMANYPATHOPTIONS", "Too many path options", ValidationLevel.ERROR);
-TooManyPathOptions.fails = function(board: IBoard, args: any = {}) {
+TooManyPathOptions.fails = function({ board }, args: any = {}) {
   let limit = args.limit || 2;
   for (var space in board.links) {
     let links = board.links[space];
@@ -348,7 +357,7 @@ TooManyPathOptions.fails = function(board: IBoard, args: any = {}) {
 };
 
 const CharactersOnPath = createRule("CHARACTERSONPATH", "Characters are on path", ValidationLevel.WARNING);
-CharactersOnPath.fails = function(board: IBoard, args: any = {}) {
+CharactersOnPath.fails = function({ board }, args: any = {}) {
   for (var spaceIdx in board.links) {
     let space = board.spaces[spaceIdx];
     if (space.hasOwnProperty("subtype") && space.subtype !== SpaceSubtype.GATE)
@@ -358,7 +367,7 @@ CharactersOnPath.fails = function(board: IBoard, args: any = {}) {
 };
 
 const SplitAtNonInvisibleSpace = createRule("SPLITATNONINVISIBLESPACE", "Split at non-invisible space", ValidationLevel.WARNING);
-SplitAtNonInvisibleSpace.fails = function(board: IBoard, args: any = {}) {
+SplitAtNonInvisibleSpace.fails = function({ board }, args: any = {}) {
   const preferredSplitTypes = [
     Space.OTHER,
     Space.STAR,
@@ -378,7 +387,7 @@ SplitAtNonInvisibleSpace.fails = function(board: IBoard, args: any = {}) {
 };
 
 const TooManyArrowRotations = createRule("TOOMANYARROWROTATIONS", "Too many arrow rotations", ValidationLevel.WARNING);
-TooManyArrowRotations.fails = function(board: IBoard, args: any = {}) {
+TooManyArrowRotations.fails = function({ board }, args: any = {}) {
   let rotationCount = 0;
   board.spaces.forEach(space => {
     if (!space)
@@ -394,7 +403,7 @@ TooManyArrowRotations.fails = function(board: IBoard, args: any = {}) {
 };
 
 const GateSetup = createRule("GATESETUP", "Incorrect gate setup", ValidationLevel.ERROR);
-GateSetup.fails = function(board: IBoard, args: any = {}) {
+GateSetup.fails = function({ board }, args: any = {}) {
   let gateSpaceIndices = getSpacesOfSubType(SpaceSubtype.GATE, board);
 
   for (let i = 0; i < gateSpaceIndices.length; i++) {
@@ -461,7 +470,7 @@ GateSetup.fails = function(board: IBoard, args: any = {}) {
 };
 
 const AdditionalBackgroundCodeIssue = createRule("ADDITIONALBGCODEISSUE", "Additional background code issue", ValidationLevel.ERROR);
-AdditionalBackgroundCodeIssue.fails = async function(board: IBoard, args: any = {}) {
+AdditionalBackgroundCodeIssue.fails = async function({ board }, args: any = {}) {
   const bgCode = getAdditionalBackgroundCode(board);
   if (!bgCode) {
     return false;
@@ -479,7 +488,7 @@ AdditionalBackgroundCodeIssue.fails = async function(board: IBoard, args: any = 
 };
 
 const GetAudioIndexCodeIssue = createRule("GETAUDIOINDEXCODEISSUE", "Audio selection code issue", ValidationLevel.ERROR);
-GetAudioIndexCodeIssue.fails = async function(board: IBoard, args: any = {}) {
+GetAudioIndexCodeIssue.fails = async function({ board }, args: any = {}) {
   const code = getAudioSelectCode(board);
   if (!code) {
     return false;
@@ -497,7 +506,7 @@ GetAudioIndexCodeIssue.fails = async function(board: IBoard, args: any = {}) {
 };
 
 const AudioDetailsIssue = createRule("AUDIODETAILSISSUE", "Audio details issue", ValidationLevel.ERROR);
-AudioDetailsIssue.fails = async function(board: IBoard, args: any = {}) {
+AudioDetailsIssue.fails = async function({ board }, args: any = {}) {
   if (typeof board.audioType !== "number") {
     return "Expected audioType to be defined.";
   }

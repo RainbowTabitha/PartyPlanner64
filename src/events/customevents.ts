@@ -166,6 +166,11 @@ export const CustomAsmHelper = {
 
     const preppedAsm = prepAsm(asm, customEvent, {} as IEventInstance, Object.assign({
       addr: 0,
+      audioIndices: createFilledArray(1, 20),
+      boardInfo: dummyBoardInfo,
+      board: {
+        additionalbg: createFilledArray("", 20),
+      },
     }, info) as IEventWriteInfo);
     assemble(preppedAsm);
 

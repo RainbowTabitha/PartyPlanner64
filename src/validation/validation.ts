@@ -10,7 +10,7 @@ import { getValidationRules as getValidationRulesForMP3 } from "./validation.MP3
 import { get, $setting } from "../views/settings";
 import { getRule, IValidationRule } from "./validationrules";
 import { getBoardInfos } from "../adapter/boardinfo";
-import { IBoardInfo } from "../adapter/boardinfobase";
+import { dummyBoardInfo, IBoardInfo } from "../adapter/boardinfobase";
 import { isPromiseLike } from "../utils/promise";
 
 function _overwriteAvailable(boardInfo: IBoardInfo) {
@@ -102,7 +102,10 @@ export async function validateCurrentBoardForOverwrite(): Promise<IValidationRes
   let gameLevelWarnings: string[] = [];
   if (!skipValidation) {
     for (const rule of _getRulesForGame(gameID)) {
-      let failureResult = rule.fails(currentBoard);
+      let failureResult = rule.fails({
+        board: currentBoard,
+        boardInfo: dummyBoardInfo,
+      });
       if (isPromiseLike(failureResult)) {
         failureResult = await failureResult;
       }
@@ -138,7 +141,10 @@ export async function validateCurrentBoardForOverwrite(): Promise<IValidationRes
       if (!unavailable && !get($setting.uiSkipValidation)) {
         let rules = _getRulesForBoard(gameID, boardIndex);
         for (const rule of rules) {
-          let failureResult = rule.fails(currentBoard);
+          let failureResult = rule.fails({
+            board: currentBoard,
+            boardInfo
+          });
           if (isPromiseLike(failureResult)) {
             failureResult = await failureResult;
           }

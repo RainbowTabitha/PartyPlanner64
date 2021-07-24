@@ -4,14 +4,20 @@ import { getChainIndexValuesFromAbsoluteIndex } from "../adapter/boarddef";
 import { Game, EventParameterType } from "../types";
 import { $$hex } from "../utils/debug";
 import { IEventInstance } from "../boards";
+import { makeAudioSymbolLabels } from "./getaudiochoice";
+import { getBoardAdditionalBgHvqIndices, makeBgSymbolLabels } from "./additionalbg";
 
 /**
  * Takes event asm, and makes it assemble (in isolation)
  */
 export function prepAsm(asm: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo) {
   const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
+  const audioSymbols = makeAudioSymbolLabels(info.audioIndices);
+  const bgSymbols = makeBgSymbolLabels(info.boardInfo.bgDir, getBoardAdditionalBgHvqIndices(info.board));
   const asmWithParamSyms = [
     ...parameterSymbols,
+    ...audioSymbols,
+    ...bgSymbols,
     asm,
   ].join("\n");
 

@@ -145,7 +145,7 @@ export function prepGetAudioAsm(asm: string, audioIndices: number[]): string {
   return scopeLabelsStaticByDefault(`
     .beginfile ; Scopes static labels
     __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX:
-    ${makeAudioSymbols(audioIndices).join("\n")}
+    ${makeAudioSymbolLabels(audioIndices).join("\n")}
     ${asm}
     .align 4
     .endfile
@@ -160,7 +160,7 @@ export function makeFakeGetAudioIndices(board: IBoard): number[] {
   return board.audioData.map(_ => ++i);
 }
 
-function makeAudioSymbols(audioIndices: number[]): string[] {
+export function makeAudioSymbolLabels(audioIndices: number[]): string[] {
   const syms = audioIndices.map((audioIndex, i) => {
     return `.definelabel MUSIC_TRACK_INDEX_${i + 1},${audioIndex}`;
   });

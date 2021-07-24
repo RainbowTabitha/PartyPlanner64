@@ -38,6 +38,8 @@ import { getImageData } from "../utils/img/getImageData";
 import { createGameMidi } from "../audio/midi";
 import { getEventsInLibrary } from "../events/EventLibrary";
 import { EventMap } from "../app/boardState";
+import { getBoardAdditionalBgHvqIndices, makeBgSymbolLabels } from "../events/additionalbg";
+import { makeAudioSymbolLabels } from "../events/getaudiochoice";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -1051,21 +1053,23 @@ export abstract class AdapterBase {
     const genericAddrSymbols = makeGenericSymbolsForAddresses(eventAsmCombinedString);
 
     const asm = `
-      .org ${$$hex(this.EVENT_RAM_LOC)}
-      .ascii "PP64"
-      .word ${$$hex(this.EVENT_RAM_LOC)}
-      .word 0 // Populated with buffer size later
-      .align 16
+.org ${$$hex(this.EVENT_RAM_LOC)}
+.ascii "PP64"
+.word ${$$hex(this.EVENT_RAM_LOC)}
+.word 0 // Populated with buffer size later
+.align 16
 
-      ${eventSyms}
+${eventSyms}
 
-      ${makeGameSymbolLabels(game, false).join("\n")}
-      ${genericAddrSymbols.join("\n")}
+${makeGameSymbolLabels(game, false).join("\n")}
+${makeBgSymbolLabels(boardInfo.bgDir, getBoardAdditionalBgHvqIndices(board)).join("\n")}
+${makeAudioSymbolLabels(audioIndices).join("\n")}
+${genericAddrSymbols.join("\n")}
 
-      ${eventTable.getAssembly()}
-      ${eventLists.map(eventList => eventList.getAssembly()).join("\n")}
-      ${eventAsmCombinedString}
-    `;
+${eventTable.getAssembly()}
+${eventLists.map(eventList => eventList.getAssembly()).join("\n")}
+${eventAsmCombinedString}
+`;
 
     $$log(asm);
 
