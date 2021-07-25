@@ -23,8 +23,8 @@
     "electron-publish": "node scripts/electron.js --publish",
     "react-start": "react-scripts start",
     "react-build": "react-scripts build",
-    "electron-builder-build": "electron-builder build -wlm",
-    "electron-builder-build-publish": "electron-builder build -wlm --publish always"
+    "electron-builder-build": "electron-builder build -wl",
+    "electron-builder-build-publish": "electron-builder build -wl --publish always"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.6.1",
