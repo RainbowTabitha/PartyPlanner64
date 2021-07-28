@@ -22,6 +22,7 @@ import { useForceUpdate } from "../utils/react";
 import { useCallback } from "react";
 import { useAppSelector } from "../app/hooks";
 import { selectEventLibrary } from "../app/boardState";
+import { isDebug } from "../debug";
 
 interface IEventsListProps {
   events?: IEventInstance[];
@@ -413,8 +414,17 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
       nameClass += " eventEntryItemParameterHypothetical";
     }
 
-    const tooltip = `(Space) ${this.props.parameter.name}: ${valueHasBeenSet ? "set" : "null"}`
-      + "\nDrag to a space to associate it";
+    let tooltip = `(Space) ${this.props.parameter.name}: `;
+    if (valueHasBeenSet) {
+      tooltip += "set";
+      if (isDebug()) {
+        tooltip += ` (to space index ${parameterValue})`;
+      }
+    }
+    else {
+      tooltip += "null";
+    }
+    tooltip += "\nDrag to a space to associate it";
 
     let valueRepresentation;
     if (valueHasBeenSet) {
