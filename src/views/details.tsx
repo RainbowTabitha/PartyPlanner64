@@ -55,7 +55,7 @@ const _details_mp2: IDetailsItemBase[] = [
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
   { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
-  { type: "header", desc: "Background Music" },
+  { type: "audioheader", desc: "Background Music" },
   { type: "audio", id: "detailBoardAudio", desc: "Background music" },
   { type: "header", desc: "Images" },
   { type: "image", id: "detailBoardSelectImg", desc: "Board select image", width: 64, height: 48 },
