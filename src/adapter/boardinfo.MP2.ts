@@ -61,24 +61,6 @@ const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
   },
 
   onAfterOverwrite: function(board: IBoard) {
-    const sceneView = scenes.getDataView(62);
-    //romView.setUint32(0x29AE18, 0); Baby Bowser
-    //romView.setUint32(0x29AE20, 0); Toad
-    //romView.setUint32(0x29AE28, 0); // Boo assets
-    //romView.setUint32(0x29AE30, 0); // ... not the train
-    sceneView.setUint32(0x3368, 0); // 0x29AE38 // Wipe out wood gates fn, which reads 2 space indices at 2A6DB8
-    //romView.setUint32(0x29AE40, 0); // ... not the train
-    //romView.setUint32(0x29AE48, 0); // ... not the train
-    sceneView.setUint32(0x3380, 0); // 0x29AE50 // Train!
-
-    // Prevent unused event table hydration
-    // romView.setUint32(0x29AEBC, 0); // 0x80112484 table
-    // romView.setUint32(0x29AEC0, 0);
-    // romView.setUint32(0x29AEC4, 0);
-    // romView.setUint32(0x29AED4, 0); // 0x801124EC table
-    // romView.setUint32(0x29AED8, 0);
-    // romView.setUint32(0x29AEDC, 0);
-
     // Skip Bowser the Brash fight scene
     // 0x004F is the Bowser scene, 0x0051 is the results scene.
     // To debug, end game early with 0x800F93AF (turn count)

@@ -1881,6 +1881,10 @@ export default [{
       name: "scene",
       desc: "Current scene number" },
 {
+      addr: 2148520643, // 0x800FD2C3
+      type: "u8",
+      name: "p1_controller" },
+{
       addr: 2148520644, // 0x800FD2C4
       type: "u8",
       name: "p1_char",

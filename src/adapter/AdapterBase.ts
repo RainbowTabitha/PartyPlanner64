@@ -14,9 +14,8 @@ import { findCalls, getRegSetAddress } from "../utils/MIPS";
 import { SpaceEventTable } from "./eventtable";
 import { SpaceEventList } from "./eventlist";
 import { createEventInstance, write as writeEvent, parse as parseEvent, getEvent, IEventWriteInfo } from "../events/events";
-import { toU32, stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
-import { makeDivisibleBy, distance } from "../utils/number";
-import { parse as parseInst } from "mips-inst";
+import { stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
+import { distance } from "../utils/number";
 import { assemble } from "mips-assembler";
 import { createContext } from "../utils/canvas";
 import { toArrayBuffer } from "../utils/image";
@@ -64,7 +63,6 @@ export abstract class AdapterBase {
   public abstract MAINFS_READ_ADDR: number;
   public abstract TABLE_HYDRATE_ADDR: number;
   public abstract HEAP_FREE_ADDR: number;
-  public abstract writeFullOverlay: boolean;
 
   public loadBoards(): IBoard[] {
     let boards = [];
@@ -168,23 +166,7 @@ export abstract class AdapterBase {
     this._createGateEvents(boardCopy, boardInfo, chains);
     const audioIndices = this.onWriteAudio(boardCopy, boardInfo, boardIndex);
 
-    let eventSyms: string = "";
-    if (this.writeFullOverlay) {
-      eventSyms = await this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex, audioIndices);
-    }
-    else {
-      // Wipe out the event ASM from those events.
-      const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
-      const eventASMStart = boardInfo.eventASMStart;
-      const eventASMEnd = boardInfo.eventASMEnd;
-      if (eventASMStart && eventASMEnd) {
-        for (let offset = eventASMStart; offset < eventASMEnd; offset += 4)
-          sceneView.setUint32(offset, 0);
-      }
-
-      this._writeStarInfo(boardCopy, boardInfo);
-      this._writeBoos(boardCopy, boardInfo);
-    }
+    let eventSyms: string = await this._writeNewBoardOverlay(boardCopy, boardInfo, boardIndex, audioIndices);
 
     this.onWriteStrings(boardCopy, boardInfo);
 
@@ -580,28 +562,16 @@ export abstract class AdapterBase {
         links.forEach(link => {
           endpoints.push(_getChainWithSpace(link)!);
         });
-        if (this.gameVersion === 1) {
-          if (links.length > 2) {
-            throw new Error(`Encountered branch with ${links.length} directions, only 2 are supported currently`);
-          }
-          event = createEventInstance(ChainSplit1, {
-            parameterValues: {
-              left_space: links[0],
-              right_space: links[1],
-              chains: endpoints,
-            },
-          });
+        if (links.length > 2) {
+          throw new Error(`Encountered branch with ${links.length} directions, only 2 are supported currently`);
         }
-        else {
-          if (this.gameVersion !== 2)
-            throw new Error("Unexpected code path for MP3");
-          event = createEventInstance(ChainSplit2, {
-            inlineArgs: links.concat(0xFFFF),
-            parameterValues: {
-              chains: endpoints,
-            },
-          });
-        }
+        event = createEventInstance(this.gameVersion === 1 ? ChainSplit1 : ChainSplit2, {
+          parameterValues: {
+            left_space: links[0],
+            right_space: links[1],
+            chains: endpoints,
+          },
+        });
       }
       else if (links.length > 0) {
         event = createEventInstance(ChainMerge, {
@@ -731,214 +701,11 @@ export abstract class AdapterBase {
     }
   }
 
-  _getArgsSize(count: number) {
-    return (count * 2) + (4 - ((count * 2) % 4));
-  }
-
   // Write out all of the events ASM.
   async _writeEvents(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string, audioIndices: number[]) {
     if (boardInfo.mainfsEventFile) {
-      if (this.gameVersion !== 2) { // If events use non-string old write format
-        await this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms, audioIndices);
-      }
-      else {
-        await this._writeEventsNew(board, boardInfo, boardIndex, chains, audioIndices);
-      }
-
-      if (!this.writeFullOverlay) {
-        this._writeEventAsmHook(boardInfo, boardIndex);
-      }
+      await this._writeEventsNew2(board, boardInfo, boardIndex, chains, eventSyms, audioIndices);
     }
-  }
-
-  async _writeEventsNew(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], audioIndices: number[]) {
-    if (!boardInfo.mainfsEventFile)
-      throw new Error(`No MainFS file specified to place board ASM for board ${boardIndex}.`);
-
-    // We will make the buffer maximum size, but will shrink it later to what it actually needs to be.
-    let eventBuffer = new ArrayBuffer(this.EVENT_MEM_SIZE);
-    let eventView = new DataView(eventBuffer);
-
-    let currentOffset = this.EVENT_HEADER_SIZE;
-
-    eventView.setUint32(0, toU32("PP64"));
-    eventView.setUint32(4, this.EVENT_RAM_LOC);
-
-    // Create hollow structures for the table and lists to figure out how big they will be.
-    let eventTable = new SpaceEventTable();
-    let eventLists = [];
-
-    for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
-      if (!space.events || !space.events.length)
-        continue;
-      eventTable.add(i, 0); // Just to keep track of what the table size is, address will be added later.
-
-      let eventList = new SpaceEventList();
-      for (const event of space.events) {
-        const activationType = getEventActivationTypeFromEditorType(event.activationType);
-        eventList.add(activationType, event.executionType || (event as any).mystery, 0); // Also to track size
-      }
-      eventLists.push(eventList);
-    }
-
-    // Write any board events
-    const type5 = new SpaceEventList(-5);
-    const type4 = new SpaceEventList(-4);
-    const type3 = new SpaceEventList(-3);
-    const type2 = new SpaceEventList(-2);
-    const boardEventTypeInfos = [
-      { index: -5, list: type5, type: EditorEventActivationType.BEFORE_DICE_ROLL },
-      { index: -4, list: type4, type: EditorEventActivationType.BEFORE_PLAYER_TURN },
-      { index: -3, list: type3, type: EditorEventActivationType.AFTER_TURN },
-      { index: -2, list: type2, type: EditorEventActivationType.BEFORE_TURN },
-    ];
-    for (const { index, list, type } of boardEventTypeInfos) {
-      const events = _getEventsWithActivationType(board.boardevents || [], type);
-      const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
-      for (const event of events) {
-        list.add(activationType, event.executionType, 0);
-      }
-
-      this.onAddDefaultBoardEvents(type, list);
-
-      if (list.count() > 0) {
-        eventTable.add(index, 0);
-        eventLists.push(list);
-      }
-    }
-
-    // Figure out size of table and lists
-    let tableSize = makeDivisibleBy(eventTable.byteLength(), 16);
-
-    let listsSize = eventLists.reduce((sum, list) => {
-      return sum + list.byteLength();
-    }, 0);
-    listsSize = makeDivisibleBy(listsSize, 16);
-
-    currentOffset += tableSize + listsSize;
-
-    // Now we know where to start writing the ASM event code.
-    // As we go along, we can go back and fill in the space and event lists.
-    let eventTemp: any = {};
-    let eventListIndex = 0;
-    let eventListCurrentOffset = this.EVENT_HEADER_SIZE + tableSize;
-    for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
-      if (!space.events || !space.events.length)
-        continue;
-
-      let eventList = eventLists[eventListIndex];
-      for (let e = 0; e < space.events.length; e++) {
-        let event = space.events[e];
-
-        let temp = eventTemp[event.id] || {};
-        let info: IEventWriteInfo = {
-          boardIndex,
-          board,
-          boardInfo,
-          audioIndices,
-          curSpaceIndex: i,
-          curSpace: space,
-          chains,
-          offset: currentOffset,
-          addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
-          game: romhandler.getROMGame()!,
-          gameVersion: this.gameVersion,
-        };
-
-        let [writtenOffset, len, mainOffset] = await writeEvent(eventBuffer, event, info, temp) as number[];
-        eventTemp[event.id] = temp;
-
-        const absMainOffset = writtenOffset + (mainOffset || 0);
-
-        // Apply address to event list.
-        // If the writtenOffset is way out of bounds (like > EVENT_MEM_SIZE)
-        // it probably means it is directly referencing old code (some 2/3
-        // events are like this for now) so we need to calc differently.
-        let eventListAsmAddr;
-        if (writtenOffset > this.EVENT_MEM_SIZE)
-          eventListAsmAddr = this._offsetToAddr(absMainOffset, boardInfo) | 0x80000000;
-        else
-          eventListAsmAddr = this._offsetToAddrBase(absMainOffset, this.EVENT_RAM_LOC);
-        eventList.setAddress(e, eventListAsmAddr);
-
-        currentOffset += len;
-      }
-
-      // We can fill in the address of the event listing itself back into the
-      // event table (not related to the e loop above, but saves having
-      // to loop on spaces again.)
-      let eventListAddr = this._offsetToAddrBase(eventListCurrentOffset, this.EVENT_RAM_LOC);
-      eventTable.add(i, eventListAddr);
-
-      eventListCurrentOffset += eventList.write(eventBuffer, eventListCurrentOffset);
-
-      eventListIndex++;
-    }
-
-    // Now write any board events
-    for (const { index, list, type } of boardEventTypeInfos) {
-      if (list.count() > 0) {
-        const events = _getEventsWithActivationType(board.boardevents || [], type);
-        for (let e = 0; e < events.length; e++) {
-          const event = events[e];
-          let temp = eventTemp[event.id] || {};
-          let info: IEventWriteInfo = {
-            boardIndex,
-            board,
-            boardInfo,
-            audioIndices,
-            curSpaceIndex: index,
-            curSpace: null,
-            chains,
-            offset: currentOffset,
-            addr: this._offsetToAddrBase(currentOffset, this.EVENT_RAM_LOC),
-            game: romhandler.getROMGame()!,
-            gameVersion: this.gameVersion,
-          };
-
-          let [writtenOffset, len] = await writeEvent(eventBuffer, event, info, temp) as number[];
-          eventTemp[event.id] = temp;
-
-          // Apply address to event list.
-          // If the writtenOffset is way out of bounds (like > EVENT_MEM_SIZE)
-          // it probably means it is directly referencing old code (some 2/3
-          // events are like this for now) so we need to calc differently.
-          let eventListAsmAddr;
-          if (writtenOffset > this.EVENT_MEM_SIZE)
-            eventListAsmAddr = this._offsetToAddr(writtenOffset, boardInfo) | 0x80000000;
-          else
-            eventListAsmAddr = this._offsetToAddrBase(writtenOffset, this.EVENT_RAM_LOC);
-
-          list.setAddress(e, eventListAsmAddr);
-
-          currentOffset += len;
-        }
-
-        // Fill in the address of the event listing itself back into the event table.
-        let eventListAddr = this._offsetToAddrBase(eventListCurrentOffset, this.EVENT_RAM_LOC);
-        eventTable.add(index, eventListAddr);
-
-        eventListCurrentOffset += list.write(eventBuffer, eventListCurrentOffset);
-      }
-    }
-
-    // Now we can write the event table, because all the addresses are set.
-    eventTable.write(eventBuffer, this.EVENT_HEADER_SIZE);
-
-    // We can write the size of the event buffer to the header now, for the hook to use.
-    eventView.setUint32(8, currentOffset);
-
-    // Shrink the buffer to what was actually needed
-    eventBuffer = eventBuffer.slice(0, currentOffset);
-
-    // We write list blob of ASM/structures into the MainFS, in a location
-    // that is not used by the game.
-    let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
-    mainfs.write(mainFsDir, mainFsFile, eventBuffer);
-
-    //saveAs(new Blob([eventBuffer]), "eventBuffer");
   }
 
   async _writeEventsNew2(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, chains: number[][], eventSyms: string, audioIndices: number[]) {
@@ -1100,95 +867,6 @@ ${eventAsmCombinedString}
     mainfs.write(mainFsDir, mainFsFile, buffer);
 
     //saveAs(new Blob([buffer]), "eventBuffer");
-  }
-
-  _writeEventAsmHook(boardInfo: IBoardInfo, boardIndex: number) {
-    if (!boardInfo.eventASMStart)
-      throw new Error("eventASMStart is not specified for board " + boardIndex);
-
-    // The hook logic will be placed at the top of eventASMStart, since
-    // we don't put anything there much anymore.
-    const hookAddr = this._offsetToAddr(boardInfo.eventASMStart, boardInfo);
-    const hookJAL = parseInst(`JAL ${hookAddr}`);
-
-    const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
-
-    // Clear the space event table hydrations, because we want a NOP sled
-    // through the old logic basically, and no hook interference.
-    this._clearSpaceEventTableCalls(sceneView, boardInfo);
-
-    // We will JAL to the eventASMStart location from the location where the
-    // board data is hydrated.
-    const hookOffset = boardInfo.spaceEventTables![0].upper;
-    sceneView.setUint32(hookOffset, hookJAL);
-
-    $$log(`Installed event hook at ROM ${$$hex(hookOffset)}, JAL ${hookAddr}`);
-
-    //this.onWriteEventAsmHook(romView, boardInfo, boardIndex);
-    // We essentially repeat the logic that all the boards use to hydrate the
-    // MainFS code blob (and bring the blob into RAM of course.)
-    const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile!;
-    const hookAsm = `
-      .orga ${boardInfo.eventASMStart}
-
-      // Set up the stack (this is a legit function call)
-      ADDIU SP SP 0xFFE8
-      SW RA, 0x0010(SP)
-
-      // Call for the MainFS to read in the ASM blob.
-      LUI A0 ${mainFsDir}
-      JAL ${this.MAINFS_READ_ADDR}
-      ADDIU A0 A0 ${mainFsFile}
-
-      // Now, V0 has the location that the MainFSRead put the blob... it isn't
-      // where we want it, it is in the heap somewhere, so we will move it.
-
-      // This is a pretty simple copy loop
-      // T4 = Copy of V0, Current source RAM location
-      // T0 = Current dest RAM location
-      // T1 = Size of buffer remaining to copy
-      // T2 = Temp word register to do the copy
-      ADDU T4 V0 R0 // Copy V0 -> T4
-      LW T0 0x4(T4) // LW T0, 0x4(T4) [RAM dest]
-      LW T1 0x8(T4) // LW T1, 0x8(T4) [Buffer size]
-    loop_start:
-      LW T2 0(T4)
-      SW T2 0(T0)
-      ADDIU T4 T4 4
-      ADDIU T0 T0 4
-      ADDIU T1 T1 -4
-      BGTZ T1 loop_start
-      NOP
-
-      // Now we can hydrate the table.
-      // T9 = V0 copy (least likely to be overwritten by an uncontrolled JAL)
-      // T4 = Dest buffer addr + 0x10, where the table really starts
-      ADDU T9 V0 R0 // Copy V0 -> T9
-      LW T4 4(T9) // LW T4, 0x4(T9) [RAM dest]
-      JAL ${this.TABLE_HYDRATE_ADDR}
-      ADDIU A0 T4 16 // ADDIU A0, T4, 16
-
-      // Well, we copied the buffer... now we should "free" it with this magic JAL...
-      // Free our T9 reference, which theoretically could be corrupted, but in practice not.
-      JAL ${this.HEAP_FREE_ADDR}
-      ADDU A0 T9 R0
-
-      // End the call stack
-      LW RA 0x10(SP)
-      JR RA
-      ADDIU SP SP 0x18
-    `;
-    assemble(hookAsm, { buffer: sceneView.buffer });
-  }
-
-  _clearSpaceEventTableCalls(sceneView: DataView, boardInfo: IBoardInfo) {
-    // Otherwise, we can probably just clear all memory between the upper and
-    // lower for each table.
-    let tables = boardInfo.spaceEventTables!;
-    tables.forEach((tableInfo: any) => {
-      for (let offset = tableInfo.upper; offset <= tableInfo.lower; offset += 4)
-        sceneView.setUint32(offset, 0);
-    });
   }
 
   _makeSymbolsForEventAssembly(syms: { [symbol: string]: number }, sceneInfo: ISceneInfo): string {

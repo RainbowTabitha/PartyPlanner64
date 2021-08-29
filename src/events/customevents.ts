@@ -1,6 +1,6 @@
 import { IEvent, IEventWriteInfo, IEventParameter } from "./events";
 import { $$log } from "../utils/debug";
-import { copyRange, createFilledArray } from "../utils/arrays";
+import { createFilledArray } from "../utils/arrays";
 import { getGameName, Game, getExecutionTypeByName, EventParameterTypes, EventParameterType, EventCodeLanguage, EditorEventActivationType } from "../types";
 import { assemble } from "mips-assembler";
 import { prepAsm } from "./prepAsm";
@@ -263,14 +263,5 @@ export async function writeCustomEvent(dataView: DataView, spaceEvent: IEventIns
     code = await compile(preppedC);
   }
 
-  if (info.gameVersion !== 2) {
-    return code;
-  }
-
-  const preppedAsm = prepAsm(code, customEvent, spaceEvent, info);
-  const symMap = Object.create(null);
-  const bytes = assemble(preppedAsm, { symbolOutputMap: symMap }) as ArrayBuffer;
-  $$log(preppedAsm);
-  copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-  return [info.offset!, bytes.byteLength, symMap["main"] || 0];
+  return code;
 }

@@ -648,7 +648,7 @@ interface IAudioSelectionConfigButtonProps {
 }
 
 function AudioSelectionConfigButton(props: IAudioSelectionConfigButtonProps) {
-  if (boardIsROM(props.board) || romhandler.getGameVersion() === 2) {
+  if (boardIsROM(props.board)) {
     return null;
   }
   if (!get($setting.uiAdvanced)) {

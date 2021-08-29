@@ -19759,6 +19759,7 @@ D_8011D318:
 .word 0x00000000
 
 ; passed as addr, may be u16
+; is this the array of hidden block banned spaces?
 D_8011D31C:
 .word 0xFFFF0000
 

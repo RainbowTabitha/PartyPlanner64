@@ -13,10 +13,11 @@ import { mainfs } from "../fs/mainfs";
 import { toPack } from "../utils/img/ImgPack";
 import { IBoardInfo } from "./boardinfobase";
 import { BankEvent } from "../events/builtin/events.common";
-
-import mp2boardselectblank1Image from "../img/details/mp2boardselectblank1.png";
 import { getImageData } from "../utils/img/getImageData";
 import { EventMap } from "../app/boardState";
+import { createBoardOverlay } from "./MP2.U.boardoverlay";
+
+import mp2boardselectblank1Image from "../img/details/mp2boardselectblank1.png";
 
 export const MP2 = new class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
@@ -29,8 +30,6 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   public HEAP_FREE_ADDR: number = 0x00017800;
   public TABLE_HYDRATE_ADDR: number = 0x0005568C;
 
-  public writeFullOverlay: boolean = false;
-
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
       this._extractBanks(board, boardInfo);
@@ -41,11 +40,11 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     this._readAnimationBackgrounds(board, boardInfo);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
-    this._writeBanks(board, boardInfo);
-    this._writeItemShops(board, boardInfo);
-    this._writeGates(board, boardInfo);
+  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]) {
+    return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
+  }
 
+  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
     // Patch game to use all 8MB.
     romView.setUint16(0x41602, 0x8040); // Main heap now starts at 0x80400000
     romView.setUint16(0x4160A, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space

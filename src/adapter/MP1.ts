@@ -33,8 +33,6 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   public HEAP_FREE_ADDR: number = 0x00014730;
   public TABLE_HYDRATE_ADDR: number = 0x0004C900;
 
-  public writeFullOverlay: boolean = true;
-
   // Gives a new space the default things it would need.
   hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.STAR) {

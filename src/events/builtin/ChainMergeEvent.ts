@@ -1,9 +1,7 @@
 import { IEvent, IEventWriteInfo, IEventParseInfo } from "../events";
 import { EventExecutionType, Game, EventParameterType, EditorEventActivationType } from "../../types";
-import { hashEqual, copyRange } from "../../utils/arrays";
+import { hashEqual } from "../../utils/arrays";
 import { addConnection, IEventInstance } from "../../boards";
-import { prepAsm } from "../prepAsm";
-import { assemble } from "mips-assembler";
 import { addEventToLibrary } from "../EventLibrary";
 
 // Represents the "event" that takes the player from one chain to another.
@@ -93,12 +91,7 @@ export const ChainMerge: IEvent = {
       ADDIU SP, SP, 0x18
     `;
 
-    if (info.gameVersion !== 2) {
-      return asm;
-    }
-    const bytes = assemble(prepAsm(asm, ChainMerge, event, info)) as ArrayBuffer;
-    copyRange(dataView, bytes, 0, 0, bytes.byteLength);
-    return [info.offset!, bytes.byteLength, 0];
+    return asm;
   }
 };
 addEventToLibrary(ChainMerge);

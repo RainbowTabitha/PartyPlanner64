@@ -37,8 +37,6 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   public HEAP_FREE_ADDR: number = 0x00009E6C;
   public TABLE_HYDRATE_ADDR: number = 0x000EBA60;
 
-  public writeFullOverlay: boolean = true;
-
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
       this._extractBanks(board, boardInfo);

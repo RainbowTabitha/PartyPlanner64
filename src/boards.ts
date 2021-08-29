@@ -155,7 +155,6 @@ export interface IEventInstance {
   activationType: EditorEventActivationType;
   executionType: EventExecutionType;
   parameterValues?: EventParameterValues;
-  inlineArgs?: number[]; // deprecated
   custom?: boolean;
 }
 

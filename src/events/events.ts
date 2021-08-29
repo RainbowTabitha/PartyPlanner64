@@ -1,5 +1,4 @@
 import { Game, EventExecutionType, EventParameterType, EventCodeLanguage, EditorEventActivationType } from "../types";
-import { makeDivisibleBy } from "../utils/number";
 import { copyObject } from "../utils/obj";
 import { IBoard, getCurrentBoard, ISpace, IEventInstance, getBoardEvent } from "../boards";
 import { romhandler } from "../romhandler";
@@ -169,34 +168,7 @@ export interface IEventWriteInfo {
   testCompile?: boolean;
 }
 
-function _getArgsSize(count: number) {
-  // return (count * 2) + (4 - ((count * 2) % 4));
-  return makeDivisibleBy(count * 2, 4);
-}
-
 export async function write(buffer: ArrayBuffer, event: IEventInstance, info: IEventWriteInfo, temp: any) {
-  // Write any inline arguments.
-  // Normally, these are right by the event list, but it makes more sense
-  // to write them mixed in right beside the ASM that actually uses them...
-  let argsCount = 0;
-  let argsSize = 0;
-  if (event.inlineArgs) {
-    argsCount = event.inlineArgs.length;
-    argsSize = _getArgsSize(argsCount);
-
-    let argView = new DataView(buffer, info.offset);
-    for (let arg = 0; arg < argsCount; arg++) {
-      let argOffset = (arg * 2);
-      argView.setUint16(argOffset, event.inlineArgs[arg]);
-    }
-
-    // We will tell the event code where the args are, and update where it
-    // should actually start writing the ASM because we wrote those args.
-    info.argsAddr = info.addr;
-    info.addr! += argsSize;
-    info.offset! += argsSize;
-  }
-
   let asmView = new DataView(buffer, info.offset);
 
   let result;
@@ -212,10 +184,6 @@ export async function write(buffer: ArrayBuffer, event: IEventInstance, info: IE
 
   if (result === false)
     throw new Error(`Could not write ${event.id} for game ${info.gameVersion}`);
-
-  if (event.inlineArgs) {
-    (result as number[])[1] += argsSize; // len needs to be more than what the event thought it should be
-  }
 
   return result;
 }
