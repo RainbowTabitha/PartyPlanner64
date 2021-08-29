@@ -79,9 +79,11 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
     case Game.MP2_USA:
       if (needOverlayStubs) {
         syms.push(".definelabel ViewBoardMap,0");
+        syms.push(".definelabel GetBoardAudioIndex,0");
       }
       else {
-        syms.push(".definelabel ViewBoardMap,0x80103A64");
+        syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
+        syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
       }
       break;
 
