@@ -52,7 +52,6 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
 
     const game = romhandler.getGameVersion()!;
     const adapter = getAdapter(game)!;
-    const trackNames = adapter.getAudioMap();
 
     const advancedSetting = get($setting.uiAdvanced);
 
@@ -60,6 +59,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     const sequenceTableCount = audio.getSequenceTableCount();
     for (let t = 0; t < sequenceTableCount; t++) {
       const tableIndex = t;
+      const trackNames = adapter.getAudioMap(tableIndex);
 
       if (t > 0) {
         sequenceRows.push(

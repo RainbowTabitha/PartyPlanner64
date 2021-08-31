@@ -601,7 +601,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   }
 
   // Writes to 0x800CD524, break 0x80079390
-  getAudioMap() {
+  getAudioMap(tableIndex: number): string[] {
     return [
       "", // 0x00 Two Beeps
       "Story One",

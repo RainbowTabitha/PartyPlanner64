@@ -1404,7 +1404,7 @@ ${eventAsmCombinedString}
     return audioIndices;
   }
 
-  getAudioMap(): string[] {
+  getAudioMap(table: number): string[] {
     $$log("Adapter does not implement getAudioMap");
     return [];
   }

@@ -776,7 +776,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   }
 
   // Writes to 0x800A1904, break 0x8004a520 (JAL 0C012948)
-  getAudioMap() {
+  getAudioMap(tableIndex: number): string[] {
     return [
       "Opening", // 0x00
       "Opening Demo",
