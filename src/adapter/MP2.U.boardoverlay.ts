@@ -1,11 +1,14 @@
 import { IBoard, getSpacesOfSubType, getSpacesWithEvent, getDeadSpaceIndex } from "../boards";
 import { IBoardInfo } from "./boardinfobase";
-import { SpaceSubtype } from "../types";
-import { distance } from "../utils/number";
+import { Game, Space, SpaceSubtype } from "../types";
+import { distance, getRawFloat32Format } from "../utils/number";
 import { BankEvent, BooEvent, ItemShopEvent } from "../events/builtin/events.common";
 import { getAdditionalBgAsmForOverlay, getBoardAdditionalBgHvqIndices } from "../events/additionalbg";
 import { getShuffleSeedData } from "./overlayutils";
 import { getAudioIndexAsmForOverlay } from "../events/getaudiochoice";
+import { getArrowRotationLimit } from "./boardinfo";
+import { $$hex } from "../utils/debug";
+import { getSymbol } from "../symbols/symbols";
 
 export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]): Promise<string> {
   const [mainFsEventDir, mainFsEventFile] = boardInfo.mainfsEventFile!;
@@ -126,21 +129,21 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
     if (bestBooForBooEventSpaces.length < 2) bestBooForBooEventSpaces.push(getDeadSpaceIndex(board));
   }
 
-  // const rotations = [];
-  // for (let i = 0; i < board.spaces.length; i++) {
-  //   if (board.spaces[i].type === Space.ARROW) {
-  //     rotations.push(board.spaces[i].rotation || 0);
-  //   }
-  // }
-  // const addArrowAngleAddr = getSymbol(Game.MP3_USA, "AddArrowAngle");
-  // const totalArrowsToWrite = getArrowRotationLimit();
-  // let arrowRotationInstructions = [];
-  // const loopLimit = Math.min(totalArrowsToWrite, rotations.length);
-  // for (let i = 0; i < loopLimit; i++) {
-  //   arrowRotationInstructions.push(`LUI A0 hi(${$$hex(getRawFloat32Format(rotations[i]))})`);
-  //   arrowRotationInstructions.push(`JAL ${addArrowAngleAddr}`);
-  //   arrowRotationInstructions.push("MTC1 A0 F12");
-  // }
+  const rotations = [];
+  for (let i = 0; i < board.spaces.length; i++) {
+    if (board.spaces[i].type === Space.ARROW) {
+      rotations.push(board.spaces[i].rotation || 0);
+    }
+  }
+  const addArrowAngleAddr = getSymbol(Game.MP2_USA, "AddArrowAngle");
+  const totalArrowsToWrite = getArrowRotationLimit();
+  let arrowRotationInstructions = [];
+  const loopLimit = Math.min(totalArrowsToWrite, rotations.length);
+  for (let i = 0; i < loopLimit; i++) {
+    arrowRotationInstructions.push(`LUI A0 hi(${$$hex(getRawFloat32Format(rotations[i]))})`);
+    arrowRotationInstructions.push(`JAL ${addArrowAngleAddr}`);
+    arrowRotationInstructions.push("MTC1 A0 F12");
+  }
 
   const additionalBgIndices = getBoardAdditionalBgHvqIndices(board);
   const preppedAdditionalBgCode = await getAdditionalBgAsmForOverlay(board, boardInfo.bgDir, additionalBgIndices);
@@ -3792,9 +3795,9 @@ setup_routine:
   li    A2, 200
   jal   func_80026DAC
    li    A3, 200
-JAL   __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
- NOP
-move  A0, V0 ; Determined by user-customizable hook
+  JAL   __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
+   NOP
+  move  A0, V0 ; Determined by user-customizable hook
   li    A1, ${boardInfo.boardDefFile}
   li    A2, 8 ; TODO: pauseBgDir?
   jal   func_80062E10 ; setup board?
@@ -3807,6 +3810,10 @@ move  A0, V0 ; Determined by user-customizable hook
   lui   A0, hi(D_801119F4)
   jal   func_80055980
    addiu A0, A0, lo(D_801119F4)
+
+  ; begin arrow rotation
+  ${arrowRotationInstructions.join("\n")}
+  ; end arrow rotation
 
   lui   A1, hi(func_8010BA48) ; boo event
   addiu A1, A1, lo(func_8010BA48)
@@ -5457,7 +5464,7 @@ func_80108E0C:
   sw    RA, 0x3c(SP)
   sw    S2, 0x38(SP)
   sw    S1, 0x34(SP)
-/*  */  jal   func_800558F4
+  jal   func_800558F4
    sw    S0, 0x30(SP)
   move  S0, V0
   lui   S1, hi(D_800F93A8)
@@ -6353,7 +6360,7 @@ func_80109B30:
   addiu SP, SP, -0x70
   sw    RA, 0x68(SP)
   sw    S5, 0x64(SP)
-/*  */  sw    S4, 0x60(SP)
+  sw    S4, 0x60(SP)
   sw    S3, 0x5c(SP)
   sw    S2, 0x58(SP)
   sw    S1, 0x54(SP)

@@ -113,6 +113,7 @@ const mp2_actions: ToolbarItem[] = [
   { "name": "Connect spaces", "icon": lineImage, "type": Action.LINE },
   { "name": "Connect multiple spaces in one click", "icon": stickylineImage, "type": Action.LINE_STICKY },
   { "name": "Erase spaces and lines", "icon": eraserImage, "type": Action.ERASE },
+  { "name": "Rotate arrow spaces", "icon": rotateImage, "type": Action.ROTATE },
   { "name": "Telescope tool: move your cursor over the map to visualize how it will look during gameplay", "icon": telescopeImage, "type": Action.TELESCOPE },
   { "spacer": true},
   { "name": "Add blue space", "icon": blueImage, "type": Action.ADD_BLUE, draggable: true },

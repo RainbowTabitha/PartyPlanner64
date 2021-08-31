@@ -77,6 +77,10 @@ const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
     bytes.push(0x00); // Null byte
     strings.write(697, arrayToArrayBuffer(bytes));
 
+    // Model table at 0x800CB340 (0xCBF40) for small and big models.
+    // 0x800CCE28 (0xCDA28) for list of 2d model renders of themed characters.
+    // 0x800CCEE8 for list of themed bowser suits.
+
     // Use the normal character models, not themed.
     for (let charIdx = 2; charIdx <= 7; charIdx++) {
       mainfs.write(charIdx, 212, mainfs.get(charIdx, 211)); // Western Land - small model
