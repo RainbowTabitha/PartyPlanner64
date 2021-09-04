@@ -1984,6 +1984,7 @@ L80103F8C:
   jr    RA
    addiu SP, SP, 0x48
 
+__PP64_INTERNAL_RAND_MESSAGE_CHOICE:
 func_80103FB0:
   addiu SP, SP, -0x40
   sw    RA, 0x38(SP)

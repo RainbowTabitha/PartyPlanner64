@@ -80,10 +80,12 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
       if (needOverlayStubs) {
         syms.push(".definelabel ViewBoardMap,0");
         syms.push(".definelabel GetBoardAudioIndex,0");
+        syms.push(".definelabel GetRandPromptSelection,0");
       }
       else {
         syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
         syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
+        syms.push(".definelabel GetRandPromptSelection,__PP64_INTERNAL_RAND_MESSAGE_CHOICE");
       }
       break;
 
