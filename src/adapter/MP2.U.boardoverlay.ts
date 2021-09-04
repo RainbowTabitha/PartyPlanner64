@@ -164,6 +164,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 .definelabel D_800CCBDC,0x800CCBDC
 .definelabel D_800CCC16,0x800CCC16
 .definelabel D_800CCC18,0x800CCC18
+.definelabel D_800CCD5C,0x800CCD5C
 .definelabel D_800CD414,0x800CD414
 .definelabel D_800D0032,0x800D0032
 .definelabel D_800F6098,0x800F6098
@@ -432,6 +433,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
 .definelabel func_800B7890,0x800B7890
 .definelabel func_800B83C0,0x800B83C0
 
+.definelabel BOARD_COUNT,6
 .definelabel BANK_COUNT,${bankSpaces.length}
 .definelabel SHOP_COUNT,${itemShopSpaces.length}
 .definelabel STAR_COUNT,${starIndices.length}
@@ -3961,8 +3963,11 @@ jal __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX
   jal   func_80053AA0
    move  A0, R0
 
-JAL hydrate_events
- NOP
+  jal hydrate_events
+   nop
+
+  jal func_randomize_minigames
+   nop
 
   jal   func_80066C34
    move  A0, R0
@@ -4015,6 +4020,34 @@ ADDU A0 T9 R0
 LW RA 0x10(SP)
 JR RA
 ADDIU SP SP 0x18
+
+; Overwrite the static array entry for this board's duel mini-game.
+func_randomize_minigames:
+  addiu SP, SP, -0x18
+  sw    RA, 0x10(SP)
+
+  ; T0 = GetRandomByte() % BOARD_COUNT;
+  jal	GetRandomByte
+  nop
+  li   A0, BOARD_COUNT
+  div  V0, A0
+  nop
+  mfhi T0
+  nop
+  andi T0, T0, 0xFF
+  nop
+
+  lui T1 hi(DuelMinigamesArray)
+  addu T1 T1 T0
+  lbu T1, lo(DuelMinigamesArray)(T1)
+
+  lui T2 hi(D_800CCD5C)
+  addiu T2 T2 ${boardIndex * 4}
+  sw T1 lo(D_800CCD5C)(T2)
+
+  lw    RA, 0x10(SP)
+  jr    RA
+   addiu SP, SP, 0x18
 
 overlaycall3:
   addiu SP, SP, -0x18
@@ -14158,6 +14191,15 @@ D_8011368C: .word 0x00000000
 
 D_80113690: .word 0x3FF00000
 D_80113694: .word 0x00000000
+
+DuelMinigamesArray:
+.byte 0x3F ; Western Land minigame index
+.byte 0x42 ; Pirate Land minigame index
+.byte 0x44 ; Horror Land minigame index
+.byte 0x46 ; Space Land minigame index
+.byte 0x48 ; Mystery Land minigame index
+.byte 0x4A ; Bowser Land minigame index
+.align 4
 
 ; jump table
 D_80113698:
