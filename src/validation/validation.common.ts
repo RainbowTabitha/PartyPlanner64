@@ -249,7 +249,7 @@ FailingCustomEvents.fails = async function({ board, boardInfo }, args: any) {
       });
     }
     catch (e) {
-      console.error(e.toString());
+      console.error(e);
       if (!failingEvents[event.id])
         failingEvents[event.id] = true;
     }
@@ -525,6 +525,9 @@ AudioDetailsIssue.fails = async function({ board }, args: any = {}) {
       }
       if (!Array.isArray(board.audioData)) {
         return "Expected custom audio data to be an array.";
+      }
+      if (!board.audioData.length) {
+        return "Custom audio was chosen, but a midi file was not uploaded."
       }
 
       for (const audioEntry of board.audioData) {
