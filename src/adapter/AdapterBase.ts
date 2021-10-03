@@ -1387,18 +1387,12 @@ ${eventAsmCombinedString}
             soundbankIndex: audioEntry.soundbankIndex,
           });
         }
-
         break;
 
       case BoardAudioType.InGame:
       default:
         audioIndices = [board.audioIndex || 0];
         break;
-    }
-
-    if (boardInfo.audioIndexOffset && boardInfo.sceneIndex) {
-      const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-      sceneView.setUint16(boardInfo.audioIndexOffset, audioIndices[0]);
     }
 
     return audioIndices;
