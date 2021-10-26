@@ -571,10 +571,8 @@ const BoardBG: React.FC = () => {
     const bgImgEl = imgEl.current!;
     const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
     bgImgEl.style.transform = transformStyle;
-    if (bgImgEl.width !== boardWidth || bgImgEl.height !== boardHeight) {
-      bgImgEl.width = boardWidth;
-      bgImgEl.height = boardHeight;
-    }
+    bgImgEl.width = boardWidth;
+    bgImgEl.height = boardHeight;
   }, [boardWidth, boardHeight, editorWidth, editorHeight]);
 
   const imgSrcToUse = overrideBg || boardBgSrc;
