@@ -1,5 +1,5 @@
-import { BoardType, View } from "../types";
-import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType, IBoardAudioData, setBoardName, setBoardDescription, setBoardDifficulty, setBoardOtherBackground, setBoardAudio, IBoardAudioChanges } from "../boards";
+import { BoardType, CostumeType, View } from "../types";
+import { getCurrentBoard, IBoard, boardIsROM, currentBoardIsROM, BoardAudioType, IBoardAudioData, setBoardName, setBoardDescription, setBoardDifficulty, setBoardOtherBackground, setBoardAudio, IBoardAudioChanges, setBoardCostumeTypeIndex } from "../boards";
 import * as React from "react";
 import { make8Bit } from "../utils/img/RGBA32";
 import { MPEditor, MPEditorDisplayMode } from "../texteditor";
@@ -20,8 +20,9 @@ import editImage from "../img/audio/edit.png";
 import audioImage from "../img/details/audio.png";
 import deleteImage from "../img/details/delete.png";
 import audioConfigImage from "../img/details/audioconfig.png";
+import { IToggleItem, ToggleGroup } from "../controls";
 
-type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "audioheader" | "stats" | "br";
+type DetailsType = "image" | "richtext" | "audio" | "difficulty" | "header" | "audioheader" | "stats" | "costume" | "br";
 
 interface IDetailsItemBase {
   type: DetailsType;
@@ -55,6 +56,7 @@ const _details_mp2: IDetailsItemBase[] = [
   { type: "richtext", id: "detailBoardName", desc: "Board name", maxlines: 1 },
   { type: "richtext", id: "detailBoardDesc", desc: "Board description", maxlines: 2 },
   { type: "difficulty", id: "detailBoardDifficulty", desc: "Difficulty" },
+  { type: "costume", id: "detailBoardCostume", desc: "Costume Theme" },
   { type: "audioheader", desc: "Background Music" },
   { type: "audio", id: "detailBoardAudio", desc: "Background music" },
   { type: "header", desc: "Images" },
@@ -124,6 +126,8 @@ function _getValue(id: string | undefined, props: IDetailsProps) {
       return props.board.description;
     case "detailBoardDifficulty":
       return props.board.difficulty;
+    case "detailBoardCostume":
+      return props.board.costumeTypeIndex;
     case "detailBoardSelectImg":
       return props.board.otherbg.boardselect;
     case "detailBoardSelectIcon":
@@ -155,6 +159,9 @@ function _setValue(id: string, value: any, board: IBoard) {
       break;
     case "detailBoardDifficulty":
       setBoardDifficulty(value);
+      break;
+    case "detailBoardCostume":
+      setBoardCostumeTypeIndex(value);
       break;
     case "detailBoardSelectImg":
       setBoardOtherBackground("boardselect", value);
@@ -336,6 +343,11 @@ export class Details extends React.Component<IDetailsProps> {
           return (
             <DetailsDifficulty id={detail.id!} desc={detail.desc!} readonly={readonly}
               value={value} key={detail.id} onDifficultySelected={this.onValueChange} />
+          );
+        case "costume":
+          return (
+            <DetailsCostumeType id={detail.id!} desc={detail.desc!} readonly={readonly}
+              costumeType={value as CostumeType} key={detail.id} onCostumeTypeSelected={type => this.onValueChange(detail.id!, type)} />
           );
         case "stats":
           return (
@@ -764,3 +776,51 @@ class DetailsDifficultyLevel extends React.Component<IDetailsDifficultyLevelProp
     );
   }
 };
+
+const CostumeTypesArr = [
+  CostumeType.NORMAL,
+  CostumeType.WESTERN,
+  CostumeType.PIRATE,
+  CostumeType.HORROR,
+  CostumeType.SPACE,
+  CostumeType.MYSTERY,
+]
+
+const CostumeTypeDescriptions = {
+  [CostumeType.NORMAL]: "Normal",
+  [CostumeType.WESTERN]: "Western",
+  [CostumeType.PIRATE]: "Pirate",
+  [CostumeType.HORROR]: "Horror",
+  [CostumeType.SPACE]: "Space",
+  [CostumeType.MYSTERY]: "Mystery",
+};
+
+interface IDetailsCostumeTypeProps {
+  costumeType: CostumeType;
+  id: string;
+  desc: string;
+  readonly: boolean;
+  onCostumeTypeSelected(costumeType: CostumeType): void;
+}
+
+function DetailsCostumeType(props: IDetailsCostumeTypeProps) {
+  const costumeOptions: IToggleItem<CostumeType>[] = [];
+  for (const costumeType of CostumeTypesArr) {
+    costumeOptions.push({
+      id: costumeType,
+      selected: props.costumeType === costumeType
+        || (typeof props.costumeType === "undefined" && costumeType === CostumeType.NORMAL),
+      text: CostumeTypeDescriptions[costumeType],
+    });
+  }
+
+  return (
+    <div className="difficultyDetailsContainer">
+      <label>{props.desc}</label>
+      <ToggleGroup<CostumeType> items={costumeOptions}
+        allowDeselect={false}
+        readonly={props.readonly}
+        onToggleClick={(costumeType) => props.onCostumeTypeSelected(costumeType)} />
+    </div>
+  );
+}

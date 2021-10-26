@@ -48,7 +48,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
+  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo, boardIndex: number): void {
     // Patch game to use all 8MB.
     romView.setUint16(0x360EE, 0x8040); // Main heap now starts at 0x80400000
     romView.setUint16(0x360F6, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space

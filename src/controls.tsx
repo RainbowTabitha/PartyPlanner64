@@ -34,6 +34,7 @@ export interface IToggleButtonProps {
   allowDeselect?: boolean;
   id: string | number;
   pressed?: boolean;
+  readonly?: boolean;
   css?: string;
   title?: string;
 }
@@ -42,8 +43,12 @@ export const ToggleButton = class ToggleButton extends React.Component<IToggleBu
   state = {}
 
   onClick = () => {
-    if (this.props.allowDeselect === false && this.props.pressed)
+    if (this.props.readonly) {
       return;
+    }
+    if (this.props.allowDeselect === false && this.props.pressed) {
+      return;
+    }
     this.props.onToggled(this.props.id, !this.props.pressed);
   }
 
@@ -61,7 +66,7 @@ export const ToggleButton = class ToggleButton extends React.Component<IToggleBu
   }
 };
 
-interface IToggleItem<Tid> {
+export interface IToggleItem<Tid> {
   id: Tid;
   selected: boolean;
   title?: string;
@@ -73,30 +78,28 @@ export interface IToggleGroupProps<Tid = number | string> {
   groupCssClass?: string;
   items: IToggleItem<Tid>[];
   allowDeselect?: boolean;
+  readonly?: boolean;
 }
 
-export class ToggleGroup<Tid extends number | string> extends React.Component<IToggleGroupProps<Tid>> {
-  state = {}
-
-  render() {
-    const items = this.props.items;
-    let toggles = items.map(item => {
-      return (
-        <ToggleButton id={item.id}
-          key={item.id}
-          pressed={item.selected}
-          allowDeselect={this.props.allowDeselect}
-          title={item.title}
-          onToggled={this.props.onToggleClick}>
-          {item.text}
-        </ToggleButton>
-      );
-    });
-
+export function ToggleGroup<Tid extends number | string>(props: IToggleGroupProps<Tid>) {
+  const items = props.items;
+  let toggles = items.map(item => {
     return (
-      <div className={this.props.groupCssClass}>
-        {toggles}
-      </div>
+      <ToggleButton id={item.id}
+        key={item.id}
+        pressed={item.selected}
+        allowDeselect={props.allowDeselect}
+        readonly={props.readonly}
+        title={item.title}
+        onToggled={props.onToggleClick}>
+        {item.text}
+      </ToggleButton>
     );
-  }
+  });
+
+  return (
+    <div className={props.groupCssClass}>
+      {toggles}
+    </div>
+  );
 }

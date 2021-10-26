@@ -4,12 +4,27 @@
   max-width: 665px; // 775px;
   padding: 1em;
 
-  .detailsSpan, label, h2, td {
+  .detailsSpan, label, h2, td, .toggleButton {
     color: #EEEEEE;
+  }
+
+  .toggleButton {
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    &.pressed {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
   }
 }
 
-.detailTextContainer, .detailImgContainer, .detailRichTextContainer, .audioDetailsContainer, .difficultyDetailsContainer, .boardStatsContainer {
+.detailTextContainer,
+.detailImgContainer,
+.detailRichTextContainer,
+.audioDetailsContainer,
+.difficultyDetailsContainer,
+.boardStatsContainer {
   display: inline-block;
   margin: 5px 10px 5px 0;
   vertical-align: top;

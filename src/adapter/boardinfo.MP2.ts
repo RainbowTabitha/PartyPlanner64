@@ -6,6 +6,7 @@ import { mainfs } from "../fs/mainfs";
 import { arrayToArrayBuffer } from "../utils/arrays";
 import { toPack } from "../utils/img/ImgPack";
 import { scenes } from "../fs/scenes";
+import { CostumeType } from "../types";
 
 // Western Land - (U) ROM
 const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
@@ -14,6 +15,7 @@ const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
   boardDefFile: 64,
   bgDir: 2,
   animBgSet: 0,
+  costumeType: CostumeType.WESTERN,
   str: {
     boardSelect: 197,
     boardNames: [190, 210],
@@ -77,25 +79,6 @@ const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
     bytes.push(0x00); // Null byte
     strings.write(697, arrayToArrayBuffer(bytes));
 
-    // Model table at 0x800CB340 (0xCBF40) for small and big models.
-    // 0x800CCE28 (0xCDA28) for list of 2d model renders of themed characters.
-    // 0x800CCEE8 for list of themed bowser suits.
-
-    // Use the normal character models, not themed.
-    for (let charIdx = 2; charIdx <= 7; charIdx++) {
-      mainfs.write(charIdx, 212, mainfs.get(charIdx, 211)); // Western Land - small model
-      mainfs.write(charIdx, 213, mainfs.get(charIdx, 209)); // Western Land - big model
-    }
-
-    // For each character (different than loop above)
-    for (let c = 0; c < 6; c++) {
-      // Replace the 2d model renders of themed characters
-      mainfs.write(10, 612 + c, mainfs.get(10, 642 + c));
-
-      // Replace the bowser suited 2d renders
-      mainfs.write(10, 648 + c, mainfs.get(10, 666 + c));
-    }
-
     // Hide some intro scene graphics
     // Bowser sign
     let oldPack = mainfs.get(10, 410);
@@ -139,6 +122,7 @@ MP2_PIRATE.name = "Pirate Land";
 MP2_PIRATE.boardDefFile = 65;
 MP2_PIRATE.bgDir = 10;
 MP2_PIRATE.animBgSet = 1;
+MP2_PIRATE.costumeType = CostumeType.PIRATE;
 MP2_PIRATE.str = {
   boardSelect: 198,
 };
@@ -158,6 +142,7 @@ MP2_HORROR.name = "Horror Land";
 MP2_HORROR.boardDefFile = 66;
 MP2_HORROR.bgDir = 21;
 MP2_HORROR.animBgSet = 2;
+MP2_HORROR.costumeType = CostumeType.HORROR;
 MP2_HORROR.str = {
   boardSelect: 201,
 };
@@ -186,6 +171,7 @@ MP2_SPACE.name = "Space Land";
 MP2_SPACE.boardDefFile = 67;
 MP2_SPACE.bgDir = 24;
 MP2_SPACE.animBgSet = 3;
+MP2_SPACE.costumeType = CostumeType.SPACE;
 MP2_SPACE.str = {
   boardSelect: 199,
   boardNames: [193, 212],
@@ -202,6 +188,7 @@ const MP2_MYSTERY = createBoardInfo("MP2_MYSTERY");
 MP2_MYSTERY.name = "Mystery Land";
 MP2_MYSTERY.boardDefFile = 68;
 MP2_MYSTERY.bgDir = 16;
+MP2_MYSTERY.costumeType = CostumeType.MYSTERY;
 MP2_MYSTERY.str = {
   boardSelect: 200,
 };
@@ -218,6 +205,7 @@ MP2_BOWSER.name = "Bowser Land";
 MP2_BOWSER.boardDefFile = 69
 MP2_BOWSER.bgDir = 37;
 MP2_BOWSER.animBgSet = 4;
+MP2_BOWSER.costumeType = CostumeType.NORMAL;
 MP2_BOWSER.str = {
   boardSelect: 202,
 };

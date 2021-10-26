@@ -1,5 +1,5 @@
 import { IBoard } from "../boards";
-import { BoardType } from "../types";
+import { BoardType, CostumeType } from "../types";
 
 // BoardInfos are a PP64-specific object that represents known info about each game board.
 const _boardInfos = Object.create(null);
@@ -19,6 +19,7 @@ export interface IBoardInfo {
   bgDir: number;
   pauseBgDir?: number;
   animBgSet?: number;
+  costumeType?: CostumeType;
   str: {
     boardSelect?: number | number[] | number[][],
     boardNames?: number[] | number[][];

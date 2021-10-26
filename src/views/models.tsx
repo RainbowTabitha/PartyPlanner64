@@ -526,10 +526,13 @@ class ModelSelect extends React.Component<IModelSelectProps> {
   state = {}
 
   render() {
-    let entries = this.getModelEntries();
-    let options = entries.map(entry => {
+    const entries = this.getModelEntries();
+    const options = entries.map(entry => {
+      const [d, f] = entry;
+      const name = d + "/" + f;
+      const tooltip = "0x" + pad($$hex(d, ""), 4, "0") + "/" + pad($$hex(f, ""), 4, "0");
       return (
-        <option value={entry} key={entry}>{entry}</option>
+        <option value={name} key={name} title={tooltip}>{name}</option>
       );
     });
     return (
@@ -555,20 +558,19 @@ class ModelSelect extends React.Component<IModelSelectProps> {
       this.props.onModelSelected(e.target.value);
   }
 
-  getModelEntries() {
-    let entries = [];
+  getModelEntries(): [number, number][] {
+    let entries: [number, number][] = [];
     let mainfsDirCount = mainfs.getDirectoryCount();
     for (let d = 0; d < mainfsDirCount; d++) {
       let dirFileCount = mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
         let file = mainfs.get(d, f);
         if (FORM.isForm(file)) {
-          let name = d + "/" + f;
           try {
             // let form = FORM.unpack(file);
             // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
             //   name += ` (${form.STRG[0].parsed[0]})`;
-            entries.push(name);
+            entries.push([d, f]);
           }
           catch (e) {
             console.error(`Could not parse FORM ${d}/${f}`, e);

@@ -56,7 +56,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
+  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo, boardIndex: number): void {
     // this._writeKoopa(board, boardInfo);
     // this._writeBowser(board, boardInfo);
 

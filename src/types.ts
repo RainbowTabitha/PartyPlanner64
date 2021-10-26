@@ -60,6 +60,16 @@ export enum BoardType {
   DUEL = "DUEL",
 }
 
+/** Player costume types. */
+export enum CostumeType {
+  NORMAL = 0,
+  WESTERN = 1,
+  PIRATE = 2,
+  HORROR = 3,
+  SPACE = 4,
+  MYSTERY = 5,
+}
+
 export enum Action {
   MOVE = 0,
   LINE = 1,

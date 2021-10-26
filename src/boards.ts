@@ -1,4 +1,4 @@
-import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType } from "./types";
+import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType, CostumeType } from "./types";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
 import { getEvent, IEventParameter, EventParameterValues } from "./events/events";
@@ -45,6 +45,7 @@ import {
   setAudioSelectCodeAction,
   setBackgroundAction,
   setBoardAudioAction,
+  setBoardCostumeTypeIndexAction,
   setBoardDescriptionAction,
   setBoardDifficultyAction,
   setBoardNameAction,
@@ -97,6 +98,7 @@ export interface IBoard {
   audioIndex?: number;
   audioData?: IBoardAudioData[];
   audioSelectCode?: IBoardEvent;
+  costumeTypeIndex?: CostumeType;
   _rom?: boolean;
   _deadSpace?: number;
 }
@@ -216,6 +218,7 @@ export function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = 
         largescene: true,
       };
       board.audioIndex = 0x36; // Mini-Game Stadium
+      board.costumeTypeIndex = CostumeType.NORMAL;
       break;
     case 3:
       switch (type) {
@@ -595,15 +598,15 @@ export function getDeadEnds(board: IBoard) {
 
 export function _fixPotentiallyOldBoard(board: IBoard): IBoard {
   if (!("game" in board)) {
-    (board as IBoard).game = 1;
+    board.game = 1;
   }
 
   if (!("type" in board)) {
-    (board as IBoard).type = BoardType.NORMAL;
+    board.type = BoardType.NORMAL;
   }
 
   if (!("events" in board)) {
-    (board as IBoard).events = {};
+    board.events = {};
   }
 
   for (const eventId in board.events) {
@@ -617,11 +620,15 @@ export function _fixPotentiallyOldBoard(board: IBoard): IBoard {
   }
 
   if (typeof board.audioType === "undefined") {
-    (board as IBoard).audioType = BoardAudioType.InGame;
+    board.audioType = BoardAudioType.InGame;
   }
 
   if (board.audioData && !Array.isArray(board.audioData)) {
-    (board as IBoard).audioData = [(board as any).audioData];
+    board.audioData = [(board as any).audioData];
+  }
+
+  if (board.game === 2 && typeof board.costumeTypeIndex !== "number") {
+    board.costumeTypeIndex = CostumeType.NORMAL;
   }
 
   _migrateOldCustomEvents(board);
@@ -779,6 +786,10 @@ export function setBoardDescription(description: string): void {
 
 export function setBoardDifficulty(difficulty: number): void {
   store.dispatch(setBoardDifficultyAction({ difficulty }));
+}
+
+export function setBoardCostumeTypeIndex(costumeType: CostumeType): void {
+  store.dispatch(setBoardCostumeTypeIndexAction({ costumeType }));
 }
 
 export function setBoardOtherBackground(name: keyof IBoard["otherbg"], value: string): void {

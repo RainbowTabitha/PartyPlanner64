@@ -144,7 +144,7 @@ export abstract class AdapterBase {
   }
 
   protected abstract onLoad?(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean): void;
-  protected abstract onAfterOverwrite?(romView: DataView, boardCopy: IBoard, boardInfo: IBoardInfo): void;
+  protected abstract onAfterOverwrite?(romView: DataView, boardCopy: IBoard, boardInfo: IBoardInfo, boardIndex: number): void;
   protected abstract onWriteEvents?(board: IBoard): void;
 
   async overwriteBoard(boardIndex: number, board: IBoard) {
@@ -189,7 +189,7 @@ export abstract class AdapterBase {
 
     const romView = romhandler.getDataView();
     if (this.onAfterOverwrite)
-      this.onAfterOverwrite(romView, boardCopy, boardInfo);
+      this.onAfterOverwrite(romView, boardCopy, boardInfo, boardIndex);
 
     await this.onOverwritePromises(board, boardInfo, boardIndex);
   }

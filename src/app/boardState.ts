@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { addConnectionInternal, addEventToSpaceInternal, addSpaceInternal, BoardAudioType, forEachEvent, forEachEventParameter, getBoardEvent, IBoard, IBoardAudioChanges, IEventInstance, includeEventInBoardInternal, ISpace, _makeDefaultBoard } from "../boards";
 import { createCustomEvent, ICustomEvent } from "../events/customevents";
 import { EventParameterValue, IEvent, IEventParameter } from "../events/events";
-import { EditorEventActivationType, EventCodeLanguage, EventParameterType, Space, SpaceSubtype } from "../types";
+import { CostumeType, EditorEventActivationType, EventCodeLanguage, EventParameterType, Space, SpaceSubtype } from "../types";
 import { assert } from "../utils/debug";
 import { lineDistance } from "../utils/number";
 import { copyObject } from "../utils/obj";
@@ -163,6 +163,12 @@ export const boardStateSlice = createSlice({
     }>) => {
       const currentBoard = getCurrentBoard(state);
       currentBoard.difficulty = action.payload.difficulty;
+    },
+    setBoardCostumeTypeIndexAction: (state, action: PayloadAction<{
+      costumeType: CostumeType,
+    }>) => {
+      const currentBoard = getCurrentBoard(state);
+      currentBoard.costumeTypeIndex = action.payload.costumeType;
     },
     setBackgroundAction: (state, action: PayloadAction<{
       bg: string,
@@ -623,6 +629,7 @@ export const {
   setBoardNameAction,
   setBoardDescriptionAction,
   setBoardDifficultyAction,
+  setBoardCostumeTypeIndexAction,
   setBackgroundAction,
   setBoardOtherBgAction,
   addAnimationBackgroundAction,

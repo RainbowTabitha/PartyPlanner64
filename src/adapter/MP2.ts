@@ -1,7 +1,7 @@
 import { AdapterBase } from "./AdapterBase";
 import { IBoard, ISpace, addEventToSpaceInternal } from "../boards";
 import { animationfs } from "../fs/animationfs";
-import { Space } from "../types";
+import { CostumeType, Space } from "../types";
 import { createEventInstance } from "../events/events";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL, arrayBufferToImageData } from "../utils/arrays";
@@ -32,6 +32,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
+      this._extractCostumeType(board, boardInfo);
       this._extractBanks(board, boardInfo);
       this._extractItemShops(board, boardInfo);
     }
@@ -44,16 +45,19 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo) {
+  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo, boardIndex: number): void {
     // Patch game to use all 8MB.
     romView.setUint16(0x41602, 0x8040); // Main heap now starts at 0x80400000
     romView.setUint16(0x4160A, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space
     romView.setUint16(0x41616, 0x001A); // Temp heap fills as much as 0x1A8000 (8000 is ORed in)
     romView.setUint16(0x7869E, 0x001A);
 
+    this._writeCostumeType(romView, board, boardIndex);
+
     // Remove the animations (we might add our own after this though).
-    if (typeof boardInfo.animBgSet === "number")
+    if (typeof boardInfo.animBgSet === "number") {
       animationfs.setSetEntryCount(boardInfo.animBgSet, 0);
+    }
   }
 
   onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
@@ -293,6 +297,191 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       if (newType !== undefined)
         space.type = newType;
     });
+  }
+
+  _extractCostumeType(board: IBoard, boardInfo: IBoardInfo): void {
+    board.costumeTypeIndex = boardInfo.costumeType!;
+  }
+
+  /** Overwrite character costumes. */
+  _writeCostumeType(romView: DataView, board: IBoard, boardIndex: number): void {
+    const costumeModelMap = {
+      [CostumeType.NORMAL]: {
+        small: 0xD3, // 211
+        big: 0xD1, // 209
+        toad: 0x00080000,
+        player2d: [
+          0x000A0282, // 10/642
+          0x000A0283,
+          0x000A0285,
+          0x000A0286,
+          0x000A0284,
+          0x000A0287,
+        ],
+        bowser2d: [
+          0x000A029A, // 10/666
+          0x000A029B,
+          0x000A029D,
+          0x000A029E,
+          0x000A029C,
+          0x000A029F,
+        ],
+      },
+      [CostumeType.WESTERN]: {
+        small: 0xD4, // 212
+        big: 0xD5, // 213
+        toad: 0x0008000E,
+        player2d: [
+          0x000A0264, // 10/612
+          0x000A0265,
+          0x000A0267,
+          0x000A0268,
+          0x000A0266,
+          0x000A0269,
+        ],
+        bowser2d: [
+          0x000A0288, // 10/648
+          0x000A0289,
+          0x000A028B,
+          0x000A028C,
+          0x000A028A,
+          0x000A028D,
+        ],
+      },
+      [CostumeType.PIRATE]: {
+        small: 0xD6, // 214
+        big: 0xD7, // 215,
+        toad: 0x00080016,
+        player2d: [
+          0x000A026A, // 10/618
+          0x000A026B,
+          0x000A026D,
+          0x000A026E,
+          0x000A026C,
+          0x000A026F,
+        ],
+        bowser2d: [
+          0x000A028E,
+          0x000A028F,
+          0x000A0291,
+          0x000A0292,
+          0x000A0290,
+          0x000A0293,
+        ],
+      },
+      [CostumeType.HORROR]: {
+        small: 0xD8, // 216
+        big: 0xD9, // 217
+        toad: 0x00080028,
+        player2d: [
+          0x000A0270,
+          0x000A0271,
+          0x000A0273,
+          0x000A0274,
+          0x000A0272,
+          0x000A0275,
+        ],
+        bowser2d: [
+          0x000A0294,
+          0x000A0295,
+          0x000A0297,
+          0x000A0298,
+          0x000A0296,
+          0x000A0299,
+        ],
+      },
+      [CostumeType.SPACE]: {
+        small: 0xDA, // 218
+        big: 0xDB, // 219
+        toad: 0x0008001C,
+        player2d: [
+          0x000A0276,
+          0x000A0277,
+          0x000A0279,
+          0x000A027A,
+          0x000A0278,
+          0x000A027B,
+        ],
+        bowser2d: [
+          0x000A029A, // same as normal
+          0x000A029B,
+          0x000A029D,
+          0x000A029E,
+          0x000A029C,
+          0x000A029F,
+        ],
+      },
+      [CostumeType.MYSTERY]: {
+        small: 0xDC, // 220
+        big: 0xDD, // 221
+        toad: 0x00080023,
+        player2d: [
+          0x000A027C, // 10/636
+          0x000A027D,
+          0x000A027F,
+          0x000A0280,
+          0x000A027E,
+          0x000A0281,
+        ],
+        bowser2d: [
+          0x000A02A0,
+          0x000A02A1,
+          0x000A02A3,
+          0x000A02A4,
+          0x000A02A2,
+          0x000A02A5,
+        ],
+      },
+    };
+
+    const costumeInfo = costumeModelMap[board.costumeTypeIndex ?? CostumeType.NORMAL];
+
+    const boardModelRowsIndex = 0xCBF40 + (boardIndex * (16 * 12)); // 16 bytes per model entry * 12 rows (6 big, 6 small models)
+    const CHARACTER_COUNT = 6;
+
+    for (let i = 0; i < CHARACTER_COUNT; i++) {
+      // Table at ROM 0xCBF40 has the "small/big" models for each character.
+      // Ex: 2/D4 is Western small, 2/D5 is western big, 2/D6 pirate small, 2/D7 pirate big.
+      romView.setUint16(boardModelRowsIndex + (i * 16) + 2, costumeInfo.small);
+      romView.setUint16(boardModelRowsIndex + 96 + (i * 16) + 2, costumeInfo.big);
+
+      // Table at ROM 0xCC4C0 has costumed toads.
+
+      // Table at ROM 0xCDA28 has list of 2d model renders of themed characters.
+      romView.setUint32(0xCDA28 + (boardIndex * 6 * 4) + (i * 4), costumeInfo.player2d[i]);
+
+      // Table at ROM 0xCDAE8 has list of themed bowser suits.
+      romView.setUint32(0xCDAE8 + (boardIndex * 6 * 4) + (i * 4), costumeInfo.bowser2d[i]);
+    }
+
+    // The following somewhat replaces the toad models, but animations aren't yet replaced.
+
+    // if (boardIndex < 5) { // Not bowser land
+    //   // Table at ROM 0xCC4C0 has costumed toads. None for Bowser Land.
+    //   romView.setUint32(0xCC4C0 + (boardIndex * 16), costumeInfo.toad);
+    // }
+
+    // // 0x35CF64 also has the toad models.
+    // let sceneView = scenes.getDataView(82);
+    // sceneView.setUint32(0x4184 + (boardIndex * 4), costumeInfo.toad);
+
+    // // And animations following?
+
+    // // 0x37EA64 also has the toad models, used when selecting board.
+    // // RAM: 80113364
+    // // Overlay 88 (0x58) offset +68452 (+0x10B64)
+    // sceneView = scenes.getDataView(88);
+    // sceneView.setUint32(0x10B64 + (boardIndex * 4), costumeInfo.toad);
+
+    // // And animations following?
+
+    // // 0x3900F4 also has the toad models
+    // // RAM: 80113444
+    // // Overlay 91 (0x5B) offset +68676 (+0x10C44)
+    // sceneView = scenes.getDataView(91);
+    // sceneView.setUint32(0x10C44 + (boardIndex * 4), costumeInfo.toad);
+
+    // // And animations following?
   }
 
   _readAnimationBackgrounds(board: IBoard, boardInfo: IBoardInfo) {
