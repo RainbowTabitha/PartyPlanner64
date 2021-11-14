@@ -7,17 +7,16 @@
   flex-wrap: wrap;
 
   label {
-    color: white;
+    color: var(--text-color);
   }
 }
 
 $codeMirrorWidth: 640px;
 $codeMirrorWidthBigger: 900px;
-$codeMirrorBackground: #f3ece8;
-$codeMirrorReadonlyBackground: #d1ccc9;
+$codeMirrorBackground: var(--code-bg-color);
+$codeMirrorReadonlyBackground: var(--code-readonly-bg-color);
 
 .eventcodemirror {
-  // border: 1px solid rgb(51, 43, 39);
   border-radius: 3px;
   overflow: hidden;
 
@@ -53,7 +52,7 @@ $codeMirrorReadonlyBackground: #d1ccc9;
   padding: 0 1em;
 
   &, * {
-    color: white;
+    color: var(--text-color);
   }
 
   label {
@@ -171,7 +170,7 @@ $codeMirrorReadonlyBackground: #d1ccc9;
   border-bottom: none;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
-  background-color: #B59C95;
+  background-color: var(--code-tab-bg-color);
   padding: 0 0.5em;
   padding-top: 0.55em;
   margin: 0 0.15em;
@@ -180,7 +179,7 @@ $codeMirrorReadonlyBackground: #d1ccc9;
   cursor: pointer;
 
   &:hover {
-    background-color: #D0B6AF;
+    background-color: var(--code-tab-hover-bg-color);
   }
 
   &.activeTab {

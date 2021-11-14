@@ -33,7 +33,7 @@
 
 .loadingMsgTxt, .loadingMsgTxt a {
   font-size: 16pt;
-  color: white;
+  color: var(--text-color);
   margin-bottom: 0.5em;
   white-space: pre;
 }

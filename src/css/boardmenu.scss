@@ -6,11 +6,10 @@
 }
 
 .boardEntry {
-  // background-color: rgba(255, 255, 255, 0.75);
-  background-color: #FFFFFF;
+  background-color: var(--board-card-bg-color);
   opacity: 0.6;
   border-radius: 3px;
-  box-shadow: 0 1px 2px #222222;
+  box-shadow: 0 1px 2px var(--board-card-shadow-color);
   box-sizing: border-box;
   cursor: pointer;
   margin: 5px 0;
@@ -34,8 +33,7 @@
 }
 
 .boardEntry.boardEntryCurrent {
- // background-color: #FFFFFF;
- opacity: 1;
+  opacity: 1;
 }
 
 .boardEntryImg {
@@ -50,7 +48,7 @@
   padding: 1px 0.25em;
   margin-right: 15px;
   font-size: 11pt;
-  color: #222222;
+  color: var(--board-card-text-color);
 }
 
 .boardEntryCurrent .boardName {
@@ -84,7 +82,7 @@
 // Context menu overrides
 
 .basicContext {
-  background-color: #997A73;
+  background-color: var(--context-menu-bg-color);
 }
 
 .basicContext__item:hover:not(.basicContext__item--disabled) .basicContext__data {

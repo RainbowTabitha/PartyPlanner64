@@ -58,6 +58,7 @@ $header-logo-width: 215px;
 }
 
 .headerButtonText {
+  color: var(--header-text-color);
   vertical-align: middle;
   cursor: default;
 }
@@ -76,7 +77,7 @@ $header-logo-width: 215px;
   top: 44px;
   right: 0;
   z-index: 4;
-  background-color: #B59C95; // Same as header
+  background-color: var(--header-bg-color);
   max-width: 400px;
   border: 1px solid darken(#B59C95, 40);
   border-radius: 6px;
@@ -104,7 +105,7 @@ $header-logo-width: 215px;
     vertical-align: middle;
 
     a {
-      color: #001281;
+      color: var(--link-color);
     }
   }
 }
@@ -141,24 +142,24 @@ $more-menu-width: 300px;
 $more-menu-padding: 4px;
 $more-menu-border: 1px;
 
-.headerMoreMenu {
-  background-color: #a6867e;
-  box-shadow: 0 1px 2px #222222;
-  border-left: $more-menu-border solid #2f1b16;
-  border-bottom: $more-menu-border solid #2f1b16;
-  z-index: 4;
-  transition: 0.1s transform;
-  transform: translateX(#{$more-menu-width + (2 * $more-menu-padding) + (2 * $more-menu-border)});
-  position: fixed;
-  top: 0;
-  right: 0;
-  padding: $more-menu-padding;
-  height: 300px;
-  width: $more-menu-width;
-}
-.headerMoreOpen .headerMoreMenu {
-  transform: translateX(0);
-}
+// .headerMoreMenu {
+//   background-color: #a6867e;
+//   box-shadow: 0 1px 2px #222222;
+//   border-left: $more-menu-border solid #2f1b16;
+//   border-bottom: $more-menu-border solid #2f1b16;
+//   z-index: 4;
+//   transition: 0.1s transform;
+//   transform: translateX(#{$more-menu-width + (2 * $more-menu-padding) + (2 * $more-menu-border)});
+//   position: fixed;
+//   top: 0;
+//   right: 0;
+//   padding: $more-menu-padding;
+//   height: 300px;
+//   width: $more-menu-width;
+// }
+// .headerMoreOpen .headerMoreMenu {
+//   transform: translateX(0);
+// }
 
 .pendingDropdownBox {
   width: 100px;

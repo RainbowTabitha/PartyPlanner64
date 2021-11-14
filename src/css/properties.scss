@@ -14,7 +14,7 @@
   padding: 5px;
   box-sizing: border-box;
   font-size: 10pt;
-  color: #39221C;
+  color: var(--properties-empty-text-color);
   font-style: italic;
   text-align: center;
 }
@@ -85,10 +85,10 @@ $propertySectionHeight: 14px;
   font-size: 10pt;
   padding: 1px 3px;
   cursor: default;
-  border: 1px solid #514745;
+  background-color: var(--event-entry-bg-color);
+  border: 1px solid var(--event-entry-border-color);
   border-radius: 2px;
-  background-color: #816A66;
-  box-shadow: 0 0px 1px #555555;
+  box-shadow: 0 0px 1px var(--event-entry-shadow-color);
   overflow: hidden;
 
   &:not(:first-child) {
@@ -96,7 +96,7 @@ $propertySectionHeight: 14px;
   }
 
   &:hover {
-    border-color: #3d3230;
+    border-color: var(--event-entry-hover-border-color);
   }
 }
 
@@ -129,7 +129,7 @@ $propertySectionHeight: 14px;
 .eventEntryItem {
   display: flex;
   align-items: center;
-  border: 1px solid #605654;
+  border: 1px solid var(--event-entry-item-border-color);
   border-radius: 2px;
   font-size: 9pt;
   margin-top: 2px;
@@ -142,8 +142,8 @@ $propertySectionHeight: 14px;
   }
 
   &:hover {
-    border-color: #4a3d3a;
-    background-color: rgb(148, 125, 121);
+    background-color: var(--event-entry-item-hover-bg-color);
+    border-color: var(--event-entry-item-hover-border-color);
     cursor: pointer;
   }
 }
@@ -194,7 +194,7 @@ $propertySectionHeight: 14px;
 }
 
 .eventEntryItemParameterUnset {
-  color: #841617;
+  color: var(--event-entry-item-param-unset-text-color);
   font-style: italic;
 }
 
@@ -291,7 +291,7 @@ $propertySectionHeight: 14px;
 
   &:hover {
     font-weight: bold;
-    color: #0000AA;
+    color: var(--link-color);
     cursor: pointer;
   }
 }

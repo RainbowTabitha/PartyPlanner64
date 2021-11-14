@@ -1,7 +1,7 @@
-$notification-color-red: #c7212a;
-$notification-color-green: #278532;
-$notification-color-blue: #395db2;
-$notification-font-color: white;
+$notification-color-red: var(--notification-color-red);
+$notification-color-green: var(--notification-color-green);
+$notification-color-blue: var(--notification-color-blue);
+$notification-font-color: var(--notification-text-color);
 
 .notificationBar {
   max-height: 36px;

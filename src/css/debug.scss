@@ -5,7 +5,7 @@
   padding: 1em;
 
   :not(input) {
-    color: white;
+    color: var(--text-color);
   }
 
   .nbButton {

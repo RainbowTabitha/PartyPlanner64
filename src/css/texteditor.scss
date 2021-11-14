@@ -1,10 +1,10 @@
-$foreColorLight: #200E71;
-$bgColorLight: #DCE4BA;
-$borderColorLight: #DCC241;
+$bgColorLight: var(--mp-text-light-bg-color);
+$borderColorLight: var(--mp-text-light-border-color);
+$foreColorLight: var(--mp-text-light-text-color);
 
-$foreColorDark: #FFFFFF;
-$bgColorDark: #6D7597;
-$borderColorDark: #525F97;
+$bgColorDark: var(--mp-text-dark-bg-color);
+$borderColorDark: var(--mp-text-dark-border-color);
+$foreColorDark: var(--mp-text-dark-text-color);
 
 .mpEditor {
   font-size: 14px;
@@ -61,7 +61,7 @@ $borderColorDark: #525F97;
   top: 16px;
   left: 0;
   border-radius: 2px;
-  box-shadow: 0 1px 2px #222222;
+  box-shadow: 0 1px 2px var(--context-menu-shadow-color);
   outline: none;
   z-index: 2;
 }
@@ -78,7 +78,7 @@ $borderColorDark: #525F97;
   height: 14px;
   width: 0px;
   margin: 0 2px;
-  background-color: #AAAAAA;
+  background-color: var(--mp-text-editor-separator-color);
 }
 
 .mpEditor.mpEditorShowToolbarTop {

@@ -1,14 +1,14 @@
 .toolWindow {
   position: absolute;
-  background-color: #755E59;
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  box-shadow: 0 1px 2px #222222;
+  background-color: var(--tool-window-bg-color);
+  border: 1px solid var(--tool-window-border-color);
+  box-shadow: 0 1px 2px var(--tool-window-shadow-color);
   min-width: 200px;
 }
 
 .toolWindowName {
-  background-color: rgba(0, 0, 0, 0.5);
-  color: #958883;
+  background-color: var(--tool-window-border-color);
+  color: var(--tool-window-title-text-color);
   cursor: default;
   padding: 3px 2px;
   font-size: 11pt;
@@ -23,14 +23,14 @@
 .toolWindowCloseBtn {
   height: 16px;
   width: 16px;
-  color: #958883;
+  color: var(--tool-window-title-text-color);
   float: right;
   font-size: 16px;
   text-align: center;
   border-radius: 2px;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--tool-window-border-color);
     color: #afa29d;
   }
 }

@@ -22,16 +22,12 @@ body {
 
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
 }
 
 .selectable {
   -webkit-user-select: text;
   -moz-user-select: text;
-  -ms-user-select: text;
-  -o-user-select: text;
   user-select: text;
 }
 
@@ -45,7 +41,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: #46342f; // #39221C; // Default color before React replaces content.
+  background-color: var(--bg-color); // Default color before React replaces content.
 }
 
 .header {
@@ -55,7 +51,7 @@ body {
   max-width: 100%;
   flex-shrink: 0;
   flex: 0;
-  background-color: #B59C95;
+  background-color: var(--header-bg-color);
   box-sizing: border-box;
   border-bottom: 1px solid rgba(0, 0, 0, 0.9);
 }
@@ -75,7 +71,7 @@ body {
   min-width: $sidebar-width;
   flex: 0;
   flex-shrink: 0;
-  background-color: #5A4540;
+  background-color: var(--sidebar-bg-color);
   vertical-align: top;
 }
 
@@ -87,7 +83,6 @@ body {
 .properties {
   height: 50%;
   box-sizing: border-box;
-  border-top: 1px solid #4A3530;
 }
 
 .main {
@@ -95,7 +90,7 @@ body {
   width: 100%;
   position: relative;
   overflow: auto;
-  background-color: #46342f;
+  background-color: var(--bg-color);
 }
 .main:first-child { // No sidebar
   width: 100%;
@@ -180,13 +175,13 @@ canvas:focus {
 }
 
 .errorDiv {
-  color: white;
+  color: var(--text-color);
   padding: 1em;
   max-width: 100%;
   overflow: auto;
 
   a {
-    color: white;
+    color: var(--text-color);
   }
 
   pre {

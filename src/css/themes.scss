@@ -1,0 +1,59 @@
+:root, :root.theme-classic {
+  --bg-color: #46342f;
+
+  --header-bg-color: #B59C95;
+  --header-text-color: black;
+
+  --sidebar-bg-color: #5A4540;
+
+  --accent-color: #5A4540;
+
+  --text-color: white;
+  --link-color: #001281;
+
+  --board-card-bg-color: #FFFFFF;
+  --board-card-shadow-color: #222222;
+  --board-card-text-color: #222222;
+
+  --context-menu-bg-color: #997A73;
+  --context-menu-shadow-color: #333333;
+
+  --code-bg-color: #f3ece8;
+  --code-readonly-bg-color: #d1ccc9;
+
+  --code-tab-bg-color: #B59C95;
+  --code-tab-hover-bg-color: #D0B6AF;
+
+  --details-audio-entry-bg-color: #816A66;
+  --details-audio-entry-border-color: #514745;
+
+  --properties-empty-text-color: #39221C;
+  --tool-window-bg-color: #755E59;
+  --tool-window-border-color: #3a2f2c;
+  --tool-window-shadow-color: #222222;
+  --tool-window-title-text-color: #958883;
+
+  --event-entry-bg-color: #816A66;
+  --event-entry-border-color: #514745;
+  --event-entry-hover-border-color: #3d3230;
+  --event-entry-shadow-color: #555555;
+  --event-entry-item-border-color: #605654;
+  --event-entry-item-hover-bg-color: #947d79;
+  --event-entry-item-hover-border-color: #4a3d3a;
+  --event-entry-item-param-unset-text-color: #841617;
+
+  --mp-text-editor-separator-color: #AAAAAA;
+
+  // These match the game, unlikely to need to change for other themes.
+  --mp-text-light-bg-color: #DCE4BA;
+  --mp-text-light-border-color: #DCC241;
+  --mp-text-light-text-color: #200E71;
+  --mp-text-dark-bg-color: #6D7597;
+  --mp-text-dark-border-color: #525F97;
+  --mp-text-dark-text-color: #FFFFFF;
+
+  --notification-text-color: white;
+  --notification-color-red: #c7212a;
+  --notification-color-green: #278532;
+  --notification-color-blue: #395db2;
+}
