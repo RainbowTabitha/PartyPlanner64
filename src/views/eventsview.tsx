@@ -138,21 +138,9 @@ function _getViewForEventLanguage(language: EventCodeLanguage | undefined): View
 
 function EventEntryTable(props: { listing: any }) {
   return (
-    <table className="eventsViewTable">
-      {Array.isArray(props.listing) ? (
-        <thead>
-          <tr>
-            <th className="eventsViewTableIconColumn"></th>
-            <th className="eventsViewTableIconColumn"></th>
-            <th className="eventsViewTableIconColumn"></th>
-            <th></th>
-          </tr>
-        </thead>
-      ) : null }
-      <tbody>
-        {props.listing}
-      </tbody>
-    </table>
+    <div className="eventsViewTable">
+      {props.listing}
+    </div>
   )
 }
 
@@ -190,49 +178,49 @@ class EventRow extends React.Component<IEventRowProps> {
     let copyOption;
     if (this.props.onCopyToLibrary) {
       copyOption = (
-        <td>
+        <div className="eventTableIconCell">
           <img src={this.props.isDestructiveCopy ? copytolibrary_destructiveImage : copytolibraryImage}
             alt="Copy this event into the local library"
             title="Copy this event into the local library"
             onClick={() => this.props.onCopyToLibrary!(this.props.event, this.props.isDestructiveCopy)} />
-        </td>
+        </div>
       );
     }
     else if (this.props.onCopyToBoard) {
       copyOption = (
-        <td>
+        <div className="eventTableIconCell">
           <img src={this.props.isDestructiveCopy ? copytoboard_destructiveImage : copytoboardImage}
             alt="Copy this event into the board file"
             title="Copy this event into the board file"
             onClick={() => this.props.onCopyToBoard!(this.props.event, this.props.isDestructiveCopy)} />
-        </td>
+        </div>
       );
     }
     else {
       copyOption = (
-        <td>
+        <div className="eventTableIconCell">
           <img src={nocopyoptionImage}
             className="eventRowIconNoAction"
             alt="The event is the same in both the board and library"
             title="The event is the same in both the board and library" />
-        </td>
+        </div>
       );
     }
 
     return (
-      <tr className="eventTableRow">
-        <td>
+      <div className="eventTableRow">
+        <div className="eventTableIconCell">
           <img src={deleteImage}
             alt="Delete event" title="Delete event"
             onClick={() => { this.props.onDeleteEvent(this.props.event)} } />
-        </td>
-        <td>
+        </div>
+        <div className="eventTableIconCell">
           <img src={exportImage}
             alt="Download event code" title="Download event code"
             onClick={this.onExportEvent} />
-        </td>
+        </div>
         {copyOption}
-        <td className="eventNameTableCell"
+        <div className="eventNameTableCell"
           onClick={() => this.props.onEditEvent(this.props.event.id)}>
           <span className="eventNameText">
             {this.props.event.name}
@@ -240,8 +228,8 @@ class EventRow extends React.Component<IEventRowProps> {
           </span>
           <img src={editImage} className="eventEditCellIcon"
             alt="Edit event" title="Edit event"/>
-        </td>
-      </tr>
+        </div>
+      </div>
     );
   }
 

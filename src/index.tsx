@@ -5,9 +5,9 @@ import "basiccontext/dist/basicContext.min.css";
 import "basiccontext/dist/themes/default.min.css";
 import "codemirror/lib/codemirror.css";
 import "codemirror/addon/hint/show-hint.css";
+import "normalize.css";
 
 import "./css/themes.scss";
-import "./css/normalize.css";
 import "./css/index.scss";
 import "./css/interaction.scss";
 import "./css/newboard.scss";

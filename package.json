@@ -51,6 +51,7 @@
     "midi-player-js": "^2.0.14",
     "mips-assembler": "^2.0.0",
     "mips-inst": "^3.0.0",
+    "normalize.css": "^8.0.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-hotkeys-hook": "^3.4.0",

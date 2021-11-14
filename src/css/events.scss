@@ -11,13 +11,15 @@
 
 .eventsViewTable {
   width: 100%;
-
-  th {
-    text-align: left;
-  }
 }
 
 .eventTableRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: 2px;
+  overflow: hidden;
+
   img {
     padding: 4px;
     cursor: pointer;
@@ -35,20 +37,16 @@
     }
   }
 
-  td {
-    padding-top: 3px;
-    padding-bottom: 3px;
-  }
-
   &:hover {
-    td {
+    > div {
       background-color: rgba(0, 0, 0, 0.2);
     }
   }
 }
 
-.eventsViewTableIconColumn {
+.eventTableIconCell {
   width: 32px;
+  padding: 3px 0;
 }
 
 .eventEditCellIcon {
@@ -69,17 +67,19 @@
   }
 }
 
+.eventNameTableCell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0;
+  padding-left: 0.5em;
+}
+
 .eventNameText {
   font-size: 13pt;
 }
 
 .eventNameExtensionText {
   opacity: 0.5;
-}
-
-.eventNameTableCell {
-  padding-left: 0.5em;
-}
-.eventsViewTable th:not(.eventsViewTableIconColumn) {
-  padding-left: 0.5em;
 }
