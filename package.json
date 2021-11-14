@@ -37,7 +37,7 @@
     "@types/react": "17.0.34",
     "@types/react-dom": "17.0.11",
     "@types/react-redux": "^7.1.20",
-    "@types/three": "^0.127.1",
+    "@types/three": "^0.134.0",
     "basiccontext": "^3.5.1",
     "codemirror": "^5.63.3",
     "cookies-js": "^1.2.2",
@@ -59,7 +59,7 @@
     "redux-undo": "^1.0.1",
     "resize-image-data": "^0.3.1",
     "sass": "^1.43.4",
-    "three": "0.128.0",
+    "three": "0.134.0",
     "typescript": "4.4.4"
   },
   "devDependencies": {

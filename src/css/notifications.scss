@@ -12,7 +12,7 @@ $notification-font-color: var(--notification-text-color);
   color: $notification-font-color;
   flex-shrink: 1;
 
-  a {
+  a, button {
     color: $notification-font-color;
   }
 }
