@@ -46,7 +46,6 @@
     "electron-updater": "^4.3.9",
     "file-saver": "^2.0.5",
     "gh-pages": "^3.2.3",
-    "immutable": "^3.8.1",
     "jszip": "^3.7.1",
     "midi-player-js": "^2.0.16",
     "mips-assembler": "^2.0.0",
