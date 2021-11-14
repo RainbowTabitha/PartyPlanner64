@@ -91,7 +91,7 @@ export async function testAdditionalBgCodeWithGame(code: string, language: Event
       assemble(preppedAsm);
     }
     catch (e) {
-      failures.push(`Failed test compile/assemble for ${getGameName(game)}:\n${e.toString()}\n`);
+      failures.push(`Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`);
     }
   }
   else {
@@ -102,7 +102,7 @@ export async function testAdditionalBgCodeWithGame(code: string, language: Event
       assemble(preppedAsm);
     }
     catch (e) {
-      failures.push(`Failed test assembly for ${getGameName(game)}:\n${e.toString()}\n`);
+      failures.push(`Failed test assembly for ${getGameName(game)}:\n${e}\n`);
     }
   }
 

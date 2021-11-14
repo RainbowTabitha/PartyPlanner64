@@ -272,7 +272,7 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
         try {
           await validateCustomEvent(event);
         }
-        catch (e) {
+        catch (e: any) {
           showMessage(e.toString());
         }
         try {
@@ -280,7 +280,7 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
             game: event.supportedGames[0], // Pick one game randomly I guess
           }) as string;
         }
-        catch (e) {
+        catch (e: any) {
           showMessage(e.toString());
           return;
         }

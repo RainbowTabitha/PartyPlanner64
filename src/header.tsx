@@ -356,7 +356,7 @@ function eventFileSelected(event: any) {
         await validateCustomEvent(customEvent);
         addEventToLibrary(customEvent);
       } catch (e) {
-        showMessage("Event file load failed. " + e.toString());
+        showMessage("Event file load failed. " + e);
         return;
       }
     };
@@ -763,7 +763,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       }
       catch (e) {
         console.error(e);
-        showMessage("Error overwriting the board.\n\n" + e.toString());
+        showMessage("Error overwriting the board.\n\n" + e);
         return;
       }
 

@@ -243,7 +243,7 @@ export async function validateCustomEvent(event: ICustomEvent): Promise<boolean>
     }
     catch (e) {
       const errorMsg = "Failed a test compile/assembly for " + getGameName(game)
-      + ". The event code may need adjustments before it can be used.\n\n" + e.toString();
+      + ". The event code may need adjustments before it can be used.\n\n" + e;
       console.error(errorMsg + "\n\n" + code)
       throw new Error(errorMsg);
     }

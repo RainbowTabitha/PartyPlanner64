@@ -402,7 +402,7 @@ function initializeState(): void {
       }
       catch (e) {
         // Just let the error slide, event format changed or something?
-        console.error("Error reading cached event: " + e.toString());
+        console.error("Error reading cached event", e);
       }
     });
   }

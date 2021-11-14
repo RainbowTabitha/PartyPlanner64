@@ -58,7 +58,7 @@ export async function saveEvent(): Promise<void> {
   try {
     await validateCustomEvent(event);
   }
-  catch (e) {
+  catch (e: any) {
     showMessage(e.toString());
   }
 

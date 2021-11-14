@@ -11,7 +11,10 @@ export async function compile(source: string): Promise<string> {
     //$$log("preprocessed:", source);
   }
   catch (e) {
-    throw new Error(e);
+    if (typeof e === "string") {
+      throw new Error(e);
+    }
+    throw e;
   }
 
   let _smallerCInstance: EmscriptenModule;
