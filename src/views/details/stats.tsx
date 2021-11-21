@@ -72,7 +72,7 @@ export const DetailsBoardStats: React.FC = () => {
 
 const DetailsMP1BoardStats: React.FC<{ counts: SpaceCountMap }> = ({ counts }) => {
   return (
-    <>
+    <tbody>
       <tr>
         <DetailsStatsSpaceImageCell src={blueImage} alt="Blue space" />
         <DetailsStatsSpaceImageCell src={redImage} alt="Red space" />
@@ -101,13 +101,13 @@ const DetailsMP1BoardStats: React.FC<{ counts: SpaceCountMap }> = ({ counts }) =
         <DetailsStatsSpaceCountCell count={count(counts, Space.BLUE, Space.RED, Space.HAPPENING, Space.CHANCE, Space.MINIGAME, Space.SHROOM, Space.BOWSER)} />
         <DetailsStatsSpaceCountCell count={count(counts)} />
       </tr>
-    </>
+    </tbody>
   );
 };
 
 const DetailsMP2BoardStats: React.FC<{ counts: SpaceCountMap }> = ({ counts }) => {
   return (
-    <>
+    <tbody>
       <tr>
         <DetailsStatsSpaceImageCell src={blueImage} alt="Blue space" />
         <DetailsStatsSpaceImageCell src={redImage} alt="Red space" />
@@ -142,13 +142,13 @@ const DetailsMP2BoardStats: React.FC<{ counts: SpaceCountMap }> = ({ counts }) =
         <DetailsStatsSpaceCountCell count={count(counts, Space.BLUE, Space.RED, Space.HAPPENING, Space.CHANCE, Space.ITEM, Space.BATTLE, Space.BANK, Space.BOWSER)} />
         <DetailsStatsSpaceCountCell count={count(counts)} />
       </tr>
-    </>
+    </tbody>
   );
 };
 
 const DetailsMP3BoardStats: React.FC<{ counts: SpaceCountMap }> = ({ counts }) => {
   return (
-    <>
+    <tbody>
       <tr>
         <DetailsStatsSpaceImageCell src={blue3Image} alt="Blue space" />
         <DetailsStatsSpaceImageCell src={red3Image} alt="Red space" />
@@ -183,7 +183,7 @@ const DetailsMP3BoardStats: React.FC<{ counts: SpaceCountMap }> = ({ counts }) =
         <DetailsStatsSpaceCountCell count={count(counts, Space.BLUE, Space.RED, Space.HAPPENING, Space.CHANCE, Space.ITEM, Space.BATTLE, Space.BANK, Space.GAMEGUY, Space.BOWSER)} />
         <DetailsStatsSpaceCountCell count={count(counts)} />
       </tr>
-    </>
+    </tbody>
   );
 };
 
