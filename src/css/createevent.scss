@@ -171,6 +171,7 @@ $codeMirrorReadonlyBackground: var(--code-readonly-bg-color);
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
   background-color: var(--code-tab-bg-color);
+  color: var(--code-tab-inactive-text-color);
   padding: 0 0.5em;
   padding-top: 0.55em;
   margin: 0 0.15em;
@@ -180,11 +181,13 @@ $codeMirrorReadonlyBackground: var(--code-readonly-bg-color);
 
   &:hover {
     background-color: var(--code-tab-hover-bg-color);
+    color: var(--code-tab-inactive-hover-text-color);
   }
 
   &.activeTab {
     font-weight: bold;
     background-color: $codeMirrorBackground;
+    color: var(--code-tab-text-color);
     cursor: default;
     border-top-width: 3px;
     padding-top: 0.45em;

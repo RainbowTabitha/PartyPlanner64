@@ -1,5 +1,6 @@
 .properties {
   max-width: 200px;
+  color: var(--tool-window-text-color);
 }
 
 .propertiesPadded {
@@ -73,6 +74,7 @@ $propertySectionHeight: 14px;
 
 .propertySectionTitle {
   background-color: rgba(0, 0, 0, 0.2);
+  color: var(--tool-window-text-color);
   cursor: default;
   padding: 2px 2px;
   font-size: 10pt;
@@ -86,6 +88,7 @@ $propertySectionHeight: 14px;
   padding: 1px 3px;
   cursor: default;
   background-color: var(--event-entry-bg-color);
+  color: var(--event-entry-text-color);
   border: 1px solid var(--event-entry-border-color);
   border-radius: 2px;
   box-shadow: 0 0px 1px var(--event-entry-shadow-color);
@@ -164,12 +167,14 @@ $propertySectionHeight: 14px;
 }
 
 .eventEntryDelete, .eventParameterDelete {
-  background: url("../img/events/deletelist.png") no-repeat;
+  background-image: var(--delete-list-img);
+  background-repeat: no-repeat;
   background-position: center;
   opacity: 0.6;
 
   &:hover {
-    background: url("../img/events/deletelist_hover.png") no-repeat;
+    background-image: var(--delete-list-hover-img);
+    background-repeat: no-repeat;
     background-position: center;
     opacity: 1;
     cursor: pointer;
@@ -224,6 +229,7 @@ $propertySectionHeight: 14px;
 .propertiesActionButton {
   display: flex;
   align-items: center;
+  color: var(--tool-window-text-color);
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
@@ -254,7 +260,8 @@ $propertySectionHeight: 14px;
   width: 16px;
   height: 16px;
   margin-right: 0.25em;
-  background: url("../img/editor/boardproperties/eye.png") no-repeat;
+  background: var(--eye-img);
+  background-repeat: no-repeat;
   background-position: center;
   opacity: 0;
 }
@@ -270,12 +277,14 @@ $propertySectionHeight: 14px;
   width: 16px;
   height: 16px;
   margin-right: 0.25em;
-  background: url("../img/editor/boardproperties/deletelist.png") no-repeat;
+  background-image: var(--delete-list-img);
+  background-repeat: no-repeat;
   background-position: center;
   opacity: 0.6;
 
   &:hover {
-    background: url("../img/editor/boardproperties/deletelist_hover.png") no-repeat;
+    background-image: var(--delete-list-hover-img);
+    background-repeat: no-repeat;
     background-position: center;
     opacity: 1;
     cursor: pointer;

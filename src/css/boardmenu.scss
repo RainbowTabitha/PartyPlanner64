@@ -85,6 +85,10 @@
   background-color: var(--context-menu-bg-color);
 }
 
+.basicContext__data {
+  color: var(--context-menu-text-color);
+}
+
 .basicContext__item:hover:not(.basicContext__item--disabled) .basicContext__data {
   background-color: rgba(0, 0, 0, 0.3);
 }

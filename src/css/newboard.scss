@@ -1,5 +1,6 @@
 .nbLabel {
   font-weight: 700;
+  color: var(--context-menu-text-color);
 }
 
 .nbButton, .toggleButton {
@@ -7,6 +8,7 @@
   border-radius: 4px;
   padding: 5px;
   margin: 2px;
+  color: var(--context-menu-text-color);
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
