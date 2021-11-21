@@ -25,7 +25,7 @@ export class BoardMenu extends React.Component<IBoardMenuProps> {
       );
     });
 
-    const showRomBoards = get($setting.uiShowRomBoards);
+    const showRomBoards = !!get($setting.uiShowRomBoards);
     let romBoards;
     if (showRomBoards) {
       romBoards = getROMBoards().map(function(item, idx) {

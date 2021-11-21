@@ -279,3 +279,9 @@ export enum EventParameterType {
 export function isArrayEventParameterType(type: EventParameterType): boolean {
   return type.endsWith("[]");
 }
+
+/** UI color themes for PartyPlanner64. */
+export enum EditorThemes {
+  Classic = "classic",
+  DarkGray = "dark-gray",
+}

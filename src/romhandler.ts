@@ -224,11 +224,11 @@ export const romhandler = new class RomHandler {
     return null;
   }
 
-  romRecognized() {
+  romRecognized(): boolean {
     return this.getGameVersion() !== null;
   }
 
-  romSupported() {
+  romSupported(): boolean {
     let supported = false;
     switch (this.getROMGame()) {
       case Game.MP1_USA:
@@ -236,10 +236,10 @@ export const romhandler = new class RomHandler {
       case Game.MP3_USA:
         supported = true;
     };
-    return supported || get($setting.uiAllowAllRoms);
+    return supported || !!get($setting.uiAllowAllRoms);
   }
 
-  byteSwapIfNeeded() {
+  byteSwapIfNeeded(): void {
     if (!this._rom || this._rom.byteLength < 4 || !this._u8array)
       return;
     let romView = this.getDataView();

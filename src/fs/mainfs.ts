@@ -236,7 +236,7 @@ export class mainfs {
 
   private static _writeFile(d: number, f: number, view: DataView, offset: number) {
     let fileData = _mainfsCache![d][f];
-    let writeDecompressed = get($setting.writeDecompressed);
+    let writeDecompressed = !!get($setting.writeDecompressed);
 
     if (!fileData) {
       view.setUint32(offset, 0); // No file, no size
@@ -294,7 +294,7 @@ export class mainfs {
 
   public static getByteLength() {
     const dirCount = _mainfsCache!.length;
-    const writeDecompressed = get($setting.writeDecompressed);
+    const writeDecompressed = !!get($setting.writeDecompressed);
 
     let byteLen = 0;
     byteLen += 4; // Count of directories

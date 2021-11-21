@@ -31,3 +31,22 @@
   font-size: 9pt;
   color: rgba(255, 255, 255, 0.9);
 }
+
+.themeSetting {
+  .toggleButton {
+    font-size: 0; // prevent extra bottom padding
+  }
+
+  .themeColorSwatch {
+    display: inline-block;
+    height: 36px;
+    width: 36px;
+    border-radius: 18px;
+    cursor: pointer;
+    outline: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  .toggleButton.pressed .themeColorSwatch {
+    outline: 1px solid rgba(255, 255, 255, 0.7);
+  }
+}

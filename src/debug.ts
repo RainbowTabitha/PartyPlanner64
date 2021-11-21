@@ -5,6 +5,6 @@ export function isDebug(): boolean {
   return $$debug;
 }
 
-export function setDebug(on: boolean): void {
-  $$debug = on;
+export function setDebug(on: boolean | undefined): void {
+  $$debug = !!on;
 }

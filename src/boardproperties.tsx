@@ -51,7 +51,7 @@ export class BoardProperties extends React.Component<IBoardPropertiesProps> {
 
     let additionalBGList;
     if (supportsAdditionalBackgrounds(board)) {
-      const advanced = get($setting.uiAdvanced);
+      const advanced = !!get($setting.uiAdvanced);
       const hasBgs = board.additionalbg && board.additionalbg.length;
       const hasBgCode = !!board.additionalbgcode;
       additionalBGList = (advanced || hasBgs || hasBgCode) && (

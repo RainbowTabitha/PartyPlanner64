@@ -5,7 +5,6 @@ import { getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelec
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { updateWindowTitle } from "../utils/browser";
 import { Editor } from "../renderer";
 import { Details } from "../views/details";
 import { Settings } from "../views/settings";
@@ -44,7 +43,7 @@ import { SpriteView } from "../views/sprites";
 import { store } from "./store";
 import { selectCurrentAction, selectCurrentView, selectNotifications, selectRomLoaded, selectUpdateExists, setHideUpdateNotification, setUpdateExistsAction } from "./appState";
 import { useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "./hooks";
+import { useAppDispatch, useAppSelector, useEditorThemeClass, useWindowTitle } from "./hooks";
 import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./blocker";
 import { addEventToLibraryAction, selectBoards, selectCurrentBoard, setBoardsAction } from "./boardState";
 import { BasicErrorBoundary } from "../components/BasicErrorBoundary";
@@ -141,7 +140,8 @@ function PP64AppInternal(props: PP64AppInternalProps) {
   const currentAction = useAppSelector(selectCurrentAction);
   const romLoaded = useAppSelector(selectRomLoaded);
 
-  updateWindowTitle(currentBoard.name);
+  useWindowTitle(currentBoard.name);
+  useEditorThemeClass();
   usePP64Hotkeys();
 
   let mainView;

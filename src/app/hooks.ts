@@ -1,6 +1,9 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { IBoard, ISpace } from '../boards';
+import { EditorThemes } from '../types';
+import { updateWindowTitle } from '../utils/browser';
+import { $setting, addSettingChangedListener, get as getSetting, removeSettingChangedListener } from '../views/settings';
 import { selectCurrentBoard, selectSelectedSpaceIndices, SpaceIndexMap } from './boardState';
 import type { RootState, AppDispatch } from './store';
 
@@ -39,4 +42,41 @@ export function useSelectedSpaces(): ISpace[] {
     }
     return selectedSpaces;
   }, [board, selectedSpaceMap]);
+}
+
+/** Applies the given title to the browser tab. */
+export function useWindowTitle(title: string): void {
+  useEffect(() => {
+    updateWindowTitle(title);
+  }, [title]);
+}
+
+/** Hook that returns the current editor theme. */
+export function useEditorTheme(): EditorThemes {
+  const [theme, setTheme] = useState(getSetting($setting.uiTheme) || EditorThemes.Classic);
+
+  const onSettingChanged = useCallback((settingName: $setting) => {
+    if (settingName === $setting.uiTheme) {
+      setTheme(getSetting($setting.uiTheme) || EditorThemes.Classic);
+    }
+  }, []);
+
+  useEffect(() => {
+    addSettingChangedListener(onSettingChanged);
+    return () => removeSettingChangedListener(onSettingChanged);
+  }, [onSettingChanged]);
+
+  return theme;
+}
+
+/** Synchronizes the current editor theme with the root css class. */
+export function useEditorThemeClass(): void {
+  const theme = useEditorTheme();
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const appliedThemeClasses = html.className.split(" ").filter(cls => cls.startsWith("theme-"));
+    html.classList.remove(...appliedThemeClasses);
+    html.classList.add("theme-" + theme);
+  }, [theme]);
 }
