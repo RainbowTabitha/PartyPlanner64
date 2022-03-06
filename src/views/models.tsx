@@ -379,11 +379,6 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
       scene.background = new THREE.Color(this.props.bgColor);
       scene.add(modelObj);
 
-      if (this.props.showVertexNormals) {
-        const normalsHelper = new VertexNormalsHelper(modelObj, 8, 0x00FF00);
-        scene.add(normalsHelper);
-      }
-
       $$log("Scene", scene);
 
       if (this.props.selectedAnimDir !== null) {
@@ -851,13 +846,13 @@ class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
     }
 
     const exporter = new GLTFExporter();
-    exporter.parse(modelObj, (result: any) => {
-      if (binary) {
-        saveAs(new Blob([result as ArrayBuffer]), `model-${dir}-${file}.glb`);
-      }
-      else {
-        saveAs(new Blob([JSON.stringify(result)]), `model-${dir}-${file}.gltf`);
-      }
-    }, exporterOpts);
+    const result: any = await exporter.parseAsync(modelObj, exporterOpts);
+
+    if (binary) {
+      saveAs(new Blob([result as ArrayBuffer]), `model-${dir}-${file}.glb`);
+    }
+    else {
+      saveAs(new Blob([JSON.stringify(result)]), `model-${dir}-${file}.gltf`);
+    }
   }
 };
