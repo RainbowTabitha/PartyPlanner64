@@ -101,7 +101,7 @@ function _renderAssociations(
         if (!associatedSpace)
           return; // Probably shouldn't happen.
 
-        const dotsColor = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.5)`;
+        const dotsColor = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.9)`;
         drawAssociation(context, space!.x, space!.y, associatedSpace.x, associatedSpace.y, dotsColor);
         associationNum++;
       });
