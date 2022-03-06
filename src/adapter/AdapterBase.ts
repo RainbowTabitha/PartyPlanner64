@@ -199,6 +199,7 @@ export abstract class AdapterBase {
     const game = romhandler.getROMGame()!;
     const asm = `
         ${makeGameSymbolLabels(game, true).join("\n")}
+        ${makeGenericSymbolsForAddresses(overlayAsm).join("\n")}
 
         ${overlayAsm}
       `;
