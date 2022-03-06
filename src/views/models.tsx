@@ -7,7 +7,6 @@ import { Button, ToggleButton } from "../controls";
 import * as React from "react";
 import { MTNX } from "../models/MTNX";
 import * as THREE from "three";
-import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHelper";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFExporter, GLTFExporterOptions } from "three/examples/jsm/exporters/GLTFExporter";
 import { MtnxToThreeJs } from "../models/MtnxToThreeJs";
