@@ -8,6 +8,7 @@ export interface IToolWindowProps {
   position?: string;
   visible?: boolean;
   canClose?: boolean;
+  children?: React.ReactNode;
   onCloseClick?: () => void;
 }
 

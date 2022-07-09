@@ -22,7 +22,7 @@ export function getImageData(src: string, width: number, height: number): Promis
       let imgData = canvasCtx.getImageData(0, 0, imgWidth, imgHeight);
 
       if (width !== imgWidth || height !== imgHeight) {
-        imgData = resizeImageData(imgData, width, height);
+        imgData = resizeImageData(imgData, width, height) as unknown as ImageData;
       }
 
       clearTimeout(failTimer);

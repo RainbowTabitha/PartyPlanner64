@@ -223,6 +223,7 @@ class CheckDeadEnds extends React.Component<ICheckDeadEndsProps> {
 };
 
 interface IBackgroundListProps {
+  children?: React.ReactNode;
   list: "animbg" | "additionalbg";
   title: string;
   onAddBackground(bg: string): void;

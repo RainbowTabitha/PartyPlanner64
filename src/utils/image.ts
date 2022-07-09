@@ -36,7 +36,7 @@ export function toArrayBuffer(image: HTMLImageElement, width: number, height: nu
 
   let imgData = canvasCtx.getImageData(0, 0, imgWidth, imgHeight);
   if (width !== imgWidth || height !== imgHeight) {
-    imgData = resizeImageData(imgData, width, height);
+    imgData = resizeImageData(imgData, width, height) as unknown as ImageData;
   }
 
   return imgData.data.buffer;

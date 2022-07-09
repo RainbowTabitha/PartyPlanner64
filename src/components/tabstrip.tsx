@@ -3,6 +3,7 @@ import React from "react";
 
 interface ITabStripProps {
   activeTabIndex?: number;
+  children?: React.ReactNode;
   className?: string;
   tabsClassName?: string;
   contentClassName?: string;
@@ -56,6 +57,7 @@ export const TabStrip: React.FC<ITabStripProps> = (props) => {
 }
 
 interface ITabProps {
+  children?: React.ReactNode;
   caption: string;
   className?: string;
   onClick?(): void;

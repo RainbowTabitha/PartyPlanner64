@@ -18,7 +18,7 @@ export function SpriteView() {
     setSelectedSprite(entries[0]);
   }, []);
 
-  const onSelectedSpriteChanged = useCallback(sprite => setSelectedSprite(sprite), []);
+  const onSelectedSpriteChanged = useCallback((sprite: MainFSPair) => setSelectedSprite(sprite), []);
 
   if (!spriteFsEntries.length) {
     return null;

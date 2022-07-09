@@ -2,10 +2,11 @@ import * as React from "react";
 import { makeKeyClick } from "./utils/react";
 
 export interface IButtonProps {
-  onClick: (id?: string) => any;
+  children?: React.ReactNode;
   id?: string;
   css?: string;
   title?: string;
+  onClick: (id?: string) => any;
 }
 
 export const Button = class Button extends React.Component<IButtonProps> {
@@ -30,13 +31,14 @@ export const Button = class Button extends React.Component<IButtonProps> {
 };
 
 export interface IToggleButtonProps {
-  onToggled: (id: any, pressed: boolean) => any;
+  children?: React.ReactNode;
   allowDeselect?: boolean;
   id: string | number;
   pressed?: boolean;
   readonly?: boolean;
   css?: string;
   title?: string;
+  onToggled: (id: any, pressed: boolean) => any;
 }
 
 export const ToggleButton = class ToggleButton extends React.Component<IToggleButtonProps> {

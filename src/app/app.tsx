@@ -3,7 +3,7 @@
 import { View, Action, EventCodeLanguage } from "../types";
 import { getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode, _fixPotentiallyOldBoard, _makeDefaultBoard } from "../boards";
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 import { Provider } from "react-redux";
 import { Editor } from "../renderer";
 import { Details } from "../views/details";
@@ -411,11 +411,11 @@ function initializeState(): void {
 }
 
 const body = document.getElementById("body");
-ReactDOM.render(
+const root = createRoot(body!);
+root.render(
   <Provider store={store}>
     <PP64App ref={app => (window as any)._PP64instance = app} />
-  </Provider>,
-  body
+  </Provider>
 );
 
 function _onError(app: PP64App, error: Error, errorInfo: React.ErrorInfo | null) {

@@ -1,11 +1,11 @@
 import React from "react";
 
 interface IBasicErrorBoundaryState {
-    hasError: boolean;
-  }
+  hasError: boolean;
+}
 
 /** Component that wraps children in an error boundary. */
-export class BasicErrorBoundary extends React.Component<{}, IBasicErrorBoundaryState> {
+export class BasicErrorBoundary extends React.Component<React.PropsWithChildren, IBasicErrorBoundaryState> {
   constructor(props: {}) {
     super(props);
 

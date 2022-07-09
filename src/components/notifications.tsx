@@ -8,6 +8,7 @@ export enum NotificationColor {
 }
 
 interface INotificationProps {
+  children?: React.ReactNode;
   color: NotificationColor;
   onClose?(): any;
 }
@@ -45,6 +46,7 @@ export class Notification extends React.Component<INotificationProps> {
 }
 
 interface INotificationBarProps {
+  children?: React.ReactNode;
 }
 
 /** Container for several notifications. */
@@ -63,6 +65,7 @@ export class NotificationBar extends React.Component<INotificationBarProps> {
 }
 
 interface INotificationButtonProps {
+  children?: React.ReactNode;
   onClick?(): any;
 }
 

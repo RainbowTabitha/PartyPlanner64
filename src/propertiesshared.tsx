@@ -1,6 +1,7 @@
 import * as React from "react";
 
 interface ISectionHeadingProps {
+  children?: React.ReactNode;
   text: string;
 }
 
