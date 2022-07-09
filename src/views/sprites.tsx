@@ -93,7 +93,7 @@ function SpriteDisplay(props: ISpriteDisplayProps) {
 
   const imgs = imgInfos.map((imgInfo, i) => {
     const dataUri = arrayBufferToDataURL(imgInfo.src!, imgInfo.width, imgInfo.height);
-    return <SpriteImage name={`Sprite ${d}/${f}`} dataUri={dataUri} height={imgInfo.height} width={imgInfo.width} />
+    return <SpriteImage name={`Sprite ${d}/${f}`} key={`${d}-${f}-${i}`} dataUri={dataUri} height={imgInfo.height} width={imgInfo.width} />
   });
 
   return (
