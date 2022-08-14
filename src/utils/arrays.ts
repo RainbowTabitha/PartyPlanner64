@@ -1,6 +1,6 @@
 import { createContext } from "./canvas";
 import { $$hex } from "./debug";
-import * as SparkMD5 from "../lib/js-spark-md5/spark-md5";
+import SparkMD5 from "../lib/js-spark-md5/spark-md5";
 
 export function copyRange(outArr: ArrayBuffer | DataView, inArr: ArrayBuffer | DataView | number[], outOffset: number, inOffset: number, len: number) {
   if (outArr instanceof ArrayBuffer)

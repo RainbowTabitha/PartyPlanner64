@@ -1318,7 +1318,4 @@ function cpp_js(settings) {
 	};
 };
 
-// node.js interface
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports.create = cpp_js;
-}
+export { cpp_js as create };

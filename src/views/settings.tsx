@@ -107,12 +107,9 @@ class SettingsManager {
   public listeners: Set<SettingChangedListener> = new Set();
 
   constructor() {
-    (Cookies as any).defaults = {
-      expires: Infinity
-    };
-
     this._tempSettings = {};
   }
+
   getSetting<TKey extends keyof SettingTypeMap>(name: TKey): SettingValueTypeForKey<TKey> | undefined {
     // Allow changing settings for at least the session without cookies.
     if (this._tempSettings.hasOwnProperty(name)) {
@@ -140,7 +137,7 @@ class SettingsManager {
   setSetting<TKey extends keyof SettingTypeMap>(name: TKey, value: SettingValueTypeForKey<TKey>): void {
     this._tempSettings[name] = value;
     if (Cookies.enabled) {
-      Cookies.set(name, JSON.stringify(value));
+      Cookies.set(name, JSON.stringify(value), { expires: Infinity });
     }
 
     this.listeners.forEach(callback => {

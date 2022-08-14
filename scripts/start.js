@@ -6,9 +6,9 @@ const getVersion = require("./version").getVersion;
 const spawn = require("child_process").spawn;
 
 getVersion(version => {
-  process.env.REACT_APP_PP64_VERSION = version;
+  process.env.VITE_PP64_VERSION = version;
 
-  const reactAppStart = spawn("npm", ["run", "react-start"]);
+  const reactAppStart = spawn("npm", ["run", "vite-start"]);
   reactAppStart.stdout.on("data", function (data) {
     console.log(data.toString());
   });

@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as CodeMirror from "codemirror";
+import CodeMirror from "codemirror";
 import { normalizeLineEndings } from "../utils/string";
 import "../utils/lib/mp-mips-autocomplete";
 import "../utils/lib/mp-mips-codemirror";
@@ -39,7 +39,7 @@ export class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> 
 
   componentDidMount() {
     const closureEl = this.el!;
-    this.codemirror = (CodeMirror as any)(function(el: HTMLElement) {
+    this.codemirror = CodeMirror(function(el: HTMLElement) {
       closureEl.appendChild(el);
     }, {
       mode: getCodeMirrorMode(this.props.mode),

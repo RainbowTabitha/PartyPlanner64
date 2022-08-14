@@ -8,9 +8,9 @@ const spawn = require("child_process").spawn;
 process.env.GENERATE_SOURCEMAP = "false";
 
 getVersion(version => {
-  process.env.REACT_APP_PP64_VERSION = version;
+  process.env.VITE_PP64_VERSION = version;
 
-  const reactAppBuild = spawn("npm", ["run", "react-build"]);
+  const reactAppBuild = spawn("npm", ["run", "vite-build"]);
   reactAppBuild.stdout.on("data", function (data) {
     console.log(data.toString());
   });

@@ -18,7 +18,7 @@ export const About = class About extends React.Component {
   }
 
   render() {
-    let versionNum = process.env.REACT_APP_PP64_VERSION; // Provided by build system.
+    let versionNum = import.meta.env.VITE_PP64_VERSION; // Provided by build system.
     if (versionNum) {
       const matchResult = verRegex.exec(versionNum);
       if (matchResult && matchResult[0]) {

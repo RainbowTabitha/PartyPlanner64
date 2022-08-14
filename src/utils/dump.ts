@@ -12,11 +12,9 @@ import { romhandler } from "../romhandler";
 import { FORM } from "../models/FORM";
 import { MTNX } from "../models/MTNX";
 import { showMessage } from "../app/appControl";
-import * as JSZipMod from "jszip";
+import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { isFontPack, fontPackToRGBA32, isKnownFontPack } from "./img/FontPack";
-
-const JSZip = JSZipMod.default;
 
 // The advanced "dump" feature packs all of the individual filesystem
 // contents into a zip file. You can edit the zipped contents and import them,

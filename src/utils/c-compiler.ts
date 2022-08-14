@@ -1,4 +1,4 @@
-import SmallerC, { EmscriptenModule } from "../lib/SmallerC/smlrc";
+import SmallerC from "../lib/SmallerC/smlrc";
 import { preprocess } from "./c-preprocessor";
 
 /**
@@ -30,7 +30,7 @@ export async function compile(source: string): Promise<string> {
     noInitialRun: true,
     locateFile: (path: string, scriptDirectory: string) => {
       if (path === "smlrc.wasm") {
-        return process.env.PUBLIC_URL + "/smlrc.wasm";
+        return import.meta.env.BASE_URL + "smlrc.wasm";
       }
       return scriptDirectory + path; // Same as default in smlrc.js's locateFile
     },

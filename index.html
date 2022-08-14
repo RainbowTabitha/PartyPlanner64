@@ -1,29 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="theme-classic">
   <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+
+    <link rel="manifest" href="/manifest.json" />
+
     <title>PartyPlanner64</title>
-    <meta charset="utf-8">
-
-    <!-- @foreach $VAR in CSSLIB -->
-    <link rel="stylesheet" type="text/css" href="$VAR" />
-    <!-- @endfor -->
-
-    <!-- @if NODE_ENV='development' -->
-    <!-- @foreach $VAR in CSS -->
-    <link rel="stylesheet" type="text/css" href="$VAR" />
-    <!-- @endfor -->
-    <!-- @endif -->
-
-    <!-- @if NODE_ENV='production' -->
-    <link rel="stylesheet" type="text/css" href="css/app.min.css" />
-    <!-- @endif -->
-
-    <!-- @if NODE_ENV='production' -->
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet" type="text/css">
-    <!-- @endif -->
-    <!-- @if NODE_ENV='development' -->
-    <link rel="stylesheet" type="text/css" href="css/font.css" />
-    <!-- @endif -->
 
     <meta name="description" content="Mario Party N64 board editor. Allows creating custom boards for the classic Nintendo title.">
 
@@ -40,41 +25,11 @@
     <meta name="twitter:title" content="PartyPlanner64 - Mario Party Board Editor" />
     <meta name="twitter:description" content="Create custom Mario Party boards! If you have the original game's ROM, you can insert your boards into the game and play in emulators or on the N64." />
     <meta name="twitter:image" content="" />
-
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="img/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="img/favicon/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="img/favicon/favicon-16x16.png" sizes="16x16">
-    <link rel="manifest" href="img/favicon/manifest.json">
-    <link rel="mask-icon" href="img/favicon/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="img/favicon/favicon.ico">
-    <meta name="msapplication-config" content="img/favicon/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">
-
   </head>
-
   <body>
+    <!-- I AM THE SUPERSTAR -->
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="body" class="body"></div>
-
-    <script type="text/javascript">
-      // I AM THE SUPERSTAR
-
-      var isElectron = (function() {
-        var userAgent = navigator.userAgent.toLowerCase();
-        return userAgent.indexOf(' electron/') > -1;
-      })();
-    </script>
-
-    <script type="text/javascript" src="js/app.min.js"></script>
-
-    <!-- @if NODE_ENV='production' -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111788770-1"></script>
-    <script>
-      window.dataLayer = [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag("js", new Date());
-      gtag("config", "UA-111788770-1");
-    </script>
-    <!-- @endif -->
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
