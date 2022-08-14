@@ -65,11 +65,11 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
     };
 
     // Set first model, start at dir 2 so it's Mario.
-    let mainfsDirCount = mainfs.getDirectoryCount();
+    const mainfsDirCount = mainfs.getDirectoryCount();
     for (let d = 2; d < mainfsDirCount; d++) {
-      let dirFileCount = mainfs.getFileCount(d);
+      const dirFileCount = mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
-        let file = mainfs.get(d, f);
+        const file = mainfs.get(d, f);
         if (FORM.isForm(file)) {
           const name = d + "/" + f;
           (this as any).state.selectedModel = name;
@@ -300,7 +300,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     renderer.dispose();
     renderer.forceContextLoss();
 
-    let container = this.__container;
+    const container = this.__container;
     if (container)
       container.innerHTML = "";
 
@@ -553,12 +553,12 @@ class ModelSelect extends React.Component<IModelSelectProps> {
   }
 
   getModelEntries(): [number, number][] {
-    let entries: [number, number][] = [];
-    let mainfsDirCount = mainfs.getDirectoryCount();
+    const entries: [number, number][] = [];
+    const mainfsDirCount = mainfs.getDirectoryCount();
     for (let d = 0; d < mainfsDirCount; d++) {
-      let dirFileCount = mainfs.getFileCount(d);
+      const dirFileCount = mainfs.getFileCount(d);
       for (let f = 0; f < dirFileCount; f++) {
-        let file = mainfs.get(d, f);
+        const file = mainfs.get(d, f);
         if (FORM.isForm(file)) {
           try {
             // let form = FORM.unpack(file);
@@ -588,8 +588,8 @@ class AnimSelect extends React.Component<IAnimSelectProps> {
   state = {}
 
   render() {
-    let entries = this.getAnimEntries();
-    let options = entries.map(entry => {
+    const entries = this.getAnimEntries();
+    const options = entries.map(entry => {
       return (
         <option value={entry} key={entry}>{entry}</option>
       );
@@ -630,7 +630,7 @@ class AnimSelect extends React.Component<IAnimSelectProps> {
       return this.getAnimationsInDir(this.props.selectedModelDir);
     }
     else {
-      let mainfsDirCount = mainfs.getDirectoryCount();
+      const mainfsDirCount = mainfs.getDirectoryCount();
       for (let d = 0; d < mainfsDirCount; d++) {
         entries = entries.concat(this.getAnimationsInDir(d));
       }
@@ -640,11 +640,11 @@ class AnimSelect extends React.Component<IAnimSelectProps> {
 
   getAnimationsInDir(d: number) {
     const entries = [];
-    let dirFileCount = mainfs.getFileCount(d);
+    const dirFileCount = mainfs.getFileCount(d);
     for (let f = 0; f < dirFileCount; f++) {
-      let file = mainfs.get(d, f);
+      const file = mainfs.get(d, f);
       if (MTNX.isMtnx(file)) {
-        let name = d + "/" + f;
+        const name = d + "/" + f;
         try {
           // let form = FORM.unpack(file);
           // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
@@ -701,7 +701,7 @@ class ModelBGColorSelect extends React.Component<IModelBGColorSelectProps> {
     this.setState({ color: id });
     this.props.onColorChange(id);
   }
-};
+}
 
 interface IModelFeatureSelectProps {
   showVertexNormals: boolean;
@@ -790,7 +790,7 @@ class ModelFeatureSelect extends React.Component<IModelFeatureSelectProps> {
       useCamera: pressed,
     });
   }
-};
+}
 
 interface IModelExportObjButtonProps {
   selectedModelDir: number | null;
@@ -854,4 +854,4 @@ class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
       saveAs(new Blob([JSON.stringify(result)]), `model-${dir}-${file}.gltf`);
     }
   }
-};
+}

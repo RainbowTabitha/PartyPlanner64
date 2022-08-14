@@ -21,15 +21,15 @@ import { isFontPack, fontPackToRGBA32, isKnownFontPack } from "./img/FontPack";
 // and your changes will be blindly applied to the ROM.
 
 export function create(callback: (blob: Blob) => any) {
-  let zip = new JSZip();
+  const zip = new JSZip();
 
-  let mainfsfolder = zip.folder("mainfs")!;
-  let mainfsDirCount = mainfs.getDirectoryCount();
+  const mainfsfolder = zip.folder("mainfs")!;
+  const mainfsDirCount = mainfs.getDirectoryCount();
   for (let d = 0; d < mainfsDirCount; d++) {
-    let dirFolder = mainfsfolder.folder(d.toString())!;
-    let dirFileCount = mainfs.getFileCount(d);
+    const dirFolder = mainfsfolder.folder(d.toString())!;
+    const dirFileCount = mainfs.getFileCount(d);
     for (let f = 0; f < dirFileCount; f++) {
-      let file = mainfs.get(d, f);
+      const file = mainfs.get(d, f);
       let name = f.toString();
       if (FORM.isForm(file))
         name += ".form";
@@ -68,24 +68,24 @@ export function load(buffer: ArrayBuffer) {
 
 // Called via console dump.images();
 export function images() {
-  let zip = new JSZip();
+  const zip = new JSZip();
 
   const game = romhandler.getROMGame()!;
 
-  let mainfsfolder = zip.folder("mainfs")!;
-  let mainfsDirCount = mainfs.getDirectoryCount();
+  const mainfsfolder = zip.folder("mainfs")!;
+  const mainfsDirCount = mainfs.getDirectoryCount();
   for (let d = 0; d < mainfsDirCount; d++) {
-    let dirFolder = mainfsfolder.folder(d.toString())!;
-    let dirFileCount = mainfs.getFileCount(d);
+    const dirFolder = mainfsfolder.folder(d.toString())!;
+    const dirFileCount = mainfs.getFileCount(d);
     for (let f = 0; f < dirFileCount; f++) {
       try {
-        let fileBuffer = mainfs.get(d, f);
+        const fileBuffer = mainfs.get(d, f);
         if (FORM.isForm(fileBuffer)) {
           try {
-            let formUnpacked = FORM.unpack(fileBuffer)!;
+            const formUnpacked = FORM.unpack(fileBuffer)!;
             if (formUnpacked.BMP1.length) {
               formUnpacked.BMP1.forEach((bmpEntry, idx) => {
-                let dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
+                const dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
                 dirFolder.file(`${f}.${idx}.png`, dataUri.substr(dataUri.indexOf(',') + 1), { base64: true });
               });
             }
@@ -145,12 +145,12 @@ export function images() {
   });
 
   function _readPackedFromMainFS(dir: number, file: number) {
-    let imgPackBuffer = mainfs.get(dir, file);
-    let imgArr = fromPack(imgPackBuffer);
+    const imgPackBuffer = mainfs.get(dir, file);
+    const imgArr = fromPack(imgPackBuffer);
     if (!imgArr || !imgArr.length)
       return;
 
-    let dataViews = imgArr.map(imgInfo => {
+    const dataViews = imgArr.map(imgInfo => {
       return new DataView(imgInfo.src!);
     });
 
@@ -158,8 +158,8 @@ export function images() {
   }
 
   function _readImgsFromMainFS(dir: number, file: number) {
-    let imgPackBuffer = mainfs.get(dir, file);
-    let imgArr = fromPack(imgPackBuffer);
+    const imgPackBuffer = mainfs.get(dir, file);
+    const imgArr = fromPack(imgPackBuffer);
     if (!imgArr || !imgArr.length)
       return;
 
@@ -169,19 +169,19 @@ export function images() {
 
 // Dump out all the FORM bitmaps.
 export function formImages() {
-  let mainfsDirCount = mainfs.getDirectoryCount();
+  const mainfsDirCount = mainfs.getDirectoryCount();
   for (let d = 0; d < mainfsDirCount; d++) {
-    let dirFileCount = mainfs.getFileCount(d);
+    const dirFileCount = mainfs.getFileCount(d);
     for (let f = 0; f < dirFileCount; f++) {
-      let fileBuffer = mainfs.get(d, f);
+      const fileBuffer = mainfs.get(d, f);
       if (!FORM.isForm(fileBuffer))
         continue;
 
       try {
-        let formUnpacked = FORM.unpack(fileBuffer)!;
+        const formUnpacked = FORM.unpack(fileBuffer)!;
         if (formUnpacked.BMP1.length) {
           formUnpacked.BMP1.forEach(bmpEntry => {
-            let dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
+            const dataUri = arrayBufferToDataURL(bmpEntry.parsed.src, bmpEntry.parsed.width, bmpEntry.parsed.height);
             console.log(`${d}/${f}:`);
             console.log(dataUri);
           });
@@ -193,11 +193,11 @@ export function formImages() {
 }
 
 export function findStrings3(searchStr = "", raw = false) {
-  let dirCount = strings3.getDirectoryCount("en");
+  const dirCount = strings3.getDirectoryCount("en");
   for (let d = 0; d < dirCount; d++) {
-    let strCount = strings3.getStringCount("en", d);
+    const strCount = strings3.getStringCount("en", d);
     for (let s = 0; s < strCount; s++) {
-      let str = strings3.read("en", d, s) as string;
+      const str = strings3.read("en", d, s) as string;
       if (str.indexOf(searchStr) < 0)
         continue;
       let log = `${d}/${s} (${$$hex(d)}/${$$hex(s)}):\n` + str;
@@ -208,10 +208,10 @@ export function findStrings3(searchStr = "", raw = false) {
   }
 }
 
-export function findStrings(searchStr: string = "", raw: boolean = false) {
-  let strCount = strings.getStringCount();
+export function findStrings(searchStr = "", raw = false) {
+  const strCount = strings.getStringCount();
   for (let s = 0; s < strCount; s++) {
-    let str = strings.read(s) as string;
+    const str = strings.read(s) as string;
     if (str.indexOf(searchStr) < 0)
       continue;
     let log = `${s} (${$$hex(s)}):\n` + str;
@@ -230,7 +230,7 @@ export function saveWaluigi() {
     (window as any).waluigiParts.push(mainfs.get(8, f));
   }
 
-  return  (window as any).waluigiParts; // Just to see in console.
+  return (window as any).waluigiParts; // Just to see in console.
 }
 
 export function writeWaluigi(character = 1) {
@@ -277,16 +277,16 @@ export function searchForPatchLocations(offset: number) {
   if (!offset)
     throw new Error("Please pass a ROM offset the game tries to read at runtime");
 
-  let upper = (offset & 0xFFFF0000) >>> 16;
-  let lower = offset & 0x0000FFFF;
+  const upper = (offset & 0xFFFF0000) >>> 16;
+  const lower = offset & 0x0000FFFF;
 
   let found = 0;
 
   // FIXME: Won't work once scenes are in separate data views.
-  let romView = romhandler.getDataView();
-  let upperLimit = romView.byteLength - 10; // Since we read ahead for every i, just stop early.
+  const romView = romhandler.getDataView();
+  const upperLimit = romView.byteLength - 10; // Since we read ahead for every i, just stop early.
   for (let i = 2; i < upperLimit; i += 2) {
-    let val = romView.getUint16(i);
+    const val = romView.getUint16(i);
     if (val !== upper && (val + 1) !== upper && (val - 1) !== upper) // Desperate times call for desperate measures (and I forget which way to +-1)
       continue;
 
@@ -389,11 +389,11 @@ export function printSceneN64Splat() {
 
 // Prints region of ROM as assembly instructions
 export function printAsm(start: number, end: number) {
-  let romView = romhandler.getDataView();
+  const romView = romhandler.getDataView();
   let curOffset = start;
-  let insts = [];
+  const insts = [];
   while (curOffset <= end) {
-    let value = romView.getUint32(curOffset);
+    const value = romView.getUint32(curOffset);
     let asm = "? " + $$hex(value);
     try {
       asm = print(value);

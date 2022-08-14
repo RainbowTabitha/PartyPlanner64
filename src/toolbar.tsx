@@ -238,8 +238,8 @@ export class Toolbar extends React.Component<IToolbarProps> {
     }
 
     let i = 0;
-    let actions = _getActions(this.props.gameVersion, this.props.boardType);
-    let actionElements = actions.map(item => {
+    const actions = _getActions(this.props.gameVersion, this.props.boardType);
+    const actionElements = actions.map(item => {
       // if (item.group) {
       //   return (
       //     <ToolbarGroup key={item.group} icon={item.icon} actions={item.actions} currentAction={this.props.currentAction} />
@@ -252,7 +252,7 @@ export class Toolbar extends React.Component<IToolbarProps> {
         );
       }
 
-      let isCurrentAction = this.props.currentAction === item.type;
+      const isCurrentAction = this.props.currentAction === item.type;
       return (
         <ToolbarButton key={item.type} current={isCurrentAction} action={item} />
       );
@@ -263,7 +263,7 @@ export class Toolbar extends React.Component<IToolbarProps> {
       </div>
     );
   }
-};
+}
 
 // const ToolbarGroup = class ToolbarGroup extends React.Component {
 //   render() {
@@ -333,7 +333,7 @@ class ToolbarButton extends React.Component<IToolbarButtonProps> {
       </div>
     );
   }
-};
+}
 
 const ToolbarSpacer = class ToolbarSpacer extends React.Component {
   render() {

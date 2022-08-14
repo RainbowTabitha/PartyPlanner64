@@ -12,7 +12,7 @@ export interface ICodeMirrorWrapperProps {
   value?: string;
   defaultValue?: string;
   options?: any;
-  onChange?: Function;
+  onChange?(code: string, change: unknown): void;
   mode?: CodeMirrorMode;
   readOnly?: boolean;
 }

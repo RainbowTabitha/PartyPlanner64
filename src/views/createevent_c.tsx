@@ -156,21 +156,21 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
   }
 
   onExecTypeToggleClicked = (id: any, pressed: boolean) => {
-    let newState = { ...this.state };
+    const newState = { ...this.state };
     newState.executionType = id;
     this.setState({ executionType: id });
     this.syncTextToStateVars(newState, this.state.code);
   }
 
   onAddEventParameter = (entry: IEventParameter) => {
-    let newState = { ...this.state };
+    const newState = { ...this.state };
     newState.parameters = [...this.state.parameters, entry];
     this.setState(newState);
     this.syncTextToStateVars(newState, this.state.code);
   }
 
   onRemoveEventParameter = (removedEntry: IEventParameter) => {
-    let newState = { ...this.state };
+    const newState = { ...this.state };
     newState.parameters = this.state.parameters.filter(entry => {
       return entry.name !== removedEntry.name;
     });
@@ -258,6 +258,7 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
         break;
 
       case 1: // MIPS
+      {
         if (!this.getEventName()) {
           showMessage("The event name is missing.");
           return;
@@ -289,6 +290,7 @@ export class CreateCEventView extends React.Component<{}, ICreateEventViewState>
           activeCodeTabIndex: 1,
           compiledAsm: asm,
         });
+      }
         break;
     }
   }

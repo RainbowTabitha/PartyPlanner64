@@ -18,7 +18,7 @@ export enum $setting {
   "limitModelFPS" = "models.limitfps",
   "limitModelAnimations" = "models.limitAnimations",
   "modelUseGLB" = "models.useGLB",
-};
+}
 
 interface SettingTypeMap {
   [$setting.uiTheme]: "theme",

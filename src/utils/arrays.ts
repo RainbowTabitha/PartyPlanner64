@@ -21,8 +21,8 @@ export function copyRange(outArr: ArrayBuffer | DataView, inArr: ArrayBuffer | D
 }
 
 export function arrayToArrayBuffer(arr: number[]) {
-  let buffer = new ArrayBuffer(arr.length);
-  let u8arr = new Uint8Array(buffer);
+  const buffer = new ArrayBuffer(arr.length);
+  const u8arr = new Uint8Array(buffer);
   for (let i = 0; i < arr.length; i++) {
     u8arr[i] = arr[i];
   }
@@ -47,7 +47,7 @@ export function toHexString(buffer: ArrayBuffer | DataView, len: number = buffer
     view = new DataView(buffer);
   else
     view = buffer;
-  for (var i = 0; i < len; i++) {
+  for (let i = 0; i < len; i++) {
     output += $$hex(view.getUint8(i), "") + ((i && lineLen && ((i + 1) % lineLen === 0)) ? "\n" : " ");
   }
   return output;
@@ -61,10 +61,10 @@ export function readBitAtOffset(buffer: ArrayBuffer | DataView, bitOffset: numbe
   let bufView = buffer;
   if (bufView instanceof ArrayBuffer)
     bufView = new DataView(bufView);
-  let byteOffset = Math.floor(bitOffset / 8);
-  let inByteOffset = bitOffset % 8;
-  let mask = 0x80 >>> inByteOffset;
-  let maskedBit = bufView.getUint8(byteOffset) & mask;
+  const byteOffset = Math.floor(bitOffset / 8);
+  const inByteOffset = bitOffset % 8;
+  const mask = 0x80 >>> inByteOffset;
+  const maskedBit = bufView.getUint8(byteOffset) & mask;
   return maskedBit ? 1 : 0;
 }
 
@@ -72,17 +72,17 @@ export function readByteAtBitOffset(buffer: ArrayBuffer | DataView, bitOffset: n
   let bufView = buffer;
   if (bufView instanceof ArrayBuffer)
     bufView = new DataView(bufView);
-  let shortOffset = Math.floor(bitOffset / 8);
-  let inShortOffset = bitOffset % 8;
-  let mask = 0xFF00 >>> inShortOffset;
-  let maskedByte = bufView.getUint16(shortOffset) & mask;
+  const shortOffset = Math.floor(bitOffset / 8);
+  const inShortOffset = bitOffset % 8;
+  const mask = 0xFF00 >>> inShortOffset;
+  const maskedByte = bufView.getUint16(shortOffset) & mask;
   return maskedByte >>> (8 - inShortOffset);
 }
 
 export function arrayBufferToImageData(buffer: ArrayBuffer, width: number, height: number) {
-  let canvasCtx = createContext(width, height);
-  let bgImageData = canvasCtx.createImageData(width, height);
-  let bufView = new Uint8Array(buffer);
+  const canvasCtx = createContext(width, height);
+  const bgImageData = canvasCtx.createImageData(width, height);
+  const bufView = new Uint8Array(buffer);
 
   for (let i = 0; i < buffer.byteLength; i++) {
     bgImageData.data[i] = bufView[i];
@@ -92,8 +92,8 @@ export function arrayBufferToImageData(buffer: ArrayBuffer, width: number, heigh
 }
 
 export function arrayBufferToDataURL(buffer: ArrayBuffer, width: number, height: number) {
-  let bgImageData = arrayBufferToImageData(buffer, width, height)
-  let canvasCtx = createContext(width, height);
+  const bgImageData = arrayBufferToImageData(buffer, width, height)
+  const canvasCtx = createContext(width, height);
   canvasCtx.putImageData(bgImageData, 0, 0);
   return canvasCtx.canvas.toDataURL();
 }
@@ -115,8 +115,8 @@ export function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
 export function arrayBuffersEqual(first: ArrayBuffer, second: ArrayBuffer) {
   if (first.byteLength !== second.byteLength)
     return false;
-  let firstArr = new Uint8Array(first);
-  let secondArr = new Uint8Array(second);
+  const firstArr = new Uint8Array(first);
+  const secondArr = new Uint8Array(second);
   for (let i = 0; i < firstArr.byteLength; i++) {
     if (firstArr[i] !== secondArr[i])
       return false;

@@ -18,15 +18,14 @@ export async function compile(source: string): Promise<string> {
   }
 
   let _smallerCInstance: EmscriptenModule;
-  let _smallerCPromiseLike: PromiseLike<EmscriptenModule>;
 
-  let errors: string[] = [];
+  const errors: string[] = [];
   const addError = (text: string) => {
     text = text.replace("in \"/input.c\"", ""); // Input file not useful in error messages.
     errors.push(text);
   };
 
-  _smallerCPromiseLike = SmallerC({
+  const _smallerCPromiseLike: PromiseLike<EmscriptenModule> = SmallerC({
     noInitialRun: true,
     locateFile: (path: string, scriptDirectory: string) => {
       if (path === "smlrc.wasm") {
