@@ -44,11 +44,11 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
 
   public nintendoLogoFSEntry: number[] = [17, 1];
   public hudsonLogoFSEntry: number[] = [17, 2];
-  public boardDefDirectory: number = 19;
+  public boardDefDirectory = 19;
 
-  public MAINFS_READ_ADDR: number = 0x00009c10;
-  public HEAP_FREE_ADDR: number = 0x00009e6c;
-  public TABLE_HYDRATE_ADDR: number = 0x000eba60;
+  public MAINFS_READ_ADDR = 0x00009c10;
+  public HEAP_FREE_ADDR = 0x00009e6c;
+  public TABLE_HYDRATE_ADDR = 0x000eba60;
 
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
@@ -786,7 +786,8 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
 
   onWriteBoardLogoTextImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
-      const splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
+      const splashLogoTextImg =
+        boardInfo.img && boardInfo.img.splashLogoTextImg;
       if (!splashLogoTextImg) {
         resolve();
         return;
