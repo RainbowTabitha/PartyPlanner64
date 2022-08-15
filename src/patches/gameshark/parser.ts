@@ -3,10 +3,10 @@ import { $$hex, $$log } from "../../utils/debug";
 export const Opcodes: { [name: string]: number } = {
   WRITE8: 0x80,
   WRITE16: 0x81,
-  IF8: 0xD0,
-  IF16: 0xD1,
-  IFNOT8: 0xD2,
-  IFNOT16: 0xD3,
+  IF8: 0xd0,
+  IF16: 0xd1,
+  IFNOT8: 0xd2,
+  IFNOT16: 0xd3,
 };
 
 export interface ICode {
@@ -57,21 +57,21 @@ export class Parser {
       return null;
     }
 
-    const addr = (inst & 0x00FFFFFF) | 0x80000000;
+    const addr = (inst & 0x00ffffff) | 0x80000000;
 
     if (Parser.opcodeHas8BitValue(opcode)) {
-      value = value & 0x00FF;
+      value = value & 0x00ff;
     }
 
     return {
       opcode,
       addr,
-      value
+      value,
     };
   }
 
   static getOpcode(inst: number): string | null {
-    const upper8 = (inst & 0xFF000000) >>> 24;
+    const upper8 = (inst & 0xff000000) >>> 24;
     if (!upper8) {
       return null;
     }
@@ -90,9 +90,7 @@ export class Parser {
   }
 
   static opcodeHas8BitValue(opcode: string) {
-    if (opcode === "WRITE8" ||
-      opcode === "IF8" ||
-      opcode === "IFNOT8") {
+    if (opcode === "WRITE8" || opcode === "IF8" || opcode === "IFNOT8") {
       return true;
     }
 
@@ -108,7 +106,9 @@ export class Parser {
 
   static printCodes(codes: ICode[]) {
     for (let i = 0; i < codes.length; i++) {
-      console.log(`${codes[i].opcode} ${$$hex(codes[i].addr)} ${$$hex(codes[i].value)}`);
+      console.log(
+        `${codes[i].opcode} ${$$hex(codes[i].addr)} ${$$hex(codes[i].value)}`
+      );
     }
   }
 }

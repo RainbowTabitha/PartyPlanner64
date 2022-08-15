@@ -1,5 +1,9 @@
 import { IEventParseInfo, IEvent, IEventWriteInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -12,22 +16,25 @@ export const StarChanceEvent: IEvent = {
   activationType: EditorEventActivationType.LANDON,
   executionType: EventExecutionType.DIRECT,
   fakeEvent: true,
-  supportedGames: [
-    Game.MP1_USA,
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     let hashes = {
       // DK  0x2449CC, 0x800F970C
       METHOD: "7E32BF9C855085A03CF3A8D208A6AB94", // +0x8C
     };
 
-    if (hashEqual([dataView.buffer, info.offset, 0x8C], hashes.METHOD)) {
+    if (hashEqual([dataView.buffer, info.offset, 0x8c], hashes.METHOD)) {
       return true;
     }
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     return `
       addiu SP, SP, -0x20
       sw    RA, 0x18(SP)
@@ -67,6 +74,6 @@ export const StarChanceEvent: IEvent = {
       jr    RA
       addiu SP, SP, 0x20
     `;
-  }
+  },
 };
 addEventToLibrary(StarChanceEvent);

@@ -4,7 +4,12 @@ import { showMessage, getCurrentEventIsBoardEvent } from "../app/appControl";
 import { includeEventInBoard } from "../boards";
 import { getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
 import { createCustomEvent, validateCustomEvent } from "../events/customevents";
-import { Game, EventExecutionType, EventParameterType, EventCodeLanguage } from "../types";
+import {
+  Game,
+  EventExecutionType,
+  EventParameterType,
+  EventCodeLanguage,
+} from "../types";
 import { CustomAsmHelper } from "../events/customevents";
 import { IEventParameter } from "../events/events";
 import { ToggleGroup, Button, ToggleButton } from "../controls";
@@ -24,7 +29,9 @@ export interface ICreateEventView {
 
 let _createEventViewInstance: ICreateEventView | null = null;
 
-export function updateCreateEventViewInstance(instance: ICreateEventView | null): void {
+export function updateCreateEventViewInstance(
+  instance: ICreateEventView | null
+): void {
   _createEventViewInstance = instance;
 }
 
@@ -40,7 +47,9 @@ export async function saveEvent(): Promise<void> {
 
   const existingEvent = getEventFromLibrary(eventName);
   if (existingEvent && !existingEvent.custom) {
-    showMessage("The event name collides with a reserved event name from the original boards.");
+    showMessage(
+      "The event name collides with a reserved event name from the original boards."
+    );
     return;
   }
 
@@ -57,15 +66,13 @@ export async function saveEvent(): Promise<void> {
   const event = createCustomEvent(language, code);
   try {
     await validateCustomEvent(event);
-  }
-  catch (e: any) {
+  } catch (e: any) {
     showMessage(e.toString());
   }
 
   if (getCurrentEventIsBoardEvent()) {
     includeEventInBoard(event);
-  }
-  else {
+  } else {
     addEventToLibrary(event); // Add globally.
   }
 
@@ -92,7 +99,6 @@ export function getActiveEditorSupportedGames(): Game[] {
   return [];
 }
 
-
 interface IEventDetailsFormProps {
   name: string;
   supportedGames: Game[];
@@ -109,56 +115,107 @@ interface IEventDetailsFormProps {
 export class EventDetailsForm extends React.Component<IEventDetailsFormProps> {
   render() {
     const gameToggles = [
-      { id: Game.MP1_USA, text: "MP1 USA", selected: this._gameSupported(Game.MP1_USA) },
-      { id: Game.MP2_USA, text: "MP2 USA", selected: this._gameSupported(Game.MP2_USA) },
-      { id: Game.MP3_USA, text: "MP3 USA", selected: this._gameSupported(Game.MP3_USA) },
-      { id: Game.MP1_JPN, text: "MP1 JPN", selected: this._gameSupported(Game.MP1_JPN) },
-      { id: Game.MP2_JPN, text: "MP2 JPN", selected: this._gameSupported(Game.MP2_JPN) },
-      { id: Game.MP3_JPN, text: "MP3 JPN", selected: this._gameSupported(Game.MP3_JPN) },
-      { id: Game.MP1_PAL, text: "MP1 PAL", selected: this._gameSupported(Game.MP1_PAL) },
-      { id: Game.MP2_PAL, text: "MP2 PAL", selected: this._gameSupported(Game.MP2_PAL) },
-      { id: Game.MP3_PAL, text: "MP3 PAL", selected: this._gameSupported(Game.MP3_PAL) },
+      {
+        id: Game.MP1_USA,
+        text: "MP1 USA",
+        selected: this._gameSupported(Game.MP1_USA),
+      },
+      {
+        id: Game.MP2_USA,
+        text: "MP2 USA",
+        selected: this._gameSupported(Game.MP2_USA),
+      },
+      {
+        id: Game.MP3_USA,
+        text: "MP3 USA",
+        selected: this._gameSupported(Game.MP3_USA),
+      },
+      {
+        id: Game.MP1_JPN,
+        text: "MP1 JPN",
+        selected: this._gameSupported(Game.MP1_JPN),
+      },
+      {
+        id: Game.MP2_JPN,
+        text: "MP2 JPN",
+        selected: this._gameSupported(Game.MP2_JPN),
+      },
+      {
+        id: Game.MP3_JPN,
+        text: "MP3 JPN",
+        selected: this._gameSupported(Game.MP3_JPN),
+      },
+      {
+        id: Game.MP1_PAL,
+        text: "MP1 PAL",
+        selected: this._gameSupported(Game.MP1_PAL),
+      },
+      {
+        id: Game.MP2_PAL,
+        text: "MP2 PAL",
+        selected: this._gameSupported(Game.MP2_PAL),
+      },
+      {
+        id: Game.MP3_PAL,
+        text: "MP3 PAL",
+        selected: this._gameSupported(Game.MP3_PAL),
+      },
     ];
 
     const execTypeToggles = [
-      { id: 1, text: "Direct", title: "The game will execute the event function directly",
-        selected: this.props.executionType === EventExecutionType.DIRECT },
-      { id: 2, text: "Process", title: "The game will use its process system when executing the event function",
-        selected: this.props.executionType === EventExecutionType.PROCESS },
+      {
+        id: 1,
+        text: "Direct",
+        title: "The game will execute the event function directly",
+        selected: this.props.executionType === EventExecutionType.DIRECT,
+      },
+      {
+        id: 2,
+        text: "Process",
+        title:
+          "The game will use its process system when executing the event function",
+        selected: this.props.executionType === EventExecutionType.PROCESS,
+      },
     ];
 
     return (
       <div className="createEventForm">
         <label>Name:</label>
         <input value={this.props.name} onChange={this.onEventNameChange} />
-        <br /><br />
+        <br />
+        <br />
         <label>Supported Games:</label>
-        <ToggleGroup items={gameToggles}
+        <ToggleGroup
+          items={gameToggles}
           groupCssClass="createEventGameToggles"
-          onToggleClick={this.props.onGameToggleClicked} />
+          onToggleClick={this.props.onGameToggleClicked}
+        />
         <br />
         <label>Execution Type:</label>
-        <ToggleGroup items={execTypeToggles}
+        <ToggleGroup
+          items={execTypeToggles}
           allowDeselect={false}
-          onToggleClick={this.props.onExecTypeToggleClicked} />
+          onToggleClick={this.props.onExecTypeToggleClicked}
+        />
         <br />
         <label>Parameters:</label>
         <EventParametersList
           language={this.props.language}
           parameters={this.props.parameters}
           onAddEventParameter={this.props.onAddEventParameter}
-          onRemoveEventParameter={this.props.onRemoveEventParameter} />
+          onRemoveEventParameter={this.props.onRemoveEventParameter}
+        />
       </div>
     );
   }
 
   onEventNameChange = (event: any) => {
     this.props.onEventNameChange(event.target.value);
-  }
+  };
 
   _gameSupported = (game: Game) => {
     return this.props.supportedGames.indexOf(game) >= 0;
-  }
+  };
 }
 
 interface IEventParametersListProps {
@@ -170,23 +227,25 @@ interface IEventParametersListProps {
 
 class EventParametersList extends React.Component<IEventParametersListProps> {
   render() {
-    const entries = this.props.parameters.map(entry => {
+    const entries = this.props.parameters.map((entry) => {
       return (
-        <EventParametersEntry entry={entry} key={entry.name}
-          onRemoveEntry={this.props.onRemoveEventParameter}/>
+        <EventParametersEntry
+          entry={entry}
+          key={entry.name}
+          onRemoveEntry={this.props.onRemoveEventParameter}
+        />
       );
     });
 
     return (
       <div className="eventParametersList">
         <table>
-          <tbody>
-            {entries}
-          </tbody>
+          <tbody>{entries}</tbody>
         </table>
         <EventParametersAddNewEntry
           language={this.props.language}
-          onAddEntry={this.props.onAddEventParameter} />
+          onAddEntry={this.props.onAddEventParameter}
+        />
       </div>
     );
   }
@@ -204,10 +263,15 @@ class EventParametersEntry extends React.Component<IEventParametersEntryProps> {
     return (
       <tr className="eventParameterEntry">
         <td className="eventParameterEntryType">{type}</td>
-        <td className="eventParameterEntryName" title={name}>{name}</td>
+        <td className="eventParameterEntryName" title={name}>
+          {name}
+        </td>
         <td className="eventParameterEntryDelete">
-          <img src={deleteImage} alt="Delete"
-            onClick={this.onDeleteClick}></img>
+          <img
+            src={deleteImage}
+            alt="Delete"
+            onClick={this.onDeleteClick}
+          ></img>
         </td>
       </tr>
     );
@@ -215,7 +279,7 @@ class EventParametersEntry extends React.Component<IEventParametersEntryProps> {
 
   onDeleteClick = () => {
     this.props.onRemoveEntry(this.props.entry);
-  }
+  };
 }
 
 interface IEventParametersAddNewEntryProps {
@@ -227,23 +291,27 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
   state = {
     selectedType: "",
     name: "",
-  }
+  };
 
   render() {
     return (
       <div className="eventParameterAddNewEntry">
-        <select value={this.state.selectedType}
-          onChange={this.onTypeChange}>
+        <select value={this.state.selectedType} onChange={this.onTypeChange}>
           <option></option>
           <option value={EventParameterType.Boolean}>Boolean</option>
           <option value={EventParameterType.Number}>Number</option>
-          <option value={EventParameterType.PositiveNumber}>Positive Number</option>
+          <option value={EventParameterType.PositiveNumber}>
+            Positive Number
+          </option>
           <option value={EventParameterType.Space}>Space</option>
           <option value={EventParameterType.SpaceArray}>Space Array</option>
         </select>
-        <input type="text" placeholder="Name"
+        <input
+          type="text"
+          placeholder="Name"
           value={this.state.name}
-          onChange={this.onNameChange} />
+          onChange={this.onNameChange}
+        />
         <Button onClick={this.onAddClick}>Add</Button>
       </div>
     );
@@ -253,19 +321,17 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
     const newName = event.target.value;
 
     // Can only contain valid characters for a assembler label
-    if (!newName.match(CustomAsmHelper.validParameterNameRegex))
-      return;
+    if (!newName.match(CustomAsmHelper.validParameterNameRegex)) return;
 
     this.setState({ name: newName });
-  }
+  };
 
   onTypeChange = (event: any) => {
     this.setState({ selectedType: event.target.value });
-  }
+  };
 
   onAddClick = () => {
-    if (!this.state.name || !this.state.selectedType)
-      return;
+    if (!this.state.name || !this.state.selectedType) return;
 
     this.props.onAddEntry({
       name: this.state.name,
@@ -275,7 +341,7 @@ class EventParametersAddNewEntry extends React.Component<IEventParametersAddNewE
       name: "",
       selectedType: "",
     });
-  }
+  };
 }
 
 interface INewEventDropdownProps {
@@ -284,31 +350,32 @@ interface INewEventDropdownProps {
 
 export class NewEventDropdown extends React.Component<INewEventDropdownProps> {
   state = {
-    language: EventCodeLanguage.C
-  }
+    language: EventCodeLanguage.C,
+  };
 
   onLanguageChange = (language: EventCodeLanguage) => {
     this.setState({ language });
-  }
+  };
 
   submit = () => {
     let fn = this.props.onAccept;
-    if (fn)
-      fn(this.state.language);
-  }
+    if (fn) fn(this.state.language);
+  };
 
   render() {
     return (
       <div className="createEventDropdownContainer">
         <NewEventLanguageSelect
           language={this.state.language}
-          onLanguageChange={this.onLanguageChange} />
-        <Button onClick={this.submit} css="nbCreate">Create</Button>
+          onLanguageChange={this.onLanguageChange}
+        />
+        <Button onClick={this.submit} css="nbCreate">
+          Create
+        </Button>
       </div>
     );
   }
-};
-
+}
 
 interface INewEventLanguageSelect {
   language: EventCodeLanguage;
@@ -318,26 +385,34 @@ interface INewEventLanguageSelect {
 class NewEventLanguageSelect extends React.Component<INewEventLanguageSelect> {
   onLanguageChange = (language: EventCodeLanguage) => {
     this.props.onLanguageChange(language);
-  }
+  };
 
   render() {
     return (
       <div className="newBoardVersionSelect">
         <label className="nbLabel">Code Language</label>
         <br />
-        <ToggleButton id={EventCodeLanguage.C}
+        <ToggleButton
+          id={EventCodeLanguage.C}
           allowDeselect={false}
           onToggled={this.onLanguageChange}
-          pressed={this.props.language === EventCodeLanguage.C}>
-          <span className="newBoardVersion" title="C programming language">C</span>
+          pressed={this.props.language === EventCodeLanguage.C}
+        >
+          <span className="newBoardVersion" title="C programming language">
+            C
+          </span>
         </ToggleButton>
-        <ToggleButton id={EventCodeLanguage.MIPS}
+        <ToggleButton
+          id={EventCodeLanguage.MIPS}
           allowDeselect={false}
           onToggled={this.onLanguageChange}
-          pressed={this.props.language === EventCodeLanguage.MIPS}>
-          <span className="newBoardVersion" title="MIPS assembly language">MIPS</span>
+          pressed={this.props.language === EventCodeLanguage.MIPS}
+        >
+          <span className="newBoardVersion" title="MIPS assembly language">
+            MIPS
+          </span>
         </ToggleButton>
       </div>
     );
   }
-};
+}

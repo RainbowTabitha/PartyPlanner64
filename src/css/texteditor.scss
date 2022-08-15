@@ -109,7 +109,8 @@ $foreColorDark: var(--mp-text-dark-text-color);
   }
 }
 
-.mpImageTextWrapper, .mpImageTextWrapper span {
+.mpImageTextWrapper,
+.mpImageTextWrapper span {
   color: transparent !important;
 }
 
@@ -119,11 +120,13 @@ $foreColorDark: var(--mp-text-dark-text-color);
   background-repeat: no-repeat;
   background-position: center;
 
-  &::selection, ::selection {
+  &::selection,
+  ::selection {
     color: transparent;
     background-color: rgba(76, 103, 154, 0.8);
   }
-  &::-moz-selection, ::-moz-selection {
+  &::-moz-selection,
+  ::-moz-selection {
     color: transparent;
     background-color: rgba(76, 103, 154, 0.8);
   }

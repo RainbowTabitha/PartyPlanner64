@@ -4,7 +4,11 @@
   max-width: 665px;
   padding: 1em;
 
-  .detailsSpan, label, h2, td, .toggleButton {
+  .detailsSpan,
+  label,
+  h2,
+  td,
+  .toggleButton {
     color: var(--text-color);
   }
 
@@ -30,7 +34,8 @@
   vertical-align: top;
 }
 
-.audioDetailsContainer, .difficultyDetailsContainer {
+.audioDetailsContainer,
+.difficultyDetailsContainer {
   min-height: 70px;
 }
 
@@ -59,13 +64,14 @@
 }
 
 // Is this unused (replaced by MP text editor?)
-#detailsForm input[type="text"], #detailsForm textarea {
+#detailsForm input[type="text"],
+#detailsForm textarea {
   font-size: 14px;
   border: 1px solid #777777;
   border-radius: 2px;
   padding: 5px;
   color: #222222;
-  background-color: #DDDDDD;
+  background-color: #dddddd;
 }
 
 #detailBoardName {

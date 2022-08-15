@@ -1,5 +1,9 @@
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -9,28 +13,39 @@ export const Bowser: IEvent = {
   name: "Visit Bowser",
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.DIRECT,
-  supportedGames: [
-    Game.MP1_USA
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
-    let hashes = {
+    const hashes = {
       PLAYER_DIRECTION_CHANGE: "DAD5E635FE90ED982D02B3F1D5C0CE21", // +0x14
-      METHOD_END: "8A835D982BE35F1804E9ABD65C5699F4" // [0x1C]+0x1C
+      METHOD_END: "8A835D982BE35F1804E9ABD65C5699F4", // [0x1C]+0x1C
     };
 
-    if (hashEqual([dataView.buffer, info.offset, 0x14], hashes.PLAYER_DIRECTION_CHANGE) &&
-        hashEqual([dataView.buffer, info.offset + 0x1C, 0x1C], hashes.METHOD_END)) {
+    if (
+      hashEqual(
+        [dataView.buffer, info.offset, 0x14],
+        hashes.PLAYER_DIRECTION_CHANGE
+      ) &&
+      hashEqual([dataView.buffer, info.offset + 0x1c, 0x1c], hashes.METHOD_END)
+    ) {
       // Check whether this points to any of the Bowser scenes.
-      let sceneNum = dataView.getUint16(info.offset + 0x1A);
-      let isBowserScene = [0x48, 0x49, 0x4F, 0x53, 0x54, 0x5B, 0x5D].indexOf(sceneNum) !== -1;
+      const sceneNum = dataView.getUint16(info.offset + 0x1a);
+      const isBowserScene =
+        [0x48, 0x49, 0x4f, 0x53, 0x54, 0x5b, 0x5d].indexOf(sceneNum) !== -1;
       return isBowserScene;
     }
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     // Any of these "work" but only the corresponding one has the right background.
-    let bowserSceneNum = [0x48, 0x49, 0x4F, 0x53, 0x54, 0x5B, 0x5D][info.boardIndex];
+    const bowserSceneNum = [0x48, 0x49, 0x4f, 0x53, 0x54, 0x5b, 0x5d][
+      info.boardIndex
+    ];
 
     return `
       addiu SP, SP, -0x18
@@ -52,6 +67,6 @@ export const Bowser: IEvent = {
       jr    RA
       addiu SP, SP, 0x18
     `;
-  }
+  },
 };
 addEventToLibrary(Bowser);

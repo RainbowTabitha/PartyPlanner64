@@ -8,7 +8,10 @@ import * as React from "react";
 import { MTNX } from "../models/MTNX";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { GLTFExporter, GLTFExporterOptions } from "three/examples/jsm/exporters/GLTFExporter";
+import {
+  GLTFExporter,
+  GLTFExporterOptions,
+} from "three/examples/jsm/exporters/GLTFExporter";
 import { MtnxToThreeJs } from "../models/MtnxToThreeJs";
 import { pad } from "../utils/string";
 import { saveAs } from "file-saver";
@@ -44,7 +47,10 @@ interface IModelViewerState {
   useCamera: boolean;
 }
 
-export class ModelViewer extends React.Component<IModelViewerProps, IModelViewerState> {
+export class ModelViewer extends React.Component<
+  IModelViewerProps,
+  IModelViewerState
+> {
   private modelToolbar: ModelToolbar | null = null;
 
   constructor(props: IModelViewerProps) {
@@ -83,10 +89,15 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
 
   render() {
     return (
-      <div className="modelViewerContainer" tabIndex={-1}
-        onKeyDownCapture={this.onKeyDown}>
+      <div
+        className="modelViewerContainer"
+        tabIndex={-1}
+        onKeyDownCapture={this.onKeyDown}
+      >
         <ModelToolbar
-          ref={(c) => { this.modelToolbar = c }}
+          ref={(c) => {
+            this.modelToolbar = c;
+          }}
           selectedModel={this.state.selectedModel}
           onModelSelected={this.onModelSelected}
           selectedModelDir={this.state.selectedModelDir}
@@ -101,7 +112,8 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
           showWireframe={this.state.showWireframe}
           showVertexNormals={this.state.showVertexNormals}
           useCamera={this.state.useCamera}
-          onFeatureChange={this.onFeatureChange} />
+          onFeatureChange={this.onFeatureChange}
+        />
         <ModelRenderer
           selectedModelDir={this.state.selectedModelDir}
           selectedModelFile={this.state.selectedModelFile}
@@ -111,7 +123,8 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
           showTextures={this.state.showTextures}
           showWireframe={this.state.showWireframe}
           showVertexNormals={this.state.showVertexNormals}
-          useCamera={this.state.useCamera} />
+          useCamera={this.state.useCamera}
+        />
       </div>
     );
   }
@@ -119,7 +132,9 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
   onModelSelected = (model: string) => {
     const pieces = model.match(/^(\d+)\/(\d+)/);
     if (!pieces)
-      throw new Error(`Could not parse selected model string ${this.state.selectedModel}`);
+      throw new Error(
+        `Could not parse selected model string ${this.state.selectedModel}`
+      );
 
     const [, dir, file] = pieces;
 
@@ -133,7 +148,7 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
       selectedAnimDir: null,
       selectedAnimFile: null,
     } as any);
-  }
+  };
 
   onAnimSelected = (anim: string) => {
     if (!anim) {
@@ -157,30 +172,29 @@ export class ModelViewer extends React.Component<IModelViewerProps, IModelViewer
       selectedAnimDir: dir,
       selectedAnimFile: file,
     } as any);
-  }
+  };
 
   onBgColorChange = (color: number) => {
     this.setState({
       bgColor: color,
     });
-  }
+  };
 
   onFeatureChange = (features: any) => {
     this.setState(features);
-  }
+  };
 
   onKeyDown = (event: any) => {
     if (event.key && this.modelToolbar) {
       const key = event.key.toLowerCase();
       if (key === "m") {
         this.modelToolbar.focusModelSelect();
-      }
-      else if (key === "a") {
+      } else if (key === "a") {
         this.modelToolbar.focusAnimSelect();
       }
     }
-  }
-};
+  };
+}
 
 let _modelRenderer: ModelRenderer | null = null;
 let renderTimeout: any = null;
@@ -207,8 +221,8 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
   private __container: HTMLDivElement | null = null;
 
   state = {
-    hasError: false
-  }
+    hasError: false,
+  };
 
   render() {
     if (this.state.hasError) {
@@ -218,9 +232,12 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     }
 
     return (
-      <div className="modelRenderContainer"
-        style={{ backgroundColor: "#" + pad($$hex(this.props.bgColor, ""), 6, "0") }}
-        ref={el => this.__container = el}
+      <div
+        className="modelRenderContainer"
+        style={{
+          backgroundColor: "#" + pad($$hex(this.props.bgColor, ""), 6, "0"),
+        }}
+        ref={(el) => (this.__container = el)}
       />
     );
   }
@@ -235,8 +252,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
       window.addEventListener("resize", this.onWindowResize);
       _modelRenderer = this;
       this.initModel();
-    }
-    catch (e) {
+    } catch (e) {
       console.error(e);
     }
   }
@@ -246,8 +262,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
       window.removeEventListener("resize", this.onWindowResize);
       _modelRenderer = null;
       this.clearViewer();
-    }
-    catch (e) {
+    } catch (e) {
       console.error(e);
     }
   }
@@ -256,8 +271,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     try {
       this.clearViewer();
       this.initModel();
-    }
-    catch (e) {
+    } catch (e) {
       console.error(e);
     }
   }
@@ -273,7 +287,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
 
       renderer.setSize(width, height);
     }
-  }
+  };
 
   clearViewer() {
     this.disposeTHREERenderer();
@@ -294,15 +308,13 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
   }
 
   disposeTHREERenderer() {
-    if (!renderer)
-      return;
+    if (!renderer) return;
 
     renderer.dispose();
     renderer.forceContextLoss();
 
     const container = this.__container;
-    if (container)
-      container.innerHTML = "";
+    if (container) container.innerHTML = "";
 
     (renderer as any).domElement = undefined;
     renderer = null;
@@ -336,8 +348,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
           if (mtrl.envMap) mtrl.envMap.dispose();
           mtrl.dispose();
         });
-      }
-      else {
+      } else {
         if (obj.material.map) obj.material.map.dispose();
         if (obj.material.lightMap) obj.material.lightMap.dispose();
         if (obj.material.bumpMap) obj.material.bumpMap.dispose();
@@ -354,7 +365,10 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
       return;
     }
 
-    const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
+    const [dir, file] = [
+      this.props.selectedModelDir,
+      this.props.selectedModelFile,
+    ];
 
     const container = this.__container!;
     const height = container.offsetHeight;
@@ -381,7 +395,10 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
       $$log("Scene", scene);
 
       if (this.props.selectedAnimDir !== null) {
-        const [dir, file] = [this.props.selectedAnimDir, this.props.selectedAnimFile];
+        const [dir, file] = [
+          this.props.selectedAnimDir,
+          this.props.selectedAnimFile,
+        ];
         const mtnx = MTNX.unpack(mainfs.get(dir, file!))!;
         $$log("mtnx", mtnx);
 
@@ -415,8 +432,7 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
   }
 
   animate() {
-    if (!_modelRenderer || !renderer)
-      return;
+    if (!_modelRenderer || !renderer) return;
 
     controls!.update();
 
@@ -430,16 +446,14 @@ class ModelRenderer extends React.Component<IModelRendererProps> {
     _modelRenderer.renderModel();
 
     if (get($setting.limitModelFPS)) {
-      renderTimeout = setTimeout(function() {
-        if (_modelRenderer)
-          requestAnimationFrame(_modelRenderer.animate);
-      }, 1000 / 30 );
-    }
-    else {
+      renderTimeout = setTimeout(function () {
+        if (_modelRenderer) requestAnimationFrame(_modelRenderer.animate);
+      }, 1000 / 30);
+    } else {
       requestAnimationFrame(_modelRenderer.animate);
     }
   }
-};
+}
 
 interface IModelToolbarProps {
   bgColor: number;
@@ -463,35 +477,44 @@ class ModelToolbar extends React.Component<IModelToolbarProps> {
   private animSelect: AnimSelect | null = null;
   private modelSelect: ModelSelect | null = null;
 
-  state = {}
+  state = {};
 
   render() {
     return (
       <div className="modelViewerToolbar">
         <ModelSelect
-          ref={(c) => { this.modelSelect = c }}
+          ref={(c) => {
+            this.modelSelect = c;
+          }}
           selectedModel={this.props.selectedModel}
-          onModelSelected={this.props.onModelSelected} />
+          onModelSelected={this.props.onModelSelected}
+        />
         <AnimSelect
-          ref={(c) => { this.animSelect = c }}
+          ref={(c) => {
+            this.animSelect = c;
+          }}
           selectedAnim={this.props.selectedAnim}
           selectedModelDir={this.props.selectedModelDir}
-          onAnimSelected={this.props.onAnimSelected} />
+          onAnimSelected={this.props.onAnimSelected}
+        />
         <ModelBGColorSelect
           selectedColor={this.props.bgColor}
-          onColorChange={this.props.onBgColorChange} />
+          onColorChange={this.props.onBgColorChange}
+        />
         <ModelFeatureSelect
           showTextures={this.props.showTextures}
           showWireframe={this.props.showWireframe}
           showVertexNormals={this.props.showVertexNormals}
           useCamera={this.props.useCamera}
-          onFeatureChange={this.props.onFeatureChange} />
+          onFeatureChange={this.props.onFeatureChange}
+        />
         <div className="modelViewerToolbarSpacer" />
         <ModelExportObjButton
           selectedModelDir={this.props.selectedModelDir}
           selectedModelFile={this.props.selectedModelFile}
           selectedAnimDir={this.props.selectedAnimDir}
-          selectedAnimFile={this.props.selectedAnimFile} />
+          selectedAnimFile={this.props.selectedAnimFile}
+        />
       </div>
     );
   }
@@ -500,14 +523,14 @@ class ModelToolbar extends React.Component<IModelToolbarProps> {
     if (this.modelSelect) {
       this.modelSelect.focus();
     }
-  }
+  };
 
   focusAnimSelect = () => {
     if (this.animSelect) {
       this.animSelect.focus();
     }
-  }
-};
+  };
+}
 
 interface IModelSelectProps {
   selectedModel: string;
@@ -517,25 +540,31 @@ interface IModelSelectProps {
 class ModelSelect extends React.Component<IModelSelectProps> {
   private selectEl: HTMLElement | null = null;
 
-  state = {}
+  state = {};
 
   render() {
     const entries = this.getModelEntries();
-    const options = entries.map(entry => {
+    const options = entries.map((entry) => {
       const [d, f] = entry;
       const name = d + "/" + f;
-      const tooltip = "0x" + pad($$hex(d, ""), 4, "0") + "/" + pad($$hex(f, ""), 4, "0");
+      const tooltip =
+        "0x" + pad($$hex(d, ""), 4, "0") + "/" + pad($$hex(f, ""), 4, "0");
       return (
-        <option value={name} key={name} title={tooltip}>{name}</option>
+        <option value={name} key={name} title={tooltip}>
+          {name}
+        </option>
       );
     });
     return (
       <div className="modelSelectContainer">
         Model:
         <select
-          ref={(e) => { this.selectEl = e }}
+          ref={(e) => {
+            this.selectEl = e;
+          }}
           value={this.props.selectedModel}
-          onChange={this.modelSelected}>
+          onChange={this.modelSelected}
+        >
           {options}
         </select>
       </div>
@@ -543,14 +572,12 @@ class ModelSelect extends React.Component<IModelSelectProps> {
   }
 
   focus = () => {
-    if (this.selectEl)
-      this.selectEl.focus();
-  }
+    if (this.selectEl) this.selectEl.focus();
+  };
 
   modelSelected = (e: any) => {
-    if (this.props.onModelSelected)
-      this.props.onModelSelected(e.target.value);
-  }
+    if (this.props.onModelSelected) this.props.onModelSelected(e.target.value);
+  };
 
   getModelEntries(): [number, number][] {
     const entries: [number, number][] = [];
@@ -565,8 +592,7 @@ class ModelSelect extends React.Component<IModelSelectProps> {
             // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
             //   name += ` (${form.STRG[0].parsed[0]})`;
             entries.push([d, f]);
-          }
-          catch (e) {
+          } catch (e) {
             console.error(`Could not parse FORM ${d}/${f}`, e);
           }
         }
@@ -574,7 +600,7 @@ class ModelSelect extends React.Component<IModelSelectProps> {
     }
     return entries;
   }
-};
+}
 
 interface IAnimSelectProps {
   selectedAnim: string | null;
@@ -585,25 +611,28 @@ interface IAnimSelectProps {
 class AnimSelect extends React.Component<IAnimSelectProps> {
   private selectEl: HTMLElement | null = null;
 
-  state = {}
+  state = {};
 
   render() {
     const entries = this.getAnimEntries();
-    const options = entries.map(entry => {
+    const options = entries.map((entry) => {
       return (
-        <option value={entry} key={entry}>{entry}</option>
+        <option value={entry} key={entry}>
+          {entry}
+        </option>
       );
     });
-    options.unshift((
-        <option value={""} key={""}></option>
-    ));
+    options.unshift(<option value={""} key={""}></option>);
     return (
       <div className="modelSelectContainer">
         Animation:
         <select
-          ref={(e) => { this.selectEl = e }}
+          ref={(e) => {
+            this.selectEl = e;
+          }}
           value={this.props.selectedAnim!}
-          onChange={this.animSelected}>
+          onChange={this.animSelected}
+        >
           {options}
         </select>
       </div>
@@ -611,25 +640,21 @@ class AnimSelect extends React.Component<IAnimSelectProps> {
   }
 
   focus = () => {
-    if (this.selectEl)
-      this.selectEl.focus();
-  }
+    if (this.selectEl) this.selectEl.focus();
+  };
 
   animSelected = (e: any) => {
-    if (this.props.onAnimSelected)
-      this.props.onAnimSelected(e.target.value);
-  }
+    if (this.props.onAnimSelected) this.props.onAnimSelected(e.target.value);
+  };
 
   getAnimEntries() {
     let entries: string[] = [];
 
-    if (this.props.selectedModelDir === null)
-      return entries; // No model selected
+    if (this.props.selectedModelDir === null) return entries; // No model selected
 
     if (get($setting.limitModelAnimations)) {
       return this.getAnimationsInDir(this.props.selectedModelDir);
-    }
-    else {
+    } else {
       const mainfsDirCount = mainfs.getDirectoryCount();
       for (let d = 0; d < mainfsDirCount; d++) {
         entries = entries.concat(this.getAnimationsInDir(d));
@@ -650,15 +675,14 @@ class AnimSelect extends React.Component<IAnimSelectProps> {
           // if (form.STRG && form.STRG[0] && form.STRG[0].parsed)
           //   name += ` (${form.STRG[0].parsed[0]})`;
           entries.push(name);
-        }
-        catch (e) {
+        } catch (e) {
           console.error(`Could not parse MTNX ${d}/${f}`, e);
         }
       }
     }
     return entries;
   }
-};
+}
 
 interface IModelBGColorSelectProps {
   selectedColor: number;
@@ -666,31 +690,55 @@ interface IModelBGColorSelectProps {
 }
 
 class ModelBGColorSelect extends React.Component<IModelBGColorSelectProps> {
-  state = {}
+  state = {};
 
   render() {
     let motionTestColorBtn;
     if (isDebug()) {
       motionTestColorBtn = (
-        <ToggleButton id={0xC6E7FF} key={2} allowDeselect={false} onToggled={this.onColorChange}
-          pressed={this.props.selectedColor === 0xC6E7FF}>
-          <span className="colorSwatch" title="Change background to MP3 motion test (0xC6E7FF)"
-            style={{backgroundColor: "#C6E7FF"}}></span>
+        <ToggleButton
+          id={0xc6e7ff}
+          key={2}
+          allowDeselect={false}
+          onToggled={this.onColorChange}
+          pressed={this.props.selectedColor === 0xc6e7ff}
+        >
+          <span
+            className="colorSwatch"
+            title="Change background to MP3 motion test (0xC6E7FF)"
+            style={{ backgroundColor: "#C6E7FF" }}
+          ></span>
         </ToggleButton>
       );
     }
 
     return (
       <div className="modelViewerColorPicker">
-        <ToggleButton id={0x000000} key={0} allowDeselect={false} onToggled={this.onColorChange}
-          pressed={this.props.selectedColor === 0x000000}>
-          <span className="colorSwatch" title="Change background to black"
-            style={{backgroundColor: "#000000"}}></span>
+        <ToggleButton
+          id={0x000000}
+          key={0}
+          allowDeselect={false}
+          onToggled={this.onColorChange}
+          pressed={this.props.selectedColor === 0x000000}
+        >
+          <span
+            className="colorSwatch"
+            title="Change background to black"
+            style={{ backgroundColor: "#000000" }}
+          ></span>
         </ToggleButton>
-        <ToggleButton id={0xFFFFFF} key={1} allowDeselect={false} onToggled={this.onColorChange}
-          pressed={this.props.selectedColor === 0xFFFFFF}>
-          <span className="colorSwatch" title="Change background to white"
-            style={{backgroundColor: "#FFFFFF"}}></span>
+        <ToggleButton
+          id={0xffffff}
+          key={1}
+          allowDeselect={false}
+          onToggled={this.onColorChange}
+          pressed={this.props.selectedColor === 0xffffff}
+        >
+          <span
+            className="colorSwatch"
+            title="Change background to white"
+            style={{ backgroundColor: "#FFFFFF" }}
+          ></span>
         </ToggleButton>
         {motionTestColorBtn}
       </div>
@@ -700,7 +748,7 @@ class ModelBGColorSelect extends React.Component<IModelBGColorSelectProps> {
   onColorChange = (id: number, pressed: boolean) => {
     this.setState({ color: id });
     this.props.onColorChange(id);
-  }
+  };
 }
 
 interface IModelFeatureSelectProps {
@@ -712,34 +760,49 @@ interface IModelFeatureSelectProps {
 }
 
 class ModelFeatureSelect extends React.Component<IModelFeatureSelectProps> {
-  state = {}
+  state = {};
 
   render() {
     let advancedFeatures;
     if (get($setting.uiAdvanced)) {
       advancedFeatures = [
         <label key="modelFeatureSelectShowVertexNormals">
-          <input type="checkbox" checked={this.props.showVertexNormals}
-            onChange={this.onShowNormalsChange} />
+          <input
+            type="checkbox"
+            checked={this.props.showVertexNormals}
+            onChange={this.onShowNormalsChange}
+          />
           Vertex Normals
-        </label>
+        </label>,
       ];
     }
     return (
       <div className="modelFeatureSelectContainer">
         <label key="modelFeatureSelectShowTextures">
-          <input type="checkbox" checked={this.props.showTextures}
-            onChange={this.onShowTextureChange} />
+          <input
+            type="checkbox"
+            checked={this.props.showTextures}
+            onChange={this.onShowTextureChange}
+          />
           Textures
         </label>
         <label key="modelFeatureSelectShowWireframe">
-          <input type="checkbox" checked={this.props.showWireframe}
-            onChange={this.onShowWireframeChange} />
+          <input
+            type="checkbox"
+            checked={this.props.showWireframe}
+            onChange={this.onShowWireframeChange}
+          />
           Wireframe
         </label>
-        <label key="modelFeatureSelectUseCamera" title="Use the camera defined by the model">
-          <input type="checkbox" checked={this.props.useCamera}
-            onChange={this.onUseCameraChange} />
+        <label
+          key="modelFeatureSelectUseCamera"
+          title="Use the camera defined by the model"
+        >
+          <input
+            type="checkbox"
+            checked={this.props.useCamera}
+            onChange={this.onUseCameraChange}
+          />
           Camera
         </label>
         {advancedFeatures}
@@ -754,13 +817,12 @@ class ModelFeatureSelect extends React.Component<IModelFeatureSelectProps> {
         showTextures: pressed,
         showWireframe: true,
       });
-    }
-    else {
+    } else {
       this.props.onFeatureChange({
         showTextures: pressed,
       });
     }
-  }
+  };
 
   onShowWireframeChange = (event: any) => {
     const pressed = event.target.checked;
@@ -769,27 +831,26 @@ class ModelFeatureSelect extends React.Component<IModelFeatureSelectProps> {
         showTextures: true,
         showWireframe: pressed,
       });
-    }
-    else {
+    } else {
       this.props.onFeatureChange({
         showWireframe: pressed,
       });
     }
-  }
+  };
 
   onShowNormalsChange = (event: any) => {
     const pressed = event.target.checked;
     this.props.onFeatureChange({
       showVertexNormals: pressed,
     });
-  }
+  };
 
   onUseCameraChange = (event: any) => {
     const pressed = event.target.checked;
     this.props.onFeatureChange({
       useCamera: pressed,
     });
-  }
+  };
 }
 
 interface IModelExportObjButtonProps {
@@ -800,7 +861,7 @@ interface IModelExportObjButtonProps {
 }
 
 class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
-  state = {}
+  state = {};
 
   render() {
     let tooltip;
@@ -808,7 +869,7 @@ class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
       tooltip = "Export current model and animation to a glTF model file";
     }
     //else {
-      tooltip = "Export current model to a glTF model file";
+    tooltip = "Export current model to a glTF model file";
     //}
     return (
       <Button onClick={this.export} css="btnModelExport" title={tooltip}>
@@ -819,7 +880,10 @@ class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
   }
 
   export = async () => {
-    const [dir, file] = [this.props.selectedModelDir, this.props.selectedModelFile];
+    const [dir, file] = [
+      this.props.selectedModelDir,
+      this.props.selectedModelFile,
+    ];
 
     const form = FORM.unpack(mainfs.get(dir!, file!))!;
     const converter = new FormToThreeJs();
@@ -849,9 +913,8 @@ class ModelExportObjButton extends React.Component<IModelExportObjButtonProps> {
 
     if (binary) {
       saveAs(new Blob([result as ArrayBuffer]), `model-${dir}-${file}.glb`);
-    }
-    else {
+    } else {
       saveAs(new Blob([JSON.stringify(result)]), `model-${dir}-${file}.gltf`);
     }
-  }
+  };
 }

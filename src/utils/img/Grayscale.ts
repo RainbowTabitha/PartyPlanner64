@@ -1,4 +1,9 @@
-export function GrayscaleToRGBA32(buffer: ArrayBuffer, width: number, height: number, bpp: number) {
+export function GrayscaleToRGBA32(
+  buffer: ArrayBuffer,
+  width: number,
+  height: number,
+  bpp: number
+) {
   const outBuffer = new ArrayBuffer(width * height * 4);
   const outView = new Uint8Array(outBuffer);
 
@@ -6,28 +11,30 @@ export function GrayscaleToRGBA32(buffer: ArrayBuffer, width: number, height: nu
   let outIdx = 0;
   for (let i = 0; i < width * height; i++) {
     var val;
-    if (bpp === 8)
-      val = inView.getUint8(i);
+    if (bpp === 8) val = inView.getUint8(i);
     else if (bpp === 4) {
-      val = inView.getUint8(i / 2) & (i % 2 ? 0x0F : 0xF0);
+      val = inView.getUint8(i / 2) & (i % 2 ? 0x0f : 0xf0);
       if (i % 2 === 0) {
         val >>= 4;
-        val = val & 0x0F;
+        val = val & 0x0f;
       }
-      val = (val / 0x0F) * 0xFF;
-    }
-    else
-      throw new Error("bpp must be 4 or 8");
+      val = (val / 0x0f) * 0xff;
+    } else throw new Error("bpp must be 4 or 8");
     outView[outIdx] = val;
     outView[outIdx + 1] = val;
     outView[outIdx + 2] = val;
-    outView[outIdx + 3] = 0xFF;
+    outView[outIdx + 3] = 0xff;
     outIdx += 4;
   }
 
   return outBuffer;
 }
 
-export function GrayscaleFromRGBA32(buffer: ArrayBuffer, width: number, height: number, bpp: number) {
+export function GrayscaleFromRGBA32(
+  buffer: ArrayBuffer,
+  width: number,
+  height: number,
+  bpp: number
+) {
   throw new Error("Grayscale.fromRGBA32 not implemented");
 }

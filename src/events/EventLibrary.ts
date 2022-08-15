@@ -1,4 +1,9 @@
-import { addEventToLibraryAction, EventMap, removeEventFromLibraryAction, selectEventLibrary } from "../app/boardState";
+import {
+  addEventToLibraryAction,
+  EventMap,
+  removeEventFromLibraryAction,
+  selectEventLibrary,
+} from "../app/boardState";
 import { useAppSelector } from "../app/hooks";
 import { store } from "../app/store";
 import { IEvent } from "./events";

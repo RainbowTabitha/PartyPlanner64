@@ -75,116 +75,468 @@ interface IToolbarSpacer {
   spacer: true;
 }
 
-type ToolbarItem = IToolbarItem | IToolbarSpacer
+type ToolbarItem = IToolbarItem | IToolbarSpacer;
 
 const mp1_actions: ToolbarItem[] = [
-  { "name": "Move spaces", "icon": moveImage, "type": Action.MOVE },
-  { "name": "Connect spaces", "icon": lineImage, "type": Action.LINE },
-  { "name": "Connect multiple spaces in one click", "icon": stickylineImage, "type": Action.LINE_STICKY },
-  { "name": "Erase spaces and lines", "icon": eraserImage, "type": Action.ERASE },
-  { "name": "Telescope tool: move your cursor over the map to visualize how it will look during gameplay", "icon": telescopeImage, "type": Action.TELESCOPE },
-  { "spacer": true},
-  { "name": "Add blue space", "icon": blueImage, "type": Action.ADD_BLUE, draggable: true },
-  { "name": "Add red space", "icon": redImage, "type": Action.ADD_RED, draggable: true },
-  { "name": "Add happening space", "icon": happeningImage, "type": Action.ADD_HAPPENING, draggable: true },
-  { "name": "Add chance time space", "icon": chanceImage, "type": Action.ADD_CHANCE, draggable: true },
-  { "name": "Add Bowser space", "icon": bowserImage, "type": Action.ADD_BOWSER, draggable: true },
-  { "name": "Add Mini-Game space", "icon": minigameImage, "type": Action.ADD_MINIGAME, draggable: true },
-  { "name": "Add shroom space", "icon": shroomImage, "type": Action.ADD_SHROOM, draggable: true },
-  { "name": "Add invisible space", "icon": otherImage, "type": Action.ADD_OTHER, draggable: true },
-  { "name": "Add star space (decoration)", "icon": starImage, "type": Action.ADD_STAR, draggable: true, advanced: true },
-  { "name": "Add start space", "icon": startImage, "type": Action.ADD_START, draggable: true, advanced: true },
-  { "spacer": true},
+  { name: "Move spaces", icon: moveImage, type: Action.MOVE },
+  { name: "Connect spaces", icon: lineImage, type: Action.LINE },
+  {
+    name: "Connect multiple spaces in one click",
+    icon: stickylineImage,
+    type: Action.LINE_STICKY,
+  },
+  { name: "Erase spaces and lines", icon: eraserImage, type: Action.ERASE },
+  {
+    name: "Telescope tool: move your cursor over the map to visualize how it will look during gameplay",
+    icon: telescopeImage,
+    type: Action.TELESCOPE,
+  },
+  { spacer: true },
+  {
+    name: "Add blue space",
+    icon: blueImage,
+    type: Action.ADD_BLUE,
+    draggable: true,
+  },
+  {
+    name: "Add red space",
+    icon: redImage,
+    type: Action.ADD_RED,
+    draggable: true,
+  },
+  {
+    name: "Add happening space",
+    icon: happeningImage,
+    type: Action.ADD_HAPPENING,
+    draggable: true,
+  },
+  {
+    name: "Add chance time space",
+    icon: chanceImage,
+    type: Action.ADD_CHANCE,
+    draggable: true,
+  },
+  {
+    name: "Add Bowser space",
+    icon: bowserImage,
+    type: Action.ADD_BOWSER,
+    draggable: true,
+  },
+  {
+    name: "Add Mini-Game space",
+    icon: minigameImage,
+    type: Action.ADD_MINIGAME,
+    draggable: true,
+  },
+  {
+    name: "Add shroom space",
+    icon: shroomImage,
+    type: Action.ADD_SHROOM,
+    draggable: true,
+  },
+  {
+    name: "Add invisible space",
+    icon: otherImage,
+    type: Action.ADD_OTHER,
+    draggable: true,
+  },
+  {
+    name: "Add star space (decoration)",
+    icon: starImage,
+    type: Action.ADD_STAR,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add start space",
+    icon: startImage,
+    type: Action.ADD_START,
+    draggable: true,
+    advanced: true,
+  },
+  { spacer: true },
   // {
   //   "group": "Other spaces",
   //   "icon": otherImage,
   //   "actions": [
-      { "name": "Add Toad", "icon": toadImage, "type": Action.ADD_TOAD_CHARACTER, draggable: true },
-      { "name": "Add Boo", "icon": booImage, "type": Action.ADD_BOO_CHARACTER, draggable: true },
-      { "name": "Add Bowser", "icon": bowsercharacterImage, "type": Action.ADD_BOWSER_CHARACTER, draggable: true },
-      { "name": "Add Koopa Troopa", "icon": koopaImage, "type": Action.ADD_KOOPA_CHARACTER, draggable: true },
-      { "name": "Mark space as hosting star", "icon": markstarImage, "type": Action.MARK_STAR },
+  {
+    name: "Add Toad",
+    icon: toadImage,
+    type: Action.ADD_TOAD_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add Boo",
+    icon: booImage,
+    type: Action.ADD_BOO_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add Bowser",
+    icon: bowsercharacterImage,
+    type: Action.ADD_BOWSER_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add Koopa Troopa",
+    icon: koopaImage,
+    type: Action.ADD_KOOPA_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Mark space as hosting star",
+    icon: markstarImage,
+    type: Action.MARK_STAR,
+  },
   //   ]
   // }
 ];
 
 const mp2_actions: ToolbarItem[] = [
-  { "name": "Move spaces", "icon": moveImage, "type": Action.MOVE },
-  { "name": "Connect spaces", "icon": lineImage, "type": Action.LINE },
-  { "name": "Connect multiple spaces in one click", "icon": stickylineImage, "type": Action.LINE_STICKY },
-  { "name": "Erase spaces and lines", "icon": eraserImage, "type": Action.ERASE },
-  { "name": "Rotate arrow spaces", "icon": rotateImage, "type": Action.ROTATE },
-  { "name": "Telescope tool: move your cursor over the map to visualize how it will look during gameplay", "icon": telescopeImage, "type": Action.TELESCOPE },
-  { "spacer": true},
-  { "name": "Add blue space", "icon": blueImage, "type": Action.ADD_BLUE, draggable: true },
-  { "name": "Add red space", "icon": redImage, "type": Action.ADD_RED, draggable: true },
-  { "name": "Add happening space", "icon": happeningImage, "type": Action.ADD_HAPPENING, draggable: true },
-  { "name": "Add chance time space", "icon": chance2Image, "type": Action.ADD_CHANCE, draggable: true },
-  { "name": "Add Bowser space", "icon": bowserImage, "type": Action.ADD_BOWSER, draggable: true },
-  { "name": "Add item space", "icon": itemImage, "type": Action.ADD_ITEM, draggable: true },
-  { "name": "Add battle space", "icon": battleImage, "type": Action.ADD_BATTLE, draggable: true },
-  { "name": "Add bank space", "icon": bankImage, "type": Action.ADD_BANK, draggable: true },
-  { "name": "Add invisible space", "icon": otherImage, "type": Action.ADD_OTHER, draggable: true },
-  { "name": "Add star space (decoration)", "icon": starImage, "type": Action.ADD_STAR, draggable: true, advanced: true },
-  { "name": "Add black star space (decoration)", "icon": blackstarImage, "type": Action.ADD_BLACKSTAR, draggable: true, advanced: true },
-  { "name": "Add start space", "icon": startImage, "type": Action.ADD_START, draggable: true, advanced: true },
-  { "name": "Add arrow space", "icon": arrowImage, "type": Action.ADD_ARROW, draggable: true },
-  { "spacer": true},
-  { "name": "Add Toad", "icon": toadImage, "type": Action.ADD_TOAD_CHARACTER, draggable: true },
-  { "name": "Add Boo", "icon": booImage, "type": Action.ADD_BOO_CHARACTER, draggable: true },
-  { "name": "Add bank", "icon": banksubtype2Image, "type": Action.ADD_BANK_SUBTYPE, draggable: true },
-  { "name": "Add bank coin stack", "icon": bankcoinsubtypeImage, "type": Action.ADD_BANKCOIN_SUBTYPE, draggable: true },
-  { "name": "Add item shop", "icon": itemshopsubtype2Image, "type": Action.ADD_ITEMSHOP_SUBTYPE, draggable: true },
-  { "name": "Mark space as hosting star", "icon": markstarImage, "type": Action.MARK_STAR },
+  { name: "Move spaces", icon: moveImage, type: Action.MOVE },
+  { name: "Connect spaces", icon: lineImage, type: Action.LINE },
+  {
+    name: "Connect multiple spaces in one click",
+    icon: stickylineImage,
+    type: Action.LINE_STICKY,
+  },
+  { name: "Erase spaces and lines", icon: eraserImage, type: Action.ERASE },
+  { name: "Rotate arrow spaces", icon: rotateImage, type: Action.ROTATE },
+  {
+    name: "Telescope tool: move your cursor over the map to visualize how it will look during gameplay",
+    icon: telescopeImage,
+    type: Action.TELESCOPE,
+  },
+  { spacer: true },
+  {
+    name: "Add blue space",
+    icon: blueImage,
+    type: Action.ADD_BLUE,
+    draggable: true,
+  },
+  {
+    name: "Add red space",
+    icon: redImage,
+    type: Action.ADD_RED,
+    draggable: true,
+  },
+  {
+    name: "Add happening space",
+    icon: happeningImage,
+    type: Action.ADD_HAPPENING,
+    draggable: true,
+  },
+  {
+    name: "Add chance time space",
+    icon: chance2Image,
+    type: Action.ADD_CHANCE,
+    draggable: true,
+  },
+  {
+    name: "Add Bowser space",
+    icon: bowserImage,
+    type: Action.ADD_BOWSER,
+    draggable: true,
+  },
+  {
+    name: "Add item space",
+    icon: itemImage,
+    type: Action.ADD_ITEM,
+    draggable: true,
+  },
+  {
+    name: "Add battle space",
+    icon: battleImage,
+    type: Action.ADD_BATTLE,
+    draggable: true,
+  },
+  {
+    name: "Add bank space",
+    icon: bankImage,
+    type: Action.ADD_BANK,
+    draggable: true,
+  },
+  {
+    name: "Add invisible space",
+    icon: otherImage,
+    type: Action.ADD_OTHER,
+    draggable: true,
+  },
+  {
+    name: "Add star space (decoration)",
+    icon: starImage,
+    type: Action.ADD_STAR,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add black star space (decoration)",
+    icon: blackstarImage,
+    type: Action.ADD_BLACKSTAR,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add start space",
+    icon: startImage,
+    type: Action.ADD_START,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add arrow space",
+    icon: arrowImage,
+    type: Action.ADD_ARROW,
+    draggable: true,
+  },
+  { spacer: true },
+  {
+    name: "Add Toad",
+    icon: toadImage,
+    type: Action.ADD_TOAD_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add Boo",
+    icon: booImage,
+    type: Action.ADD_BOO_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add bank",
+    icon: banksubtype2Image,
+    type: Action.ADD_BANK_SUBTYPE,
+    draggable: true,
+  },
+  {
+    name: "Add bank coin stack",
+    icon: bankcoinsubtypeImage,
+    type: Action.ADD_BANKCOIN_SUBTYPE,
+    draggable: true,
+  },
+  {
+    name: "Add item shop",
+    icon: itemshopsubtype2Image,
+    type: Action.ADD_ITEMSHOP_SUBTYPE,
+    draggable: true,
+  },
+  {
+    name: "Mark space as hosting star",
+    icon: markstarImage,
+    type: Action.MARK_STAR,
+  },
 ];
 
 const mp3_actions: ToolbarItem[] = [
-  { "name": "Move spaces", "icon": moveImage, "type": Action.MOVE },
-  { "name": "Connect spaces", "icon": lineImage, "type": Action.LINE },
-  { "name": "Connect multiple spaces in one click", "icon": stickylineImage, "type": Action.LINE_STICKY },
-  { "name": "Erase spaces and lines", "icon": eraserImage, "type": Action.ERASE },
-  { "name": "Rotate arrow spaces", "icon": rotateImage, "type": Action.ROTATE },
-  { "name": "Telescope tool: move your cursor over the map to visualize how it will look during gameplay", "icon": telescopeImage, "type": Action.TELESCOPE },
-  { "spacer": true},
-  { "name": "Add blue space", "icon": blue3Image, "type": Action.ADD_BLUE, draggable: true },
-  { "name": "Add red space", "icon": red3Image, "type": Action.ADD_RED, draggable: true },
-  { "name": "Add happening space", "icon": happening3Image, "type": Action.ADD_HAPPENING, draggable: true },
-  { "name": "Add chance time space", "icon": chance3Image, "type": Action.ADD_CHANCE, draggable: true },
-  { "name": "Add Bowser space", "icon": bowser3Image, "type": Action.ADD_BOWSER, draggable: true },
-  { "name": "Add item space", "icon": item3Image, "type": Action.ADD_ITEM, draggable: true },
-  { "name": "Add battle space", "icon": battle3Image, "type": Action.ADD_BATTLE, draggable: true },
-  { "name": "Add bank space", "icon": bank3Image, "type": Action.ADD_BANK, draggable: true },
-  { "name": "Add Game Guy space", "icon": gameguyImage, "type": Action.ADD_GAMEGUY, draggable: true },
-  { "name": "Add invisible space", "icon": otherImage, "type": Action.ADD_OTHER, draggable: true },
-  { "name": "Add star space (decoration)", "icon": starImage, "type": Action.ADD_STAR, draggable: true, advanced: true },
-  { "name": "Add start space", "icon": startImage, "type": Action.ADD_START, draggable: true, advanced: true },
-  { "name": "Add arrow space", "icon": arrowImage, "type": Action.ADD_ARROW, draggable: true },
-  { "spacer": true},
-  { "name": "Add Millennium Star", "icon": mstarImage, "type": Action.ADD_TOAD_CHARACTER, draggable: true },
-  { "name": "Add Boo", "icon": booImage, "type": Action.ADD_BOO_CHARACTER, draggable: true },
-  { "name": "Add bank", "icon": banksubtypeImage, "type": Action.ADD_BANK_SUBTYPE, draggable: true },
-  { "name": "Add bank coin stack", "icon": bankcoinsubtypeImage, "type": Action.ADD_BANKCOIN_SUBTYPE, draggable: true },
-  { "name": "Add item shop", "icon": itemshopsubtypeImage, "type": Action.ADD_ITEMSHOP_SUBTYPE, draggable: true },
-  { "name": "Mark space as hosting star", "icon": markstarImage, "type": Action.MARK_STAR },
-  { "name": "Mark space as Skeleton Key gate", "icon": markgateImage, "type": Action.MARK_GATE },
+  { name: "Move spaces", icon: moveImage, type: Action.MOVE },
+  { name: "Connect spaces", icon: lineImage, type: Action.LINE },
+  {
+    name: "Connect multiple spaces in one click",
+    icon: stickylineImage,
+    type: Action.LINE_STICKY,
+  },
+  { name: "Erase spaces and lines", icon: eraserImage, type: Action.ERASE },
+  { name: "Rotate arrow spaces", icon: rotateImage, type: Action.ROTATE },
+  {
+    name: "Telescope tool: move your cursor over the map to visualize how it will look during gameplay",
+    icon: telescopeImage,
+    type: Action.TELESCOPE,
+  },
+  { spacer: true },
+  {
+    name: "Add blue space",
+    icon: blue3Image,
+    type: Action.ADD_BLUE,
+    draggable: true,
+  },
+  {
+    name: "Add red space",
+    icon: red3Image,
+    type: Action.ADD_RED,
+    draggable: true,
+  },
+  {
+    name: "Add happening space",
+    icon: happening3Image,
+    type: Action.ADD_HAPPENING,
+    draggable: true,
+  },
+  {
+    name: "Add chance time space",
+    icon: chance3Image,
+    type: Action.ADD_CHANCE,
+    draggable: true,
+  },
+  {
+    name: "Add Bowser space",
+    icon: bowser3Image,
+    type: Action.ADD_BOWSER,
+    draggable: true,
+  },
+  {
+    name: "Add item space",
+    icon: item3Image,
+    type: Action.ADD_ITEM,
+    draggable: true,
+  },
+  {
+    name: "Add battle space",
+    icon: battle3Image,
+    type: Action.ADD_BATTLE,
+    draggable: true,
+  },
+  {
+    name: "Add bank space",
+    icon: bank3Image,
+    type: Action.ADD_BANK,
+    draggable: true,
+  },
+  {
+    name: "Add Game Guy space",
+    icon: gameguyImage,
+    type: Action.ADD_GAMEGUY,
+    draggable: true,
+  },
+  {
+    name: "Add invisible space",
+    icon: otherImage,
+    type: Action.ADD_OTHER,
+    draggable: true,
+  },
+  {
+    name: "Add star space (decoration)",
+    icon: starImage,
+    type: Action.ADD_STAR,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add start space",
+    icon: startImage,
+    type: Action.ADD_START,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add arrow space",
+    icon: arrowImage,
+    type: Action.ADD_ARROW,
+    draggable: true,
+  },
+  { spacer: true },
+  {
+    name: "Add Millennium Star",
+    icon: mstarImage,
+    type: Action.ADD_TOAD_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add Boo",
+    icon: booImage,
+    type: Action.ADD_BOO_CHARACTER,
+    draggable: true,
+  },
+  {
+    name: "Add bank",
+    icon: banksubtypeImage,
+    type: Action.ADD_BANK_SUBTYPE,
+    draggable: true,
+  },
+  {
+    name: "Add bank coin stack",
+    icon: bankcoinsubtypeImage,
+    type: Action.ADD_BANKCOIN_SUBTYPE,
+    draggable: true,
+  },
+  {
+    name: "Add item shop",
+    icon: itemshopsubtypeImage,
+    type: Action.ADD_ITEMSHOP_SUBTYPE,
+    draggable: true,
+  },
+  {
+    name: "Mark space as hosting star",
+    icon: markstarImage,
+    type: Action.MARK_STAR,
+  },
+  {
+    name: "Mark space as Skeleton Key gate",
+    icon: markgateImage,
+    type: Action.MARK_GATE,
+  },
 ];
 
 const mp3_duel_actions: ToolbarItem[] = [
-  { "name": "Move spaces", "icon": moveImage, "type": Action.MOVE },
-  { "name": "Connect spaces", "icon": lineImage, "type": Action.LINE },
-  { "name": "Connect multiple spaces in one click", "icon": stickylineImage, "type": Action.LINE_STICKY },
-  { "name": "Erase spaces and lines", "icon": eraserImage, "type": Action.ERASE },
-  { "name": "Telescope tool: move your cursor over the map to visualize how it will look during gameplay", "icon": telescopeImage, "type": Action.TELESCOPE },
-  { "spacer": true},
-  { "name": "Add basic space", "icon": basic3Image, "type": Action.ADD_DUEL_BASIC, draggable: true },
-  { "name": "Add Mini-Game space", "icon": minigameduel3Image, "type": Action.ADD_MINIGAME, draggable: true },
-  { "name": "Add reverse space", "icon": reverse3Image, "type": Action.ADD_DUEL_REVERSE, draggable: true },
-  { "name": "Add happening space", "icon": happeningduel3Image, "type": Action.ADD_HAPPENING, draggable: true },
-  { "name": "Add Game Guy space", "icon": gameguyduelImage, "type": Action.ADD_GAMEGUY, draggable: true },
-  { "name": "Add power-up space", "icon": powerupImage, "type": Action.ADD_DUEL_POWERUP, draggable: true },
-  { "name": "Add invisible space", "icon": otherImage, "type": Action.ADD_OTHER, draggable: true },
-  { "name": "Add blue start space", "icon": startblueImage, "type": Action.ADD_DUEL_START_BLUE, draggable: true, advanced: true },
-  { "name": "Add red start space", "icon": startredImage, "type": Action.ADD_DUEL_START_RED, draggable: true, advanced: true },
+  { name: "Move spaces", icon: moveImage, type: Action.MOVE },
+  { name: "Connect spaces", icon: lineImage, type: Action.LINE },
+  {
+    name: "Connect multiple spaces in one click",
+    icon: stickylineImage,
+    type: Action.LINE_STICKY,
+  },
+  { name: "Erase spaces and lines", icon: eraserImage, type: Action.ERASE },
+  {
+    name: "Telescope tool: move your cursor over the map to visualize how it will look during gameplay",
+    icon: telescopeImage,
+    type: Action.TELESCOPE,
+  },
+  { spacer: true },
+  {
+    name: "Add basic space",
+    icon: basic3Image,
+    type: Action.ADD_DUEL_BASIC,
+    draggable: true,
+  },
+  {
+    name: "Add Mini-Game space",
+    icon: minigameduel3Image,
+    type: Action.ADD_MINIGAME,
+    draggable: true,
+  },
+  {
+    name: "Add reverse space",
+    icon: reverse3Image,
+    type: Action.ADD_DUEL_REVERSE,
+    draggable: true,
+  },
+  {
+    name: "Add happening space",
+    icon: happeningduel3Image,
+    type: Action.ADD_HAPPENING,
+    draggable: true,
+  },
+  {
+    name: "Add Game Guy space",
+    icon: gameguyduelImage,
+    type: Action.ADD_GAMEGUY,
+    draggable: true,
+  },
+  {
+    name: "Add power-up space",
+    icon: powerupImage,
+    type: Action.ADD_DUEL_POWERUP,
+    draggable: true,
+  },
+  {
+    name: "Add invisible space",
+    icon: otherImage,
+    type: Action.ADD_OTHER,
+    draggable: true,
+  },
+  {
+    name: "Add blue start space",
+    icon: startblueImage,
+    type: Action.ADD_DUEL_START_BLUE,
+    draggable: true,
+    advanced: true,
+  },
+  {
+    name: "Add red start space",
+    icon: startredImage,
+    type: Action.ADD_DUEL_START_RED,
+    draggable: true,
+    advanced: true,
+  },
 ];
 
 function _itemIsSpacer(item: ToolbarItem): item is IToolbarSpacer {
@@ -201,17 +553,15 @@ function _getActions(gameVersion: number, boardType: BoardType) {
       actions = mp2_actions;
       break;
     case 3:
-      if (boardType === BoardType.DUEL)
-        actions = mp3_duel_actions;
-      else
-        actions = mp3_actions;
+      if (boardType === BoardType.DUEL) actions = mp3_duel_actions;
+      else actions = mp3_actions;
       break;
     default:
       throw new Error(`Unknown game version found by Toolbar (${gameVersion})`);
   }
 
   if (!get($setting.uiAdvanced)) {
-    actions = actions.filter(a => !(a as IToolbarItem).advanced);
+    actions = actions.filter((a) => !(a as IToolbarItem).advanced);
   }
 
   return actions;
@@ -228,18 +578,16 @@ interface IToolbarProps {
 }
 
 export class Toolbar extends React.Component<IToolbarProps> {
-  state = {}
+  state = {};
 
   render() {
     if (currentBoardIsROM()) {
-      return (
-        <div className="toolbarReadonly">Board is readonly.</div>
-      );
+      return <div className="toolbarReadonly">Board is readonly.</div>;
     }
 
     let i = 0;
     const actions = _getActions(this.props.gameVersion, this.props.boardType);
-    const actionElements = actions.map(item => {
+    const actionElements = actions.map((item) => {
       // if (item.group) {
       //   return (
       //     <ToolbarGroup key={item.group} icon={item.icon} actions={item.actions} currentAction={this.props.currentAction} />
@@ -247,14 +595,16 @@ export class Toolbar extends React.Component<IToolbarProps> {
       // }
 
       if (_itemIsSpacer(item)) {
-        return (
-          <ToolbarSpacer key={"spacer" + i++} />
-        );
+        return <ToolbarSpacer key={"spacer" + i++} />;
       }
 
       const isCurrentAction = this.props.currentAction === item.type;
       return (
-        <ToolbarButton key={item.type} current={isCurrentAction} action={item} />
+        <ToolbarButton
+          key={item.type}
+          current={isCurrentAction}
+          action={item}
+        />
       );
     });
     return (
@@ -307,28 +657,34 @@ interface IToolbarButtonProps {
 class ToolbarButton extends React.Component<IToolbarButtonProps> {
   handleClick = () => {
     _buttonClicked(this.props.action.type);
-  }
+  };
 
   onDragStart = (event: any) => {
-    if (!this.props.action.draggable)
-      return; // Disobeying draggable? Its more likely than you think!
+    if (!this.props.action.draggable) return; // Disobeying draggable? Its more likely than you think!
 
     // Drag-drop is not really recommended, but user testing found it intuitive.
-    event.dataTransfer.setData("text", JSON.stringify({
-      action: this.props.action
-    }));
-  }
+    event.dataTransfer.setData(
+      "text",
+      JSON.stringify({
+        action: this.props.action,
+      })
+    );
+  };
 
   render() {
     let btnClass = "toolbarButton";
-    if (this.props.current)
-      btnClass += " selected";
+    if (this.props.current) btnClass += " selected";
     return (
-      <div className={btnClass} title={this.props.action.name}
-        role="button" tabIndex={0}
+      <div
+        className={btnClass}
+        title={this.props.action.name}
+        role="button"
+        tabIndex={0}
         onClick={this.handleClick}
         onKeyDown={makeKeyClick(this.handleClick)}
-        draggable={this.props.action.draggable} onDragStart={this.onDragStart}>
+        draggable={this.props.action.draggable}
+        onDragStart={this.onDragStart}
+      >
         <img className="toolbarIcon" src={this.props.action.icon} alt=""></img>
       </div>
     );
@@ -337,8 +693,6 @@ class ToolbarButton extends React.Component<IToolbarButtonProps> {
 
 const ToolbarSpacer = class ToolbarSpacer extends React.Component {
   render() {
-    return (
-      <div className="toolbarSpacer" role="separator"></div>
-    );
+    return <div className="toolbarSpacer" role="separator"></div>;
   }
 };

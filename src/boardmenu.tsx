@@ -1,5 +1,13 @@
 import { get, $setting } from "./views/settings";
-import { getROMBoards, IBoard, boardIsROM, setCurrentBoard, deleteBoard, copyCurrentBoard, getCurrentBoard } from "./boards";
+import {
+  getROMBoards,
+  IBoard,
+  boardIsROM,
+  setCurrentBoard,
+  deleteBoard,
+  copyCurrentBoard,
+  getCurrentBoard,
+} from "./boards";
 import * as React from "react";
 import { showDragZone, setDropHandler, hideDragZone } from "./utils/drag";
 import { makeKeyClick } from "./utils/react";
@@ -19,19 +27,15 @@ interface IBoardMenuProps {
 
 export class BoardMenu extends React.Component<IBoardMenuProps> {
   render() {
-    let boards = this.props.boards.map(function(item, idx) {
-      return (
-        <Board key={idx} board={item} index={idx} />
-      );
+    let boards = this.props.boards.map(function (item, idx) {
+      return <Board key={idx} board={item} index={idx} />;
     });
 
     const showRomBoards = !!get($setting.uiShowRomBoards);
     let romBoards;
     if (showRomBoards) {
-      romBoards = getROMBoards().map(function(item, idx) {
-        return (
-          <Board key={"r" + idx} board={item} index={idx} />
-        );
+      romBoards = getROMBoards().map(function (item, idx) {
+        return <Board key={"r" + idx} board={item} index={idx} />;
       });
     }
 
@@ -44,7 +48,7 @@ export class BoardMenu extends React.Component<IBoardMenuProps> {
       </div>
     );
   }
-};
+}
 
 interface IBoardProps {
   board: IBoard;
@@ -57,7 +61,7 @@ const Board = class Board extends React.Component<IBoardProps> {
     setCurrentBoard(this.props.index, boardIsRom);
 
     $$log("Now viewing board", this.props.board);
-  }
+  };
 
   onDragStart = (event: any) => {
     // Cannot delete courses that are within the ROM.
@@ -68,50 +72,59 @@ const Board = class Board extends React.Component<IBoardProps> {
 
     showDragZone();
     event.nativeEvent.dataTransfer.setData("text/plain", this.props.index);
-    setDropHandler(function(event: any) {
+    setDropHandler(function (event: any) {
       event.preventDefault();
       var boardIdx = parseInt(event.dataTransfer.getData("text/plain"));
-      if (isNaN(boardIdx))
-        return;
+      if (isNaN(boardIdx)) return;
       hideDragZone();
       deleteBoard(boardIdx);
     });
-  }
+  };
 
   onDragEnd = (event: any) => {
     hideDragZone();
-  }
+  };
 
   onRightClick = (event: any) => {
     // Also in BoardOptions...
     event.preventDefault();
     let items = [
-      { title: 'Copy', fn: this.onCopyBoard },
-      { title: 'Delete', fn: this.onDeleteBoard, visible: !boardIsROM(this.props.board) },
+      { title: "Copy", fn: this.onCopyBoard },
+      {
+        title: "Delete",
+        fn: this.onDeleteBoard,
+        visible: !boardIsROM(this.props.board),
+      },
     ];
     basicContext.show(items, event.nativeEvent);
-  }
+  };
 
   onDeleteBoard = () => {
     deleteBoard(this.props.index);
-  }
+  };
 
   onCopyBoard = () => {
     copyCurrentBoard();
-  }
+  };
 
   render() {
     let tooltip = `Open "${this.props.board.name}"`;
     let className = "boardEntry";
     const isCurrent = getCurrentBoard() === this.props.board;
-    if (isCurrent)
-      className += " boardEntryCurrent";
+    if (isCurrent) className += " boardEntryCurrent";
     let boardImg = this.props.board.otherbg.boardlogo || "";
     let imgEl;
     if (boardImg) {
-      imgEl = <img className="boardEntryImg" src={boardImg} width="200" height="88" alt="" />;
-    }
-    else {
+      imgEl = (
+        <img
+          className="boardEntryImg"
+          src={boardImg}
+          width="200"
+          height="88"
+          alt=""
+        />
+      );
+    } else {
       imgEl = <div className="boardEntryNoImg" />;
     }
 
@@ -119,15 +132,27 @@ const Board = class Board extends React.Component<IBoardProps> {
     const isROM = boardIsROM(this.props.board);
     const onKeyDown = makeKeyClick(this.handleClick);
     return (
-      <div className={className} title={tooltip}
-      role="option" tabIndex={0} aria-selected={isCurrent}
-        onClick={this.handleClick} onKeyDown={onKeyDown} onContextMenu={this.onRightClick}
-        draggable onDragStart={this.onDragStart} onDragEnd={this.onDragEnd}>
+      <div
+        className={className}
+        title={tooltip}
+        role="option"
+        tabIndex={0}
+        aria-selected={isCurrent}
+        onClick={this.handleClick}
+        onKeyDown={onKeyDown}
+        onContextMenu={this.onRightClick}
+        draggable
+        onDragStart={this.onDragStart}
+        onDragEnd={this.onDragEnd}
+      >
         {imgEl}
         <BoardROMIcon rom={isROM} />
         <BoardName name={boardName} />
-        <BoardOptions rom={isROM}
-          onDeleteBoard={this.onDeleteBoard} onCopyBoard={this.onCopyBoard} />
+        <BoardOptions
+          rom={isROM}
+          onDeleteBoard={this.onDeleteBoard}
+          onCopyBoard={this.onCopyBoard}
+        />
       </div>
     );
   }
@@ -139,8 +164,7 @@ interface IBoardROMIconProps {
 
 const BoardROMIcon = class BoardROMIcon extends React.Component<IBoardROMIconProps> {
   render() {
-    if (!this.props.rom)
-      return null;
+    if (!this.props.rom) return null;
     return (
       <div className="boardEntryRomIcon" title="Loaded from ROM">
         <img src={cartImage} width="26" height="26" alt="From ROM" />
@@ -154,22 +178,23 @@ interface IBoardNameProps {
 }
 
 class BoardName extends React.Component<IBoardNameProps> {
-  state = { "editing": false }
+  state = { editing: false };
 
   handleClick = () => {
-    this.setState({ "editing": !!this.state.editing });
-  }
+    this.setState({ editing: !!this.state.editing });
+  };
 
   render() {
     return (
       <div className="boardName">
         <MPEditor
           value={this.props.name}
-          displayMode={MPEditorDisplayMode.Display} />
+          displayMode={MPEditorDisplayMode.Display}
+        />
       </div>
     );
   }
-};
+}
 
 interface IBoardOptionsProps {
   rom: boolean;
@@ -181,8 +206,12 @@ class BoardOptions extends React.Component<IBoardOptionsProps> {
   handleClick = (event: any) => {
     event.preventDefault();
     let items = [
-      { title: 'Copy', fn: this.props.onCopyBoard },
-      { title: 'Delete', fn: this.props.onDeleteBoard, visible: !this.props.rom },
+      { title: "Copy", fn: this.props.onCopyBoard },
+      {
+        title: "Delete",
+        fn: this.props.onDeleteBoard,
+        visible: !this.props.rom,
+      },
       // { title: 'Disabled', icon: 'ion-minus-circled', fn: this.onDeleteOption, disabled: true },
       // { title: 'Invisible', icon: 'ion-eye-disabled', fn: this.onDeleteOption, visible: false },
       // { },
@@ -190,11 +219,16 @@ class BoardOptions extends React.Component<IBoardOptionsProps> {
     ];
 
     basicContext.show(items, event.nativeEvent);
-  }
+  };
 
   render() {
     return (
-      <img className="boardMenuIcon" src={optionsImage} onClick={this.handleClick} alt="Board Options" />
+      <img
+        className="boardMenuIcon"
+        src={optionsImage}
+        onClick={this.handleClick}
+        alt="Board Options"
+      />
     );
   }
-};
+}

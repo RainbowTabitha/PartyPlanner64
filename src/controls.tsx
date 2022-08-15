@@ -10,20 +10,23 @@ export interface IButtonProps {
 }
 
 export const Button = class Button extends React.Component<IButtonProps> {
-  state = {}
+  state = {};
 
   onClick = () => {
     this.props.onClick(this.props.id);
-  }
+  };
 
   render() {
     let css = "nbButton";
-    if (this.props.css)
-      css += " " + this.props.css;
+    if (this.props.css) css += " " + this.props.css;
     return (
-      <div className={css} title={this.props.title} tabIndex={0}
+      <div
+        className={css}
+        title={this.props.title}
+        tabIndex={0}
         onClick={this.onClick}
-        onKeyDown={makeKeyClick(this.onClick)}>
+        onKeyDown={makeKeyClick(this.onClick)}
+      >
         {this.props.children}
       </div>
     );
@@ -42,7 +45,7 @@ export interface IToggleButtonProps {
 }
 
 export const ToggleButton = class ToggleButton extends React.Component<IToggleButtonProps> {
-  state = {}
+  state = {};
 
   onClick = () => {
     if (this.props.readonly) {
@@ -52,16 +55,19 @@ export const ToggleButton = class ToggleButton extends React.Component<IToggleBu
       return;
     }
     this.props.onToggled(this.props.id, !this.props.pressed);
-  }
+  };
 
   render() {
     let css = "toggleButton" + (this.props.pressed ? " pressed" : "");
-    if (this.props.css)
-      css += " " + this.props.css;
+    if (this.props.css) css += " " + this.props.css;
     return (
-      <div className={css} title={this.props.title} tabIndex={0}
+      <div
+        className={css}
+        title={this.props.title}
+        tabIndex={0}
         onClick={this.onClick}
-        onKeyDown={makeKeyClick(this.onClick)}>
+        onKeyDown={makeKeyClick(this.onClick)}
+      >
         {this.props.children}
       </div>
     );
@@ -83,25 +89,25 @@ export interface IToggleGroupProps<Tid = number | string> {
   readonly?: boolean;
 }
 
-export function ToggleGroup<Tid extends number | string>(props: IToggleGroupProps<Tid>) {
+export function ToggleGroup<Tid extends number | string>(
+  props: IToggleGroupProps<Tid>
+) {
   const items = props.items;
-  let toggles = items.map(item => {
+  let toggles = items.map((item) => {
     return (
-      <ToggleButton id={item.id}
+      <ToggleButton
+        id={item.id}
         key={item.id}
         pressed={item.selected}
         allowDeselect={props.allowDeselect}
         readonly={props.readonly}
         title={item.title}
-        onToggled={props.onToggleClick}>
+        onToggled={props.onToggleClick}
+      >
         {item.text}
       </ToggleButton>
     );
   });
 
-  return (
-    <div className={props.groupCssClass}>
-      {toggles}
-    </div>
-  );
+  return <div className={props.groupCssClass}>{toggles}</div>;
 }

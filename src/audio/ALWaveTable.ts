@@ -37,11 +37,9 @@ export class ALWaveTable {
 
     if (this.type === ALWaveType.AL_ADPCM_WAVE) {
       this.adpcmWave = new ALADPCMWaveInfo(view, waveOffset + 12); // not 10?
-    }
-    else if (this.type === ALWaveType.AL_RAW16_WAVE) {
+    } else if (this.type === ALWaveType.AL_RAW16_WAVE) {
       this.rawWave = new ALRAWWaveInfo(view, waveOffset + 12);
-    }
-    else {
+    } else {
       throw new Error(`Unrecognized ALWaveTable type ${this.type}`);
     }
   }

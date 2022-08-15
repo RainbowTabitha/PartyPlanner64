@@ -16,7 +16,7 @@ export class ALADPCMBook {
     const predictorCount = this.order * this.npredictors * 8;
     this.predictors = new Array(predictorCount);
     for (let i = 0; i < predictorCount; i++) {
-      this.predictors[i] = view.getInt16(offset + 8 + (i * 2));
+      this.predictors[i] = view.getInt16(offset + 8 + i * 2);
     }
   }
 }

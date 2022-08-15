@@ -4,8 +4,21 @@ import { $$hex } from "../utils/debug";
 import { RGBA5551toRGBA32 } from "../utils/img/RGBA5551";
 import { BMPtoRGBA } from "../utils/img/BMP";
 
-type IFormObjType = "FORM" | "HBINMODE" | "OBJ1" | "COL1" | "MAT1" | "ATR1"
-  | "VTX1" | "FAC1" | "MTN1" | "BMP1" | "PAL1" | "SKL1" | "STRG" | "MAP1";
+type IFormObjType =
+  | "FORM"
+  | "HBINMODE"
+  | "OBJ1"
+  | "COL1"
+  | "MAT1"
+  | "ATR1"
+  | "VTX1"
+  | "FAC1"
+  | "MTN1"
+  | "BMP1"
+  | "PAL1"
+  | "SKL1"
+  | "STRG"
+  | "MAP1";
 
 type IFormObjDict = { [key in IFormObjType]: IFormObjEntry[] };
 
@@ -60,17 +73,16 @@ interface IPAL1Parsed {
 // Extracts a FORM file into a usable format.
 export const FORM = class FORM {
   static unpack(formView: ArrayBuffer | DataView): IFormObj | null {
-    if (!(formView instanceof DataView))
-      formView = new DataView(formView);
+    if (!(formView instanceof DataView)) formView = new DataView(formView);
 
-    if (!FORM.isForm(formView))
-      return null;
+    if (!FORM.isForm(formView)) return null;
 
     let formObj = Object.create(null);
     formObj.entries = [];
 
     let curOffset = 8;
-    while (curOffset < formView.byteLength - 2) { // Roughly-ish the end
+    while (curOffset < formView.byteLength - 2) {
+      // Roughly-ish the end
       let type: string | number = formView.getUint32(curOffset);
       type = fromU32(type);
       if (type === "HBIN") {
@@ -85,12 +97,11 @@ export const FORM = class FORM {
       curOffset += 4;
 
       let entry: IFormObjEntry = {
-        raw: formView.buffer.slice(curOffset, curOffset + len)
+        raw: formView.buffer.slice(curOffset, curOffset + len),
       };
 
       let parsed = FORM.parseType(type as IFormObjType, entry.raw);
-      if (parsed)
-        entry.parsed = parsed;
+      if (parsed) entry.parsed = parsed;
 
       formObj[type] = formObj[type] || [];
       formObj[type].push(entry);
@@ -113,7 +124,7 @@ export const FORM = class FORM {
     let formBuffer = new ArrayBuffer(FORM.getByteLength(formObj));
     let formView = new DataView(formBuffer);
 
-    formView.setUint32(0, 0x464F524D); // "FORM"
+    formView.setUint32(0, 0x464f524d); // "FORM"
     formView.setUint32(4, formBuffer.byteLength - 8); // Don't count the "FORM____" at the top.
 
     let entryWriteState: { [type in IFormObjType]?: number } = {};
@@ -146,20 +157,18 @@ export const FORM = class FORM {
   }
 
   static isForm(viewOrBuffer: ArrayBuffer | DataView) {
-    if (!viewOrBuffer)
-      return false;
+    if (!viewOrBuffer) return false;
 
     if (!(viewOrBuffer instanceof DataView))
       viewOrBuffer = new DataView(viewOrBuffer);
 
-    return viewOrBuffer.getUint32(0) === 0x464F524D; // "FORM"
+    return viewOrBuffer.getUint32(0) === 0x464f524d; // "FORM"
   }
 
   static getByteLength(formObj: IFormObj) {
     let byteLen = 0;
     for (let type in formObj) {
-      if (type === "entries")
-        continue;
+      if (type === "entries") continue;
       for (let i = 0; i < (formObj as any)[type].length; i++) {
         let rawLen = (formObj as any)[type][i].raw.byteLength;
         // The raw data + rounded up to 16-bit boundary + the TYPE text + entry length value.
@@ -172,7 +181,7 @@ export const FORM = class FORM {
   static parseType(type: IFormObjType, raw: ArrayBuffer) {
     switch (type) {
       case "HBINMODE":
-      return FORM.parseHBINMODE(raw);
+        return FORM.parseHBINMODE(raw);
       case "OBJ1":
         return FORM.parseOBJ1(raw);
       case "COL1":
@@ -229,40 +238,52 @@ export const FORM = class FORM {
 
       let obj: any;
       switch (objType) {
-        case 0x3D:
+        case 0x3d:
           obj = {
             children: [],
           };
           const subObjCount = rawView.getUint16(objectOffset);
           for (let j = 0; j < subObjCount; j++) {
-            obj.children.push(rawView.getUint16(objectOffset + 2 + (2 * j)));
+            obj.children.push(rawView.getUint16(objectOffset + 2 + 2 * j));
           }
-          Object.assign(obj, FORM._parseOBJ1Transforms(rawView, objectOffset + 2 + (2 * subObjCount)));
+          Object.assign(
+            obj,
+            FORM._parseOBJ1Transforms(
+              rawView,
+              objectOffset + 2 + 2 * subObjCount
+            )
+          );
           break;
 
-        case 0x3A:
+        case 0x3a:
           obj = {
             mystery1: rawView.getUint8(objectOffset),
             faceIndex: rawView.getUint16(objectOffset + 1),
             faceCount: rawView.getUint16(objectOffset + 3),
           };
-          Object.assign(obj, FORM._parseOBJ1Transforms(rawView, objectOffset + 5));
+          Object.assign(
+            obj,
+            FORM._parseOBJ1Transforms(rawView, objectOffset + 5)
+          );
           break;
 
         case 0x10: // Points to skeleton entry // 9/11 mp1
           obj = {
             skeletonGlobalIndex: rawView.getUint16(objectOffset),
           };
-          Object.assign(obj, FORM._parseOBJ1Transforms(rawView, objectOffset + 2));
+          Object.assign(
+            obj,
+            FORM._parseOBJ1Transforms(rawView, objectOffset + 2)
+          );
           break;
 
-        case 0x3B:
+        case 0x3b:
           // TODO mp3 25/2
           obj = {};
           console.warn("Object type 0x3B");
           break;
 
-        case 0x3E:
+        case 0x3e:
           // TODO
           obj = {};
           //console.warn("Object type 0x3E");
@@ -274,7 +295,7 @@ export const FORM = class FORM {
           Object.assign(obj, FORM._parseOBJ1Transforms(rawView, objectOffset));
           break;
 
-        case 0x5D:
+        case 0x5d:
           // TODO mp3 13/0
           // Refers to objects of type 0x61
           obj = {};
@@ -361,7 +382,7 @@ export const FORM = class FORM {
         xBehavior: rawView.getUint8(atrOffset + 0x5),
         yBehavior: rawView.getUint8(atrOffset + 0x6),
         // 2F 2F 01
-        bmpGlobalIndex: rawView.getUint16(atrOffset + 0xA),
+        bmpGlobalIndex: rawView.getUint16(atrOffset + 0xa),
       };
       result.atrs.push(atr);
 
@@ -404,7 +425,8 @@ export const FORM = class FORM {
     for (let i = 0; i < faceCount; i++) {
       let faceType = rawView.getUint8(faceOffset);
 
-      if (faceType !== 0x35 && faceType !== 0x16 && faceType !== 0x30) // 0x30 in mainfs 9/81 mp1
+      if (faceType !== 0x35 && faceType !== 0x16 && faceType !== 0x30)
+        // 0x30 in mainfs 9/81 mp1
         throw new Error(`Unrecognized faceType in FAC1: ${$$hex(faceType)}`);
 
       let face: IFAC1Parsed = {
@@ -417,8 +439,7 @@ export const FORM = class FORM {
       if (faceType === 0x30) {
         console.warn("Unsupported face type 0x30");
         faceOffset += 6; // TODO: What is 0x30 type? VTX num VTX?
-      }
-      else {
+      } else {
         const vtxEntryCount = faceType === 0x35 ? 4 : 3;
         for (let j = 0; j < vtxEntryCount; j++) {
           face.vtxEntries[j] = {
@@ -459,14 +480,12 @@ export const FORM = class FORM {
     result.bpp = Math.floor((raw.byteLength - 4) / colorCount) * 8;
     let colorOffset = 4;
     for (let i = 0; i < colorCount; i++) {
-      if (result.bpp === 32)
-        result.colors.push(rawView.getUint32(colorOffset));
+      if (result.bpp === 32) result.colors.push(rawView.getUint32(colorOffset));
       else if (result.bpp === 16)
         result.colors.push(rawView.getUint16(colorOffset));
       else if (result.bpp === 8)
         result.colors.push(rawView.getUint8(colorOffset));
-      else
-        throw new Error(`FORM.parseType(PAL1): bpp: ${result.bpp}`);
+      else throw new Error(`FORM.parseType(PAL1): bpp: ${result.bpp}`);
 
       colorOffset += result.bpp / 8;
     }
@@ -531,7 +550,7 @@ export const FORM = class FORM {
         throw new Error(`Palette needed for BMP format ${$$hex(format)}`);
 
       const paletteGlobalIndex = rawView.getUint16(0x09);
-      const inBmpSize = rawView.getUint16(0x0F);
+      const inBmpSize = rawView.getUint16(0x0f);
 
       // Find associated palette by global index
       let palette;
@@ -542,7 +561,9 @@ export const FORM = class FORM {
         }
       }
       if (!palette) {
-        throw new Error(`Could not locate palette at global index ${paletteGlobalIndex}`);
+        throw new Error(
+          `Could not locate palette at global index ${paletteGlobalIndex}`
+        );
       }
 
       // Doesn't appear to indicate BPP, but we can calculate from size and dimens.
@@ -558,11 +579,11 @@ export const FORM = class FORM {
         height,
         src: BMPtoRGBA(inBmpData, palette.colors, inBpp, outBpp),
       };
-    }
-    else if (format === 0x127) { // mp1 9/138
+    } else if (format === 0x127) {
+      // mp1 9/138
       // Just raw RGBA already
       const bpp = rawView.getUint8(0x4);
-      const imageByteLength = rawView.getUint16(0xB);
+      const imageByteLength = rawView.getUint16(0xb);
       switch (bpp) {
         case 16:
           return {
@@ -570,7 +591,11 @@ export const FORM = class FORM {
             origFormat: format,
             width,
             height,
-            src: RGBA5551toRGBA32(raw.slice(0xD, 0xD + imageByteLength), width, height),
+            src: RGBA5551toRGBA32(
+              raw.slice(0xd, 0xd + imageByteLength),
+              width,
+              height
+            ),
           };
 
         case 32:
@@ -579,25 +604,26 @@ export const FORM = class FORM {
             origFormat: format,
             width,
             height,
-            src: raw.slice(0xD, 0xD + imageByteLength),
+            src: raw.slice(0xd, 0xd + imageByteLength),
           };
 
         default:
           console.warn(`BMP1 0x127 had unsupported bpp ${bpp}`);
       }
-    }
-    else if (format === 0x126) { // 0x126 mp1 9/25
+    } else if (format === 0x126) {
+      // 0x126 mp1 9/25
       // 24 bits per color
       // TODO: Are the bits right, or is there alpha?
-      const imageByteLength = rawView.getUint16(0xB);
+      const imageByteLength = rawView.getUint16(0xb);
 
       const outBuffer = new ArrayBuffer(width * height * 4);
       const outView = new DataView(outBuffer);
-      for (let i = 0; i < (imageByteLength / 3); i++) {
-        const inByte1 = rawView.getUint8(0xD + i);
-        const inByte2 = rawView.getUint8(0xD + i + 1);
-        const inByte3 = rawView.getUint8(0xD + i + 2);
-        const rgba32 = (inByte1 << 24) | (inByte2 << 16) | (inByte3 << 8) | 0xFF;
+      for (let i = 0; i < imageByteLength / 3; i++) {
+        const inByte1 = rawView.getUint8(0xd + i);
+        const inByte2 = rawView.getUint8(0xd + i + 1);
+        const inByte3 = rawView.getUint8(0xd + i + 2);
+        const rgba32 =
+          (inByte1 << 24) | (inByte2 << 16) | (inByte3 << 8) | 0xff;
         const outIndex = i * 4;
         outView.setUint32(outIndex, rgba32);
       }
@@ -609,19 +635,19 @@ export const FORM = class FORM {
         height,
         src: outBuffer,
       };
-    }
-    else if (format === 0x125) {
+    } else if (format === 0x125) {
       // Grayscale?
       // TODO: I don't think this is right? Some sort of shadow mask?
-      const imageByteLength = rawView.getUint16(0xB);
+      const imageByteLength = rawView.getUint16(0xb);
 
       const outBuffer = new ArrayBuffer(imageByteLength * 4);
       const outView = new DataView(outBuffer);
       for (let i = 0; i < imageByteLength; i++) {
-        const inByte = rawView.getUint8(0xD + i);
-        const alpha = (inByte & 0x0F) | ((inByte & 0x0F) << 4);
-        const grayscale = (inByte & 0xF0) | ((inByte & 0xF0) >>> 4);
-        const rgba32 = (grayscale << 24) | (grayscale << 16) | (grayscale << 8) | alpha;
+        const inByte = rawView.getUint8(0xd + i);
+        const alpha = (inByte & 0x0f) | ((inByte & 0x0f) << 4);
+        const grayscale = (inByte & 0xf0) | ((inByte & 0xf0) >>> 4);
+        const rgba32 =
+          (grayscale << 24) | (grayscale << 16) | (grayscale << 8) | alpha;
         const outIndex = i * 4;
         outView.setUint32(outIndex, rgba32);
       }
@@ -633,26 +659,32 @@ export const FORM = class FORM {
         height,
         src: outBuffer,
       };
-    }
-    else if (format === 0x124) { // 0x124 mp3 11/51
+    } else if (format === 0x124) {
+      // 0x124 mp3 11/51
       // Grayscale?
       // TODO: I don't think this is right? Some sort of shadow mask?
-      const imageByteLength = rawView.getUint16(0xB);
+      const imageByteLength = rawView.getUint16(0xb);
 
       const outBuffer = new ArrayBuffer(imageByteLength * 8);
       const outView = new DataView(outBuffer);
       let outLoc = 0;
       for (let i = 0; i < imageByteLength; i++) {
-        const inByte = rawView.getUint8(0xD + i);
+        const inByte = rawView.getUint8(0xd + i);
 
-        let out1byte = (inByte & 0xF0) >>> 4;
-        out1byte |= (inByte & 0xF0);
-        outView.setUint32(outLoc, (out1byte << 24) | (out1byte << 16) | (out1byte << 8) | 0xFF);
+        let out1byte = (inByte & 0xf0) >>> 4;
+        out1byte |= inByte & 0xf0;
+        outView.setUint32(
+          outLoc,
+          (out1byte << 24) | (out1byte << 16) | (out1byte << 8) | 0xff
+        );
         outLoc += 4;
 
-        let out2byte = (inByte & 0x0F);
-        out2byte |= (out2byte << 4);
-        outView.setUint32(outLoc, (out2byte << 24) | (out2byte << 16) | (out2byte << 8) | 0xFF);
+        let out2byte = inByte & 0x0f;
+        out2byte |= out2byte << 4;
+        outView.setUint32(
+          outLoc,
+          (out2byte << 24) | (out2byte << 16) | (out2byte << 8) | 0xff
+        );
         outLoc += 4;
       }
 
@@ -677,7 +709,12 @@ export const FORM = class FORM {
     };
   }
 
-  static replaceBMP(formObj: IFormObj, bmpIndex: number, buffer: ArrayBuffer, palette: any) {
+  static replaceBMP(
+    formObj: IFormObj,
+    bmpIndex: number,
+    buffer: ArrayBuffer,
+    palette: any
+  ) {
     // FIXME?: For now, this assumes that the new BMP has the same properties basically.
     // Also look at the huge blob at the bottom LOL get this thing done!
 
@@ -686,8 +723,12 @@ export const FORM = class FORM {
 
     // Write the palette, which needs some care.
     formObj.PAL1[bmpIndex].parsed = palette;
-    let oldPalGlobalIndex = (new DataView(formObj.PAL1[bmpIndex].raw)).getUint16(0);
-    let newRaw = formObj.PAL1[bmpIndex].raw = new ArrayBuffer(4 + (palette.colors.length * 4));
+    let oldPalGlobalIndex = new DataView(formObj.PAL1[bmpIndex].raw).getUint16(
+      0
+    );
+    let newRaw = (formObj.PAL1[bmpIndex].raw = new ArrayBuffer(
+      4 + palette.colors.length * 4
+    ));
     let newPaletteView = new DataView(newRaw);
     newPaletteView.setUint16(0, oldPalGlobalIndex);
     newPaletteView.setUint16(2, palette.colors.length);
@@ -720,21 +761,21 @@ export const FORM = class FORM {
   }
 
   // Retrieves a value (or possibly multiple values) by global index.
-  static getByGlobalIndex(form: IFormObj, section: IFormObjType, globalIndex: number) {
-    if (!form[section])
-      return null;
+  static getByGlobalIndex(
+    form: IFormObj,
+    section: IFormObjType,
+    globalIndex: number
+  ) {
+    if (!form[section]) return null;
 
     const values = [];
     for (var s = 0; s < form[section].length; s++) {
       const parsedValue = form[section][s].parsed;
-      if (!parsedValue)
-        throw new Error(`No parsed value for ${section}`);
+      if (!parsedValue) throw new Error(`No parsed value for ${section}`);
 
       if (parsedValue.hasOwnProperty("globalIndex")) {
-        if (parsedValue.globalIndex === globalIndex)
-          values.push(parsedValue);
-      }
-      else {
+        if (parsedValue.globalIndex === globalIndex) values.push(parsedValue);
+      } else {
         let arrToSearch = parsedValue;
 
         switch (section) {
@@ -747,18 +788,17 @@ export const FORM = class FORM {
           const val = arrToSearch[i];
 
           if (!val.hasOwnProperty("globalIndex"))
-            throw new Error(`globalIndex is not a property of the searched ${section} array in getByGlobalIndex`);
+            throw new Error(
+              `globalIndex is not a property of the searched ${section} array in getByGlobalIndex`
+            );
 
-          if (val.globalIndex === globalIndex)
-            values.push(val);
+          if (val.globalIndex === globalIndex) values.push(val);
         }
       }
     }
 
-    if (!values.length)
-      return null;
-    if (values.length === 1)
-      return values[0];
+    if (!values.length) return null;
+    if (values.length === 1) return values[0];
     return values;
   }
 
@@ -772,4 +812,4 @@ export const FORM = class FORM {
     }
     return objsOfType;
   }
-}
+};

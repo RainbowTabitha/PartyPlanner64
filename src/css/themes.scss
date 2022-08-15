@@ -1,22 +1,23 @@
-:root, :root.theme-classic {
+:root,
+:root.theme-classic {
   --bg-color: #46342f;
 
-  --header-bg-color: #B59C95;
+  --header-bg-color: #b59c95;
   --header-border-color: black;
   --header-text-color: black;
 
-  --sidebar-bg-color: #5A4540;
+  --sidebar-bg-color: #5a4540;
 
-  --accent-color: #5A4540;
+  --accent-color: #5a4540;
 
   --text-color: white;
   --link-color: #001281;
 
-  --board-card-bg-color: #FFFFFF;
+  --board-card-bg-color: #ffffff;
   --board-card-shadow-color: #222222;
   --board-card-text-color: #222222;
 
-  --context-menu-bg-color: #997A73;
+  --context-menu-bg-color: #997a73;
   --context-menu-border-color: #745951;
   --context-menu-text-color: black;
   --context-menu-text-disabled-color: rgba(0, 0, 0, 0.7);
@@ -28,20 +29,20 @@
   --code-tab-text-color: black;
   --code-tab-inactive-text-color: black;
   --code-tab-inactive-hover-text-color: black;
-  --code-tab-bg-color: #B59C95;
-  --code-tab-hover-bg-color: #D0B6AF;
+  --code-tab-bg-color: #b59c95;
+  --code-tab-hover-bg-color: #d0b6af;
 
-  --details-audio-entry-bg-color: #816A66;
+  --details-audio-entry-bg-color: #816a66;
   --details-audio-entry-border-color: #514745;
 
-  --properties-empty-text-color: #39221C;
-  --tool-window-bg-color: #755E59;
+  --properties-empty-text-color: #39221c;
+  --tool-window-bg-color: #755e59;
   --tool-window-border-color: #3a2f2c;
   --tool-window-shadow-color: #222222;
   --tool-window-text-color: black;
   --tool-window-title-text-color: #958883;
 
-  --event-entry-bg-color: #816A66;
+  --event-entry-bg-color: #816a66;
   --event-entry-border-color: #514745;
   --event-entry-hover-border-color: #3d3230;
   --event-entry-text-color: black;
@@ -55,15 +56,15 @@
   --delete-list-hover-img: url("../img/editor/icons/deletelist_hover.png");
   --eye-img: url("../img/editor/boardproperties/eye.png");
 
-  --mp-text-editor-separator-color: #AAAAAA;
+  --mp-text-editor-separator-color: #aaaaaa;
 
   // These match the game, unlikely to need to change for other themes.
-  --mp-text-light-bg-color: #DCE4BA;
-  --mp-text-light-border-color: #DCC241;
-  --mp-text-light-text-color: #200E71;
-  --mp-text-dark-bg-color: #6D7597;
-  --mp-text-dark-border-color: #525F97;
-  --mp-text-dark-text-color: #FFFFFF;
+  --mp-text-light-bg-color: #dce4ba;
+  --mp-text-light-border-color: #dcc241;
+  --mp-text-light-text-color: #200e71;
+  --mp-text-dark-bg-color: #6d7597;
+  --mp-text-dark-border-color: #525f97;
+  --mp-text-dark-text-color: #ffffff;
 
   --notification-text-color: white;
   --notification-color-red: #c7212a;
@@ -85,7 +86,7 @@
   --text-color: white;
   --link-color: #76bdff;
 
-  --board-card-bg-color: #FFFFFF;
+  --board-card-bg-color: #ffffff;
   --board-card-shadow-color: #161616;
   --board-card-text-color: #222222;
 
@@ -99,7 +100,7 @@
   --code-readonly-bg-color: #d1d1d1;
 
   --code-tab-text-color: black;
-  --code-tab-inactive-text-color: #CCCCCC;
+  --code-tab-inactive-text-color: #cccccc;
   --code-tab-inactive-hover-text-color: #222222;
   --code-tab-bg-color: #535353;
   --code-tab-hover-bg-color: #cccccc;

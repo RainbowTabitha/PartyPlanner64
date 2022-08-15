@@ -37,7 +37,7 @@ import { copyRange } from "../utils/arrays";
 import { makeDivisibleBy } from "../utils/number";
 import { assert } from "../utils/debug";
 
-const MBF0_MAGIC = 0x4D424630;
+const MBF0_MAGIC = 0x4d424630;
 const MBF0_HEADER_SIZE = 0x40;
 
 export class MBF0 {
@@ -55,14 +55,21 @@ export class MBF0 {
   }
 
   private _extract(view: DataView) {
-    if (view.getUint32(0) !== MBF0_MAGIC) // "MBF0"
+    if (view.getUint32(0) !== MBF0_MAGIC)
+      // "MBF0"
       throw new Error("MBF0 constructor encountered non-MBF0 structure");
 
     const midiCount = view.getUint32(4);
 
     // Don't really know what these are, so just grab rest of header in bulk.
     this._headerContents = new ArrayBuffer(0x38);
-    copyRange(this._headerContents, view, 0, 8, this._headerContents.byteLength);
+    copyRange(
+      this._headerContents,
+      view,
+      0,
+      8,
+      this._headerContents.byteLength
+    );
 
     const tableEntriesOffset = MBF0_HEADER_SIZE;
 
@@ -74,15 +81,14 @@ export class MBF0 {
 
     // Extract midi buffers
     for (let i = 0; i < midiCount; i++) {
-      const tableEntryOffset = tableEntriesOffset + (i * 16);
+      const tableEntryOffset = tableEntriesOffset + i * 16;
       const midiOffset = view.getUint32(tableEntryOffset + 8);
       const midiSize = view.getUint32(tableEntryOffset + 12);
 
       let buffer: ArrayBuffer;
       if (buffersMap.has(midiOffset)) {
         buffer = buffersMap.get(midiOffset)!;
-      }
-      else {
+      } else {
         buffer = view.buffer.slice(
           view.byteOffset + midiOffset,
           view.byteOffset + midiOffset + midiSize
@@ -99,25 +105,38 @@ export class MBF0 {
       });
 
       assert(view.getUint8(tableEntryOffset + 3) === 0);
-      assert(view.getUint32(tableEntryOffset + 4) === 0x07000000
-        || view.getUint32(tableEntryOffset + 4) === 0);
+      assert(
+        view.getUint32(tableEntryOffset + 4) === 0x07000000 ||
+          view.getUint32(tableEntryOffset + 4) === 0
+      );
     }
 
-    const extraOffsetsOffset = MBF0_HEADER_SIZE + (16 * midiCount);
+    const extraOffsetsOffset = MBF0_HEADER_SIZE + 16 * midiCount;
     const B1offset = view.getUint32(extraOffsetsOffset);
     const B1size = view.getUint32(extraOffsetsOffset + 4);
     const tblOffsetStart = view.getUint32(extraOffsetsOffset + 8);
-    const tblOffsetEnd = tblOffsetStart + view.getUint32(extraOffsetsOffset + 12);
+    const tblOffsetEnd =
+      tblOffsetStart + view.getUint32(extraOffsetsOffset + 12);
 
     // Extract tbl buffer
-    this.tbl = view.buffer.slice(view.byteOffset + tblOffsetStart, view.byteOffset + tblOffsetEnd);
+    this.tbl = view.buffer.slice(
+      view.byteOffset + tblOffsetStart,
+      view.byteOffset + tblOffsetEnd
+    );
 
     // Extract B1 structure
-    const B1view = new DataView(view.buffer, view.byteOffset + B1offset, B1size);
+    const B1view = new DataView(
+      view.buffer,
+      view.byteOffset + B1offset,
+      B1size
+    );
     this.soundbanks = new B1(B1view);
 
     // Workaround until B1 can measure itself.
-    this._soundbackBuffer = view.buffer.slice(view.byteOffset + B1offset, view.byteOffset + B1offset + B1size);
+    this._soundbackBuffer = view.buffer.slice(
+      view.byteOffset + B1offset,
+      view.byteOffset + B1offset + B1size
+    );
   }
 
   public pack(buffer: ArrayBuffer, startOffset: number = 0): number {
@@ -126,7 +145,13 @@ export class MBF0 {
 
     dataView.setUint32(0, MBF0_MAGIC);
     dataView.setUint32(4, this.midis.length);
-    copyRange(dataView, this._headerContents, 8, 0, this._headerContents.byteLength);
+    copyRange(
+      dataView,
+      this._headerContents,
+      8,
+      0,
+      this._headerContents.byteLength
+    );
     currentOffset += MBF0_HEADER_SIZE;
 
     currentOffset += 16 * this.midis.length; // Skip over midi entry table.
@@ -142,7 +167,13 @@ export class MBF0 {
       assert(currentOffset % 8 === 0);
       buffersMap.set(midiInfo.buffer, currentOffset);
 
-      copyRange(dataView, midiInfo.buffer, currentOffset, 0, midiInfo.buffer.byteLength);
+      copyRange(
+        dataView,
+        midiInfo.buffer,
+        currentOffset,
+        0,
+        midiInfo.buffer.byteLength
+      );
 
       currentOffset += makeDivisibleBy(midiInfo.buffer.byteLength, 8);
     }
@@ -166,12 +197,17 @@ export class MBF0 {
     // Now go back and fill out upper table.
     currentOffset = MBF0_HEADER_SIZE;
     for (const midiInfo of this.midis) {
-
       dataView.setUint8(currentOffset, midiInfo.mystery0 || 0);
-      dataView.setUint8(currentOffset + 1, (typeof midiInfo.mystery1 === "number") ? midiInfo.mystery1 : 0x6F);
+      dataView.setUint8(
+        currentOffset + 1,
+        typeof midiInfo.mystery1 === "number" ? midiInfo.mystery1 : 0x6f
+      );
       dataView.setUint8(currentOffset + 2, midiInfo.soundbankIndex);
       dataView.setUint8(currentOffset + 3, 0);
-      dataView.setUint32(currentOffset + 4, (typeof midiInfo.mystery4 === "number") ? midiInfo.mystery4 : 0x07000000);
+      dataView.setUint32(
+        currentOffset + 4,
+        typeof midiInfo.mystery4 === "number" ? midiInfo.mystery4 : 0x07000000
+      );
       dataView.setUint32(currentOffset + 8, buffersMap.get(midiInfo.buffer)!);
       dataView.setUint32(currentOffset + 12, midiInfo.buffer.byteLength);
 
@@ -184,8 +220,7 @@ export class MBF0 {
     dataView.setUint32(currentOffset + 12, tblLength);
 
     const byteLengthWritten = finalOffset;
-    if (isDebug())
-      assert(this.getByteLength() === byteLengthWritten);
+    if (isDebug()) assert(this.getByteLength() === byteLengthWritten);
     return byteLengthWritten;
   }
 

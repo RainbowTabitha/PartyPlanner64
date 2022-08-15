@@ -8,16 +8,14 @@ export class SpaceEventTable {
   }
 
   /*
-  * Populates this SpaceEventTable from an event table existing in the buffer.
-  */
+   * Populates this SpaceEventTable from an event table existing in the buffer.
+   */
   parse(arr: DataView): void;
   parse(arr: ArrayBuffer, offset: number): void;
   parse(arr: ArrayBuffer | DataView, offset?: number): void {
     let dataView: DataView;
-    if (arr instanceof ArrayBuffer)
-      dataView = new DataView(arr, offset);
-    else
-      dataView = arr;
+    if (arr instanceof ArrayBuffer) dataView = new DataView(arr, offset);
+    else dataView = arr;
     let currentOffset = 0;
     let spaceIndex, address;
     while ((spaceIndex = dataView.getInt16(currentOffset)) !== -1) {
@@ -28,17 +26,22 @@ export class SpaceEventTable {
   }
 
   /*
-  * Writes the current entries back to the buffer at an offset.
-  * Returns length of bytes written (equal to calling byteLength())
-  */
+   * Writes the current entries back to the buffer at an offset.
+   * Returns length of bytes written (equal to calling byteLength())
+   */
   write(buffer: ArrayBuffer, offset: number) {
     let dataView = new DataView(buffer, offset);
     let currentOffset = 0;
     for (let spaceIndex in this._entries) {
-      this._writeEntry(dataView, currentOffset, parseInt(spaceIndex), this._entries[spaceIndex] as number);
+      this._writeEntry(
+        dataView,
+        currentOffset,
+        parseInt(spaceIndex),
+        this._entries[spaceIndex] as number
+      );
       currentOffset += 8;
     }
-    this._writeEntry(dataView, currentOffset, 0xFFFF, 0);
+    this._writeEntry(dataView, currentOffset, 0xffff, 0);
     currentOffset += 8;
 
     return currentOffset;
@@ -48,19 +51,25 @@ export class SpaceEventTable {
   getAssembly(): string {
     let asm = "__PP64_INTERNAL_SPACE_TABLE:\n";
     for (let spaceIndex in this._entries) {
-      asm +=
-      `.halfword ${parseInt(spaceIndex)}, 0
+      asm += `.halfword ${parseInt(spaceIndex)}, 0
        .word ${createSpaceEventListLabel(parseInt(spaceIndex))}\n`;
     }
     asm += `.halfword 0xFFFF, 0, 0, 0\n`;
     return asm;
   }
 
-  _writeEntry(dataView: DataView, currentOffset: number, spaceIndex: number, address: number) {
+  _writeEntry(
+    dataView: DataView,
+    currentOffset: number,
+    spaceIndex: number,
+    address: number
+  ) {
     dataView.setUint16(currentOffset, spaceIndex);
     dataView.setUint16(currentOffset + 2, 0); // Just to be sure
-    if (!address && spaceIndex !== 0xFFFF)
-      throw new Error(`Tried to write null address from SpaceEventTable at space index ${spaceIndex}.`);
+    if (!address && spaceIndex !== 0xffff)
+      throw new Error(
+        `Tried to write null address from SpaceEventTable at space index ${spaceIndex}.`
+      );
     dataView.setUint32(currentOffset + 4, address);
   }
 
@@ -72,7 +81,7 @@ export class SpaceEventTable {
     for (let spaceIndex in this._entries) {
       let entry = {
         spaceIndex: Number(spaceIndex),
-        address: this._entries[spaceIndex]
+        address: this._entries[spaceIndex],
       };
       fn(entry);
     }
@@ -80,6 +89,6 @@ export class SpaceEventTable {
 
   byteLength() {
     // Each entry is 8 bytes, plus the last 0xFFFF entry.
-    return (Object.keys(this._entries).length * 8) + 8;
+    return Object.keys(this._entries).length * 8 + 8;
   }
 }

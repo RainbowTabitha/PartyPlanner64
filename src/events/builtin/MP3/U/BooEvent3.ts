@@ -9,26 +9,30 @@ export const BooEvent3: Partial<IEvent> = {
 
     // Chilly Waters 0x8010DE7C - 0x10F050, space 0x92 with 0x6A boo
     if (info.boardIndex === 0) {
-      if (info.offset !== 0x003239EC)
-        return false;
-      if (dataView.getUint32(info.offset + 0x4C) !== 0x0C03AF32) // JAL 0x800EBCC8
+      if (info.offset !== 0x003239ec) return false;
+      if (dataView.getUint32(info.offset + 0x4c) !== 0x0c03af32)
+        // JAL 0x800EBCC8
         return false;
       fnLen = getFunctionLength(dataView, info.offset);
-      found = fnLen === 0x11D4;
+      found = fnLen === 0x11d4;
     }
 
     // Deep bloober 0x8010D9E4, space 0x79 with 0x66 boo
 
-    if (!found)
-      return false;
+    if (!found) return false;
 
     return true;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     // Code still lives in the board overlay.
     return `
       J __PP64_INTERNAL_BOO_SPACE_EVENT
       NOP
     `;
-  }
+  },
 };

@@ -6,22 +6,26 @@ let _blackRGB16: ArrayBuffer | null = null;
 
 export function decode(hvqView: DataView) {
   let firstWord = hvqView.getUint32(0);
-  let isHVQ = (firstWord & 0xFFFFFF00) === 0x48565100; // "HVQ"
+  let isHVQ = (firstWord & 0xffffff00) === 0x48565100; // "HVQ"
   // $$log(`HVQ.decode, isHVQ: ${isHVQ}, len: ${$$hex(hvqView.byteLength)})`);
-  if (firstWord === 0x00000003) { // MP2+ can have run-length instead
+  if (firstWord === 0x00000003) {
+    // MP2+ can have run-length instead
     let fileStartView = new DataView(hvqView.buffer, 8);
     let decompressedSize = hvqView.getUint32(4);
     return decompress(3, fileStartView, decompressedSize);
   }
   if (!isHVQ) {
     let buffer = hvqView.buffer;
-    return buffer.slice(hvqView.byteOffset, hvqView.byteOffset + hvqView.byteLength);
+    return buffer.slice(
+      hvqView.byteOffset,
+      hvqView.byteOffset + hvqView.byteLength
+    );
   }
 
   if (!_blackRGB16) {
     _blackRGB16 = new ArrayBuffer(0x1800);
     var blackView = new DataView(_blackRGB16);
-    for (var i = 0; i < (0x1800 / 2); i++) {
+    for (var i = 0; i < 0x1800 / 2; i++) {
       blackView.setUint16(i * 2, 0x0001);
     }
   }
@@ -80,10 +84,10 @@ export function decode(hvqView: DataView) {
 
 export function encode(buffer: ArrayBuffer, width: number, height: number) {
   const gameVersion = romhandler.getGameVersion();
-  if (gameVersion === null)
-    throw new Error("HVQ encode not implemented");
+  if (gameVersion === null) throw new Error("HVQ encode not implemented");
 
-  if (gameVersion > 1) { // Hack for MP2
+  if (gameVersion > 1) {
+    // Hack for MP2
     let compressed = compress(3, new DataView(buffer));
     let result = new ArrayBuffer(compressed.byteLength + 8);
     let resultView = new DataView(result);

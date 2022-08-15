@@ -1,6 +1,19 @@
 import { AdapterBase } from "./AdapterBase";
-import { IBoard, ISpace, getConnections, addEventByIndex, addEventToSpaceInternal } from "../boards";
-import { Space, BoardType, SpaceSubtype, EventExecutionType, EditorEventActivationType, getEventActivationTypeFromEditorType } from "../types";
+import {
+  IBoard,
+  ISpace,
+  getConnections,
+  addEventByIndex,
+  addEventToSpaceInternal,
+} from "../boards";
+import {
+  Space,
+  BoardType,
+  SpaceSubtype,
+  EventExecutionType,
+  EditorEventActivationType,
+  getEventActivationTypeFromEditorType,
+} from "../types";
 import { $$log } from "../utils/debug";
 import { createEventInstance } from "../events/events";
 import { strings } from "../fs/strings";
@@ -26,16 +39,16 @@ import { getImageData } from "../utils/img/getImageData";
 import { getEventsInLibrary } from "../events/EventLibrary";
 import { EventMap } from "../app/boardState";
 
-export const MP3 = new class MP3Adapter extends AdapterBase {
+export const MP3 = new (class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
 
   public nintendoLogoFSEntry: number[] = [17, 1];
   public hudsonLogoFSEntry: number[] = [17, 2];
   public boardDefDirectory: number = 19;
 
-  public MAINFS_READ_ADDR: number = 0x00009C10;
-  public HEAP_FREE_ADDR: number = 0x00009E6C;
-  public TABLE_HYDRATE_ADDR: number = 0x000EBA60;
+  public MAINFS_READ_ADDR: number = 0x00009c10;
+  public HEAP_FREE_ADDR: number = 0x00009e6c;
+  public TABLE_HYDRATE_ADDR: number = 0x000eba60;
 
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
@@ -44,22 +57,32 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     }
   }
 
-  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]) {
+  onCreateBoardOverlay(
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number,
+    audioIndices: number[]
+  ) {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo, boardIndex: number): void {
+  onAfterOverwrite(
+    romView: DataView,
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ): void {
     // Patch game to use all 8MB.
-    romView.setUint16(0x360EE, 0x8040); // Main heap now starts at 0x80400000
-    romView.setUint16(0x360F6, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space
-    romView.setUint16(0x36102, 0x001A); // Temp heap fills as much as 0x1A8000 (8000 is ORed in)
-    romView.setUint16(0x495D6, 0x001A);
+    romView.setUint16(0x360ee, 0x8040); // Main heap now starts at 0x80400000
+    romView.setUint16(0x360f6, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space
+    romView.setUint16(0x36102, 0x001a); // Temp heap fills as much as 0x1A8000 (8000 is ORed in)
+    romView.setUint16(0x495d6, 0x001a);
 
     // gamemasterplc: patch both ROM address 0x50DA60 and 0x50DA80 with the value 0x24020001 to fix character unlocks
     // gamemasterplc: aka MIPS Instruction ADDIU V0, R0, 0x1
     const playerSelectScene = scenes.getDataView(120);
-    playerSelectScene.setUint32(0xBE60, 0x24020001); // 0x50DA60
-    playerSelectScene.setUint32(0xBE80, 0x24020001); // 0x50DA80
+    playerSelectScene.setUint32(0xbe60, 0x24020001); // 0x50DA60
+    playerSelectScene.setUint32(0xbe80, 0x24020001); // 0x50DA80
 
     // This generally fixes duels on happening spaces.
     // gamemasterplc: try making 0x00111F04 in ROM 0x10800009 for a temporary fix for question space duels until we figure out events better
@@ -74,24 +97,31 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     let blueSpaceCount = 0;
     let redSpaceCount = 0;
     for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
-      if (space.type === Space.BLUE)
-        blueSpaceCount++;
-      if (space.type === Space.RED)
-        redSpaceCount++;
+      const space = board.spaces[i];
+      if (space.type === Space.BLUE) blueSpaceCount++;
+      if (space.type === Space.RED) redSpaceCount++;
     }
     if (blueSpaceCount < 14 || redSpaceCount < 1) {
       // Fix low spaces issues
       // gamemasterplc: patch ROM offset 0x001101C4 with 0x10000085 to fix low space hangs
-      boardPlayScene.setUint32(0x25A34, 0x10000085); // Something like BEQ R0 R0 0x85, so it always branches
+      boardPlayScene.setUint32(0x25a34, 0x10000085); // Something like BEQ R0 R0 0x85, so it always branches
       $$log("Patching for low space count.");
     }
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
-    let bgIndex = boardInfo.bgDir;
-    let bgPromises = [
-      this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
+  onOverwritePromises(
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ) {
+    const bgIndex = boardInfo.bgDir;
+    const bgPromises = [
+      this._writeBackground(
+        bgIndex,
+        board.bg.src,
+        board.bg.width,
+        board.bg.height
+      ),
       this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
       this._writeBackground(bgIndex + 2, board.bg.src, 320, 240), // Overview map
       this._writeAdditionalBackgrounds(board),
@@ -102,7 +132,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       this._brandBootSplashscreen(),
     ];
 
-    return Promise.all(bgPromises)
+    return Promise.all(bgPromises);
   }
 
   onAfterSave(romView: DataView) {
@@ -111,31 +141,48 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     // set the correct save type, but this will let them play at least (with broken saving)
     // gamemasterplc: @PartyPlanner64 the jump you had to overwrite at 8000C2C0 is due
     // to the game needing 16k eeprom and emulators not setting it for modded roms
-    romView.setUint32(0x0000CEC0, 0);
+    romView.setUint32(0x0000cec0, 0);
 
     // The release ROM has debugger checks in it, which can cause some
     // emulators (Nemu64) to be upset. This stops the debugger checks.
-    romView.setUint32(0x0007FC58, 0); // Don't check if KMC worked...
-    romView.setUint32(0x0007FC60, 0); // Don't do KMC success action...
+    romView.setUint32(0x0007fc58, 0); // Don't check if KMC worked...
+    romView.setUint32(0x0007fc60, 0); // Don't do KMC success action...
     // The "return;" is just hit after this and the rest of the checks are skipped.
   }
 
-  onWriteEvents(board: IBoard) {
-  }
+  onWriteEvents(board: IBoard) {}
 
-  protected onAddDefaultBoardEvents(editorActivationType: EditorEventActivationType, list: SpaceEventList): void {
+  protected onAddDefaultBoardEvents(
+    editorActivationType: EditorEventActivationType,
+    list: SpaceEventList
+  ): void {
     if (editorActivationType === EditorEventActivationType.BEFORE_DICE_ROLL) {
-      const activationType = getEventActivationTypeFromEditorType(editorActivationType);
+      const activationType =
+        getEventActivationTypeFromEditorType(editorActivationType);
 
       // MP3 has two "Before Dice Roll" default events.
-      list.add(activationType, EventExecutionType.DIRECT, "__PP64_INTERNAL_CURSE_POISON_DICEROLL_EVENT");
-      list.add(activationType, EventExecutionType.DIRECT, "__PP64_INTERNAL_REVERSAL_DICEROLL_EVENT");
+      list.add(
+        activationType,
+        EventExecutionType.DIRECT,
+        "__PP64_INTERNAL_CURSE_POISON_DICEROLL_EVENT"
+      );
+      list.add(
+        activationType,
+        EventExecutionType.DIRECT,
+        "__PP64_INTERNAL_REVERSAL_DICEROLL_EVENT"
+      );
     }
   }
 
   hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.BANK) {
-      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, eventLibrary);
+      addEventToSpaceInternal(
+        board,
+        space,
+        createEventInstance(BankEvent),
+        false,
+        eventLibrary
+      );
     }
   }
 
@@ -157,8 +204,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         16: Space.OTHER, // Toad
         17: Space.OTHER, // Baby Bowser the COHORT
       };
-    }
-    else if (board.type === BoardType.DUEL) {
+    } else if (board.type === BoardType.DUEL) {
       typeMap = {
         1: Space.OTHER,
         2: Space.HAPPENING,
@@ -171,20 +217,18 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         9: Space.DUEL_START_BLUE,
         10: Space.DUEL_POWERUP,
       };
-    }
-    else {
+    } else {
       throw new Error(`Unrecongized board type: ${board.type}`);
     }
 
     board.spaces.forEach((space) => {
-      let newType = typeMap[space.type];
-      if (newType !== undefined)
-        space.type = newType;
+      const newType = typeMap[space.type];
+      if (newType !== undefined) space.type = newType;
     });
 
     if (isNormalBoard) {
       if (chains.length) {
-        let startSpaceIndex = chains[0][0];
+        const startSpaceIndex = chains[0][0];
         if (!isNaN(startSpaceIndex))
           board.spaces[startSpaceIndex].type = Space.START;
       }
@@ -192,7 +236,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   }
 
   onChangeGameSpaceTypesFromBoardSpaceTypes(board: IBoard) {
-    let typeMap: { [space in Space]: number } = {
+    const typeMap: { [space in Space]: number } = {
       [Space.OTHER]: 0,
       [Space.BLUE]: 1,
       [Space.RED]: 2,
@@ -212,14 +256,13 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       [Space.DUEL_BASIC]: 0, // N/A
       [Space.DUEL_START_BLUE]: 0, // N/A
       [Space.DUEL_START_RED]: 0, // N/A
-      [Space.DUEL_POWERUP]: 0,// N/A
+      [Space.DUEL_POWERUP]: 0, // N/A
       [Space.DUEL_REVERSE]: 0, // N/A
     };
 
     board.spaces.forEach((space) => {
-      let newType = typeMap[space.type];
-      if (newType !== undefined)
-        space.type = newType;
+      const newType = typeMap[space.type];
+      if (newType !== undefined) space.type = newType;
     });
   }
 
@@ -228,16 +271,16 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   onCreateChainEvents(board: IBoard, chains: number[][]) {
     // There is either a merge or a split at the end of each chain.
     for (let i = 0; i < chains.length; i++) {
-      let chain = chains[i];
+      const chain = chains[i];
       // if (chain.length < 2) {
       //   throw new Error("MP3 onCreateChainEvents assertion failed: chain.length < 2");
       // }
 
-      let firstSpace = chain[0];
-      let secondSpace = chain[1];
-      let lastSpace = chain[chain.length - 1];
-      let prevSpace = chain[chain.length - 2]; // For MP3
-      let endLinks = getConnections(lastSpace, board)!;
+      const firstSpace = chain[0];
+      const secondSpace = chain[1];
+      const lastSpace = chain[chain.length - 1];
+      const prevSpace = chain[chain.length - 2]; // For MP3
+      const endLinks = getConnections(lastSpace, board)!;
       let event;
       if (endLinks.length > 1) {
         // A split, figure out the end points.
@@ -245,29 +288,29 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         if (endLinks.length > 2)
           throw new Error("MP3 cannot support more than 2 split directions");
 
-        let chainIndices: number[] = [];
-        endLinks.forEach(link => {
+        const chainIndices: number[] = [];
+        endLinks.forEach((link) => {
           chainIndices.push(_getChainWithSpace(link)!);
         });
 
         // Create the args, which are more sophisticated / declarative in MP3 (yay)
         // The args consist of the space indices and chain indices of the two directions,
         // as well as a couple variations of each when they are used with reverse shroom.
-        let spaceIndexArgs = [];
+        const spaceIndexArgs = [];
         spaceIndexArgs.push(endLinks[0]); // First two space indices
         spaceIndexArgs.push(endLinks[1]);
-        spaceIndexArgs.push(0xFFFF);
+        spaceIndexArgs.push(0xffff);
 
         spaceIndexArgs.push(prevSpace); // As if returning from first link direction
         spaceIndexArgs.push(endLinks[1]);
-        spaceIndexArgs.push(0xFFFF);
+        spaceIndexArgs.push(0xffff);
 
         spaceIndexArgs.push(prevSpace); // As if returning from 2nd link direction
         spaceIndexArgs.push(endLinks[0]);
-        spaceIndexArgs.push(0xFFFF);
+        spaceIndexArgs.push(0xffff);
         spaceIndexArgs.push(0x0000);
 
-        let chainArgs = [];
+        const chainArgs = [];
         chainArgs.push(chainIndices[0]); // Now the two chain indices and the "indices into the chains"
         chainArgs.push(0x0000); // We know these two are always 0 because of how we generate chains.
         chainArgs.push(0x0000); // mystery
@@ -278,7 +321,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         chainArgs.push(i);
         chainArgs.push(chain.length - 2); // Return to _near_ end of entering chain
         chainArgs.push(0x0001); // mystery
-        chainArgs.push(chainIndices[1]);  // ...yes they flip, for confusion
+        chainArgs.push(chainIndices[1]); // ...yes they flip, for confusion
         chainArgs.push(0x0000);
         chainArgs.push(0x0000);
 
@@ -289,7 +332,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
         chainArgs.push(0x0000);
         chainArgs.push(0x0000);
 
-        let chainWithGate = _needsGateChainSplit(chainIndices);
+        const chainWithGate = _needsGateChainSplit(chainIndices);
         if (chainWithGate != null) {
           event = createEventInstance(ChainSplit3, {
             parameterValues: {
@@ -298,13 +341,12 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
               hasgate: true,
               prevSpace: chains[chainWithGate][0],
               altChain: [
-                chainIndices.find(i => i !== chainWithGate)!, // Chain index
+                chainIndices.find((i) => i !== chainWithGate)!, // Chain index
                 0, // Index in chain
               ],
             },
           });
-        }
-        else {
+        } else {
           event = createEventInstance(ChainSplit3, {
             parameterValues: {
               spaceIndexArgs,
@@ -313,8 +355,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
           });
         }
         addEventByIndex(board, lastSpace, event, true, getEventsInLibrary());
-      }
-      else if (endLinks.length > 0) {
+      } else if (endLinks.length > 0) {
         event = createEventInstance(ChainMerge3, {
           parameterValues: {
             chain: _getChainWithSpace(endLinks[0])!,
@@ -325,39 +366,40 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       }
 
       // See if we need a reverse split event, reverse chain merge, or safety chain merge.
-      let pointingSpaces = _getSpacesPointingToSpace(firstSpace);
+      const pointingSpaces = _getSpacesPointingToSpace(firstSpace);
       if (pointingSpaces.length) {
-        let chainIndices: number[] = [];
-        pointingSpaces.forEach(link => {
+        const chainIndices: number[] = [];
+        pointingSpaces.forEach((link) => {
           chainIndices.push(_getChainWithSpace(link)!);
         });
-        let pointingChains: number[][] = [];
-        chainIndices.forEach(index => {
+        const pointingChains: number[][] = [];
+        chainIndices.forEach((index) => {
           pointingChains.push(chains[index]);
         });
 
-        if (pointingSpaces.length >= 2) { // Build a reverse split.
+        if (pointingSpaces.length >= 2) {
+          // Build a reverse split.
           // FIXME: This obviously only deals with === 2, but rather than
           // restrict boards, we can just arbitrarily not allow going backwards
           // in some particular direction(s) for now.
 
           // The reverse args are basically the same, except the 1 bit is placed differently.
-          let spaceIndexArgs = [];
+          const spaceIndexArgs = [];
           spaceIndexArgs.push(secondSpace);
           spaceIndexArgs.push(pointingSpaces[0]);
-          spaceIndexArgs.push(0xFFFF);
+          spaceIndexArgs.push(0xffff);
 
           spaceIndexArgs.push(pointingSpaces[1]); // Probably the only indices that matter
           spaceIndexArgs.push(pointingSpaces[0]);
-          spaceIndexArgs.push(0xFFFF);
+          spaceIndexArgs.push(0xffff);
 
           spaceIndexArgs.push(pointingSpaces[1]);
           spaceIndexArgs.push(secondSpace);
-          spaceIndexArgs.push(0xFFFF);
+          spaceIndexArgs.push(0xffff);
           spaceIndexArgs.push(0x0000);
 
           // Now the chain indices and the "indices into the chains"
-          let chainArgs = [];
+          const chainArgs = [];
           chainArgs.push(i);
           chainArgs.push(0x0001); // Second space index
           chainArgs.push(0x0000);
@@ -388,8 +430,8 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
             executionType: EventExecutionType.DIRECT, // Notable difference
           });
           addEventByIndex(board, firstSpace, event, true, getEventsInLibrary());
-        }
-        else if (pointingSpaces.length === 1) { // Build a reverse merge
+        } else if (pointingSpaces.length === 1) {
+          // Build a reverse merge
           event = createEventInstance(ChainMerge3, {
             parameterValues: {
               chain: chainIndices[0], // Go to pointing chain
@@ -399,21 +441,20 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
           });
           addEventByIndex(board, firstSpace, event, true, getEventsInLibrary());
         }
-      }
-      else {
+      } else {
         // If nothing points to this chain, the player could still reverse their
         // way towards the beginning of the chain (start space for example).
         // At the start of these chains, we put a type 8 event to spin them around.
         // It is redundant when going forward on the chain but doesn't hurt.
-        let firstLinks = getConnections(firstSpace, board)!;
+        const firstLinks = getConnections(firstSpace, board)!;
         if (firstLinks.length > 1) {
           $$log("FIXME: branching isolated chain?");
-        }
-        else if (firstLinks.length > 0) {
+        } else if (firstLinks.length > 0) {
           // This doesn't crash, but it creates a back forth loop at a dead end.
           // This probably will yield issues if the loop is over invisible spaces.
           // Only do this if `firstLinks.length > 0`; if this is false, this is a single decorative space.
-          event = createEventInstance(ChainMerge, { // Not CHAINMERGE3
+          event = createEventInstance(ChainMerge, {
+            // Not CHAINMERGE3
             parameterValues: {
               chain: i,
               spaceIndex: 1, // Because of chain padding, this should be safe
@@ -427,24 +468,24 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
     function _getChainWithSpace(space: number) {
       for (let c = 0; c < chains.length; c++) {
-        if (chains[c].indexOf(space) >= 0) // Should really be 0 always - game does support supplied index other than 0 though.
+        if (chains[c].indexOf(space) >= 0)
+          // Should really be 0 always - game does support supplied index other than 0 though.
           return c;
       }
     }
 
     function _getSpacesPointingToSpace(space: number) {
-      let pointingSpaces = [];
+      const pointingSpaces = [];
       for (let s = 0; s < board.spaces.length; s++) {
-        let spaceLinks = getConnections(s, board)!;
-        if (spaceLinks.indexOf(space) >= 0)
-          pointingSpaces.push(s);
+        const spaceLinks = getConnections(s, board)!;
+        if (spaceLinks.indexOf(space) >= 0) pointingSpaces.push(s);
       }
       return pointingSpaces;
     }
 
     // Returns space index with gate, or undefined
     function _chainHasGate(chain: number[]) {
-      return chain.find(i => {
+      return chain.find((i) => {
         return board.spaces[i].subtype === SpaceSubtype.GATE;
       });
     }
@@ -452,8 +493,8 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
     // Returns index of chain with gate.
     function _needsGateChainSplit(chainIndices: number[]) {
       let chainIndex = null;
-      chainIndices.forEach(index => {
-        let spaceIndexWithGate = _chainHasGate(chains[index]);
+      chainIndices.forEach((index) => {
+        const spaceIndexWithGate = _chainHasGate(chains[index]);
         if (typeof spaceIndexWithGate === "number") {
           chainIndex = index;
         }
@@ -463,62 +504,63 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   }
 
   onParseStrings(board: IBoard, boardInfo: IBoardInfo) {
-    let strs = boardInfo.str || {};
+    const strs = boardInfo.str || {};
     if (strs.boardSelect) {
       if (!Array.isArray(strs.boardSelect))
         throw new Error("Expected number[][]");
-      let idx = strs.boardSelect[0] as number[];
-      let str = strings3.read("en", idx[0], idx[1]) as string;
-      let lines = str.split("\n");
+      const idx = strs.boardSelect[0] as number[];
+      const str = strings3.read("en", idx[0], idx[1]) as string;
+      const lines = str.split("\n");
 
       // Read the board name and description.
-      let nameStart = lines[0].indexOf(">") + 2;
-      let nameEnd = lines[0].indexOf("{", nameStart);
+      const nameStart = lines[0].indexOf(">") + 2;
+      const nameEnd = lines[0].indexOf("{", nameStart);
       board.name = lines[0].substring(nameStart, nameEnd);
       board.description = [lines[1], lines[2]].join("\n");
 
       // Parse difficulty star level
       let difficulty = 0;
-      let lastIndex = str.indexOf(this.getCharacterMap()[0x3B], 0);
+      let lastIndex = str.indexOf(this.getCharacterMap()[0x3b], 0);
       while (lastIndex !== -1) {
         difficulty++;
-        lastIndex = str.indexOf(this.getCharacterMap()[0x3B], lastIndex + 1);
+        lastIndex = str.indexOf(this.getCharacterMap()[0x3b], lastIndex + 1);
       }
       board.difficulty = difficulty;
     }
   }
 
   onWriteStrings(board: IBoard, boardInfo: IBoardInfo) {
-    let strs = boardInfo.str || {};
+    const strs = boardInfo.str || {};
     const boardSelect = strs.boardSelect as number[][];
     if (boardSelect && boardSelect.length) {
       let bytes = [];
-      bytes.push(0x0B); // Clear?
+      bytes.push(0x0b); // Clear?
       bytes.push(0x05); // Start GREEN
-      bytes.push(0x0F); // ?
+      bytes.push(0x0f); // ?
       bytes = bytes.concat(strings._strToBytes(board.name || ""));
       bytes.push(0x16);
       bytes.push(0x19);
-      bytes.push(0x0F);
+      bytes.push(0x0f);
       bytes = bytes.concat([0x20, 0x20, 0x20, 0x20]); // Spaces
       bytes.push(0x16);
       bytes.push(0x03);
-      bytes.push(0x0F);
+      bytes.push(0x0f);
       bytes = bytes.concat(strings._strToBytes("Difficulty: "));
-      let star = 0x3B;
-      if (board.difficulty > 5 || board.difficulty < 1) { // Hackers!
+      const star = 0x3b;
+      if (board.difficulty > 5 || board.difficulty < 1) {
+        // Hackers!
         bytes.push(star);
         bytes = bytes.concat(strings._strToBytes(" "));
-        bytes.push(0x3E); // Little x
-        bytes = bytes.concat(strings._strToBytes(" " + board.difficulty.toString()));
-      }
-      else {
-        for (let i = 0; i < board.difficulty; i++)
-          bytes.push(star);
+        bytes.push(0x3e); // Little x
+        bytes = bytes.concat(
+          strings._strToBytes(" " + board.difficulty.toString())
+        );
+      } else {
+        for (let i = 0; i < board.difficulty; i++) bytes.push(star);
       }
       bytes.push(0x16);
       bytes.push(0x19);
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
       bytes.push(0x00); // Null byte
 
@@ -530,7 +572,7 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       // The second copy is mostly the same, but add a couple more bytes at the end.
       bytes.pop(); // Null byte
       bytes.push(0x19);
-      bytes.push(0xFF);
+      bytes.push(0xff);
       bytes.push(0x00); // Null byte
 
       strBuffer = arrayToArrayBuffer(bytes);
@@ -541,47 +583,63 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
     if (strs.boardGreeting) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes = bytes.concat(strings._strToBytes("You're all here!"));
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(this._createBoardGreetingBase(board.name));
-      bytes.push(0x0B); // ?
-      bytes = bytes.concat(strings._strToBytes("Now, before we begin, we need\nto determine the turn order."));
+      bytes.push(0x0b); // ?
+      bytes = bytes.concat(
+        strings._strToBytes(
+          "Now, before we begin, we need\nto determine the turn order."
+        )
+      );
       bytes.push(0x19); // ?
-      bytes.push(0xFF); // ?
+      bytes.push(0xff); // ?
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
-      strings3.write("en", strs.boardGreeting[0], strs.boardGreeting[1], strBuffer);
+      const strBuffer = arrayToArrayBuffer(bytes);
+      strings3.write(
+        "en",
+        strs.boardGreeting[0],
+        strs.boardGreeting[1],
+        strBuffer
+      );
     }
 
     if (strs.boardGreetingDuel) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes = bytes.concat(strings._strToBytes("I've been waiting for you, "));
       bytes.push(0x11); // ?
-      bytes.push(0xC2); // ?
-      bytes.push(0x0A); // \n
+      bytes.push(0xc2); // ?
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(this._createBoardGreetingBase(board.name));
-      bytes.push(0x0B); // ?
-      bytes = bytes.concat(strings._strToBytes("And just as promised, if you win here..."));
+      bytes.push(0x0b); // ?
+      bytes = bytes.concat(
+        strings._strToBytes("And just as promised, if you win here...")
+      );
       bytes.push(0x19); // ?
-      bytes.push(0xFF); // ?
+      bytes.push(0xff); // ?
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
-      strings3.write("en", strs.boardGreetingDuel[0], strs.boardGreetingDuel[1], strBuffer);
+      const strBuffer = arrayToArrayBuffer(bytes);
+      strings3.write(
+        "en",
+        strs.boardGreetingDuel[0],
+        strs.boardGreetingDuel[1],
+        strBuffer
+      );
     }
 
     if (strs.boardNames && strs.boardNames.length) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes = bytes.concat(strings._strToBytes(board.name));
       bytes.push(0x00); // Null byte
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
 
       for (let i = 0; i < strs.boardNames.length; i++) {
-        let idx = strs.boardNames[i] as number[];
+        const idx = strs.boardNames[i] as number[];
         strings3.write("en", idx[0], idx[1], strBuffer);
       }
     }
@@ -590,53 +648,61 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   _createBoardGreetingBase(boardName: string) {
     let bytes = strings._strToBytes("Welcome to the legendary ");
     bytes.push(0x05); // Start GREEN
-    bytes.push(0x0F); // ?
+    bytes.push(0x0f); // ?
     bytes = bytes.concat(strings._strToBytes(boardName));
     bytes.push(0x16); // ?
     bytes.push(0x19); // ?
-    bytes.push(0xC2); // ?
+    bytes.push(0xc2); // ?
     bytes.push(0x19); // ?
-    bytes.push(0xFF); // ?
-    bytes.push(0x0B); // ?
-    bytes = bytes.concat(strings._strToBytes("Here, you'll battle to become\nthe Superstar."));
+    bytes.push(0xff); // ?
+    bytes.push(0x0b); // ?
+    bytes = bytes.concat(
+      strings._strToBytes("Here, you'll battle to become\nthe Superstar.")
+    );
     bytes.push(0x19); // ?
-    bytes.push(0xFF); // ?
+    bytes.push(0xff); // ?
     return bytes;
   }
 
   onParseBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img || !boardInfo.img.boardSelectImg)
-      return;
+    if (!boardInfo.img || !boardInfo.img.boardSelectImg) return;
 
-    board.otherbg.boardselect = this._readImgFromMainFS(20, boardInfo.img.boardSelectImg, 0);
+    board.otherbg.boardselect = this._readImgFromMainFS(
+      20,
+      boardInfo.img.boardSelectImg,
+      0
+    );
   }
 
   onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
-      let boardSelectImg = boardInfo.img && boardInfo.img.boardSelectImg;
+      const boardSelectImg = boardInfo.img && boardInfo.img.boardSelectImg;
       if (!boardSelectImg) {
         resolve();
         return;
       }
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write board select for ${boardInfo.name}`), 45000);
+      const srcImage = new Image();
+      const failTimer = setTimeout(
+        () => reject(`Failed to write board select for ${boardInfo.name}`),
+        45000
+      );
       srcImage.onload = () => {
-        let imgBuffer = toArrayBuffer(srcImage, 64, 64);
+        const imgBuffer = toArrayBuffer(srcImage, 64, 64);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(20, boardSelectImg!);
+        const oldPack = mainfs.get(20, boardSelectImg!);
 
         // Then, pack the image and write it.
-        let imgInfoArr = [
+        const imgInfoArr = [
           {
             src: imgBuffer,
             width: 64,
             height: 64,
             bpp: 32,
-          }
+          },
         ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         // saveAs(new Blob([newPack]), "imgpack");
         mainfs.write(20, boardSelectImg!, newPack);
 
@@ -648,41 +714,50 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
   }
 
   onParseBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img || !boardInfo.img.splashLogoImg)
-      return;
+    if (!boardInfo.img || !boardInfo.img.splashLogoImg) return;
 
-    board.otherbg.boardlogo = this._readImgFromMainFS(19, boardInfo.img.splashLogoImg, 0);
-    board.otherbg.boardlogotext =
-      this._readImgFromMainFS(19, boardInfo.img.splashLogoTextImg!, 0);
+    board.otherbg.boardlogo = this._readImgFromMainFS(
+      19,
+      boardInfo.img.splashLogoImg,
+      0
+    );
+    board.otherbg.boardlogotext = this._readImgFromMainFS(
+      19,
+      boardInfo.img.splashLogoTextImg!,
+      0
+    );
   }
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
-      let splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
+      const splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
       if (!splashLogoImg) {
         resolve();
         return;
       }
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write logos for ${boardInfo.name}`), 45000);
+      const srcImage = new Image();
+      const failTimer = setTimeout(
+        () => reject(`Failed to write logos for ${boardInfo.name}`),
+        45000
+      );
       srcImage.onload = () => {
         // Write the intro logo images.
-        let imgBuffer = toArrayBuffer(srcImage, 226, 120);
+        const imgBuffer = toArrayBuffer(srcImage, 226, 120);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(19, splashLogoImg!);
+        const oldPack = mainfs.get(19, splashLogoImg!);
 
         // Then, pack the image and write it.
-        let imgInfoArr = [
+        const imgInfoArr = [
           {
             src: imgBuffer,
             width: 226,
             height: 120,
             bpp: 32,
-          }
+          },
         ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         // saveAs(new Blob([newPack]), "imgpack");
         mainfs.write(19, splashLogoImg!, newPack);
 
@@ -692,16 +767,18 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       srcImage.src = board.otherbg.boardlogo!;
 
       // Just blank out the pause logo, it is not worth replacing.
-      let pauseLogoImg = boardInfo.img.pauseLogoImg;
+      const pauseLogoImg = boardInfo.img.pauseLogoImg;
       if (pauseLogoImg) {
-        let oldPack = mainfs.get(19, pauseLogoImg);
-        let imgInfoArr = [{
-          src: new ArrayBuffer(150 * 50 * 4),
-          width: 150,
-          height: 50,
-          bpp: 32,
-        }];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const oldPack = mainfs.get(19, pauseLogoImg);
+        const imgInfoArr = [
+          {
+            src: new ArrayBuffer(150 * 50 * 4),
+            width: 150,
+            height: 50,
+            bpp: 32,
+          },
+        ];
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(19, pauseLogoImg, newPack);
       }
     });
@@ -709,31 +786,34 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   onWriteBoardLogoTextImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
-      let splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
+      const splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
       if (!splashLogoTextImg) {
         resolve();
         return;
       }
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write logo text for ${boardInfo.name}`), 45000);
+      const srcImage = new Image();
+      const failTimer = setTimeout(
+        () => reject(`Failed to write logo text for ${boardInfo.name}`),
+        45000
+      );
       srcImage.onload = () => {
         // Write the intro logo text image.
-        let imgBuffer = toArrayBuffer(srcImage, 226, 36);
+        const imgBuffer = toArrayBuffer(srcImage, 226, 36);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(19, splashLogoTextImg!);
+        const oldPack = mainfs.get(19, splashLogoTextImg!);
 
         // Then, pack the image and write it.
-        let imgInfoArr = [
+        const imgInfoArr = [
           {
             src: imgBuffer,
             width: 226,
             height: 36,
             bpp: 32,
-          }
+          },
         ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         // saveAs(new Blob([newPack]), "imgpack");
         mainfs.write(19, splashLogoTextImg!, newPack);
 
@@ -746,29 +826,29 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
 
   // Create generic skeleton key gate.
   async _onWriteGateImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
-    let gateIndex = boardInfo.img && boardInfo.img.gateImg;
+    const gateIndex = boardInfo.img && boardInfo.img.gateImg;
     if (!gateIndex) {
       return;
     }
 
     // We need to write the image onto a canvas to get the RGBA32 values.
-    let [width, height] = [64, 64];
-    let failTimer = setTimeout(() => {
+    const [width, height] = [64, 64];
+    const failTimer = setTimeout(() => {
       throw new Error(`Failed to write gate image for ${boardInfo.name}`);
     }, 45000);
 
     const imgData = await getImageData(genericgateImage, width, height);
 
     // First create a BMP
-    let gateBmp = BMPfromRGBA(imgData.data.buffer, 32, 8);
+    const gateBmp = BMPfromRGBA(imgData.data.buffer, 32, 8);
 
     // Now write the BMP back into the FORM.
-    let gateFORM = mainfs.get(19, 366); // Always use gate 3 as a base.
-    let gateUnpacked = FORM.unpack(gateFORM)!;
+    const gateFORM = mainfs.get(19, 366); // Always use gate 3 as a base.
+    const gateUnpacked = FORM.unpack(gateFORM)!;
     FORM.replaceBMP(gateUnpacked, 0, gateBmp[0], gateBmp[1]);
 
     // Now write the FORM.
-    let gatePacked = FORM.pack(gateUnpacked);
+    const gatePacked = FORM.pack(gateUnpacked);
     //saveAs(new Blob([gatePacked]), "gatePacked");
     mainfs.write(19, gateIndex!, gatePacked);
 
@@ -884,11 +964,11 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       0x07: "<YELLOW>",
       0x08: "<WHITE>",
       0x09: "<SEIZURE>",
-      0x0A: "\n",
-      0x0B: "\u3014", // FEED Carriage return / start of bubble?
-      0x0C: "○", // 2ND BYTE OF PLAYER CHOICE
-      0x0D: "\t", // UNCONFIRMED / WRONG
-      0x0E: "\t", // 1ST BYTE OF PLAYER CHOICE
+      0x0a: "\n",
+      0x0b: "\u3014", // FEED Carriage return / start of bubble?
+      0x0c: "○", // 2ND BYTE OF PLAYER CHOICE
+      0x0d: "\t", // UNCONFIRMED / WRONG
+      0x0e: "\t", // 1ST BYTE OF PLAYER CHOICE
       // 0x0F - nothing
       // 0x10: " ", works but not used?
       0x11: "{0}", // These are format params that get replaced with various things
@@ -909,40 +989,40 @@ export const MP3 = new class MP3Adapter extends AdapterBase {
       0x27: "\u3006", // ' Z button
       0x28: "\u3007", // ( Analog stick
       0x29: "\u3008", // ) (coin)
-      0x2A: "\u3009", // * Star
-      0x2B: "\u3010", // , S button
-      0x2C: "\u3011", // , R button
+      0x2a: "\u3009", // * Star
+      0x2b: "\u3010", // , S button
+      0x2c: "\u3011", // , R button
       // 0x2D - nothing
       // 0x2E - nothing
       // 0x2F - nothing
       // 0x30 - 0x39: 0-9 ascii
-      0x3A: "\u3012", // Hollow coin
-      0x3B: "\u3013", // Hollow star
-      0x3C: "+", // <
-      0x3D: "-", // =
-      0x3E: "x", // > Little x
-      0x3F: "->", // Little right ARROW
+      0x3a: "\u3012", // Hollow coin
+      0x3b: "\u3013", // Hollow star
+      0x3c: "+", // <
+      0x3d: "-", // =
+      0x3e: "x", // > Little x
+      0x3f: "->", // Little right ARROW
       // 0x40 - nothing
       // 0x41 - 0x5A: A-Z ascii
-      0x5B: "\"", // [ End quotes
-      0x5C: "'", // \ Single quote
-      0x5D: "(", // ] Open parenthesis
-      0x5E: ")",
-      0x5F: "/", // _
+      0x5b: '"', // [ End quotes
+      0x5c: "'", // \ Single quote
+      0x5d: "(", // ] Open parenthesis
+      0x5e: ")",
+      0x5f: "/", // _
       // 0x60 - nothing
       // 0x61 - 0x7A: a-z ascii
-      0x7B: ":", // :
-      0x7E: "&", // ~
-      0x80: "\"", // Double quote no angle
+      0x7b: ":", // :
+      0x7e: "&", // ~
+      0x80: '"', // Double quote no angle
       0x81: "°", // . Degree
       0x82: ",", // ,
       0x83: "°", // Low circle FIXME
       0x85: ".", // … Period
-      0xC0: "“", // A`
-      0xC1: "”", // A'
-      0xC2: "!", // A^
-      0xC3: "?", // A~
-      0xFF: "\u3015", // PAUSE
+      0xc0: "“", // A`
+      0xc1: "”", // A'
+      0xc2: "!", // A^
+      0xc3: "?", // A~
+      0xff: "\u3015", // PAUSE
     };
   }
-}();
+})();

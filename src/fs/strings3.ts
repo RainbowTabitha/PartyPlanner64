@@ -13,32 +13,34 @@ interface IOffsetInfo {
 
 type ILocale = "jp" | "en" | "de" | "es" | "it" | "fr";
 
-let _stringOffsets: { [game in Game]?: { [locale in ILocale]?: IOffsetInfo[] } } = {};
+let _stringOffsets: {
+  [game in Game]?: { [locale in ILocale]?: IOffsetInfo[] };
+} = {};
 _stringOffsets[Game.MP3_USA] = {
-  "jp": [
-    { upper: 0x0000F142, lower: 0x0000F14A }, // 0x1209850, len 0x13250
-    { upper: 0x0005B3CA, lower: 0x0005B3D2 },
+  jp: [
+    { upper: 0x0000f142, lower: 0x0000f14a }, // 0x1209850, len 0x13250
+    { upper: 0x0005b3ca, lower: 0x0005b3d2 },
   ],
-  "en": [
-    { upper: 0x0005B412, lower: 0x0005B41A }, // 0x121CAA0
+  en: [
+    { upper: 0x0005b412, lower: 0x0005b41a }, // 0x121CAA0
   ],
-  "de": [
-    { upper: 0x0005B42A, lower: 0x0005B432 }, // 0x12355C0
+  de: [
+    { upper: 0x0005b42a, lower: 0x0005b432 }, // 0x12355C0
   ],
-  "es": [
-    { upper: 0x0005B436, lower: 0x0005B43E }, // 0x12765F0
+  es: [
+    { upper: 0x0005b436, lower: 0x0005b43e }, // 0x12765F0
   ],
-  "it": [
-    { upper: 0x0005B442, lower: 0x0005B446 }, // 0x1261F90
+  it: [
+    { upper: 0x0005b442, lower: 0x0005b446 }, // 0x1261F90
   ],
-  "fr": [
-    { upper: 0x0005B41E, lower: 0x0005B426 }, // 0x124D440
+  fr: [
+    { upper: 0x0005b41e, lower: 0x0005b426 }, // 0x124D440
   ],
 };
 _stringOffsets[Game.MP3_JPN] = {
-  "jp": [
-    { upper: 0x0000F142, lower: 0x0000F14A }, // 0x1206E00
-    { upper: 0x0005B262, lower: 0x0005B26A },
+  jp: [
+    { upper: 0x0000f142, lower: 0x0000f14a }, // 0x1206E00
+    { upper: 0x0005b262, lower: 0x0005b26a },
   ],
   // "en": [
   //   { upper: , lower:  }, // 0x121A050
@@ -57,14 +59,13 @@ _stringOffsets[Game.MP3_JPN] = {
   // ],
 };
 
-
 var _strFsInstances: { [locale: string]: StringTableSet } | null;
 
 class StringTableSet {
   private dirs: StringTable[];
 
   constructor(dataView: DataView) {
-    this.dirs = this._extract(dataView)
+    this.dirs = this._extract(dataView);
   }
 
   _extract(view: DataView) {
@@ -91,7 +92,7 @@ class StringTableSet {
     let decompressedSize = view.getUint32(0);
     let compressionType = view.getUint32(4);
     let dirStartView = new DataView(view.buffer, view.byteOffset + 8);
-    return decompress(compressionType, dirStartView, decompressedSize)
+    return decompress(compressionType, dirStartView, decompressedSize);
   }
 
   _getDirOffsetFromView(view: DataView, dir: number) {
@@ -101,7 +102,11 @@ class StringTableSet {
   public read(dir: number, index: number, raw: true): ArrayBuffer;
   public read(dir: number, index: number, raw?: false): string;
   public read(dir: number, index: number, raw: boolean): ArrayBuffer | string;
-  public read(dir: number, index: number, raw: boolean = false): ArrayBuffer | string {
+  public read(
+    dir: number,
+    index: number,
+    raw: boolean = false
+  ): ArrayBuffer | string {
     if (dir < 0 || dir >= this.getDirectoryCount())
       throw new Error("Requesting non-existent string directory");
     return this.dirs[dir].read(index, raw);
@@ -143,7 +148,7 @@ class StringTableSet {
     view.setUint32(0, dirCount);
 
     let curDirIndexOffset = 4;
-    let curDirWriteOffset = 4 + (dirCount * 4);
+    let curDirWriteOffset = 4 + dirCount * 4;
     for (let d = 0; d < dirCount; d++) {
       view.setUint32(curDirIndexOffset, curDirWriteOffset);
       curDirIndexOffset += 4;
@@ -175,13 +180,11 @@ export const strings3 = {
       return null;
     }
     let romOffset = localeOffsets[0];
-    if (!romOffset)
-      return null;
+    if (!romOffset) return null;
     let upper = romView.getUint16(romOffset.upper) << 16;
     let lower = romView.getUint16(romOffset.lower);
     let offset = upper | lower;
-    if (lower & 0x8000)
-      offset = offset - 0x00010000; // Signed ASM addition workaround.
+    if (lower & 0x8000) offset = offset - 0x00010000; // Signed ASM addition workaround.
     $$log(`Strings3.getROMOffset[${locale}] -> ${$$hex(offset)}`);
     return offset;
   },
@@ -193,16 +196,20 @@ export const strings3 = {
     for (let l = 0; l < locales.length; l++) {
       let locale = locales[l];
       let patchOffsets = strings3.getPatchOffsets(locale)!;
-      let upper = (curOffset & 0xFFFF0000) >>> 16;
-      let lower = curOffset & 0x0000FFFF;
-      if (lower & 0x8000)
-        upper += 1; // Adjust for signed addition in ASM.
+      let upper = (curOffset & 0xffff0000) >>> 16;
+      let lower = curOffset & 0x0000ffff;
+      if (lower & 0x8000) upper += 1; // Adjust for signed addition in ASM.
       for (let i = 0; i < patchOffsets.length; i++) {
         romView.setUint16(patchOffsets[i].upper, upper);
         romView.setUint16(patchOffsets[i].lower, lower);
       }
-      $$log(`Strings3.setROMOffset[${locale}] -> ${$$hex((upper << 16) | lower)}`);
-      curOffset += makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
+      $$log(
+        `Strings3.setROMOffset[${locale}] -> ${$$hex((upper << 16) | lower)}`
+      );
+      curOffset += makeDivisibleBy(
+        _strFsInstances![locale].getByteLength(),
+        16
+      );
     }
   },
 
@@ -277,5 +284,5 @@ export const strings3 = {
       byteLen += makeDivisibleBy(_strFsInstances![locale].getByteLength(), 16);
     }
     return byteLen;
-  }
-}
+  },
+};

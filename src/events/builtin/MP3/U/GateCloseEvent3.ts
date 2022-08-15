@@ -1,6 +1,11 @@
 import { IEventInstance } from "../../../../boards";
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+  EventParameterType,
+} from "../../../../types";
 import { getFunctionLength } from "../../../../utils/MIPS";
 
 export const GateClose3: IEvent = {
@@ -8,21 +13,16 @@ export const GateClose3: IEvent = {
   name: "",
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.DIRECT,
-  parameters: [
-    { name: "gateIndex", type: EventParameterType.Number },
-  ],
+  parameters: [{ name: "gateIndex", type: EventParameterType.Number }],
   fakeEvent: true,
-  supportedGames: [
-    Game.MP3_USA,
-  ],
+  supportedGames: [Game.MP3_USA],
 
   parse(dataView: DataView, info: IEventParseInfo) {
     let fnLen = getFunctionLength(dataView, info.offset);
-    if (fnLen !== 0x1C)
-      return false;
+    if (fnLen !== 0x1c) return false;
 
     let gateCloseJALs = [
-      0x0C0422BA, // JAL 0x80108AE8
+      0x0c0422ba, // JAL 0x80108AE8
     ];
 
     // Chilly Waters 0x8010F050 - 0x8010F06C
@@ -31,7 +31,12 @@ export const GateClose3: IEvent = {
 
     return true;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     // Most of the code still lives in the overlay.
     const gateIndex = event.parameterValues!.gateIndex as number;
     return `
@@ -43,5 +48,5 @@ export const GateClose3: IEvent = {
       jr    RA
        addiu SP, SP, 0x18
     `;
-  }
+  },
 };

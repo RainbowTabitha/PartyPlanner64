@@ -1,5 +1,8 @@
 import { intersection } from "../arrays";
-import { getSymbols as getSymbolsForGame, ISymbol } from "../../symbols/symbols";
+import {
+  getSymbols as getSymbolsForGame,
+  ISymbol,
+} from "../../symbols/symbols";
 import { registerHelper, Pos } from "codemirror";
 import { Game } from "../../types";
 import { getActiveEditorSupportedGames } from "../../views/createevent_shared";
@@ -7,7 +10,7 @@ import "codemirror/addon/hint/show-hint";
 import "./mp-mips-codemirror";
 
 // CodeMirror autocompletion for MIPS / Mario Party assembly.
-registerHelper("hint", "mips-pp64", function(cm: any) {
+registerHelper("hint", "mips-pp64", function (cm: any) {
   const cur = cm.getCursor();
   const token = cm.getTokenAt(cur);
   const tokenString = token.string;
@@ -38,17 +41,15 @@ registerHelper("hint", "mips-pp64", function(cm: any) {
     return {
       list: directives,
       from: Pos(cur.line, 1),
-      to: Pos(cur.line, end)
+      to: Pos(cur.line, end),
     };
   }
 
   const supportedGames = getActiveEditorSupportedGames();
 
   function getSymbols(games: Game[], type?: any) {
-    if (!games.length)
-      return [];
-    if (games.length === 1)
-      return getSymbolsForGame(games[0], type);
+    if (!games.length) return [];
+    if (games.length === 1) return getSymbolsForGame(games[0], type);
 
     // Take the intersection of the supported games' symbols.
     let result = getSymbolsForGame(games[0], type);
@@ -74,7 +75,7 @@ registerHelper("hint", "mips-pp64", function(cm: any) {
   }
 
   function _showSyms(symbols: ISymbol[]) {
-    let syms = symbols.map(sym => {
+    let syms = symbols.map((sym) => {
       return sym.name;
     });
     let startOffset = 1; // Default: place sym one space after any previous value.
@@ -89,12 +90,12 @@ registerHelper("hint", "mips-pp64", function(cm: any) {
     return {
       list: syms.sort(),
       from: Pos(cur.line, start + startOffset),
-      to: Pos(cur.line, end)
+      to: Pos(cur.line, end),
     };
   }
 
   function _filterByToken(tokenString: string, values: string[]) {
-    return values.filter(value => {
+    return values.filter((value) => {
       return value.startsWith(tokenString);
     });
   }

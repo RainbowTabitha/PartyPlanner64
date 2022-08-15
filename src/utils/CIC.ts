@@ -14,17 +14,15 @@ const Type = {
 
 // We need to initialize a CRC table once that we can reuse.
 const _CRCTable = new Array(256);
-(function() {
+(function () {
   let crcTable = _CRCTable;
 
-  let poly = 0xEDB88320;
+  let poly = 0xedb88320;
   for (let i = 0; i < 256; i++) {
     let crc = i;
     for (let j = 8; j > 0; j--) {
-      if (crc & 1)
-        crc = ((crc >>> 1) ^ poly) >>> 0;
-      else
-        crc >>>= 1;
+      if (crc & 1) crc = ((crc >>> 1) ^ poly) >>> 0;
+      else crc >>>= 1;
     }
     crcTable[i] = crc >>> 0;
   }
@@ -55,24 +53,24 @@ export function fixChecksum(buffer: ArrayBuffer) {
   let CHECKSUM_START = 0x00001000;
   let CHECKSUM_LENGTH = 0x00100000;
   let i = CHECKSUM_START;
-  while (i < (CHECKSUM_START + CHECKSUM_LENGTH)) {
+  while (i < CHECKSUM_START + CHECKSUM_LENGTH) {
     let d = romView.getUint32(i);
-    if (((t6 + d) >>> 0) < t6)
-      t4++; t4 >>>= 0;
-    t6 += d; t6 >>>= 0;
-    t3 ^= d; t3 >>>= 0;
-    let r = ROL(d, (d & 0x1F)) >>> 0;
-    t5 += r; t5 >>>= 0;
-    if (t2 > d)
-      t2 ^= r;
-    else
-      t2 ^= (t6 ^ d) >>> 0;
+    if ((t6 + d) >>> 0 < t6) t4++;
+    t4 >>>= 0;
+    t6 += d;
+    t6 >>>= 0;
+    t3 ^= d;
+    t3 >>>= 0;
+    let r = ROL(d, d & 0x1f) >>> 0;
+    t5 += r;
+    t5 >>>= 0;
+    if (t2 > d) t2 ^= r;
+    else t2 ^= (t6 ^ d) >>> 0;
     t2 >>>= 0;
 
     if (bootcode === 6105)
-      t1 += romView.getUint32(N64_HEADER_SIZE + 0x0710 + (i & 0xFF)) ^ d;
-    else
-      t1 += (t5 ^ d) >>> 0;
+      t1 += romView.getUint32(N64_HEADER_SIZE + 0x0710 + (i & 0xff)) ^ d;
+    else t1 += (t5 ^ d) >>> 0;
     t1 >>>= 0;
 
     i += 4;
@@ -80,22 +78,32 @@ export function fixChecksum(buffer: ArrayBuffer) {
 
   let crc1, crc2;
   if (bootcode === 6103) {
-    crc1 = (t6 ^ t4); crc1 >>>= 0;
-    crc1 += t3; crc1 >>>= 0;
-    crc2 = (t5 ^ t2); crc2 >>>= 0;
-    crc2 += t1; crc2 >>>= 0;
-  }
-  else if (bootcode === 6106) {
-    crc1 = (t6 * t4); crc1 >>>= 0;
-    crc1 += t3; crc1 >>>= 0;
-    crc2 = (t5 * t2); crc2 >>>= 0;
-    crc2 += t1; crc2 >>>= 0;
-  }
-  else {
-    crc1 = (t6 ^ t4); crc1 >>>= 0;
-    crc1 ^= t3; crc1 >>>= 0;
-    crc2 = (t5 ^ t2); crc2 >>>= 0;
-    crc2 ^= t1; crc2 >>>= 0;
+    crc1 = t6 ^ t4;
+    crc1 >>>= 0;
+    crc1 += t3;
+    crc1 >>>= 0;
+    crc2 = t5 ^ t2;
+    crc2 >>>= 0;
+    crc2 += t1;
+    crc2 >>>= 0;
+  } else if (bootcode === 6106) {
+    crc1 = t6 * t4;
+    crc1 >>>= 0;
+    crc1 += t3;
+    crc1 >>>= 0;
+    crc2 = t5 * t2;
+    crc2 >>>= 0;
+    crc2 += t1;
+    crc2 >>>= 0;
+  } else {
+    crc1 = t6 ^ t4;
+    crc1 >>>= 0;
+    crc1 ^= t3;
+    crc1 >>>= 0;
+    crc2 = t5 ^ t2;
+    crc2 >>>= 0;
+    crc2 ^= t1;
+    crc2 >>>= 0;
   }
 
   romView.setUint32(0x10, crc1);
@@ -108,13 +116,13 @@ function _getChecksumSeed(bootcode: number) {
   switch (bootcode) {
     case 6101:
     case 6102:
-      return 0xF8CA4DDC;
+      return 0xf8ca4ddc;
     case 6103:
-      return 0xA3886759;
+      return 0xa3886759;
     case 6105:
-      return 0xDF26F436;
+      return 0xdf26f436;
     case 6106:
-      return 0x1FEA617A;
+      return 0x1fea617a;
   }
   throw new Error(`CIC._getChecksumSeed: Bad bootcode ${bootcode}`);
 }
@@ -125,21 +133,26 @@ function _getGameCIC(buffer: ArrayBuffer) {
   let cicTestingArr = new Uint8Array(buffer, N64_HEADER_SIZE, N64_BC_SIZE);
   let crc = _crc32(cicTestingArr);
   switch (crc) {
-    case 0x6170A4A1: return Type[6101];
-    case 0x90BB6CB5: return Type[6102];
-    case 0x0B050EE0: return Type[6103];
-    case 0x98BC2C86: return Type[6105];
-    case 0xACC8580A: return Type[6106];
+    case 0x6170a4a1:
+      return Type[6101];
+    case 0x90bb6cb5:
+      return Type[6102];
+    case 0x0b050ee0:
+      return Type[6103];
+    case 0x98bc2c86:
+      return Type[6105];
+    case 0xacc8580a:
+      return Type[6106];
   }
   return Type[6105]; // Why is this the default?
 }
 
 function _crc32(arr: Uint8Array) {
   let len = arr.byteLength;
-  let crc = 0xFFFFFFFF;
+  let crc = 0xffffffff;
   let crcTable = _CRCTable;
   for (let i = 0; i < len; i++) {
-    crc = ((crc >>> 8) ^ crcTable[((crc ^ arr[i]) >>> 0) & 0xFF]) >>> 0;
+    crc = ((crc >>> 8) ^ crcTable[((crc ^ arr[i]) >>> 0) & 0xff]) >>> 0;
   }
-  return (~crc) >>> 0;
+  return ~crc >>> 0;
 }

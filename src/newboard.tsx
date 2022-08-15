@@ -6,12 +6,10 @@ import { isDebug } from "./debug";
 
 import defaultThemePreview from "./img/themes/default/preview.png";
 
-const Themes = [
-  { name: "Blank", id: "default" }
-];
+const Themes = [{ name: "Blank", id: "default" }];
 
 const _themePreviews = {
-  default: defaultThemePreview
+  default: defaultThemePreview,
 };
 
 interface INewBoardProps {
@@ -23,32 +21,29 @@ export class NewBoard extends React.Component<INewBoardProps> {
     version: 1,
     type: BoardType.NORMAL,
     theme: 0,
-  }
+  };
 
   onVersionChange = (version: number) => {
     this.setState({ version });
-    if (version !== 3)
-      this.setState({ type: BoardType.NORMAL });
-  }
+    if (version !== 3) this.setState({ type: BoardType.NORMAL });
+  };
 
   onTypeChange = (type: BoardType) => {
     this.setState({ type });
-  }
+  };
 
   onThemeChange = (theme: any) => {
     this.setState({ theme });
-  }
+  };
 
   submit = () => {
     if (this.state.type === BoardType.DUEL) {
       showMessage("Duel board support is partially finished, coming soon!");
-      if (!isDebug())
-        return;
+      if (!isDebug()) return;
     }
     let fn = this.props.onAccept;
-    if (fn)
-      fn(this.state.version, this.state.type, Themes[this.state.theme]);
-  }
+    if (fn) fn(this.state.version, this.state.type, Themes[this.state.theme]);
+  };
 
   render() {
     return (
@@ -59,11 +54,13 @@ export class NewBoard extends React.Component<INewBoardProps> {
             onTypeChange={this.onTypeChange} />
           : null } */}
         <NewBoardThemeSelect onThemeChange={this.onThemeChange} />
-        <Button onClick={this.submit} css="nbCreate">Create</Button>
+        <Button onClick={this.submit} css="nbCreate">
+          Create
+        </Button>
       </div>
     );
   }
-};
+}
 
 interface INewBoardVersionSelectProps {
   onVersionChange(id: number): any;
@@ -72,32 +69,51 @@ interface INewBoardVersionSelectProps {
 class NewBoardVersionSelect extends React.Component<INewBoardVersionSelectProps> {
   state = {
     version: 1,
-  }
+  };
 
   onVersionChange = (id: number, pressed: boolean) => {
     this.setState({ version: id });
     this.props.onVersionChange(id);
-  }
+  };
 
   render() {
-    let gameVersions = (
-      [
-        <ToggleButton id={1} key={1} allowDeselect={false} onToggled={this.onVersionChange}
-          pressed={this.state.version === 1}>
-          <span className="newBoardVersion" title="Mario Party 1">MP1</span>
-        </ToggleButton>
-      ]
-    );
+    let gameVersions = [
+      <ToggleButton
+        id={1}
+        key={1}
+        allowDeselect={false}
+        onToggled={this.onVersionChange}
+        pressed={this.state.version === 1}
+      >
+        <span className="newBoardVersion" title="Mario Party 1">
+          MP1
+        </span>
+      </ToggleButton>,
+    ];
     gameVersions.push(
-      <ToggleButton id={2} key={2} allowDeselect={false} onToggled={this.onVersionChange}
-        pressed={this.state.version === 2}>
-        <span className="newBoardVersion" title="Mario Party 2">MP2</span>
+      <ToggleButton
+        id={2}
+        key={2}
+        allowDeselect={false}
+        onToggled={this.onVersionChange}
+        pressed={this.state.version === 2}
+      >
+        <span className="newBoardVersion" title="Mario Party 2">
+          MP2
+        </span>
       </ToggleButton>
     );
     gameVersions.push(
-      <ToggleButton id={3} key={3} allowDeselect={false} onToggled={this.onVersionChange}
-        pressed={this.state.version === 3}>
-        <span className="newBoardVersion" title="Mario Party 3">MP3</span>
+      <ToggleButton
+        id={3}
+        key={3}
+        allowDeselect={false}
+        onToggled={this.onVersionChange}
+        pressed={this.state.version === 3}
+      >
+        <span className="newBoardVersion" title="Mario Party 3">
+          MP3
+        </span>
       </ToggleButton>
     );
     return (
@@ -108,39 +124,48 @@ class NewBoardVersionSelect extends React.Component<INewBoardVersionSelectProps>
       </div>
     );
   }
-};
+}
 
 interface INewBoardTypeSelect {
   type: BoardType;
   onTypeChange(type: BoardType): any;
 }
 
-class NewBoardTypeSelect extends React.Component<INewBoardTypeSelect> { // eslint-disable-line
+class NewBoardTypeSelect extends React.Component<INewBoardTypeSelect> {
+  // eslint-disable-line
   onTypeChange = (type: BoardType) => {
     this.props.onTypeChange(type);
-  }
+  };
 
   render() {
     return (
       <div className="newBoardVersionSelect">
         <label className="nbLabel">Board Type</label>
         <br />
-        <ToggleButton id={BoardType.NORMAL}
+        <ToggleButton
+          id={BoardType.NORMAL}
           allowDeselect={false}
           onToggled={this.onTypeChange}
-          pressed={this.props.type === BoardType.NORMAL}>
-          <span className="newBoardVersion" title="Normal party board">Normal</span>
+          pressed={this.props.type === BoardType.NORMAL}
+        >
+          <span className="newBoardVersion" title="Normal party board">
+            Normal
+          </span>
         </ToggleButton>
-        <ToggleButton id={BoardType.DUEL}
+        <ToggleButton
+          id={BoardType.DUEL}
           allowDeselect={false}
           onToggled={this.onTypeChange}
-          pressed={this.props.type === BoardType.DUEL}>
-          <span className="newBoardVersion" title="Duel board">Duel</span>
+          pressed={this.props.type === BoardType.DUEL}
+        >
+          <span className="newBoardVersion" title="Duel board">
+            Duel
+          </span>
         </ToggleButton>
       </div>
     );
   }
-};
+}
 
 interface INewBoardThemeSelectProps {
   onThemeChange(id: any): any;
@@ -149,20 +174,32 @@ interface INewBoardThemeSelectProps {
 class NewBoardThemeSelect extends React.Component<INewBoardThemeSelectProps> {
   state = {
     theme: 0,
-  }
+  };
 
   onThemeChange = (id: any, pressed: boolean) => {
     this.setState({ theme: id });
     this.props.onThemeChange(id);
-  }
+  };
 
   render() {
     let themeEntries = Themes.map((theme, i) => {
       let previewUrl = (_themePreviews as any)[theme.id];
       return (
-        <ToggleButton id={i} key={i} allowDeselect={false} css="nbTheme"
-          onToggled={this.onThemeChange} pressed={this.state.theme === i}>
-          <img src={previewUrl} className="newBoardThemePreview" width="96" height="72" alt="" />
+        <ToggleButton
+          id={i}
+          key={i}
+          allowDeselect={false}
+          css="nbTheme"
+          onToggled={this.onThemeChange}
+          pressed={this.state.theme === i}
+        >
+          <img
+            src={previewUrl}
+            className="newBoardThemePreview"
+            width="96"
+            height="72"
+            alt=""
+          />
           <span className="newBoardTheme">
             <span className="newBoardThemeInner">{theme.name}</span>
           </span>
@@ -177,4 +214,4 @@ class NewBoardThemeSelect extends React.Component<INewBoardThemeSelectProps> {
       </div>
     );
   }
-};
+}

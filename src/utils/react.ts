@@ -22,8 +22,7 @@ export function makeKeyClick(fn: IKeyEventHandler, opts?: IKeyClickOpts) {
 
     if ((!opts || opts.enter) && event.keyCode === ENTER_KEYCODE) {
       finish();
-    }
-    else if ((!opts || opts.space) && event.keyCode === SPACE_KEYCODE) {
+    } else if ((!opts || opts.space) && event.keyCode === SPACE_KEYCODE) {
       finish();
     }
   };
@@ -37,5 +36,5 @@ export function killEvent(event: any) {
 /** Force update hook implementation. */
 export function useForceUpdate(): VoidFunction {
   const [, setVal] = useState(0);
-  return useCallback(() => setVal(val => val + 1), []);
+  return useCallback(() => setVal((val) => val + 1), []);
 }

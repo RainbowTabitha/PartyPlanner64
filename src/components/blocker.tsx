@@ -26,48 +26,59 @@ export const Blocker: React.FC<IBlockerProps> = (props: IBlockerProps) => {
     let messageSpan;
     if (props.message) {
       messageSpan = (
-        <span className="loadingMsgTxt selectable">
-          {props.message}
-        </span>
+        <span className="loadingMsgTxt selectable">{props.message}</span>
       );
-    }
-    else { // messageHTML
+    } else {
+      // messageHTML
       messageSpan = (
-        <span className="loadingMsgTxt selectable"
-          dangerouslySetInnerHTML={{ __html: props.messageHTML }}></span>
+        <span
+          className="loadingMsgTxt selectable"
+          dangerouslySetInnerHTML={{ __html: props.messageHTML }}
+        ></span>
       );
     }
 
     let prompt;
     if (props.prompt) {
-      prompt = <input className="blockerPromptInput"
-        autoFocus
-        value={promptValue}
-        onChange={e => setPromptValue(e.target.value)}
-        onKeyDown={makeKeyClick(e =>
-          props.onAccept(promptValue), { enter: true })}/>
+      prompt = (
+        <input
+          className="blockerPromptInput"
+          autoFocus
+          value={promptValue}
+          onChange={(e) => setPromptValue(e.target.value)}
+          onKeyDown={makeKeyClick((e) => props.onAccept(promptValue), {
+            enter: true,
+          })}
+        />
+      );
     }
 
     content = (
       <div className="loadingMsg">
         {messageSpan}
-        <br /><br />
-        {props.prompt && <>
-          {prompt}
-          <br /><br />
-        </>}
-        <button autoFocus={!props.prompt}
-          onClick={() => props.onAccept(promptValue)}>
+        <br />
+        <br />
+        {props.prompt && (
+          <>
+            {prompt}
+            <br />
+            <br />
+          </>
+        )}
+        <button
+          autoFocus={!props.prompt}
+          onClick={() => props.onAccept(promptValue)}
+        >
           {props.confirm ? "Yes" : "OK"}
         </button>
-        {(props.prompt || props.confirm)
-          && <button onClick={() => props.onCancel()}>
+        {(props.prompt || props.confirm) && (
+          <button onClick={() => props.onCancel()}>
             {props.confirm ? "No" : "Cancel"}
-          </button>}
+          </button>
+        )}
       </div>
     );
-  }
-  else {
+  } else {
     content = (
       <img className="loadingGif swing" src={pencilImage} alt="Loading" />
     );
@@ -75,8 +86,7 @@ export const Blocker: React.FC<IBlockerProps> = (props: IBlockerProps) => {
 
   return (
     <div className="loading">
-      <div className="loadingEscapeBackDoor"
-        onClick={props.onForceClose}></div>
+      <div className="loadingEscapeBackDoor" onClick={props.onForceClose}></div>
       <img className="loadingLogo" src={logoloadingImage} alt="Loading" />
       <br />
       {content}

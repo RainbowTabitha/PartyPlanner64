@@ -178,8 +178,7 @@ function _onImageLoaded() {
 }
 
 for (let name in _imageTemp) {
-  if (!_imageTemp.hasOwnProperty(name))
-    continue;
+  if (!_imageTemp.hasOwnProperty(name)) continue;
   let url = _imageTemp[name];
   _images[name].src = url;
 }

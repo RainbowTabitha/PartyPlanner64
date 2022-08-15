@@ -4,7 +4,7 @@ import { IEventInstance } from "../../../../boards";
 
 export const BooEvent1: Partial<IEvent> = {
   parse(dataView: DataView, info: IEventParseInfo) {
-    let hashes = {
+    const hashes = {
       // Single Boo hashes
       PLAYER_DIRECTION_CHANGE: "DAD5E635FE90ED982D02B3F1D5C0CE21", // +0x14
       METHOD_END: "FF104A680C0ECE615B5A24AD95A908CC", // [0x1C/0x54]+0x18
@@ -13,20 +13,40 @@ export const BooEvent1: Partial<IEvent> = {
       DK_TWOBOO_METHOD_START: "94A87B51D2478E81AAC34F7D3C5C37F2", // +0x28
     };
 
-    if (hashEqual([dataView.buffer, info.offset + 0x1C, 0x18], hashes.METHOD_END) &&
-        hashEqual([dataView.buffer, info.offset, 0x14], hashes.PLAYER_DIRECTION_CHANGE)) {
+    if (
+      hashEqual(
+        [dataView.buffer, info.offset + 0x1c, 0x18],
+        hashes.METHOD_END
+      ) &&
+      hashEqual(
+        [dataView.buffer, info.offset, 0x14],
+        hashes.PLAYER_DIRECTION_CHANGE
+      )
+    ) {
       // Check whether this points to the Boo scene.
-      let sceneNum = dataView.getUint16(info.offset + 0x1A);
+      const sceneNum = dataView.getUint16(info.offset + 0x1a);
       return sceneNum === 0x65;
-    }
-    else if (hashEqual([dataView.buffer, info.offset + 0x54, 0x18], hashes.METHOD_END) &&
-        hashEqual([dataView.buffer, info.offset, 0x28], hashes.DK_TWOBOO_METHOD_START)) {
+    } else if (
+      hashEqual(
+        [dataView.buffer, info.offset + 0x54, 0x18],
+        hashes.METHOD_END
+      ) &&
+      hashEqual(
+        [dataView.buffer, info.offset, 0x28],
+        hashes.DK_TWOBOO_METHOD_START
+      )
+    ) {
       return true; // We know this is stock DK board.
     }
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     return `
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
@@ -62,5 +82,5 @@ export const BooEvent1: Partial<IEvent> = {
       jr    RA
       addiu SP, SP, 0x18
     `;
-  }
+  },
 };

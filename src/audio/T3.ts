@@ -40,7 +40,6 @@ import { ALSoundSimple } from "./ALSoundSimple";
 //   u8 _zero;
 // }
 
-
 export class T3 {
   private __type: string = "T3";
 
@@ -48,7 +47,8 @@ export class T3 {
   public sounds: ALSoundSimple[] = [];
 
   constructor(dataView: DataView) {
-    if (dataView.getUint16(0) !== 0x5433) // "T3"
+    if (dataView.getUint16(0) !== 0x5433)
+      // "T3"
       throw new Error("T3 constructor encountered non-T3 structure");
 
     this._extract(dataView);
@@ -61,16 +61,19 @@ export class T3 {
     const soundEffectMetadata: any[] = [];
     for (let i = 0; i < soundFxCount; i++) {
       soundEffectMetadata.push({
-        rawSound: view.getUint16(4 + (i * 8) + 4) & 0x0FFF,
+        rawSound: view.getUint16(4 + i * 8 + 4) & 0x0fff,
         //rawSound: view.getUint16(4 + (i * 8)) & 0x0FFF,
-        sampleRate: view.getUint16(4 + (i * 8) + 6)
+        sampleRate: view.getUint16(4 + i * 8 + 6),
       });
     }
 
     // Extract raw sounds
-    const rawSoundCount = view.getUint32(4 + (soundFxCount * 8) + 4);
-    const tableEntriesOffset = 4 + (soundFxCount * 8) + 0x2C;
-    const ctlView = new DataView(view.buffer, view.byteOffset + tableEntriesOffset);
+    const rawSoundCount = view.getUint32(4 + soundFxCount * 8 + 4);
+    const tableEntriesOffset = 4 + soundFxCount * 8 + 0x2c;
+    const ctlView = new DataView(
+      view.buffer,
+      view.byteOffset + tableEntriesOffset
+    );
     for (let i = 0; i < rawSoundCount; i++) {
       const sound = new ALSoundSimple(ctlView, i * 16);
 
@@ -89,11 +92,15 @@ export class T3 {
     }
     console.log(this.sounds);
 
-    const tblOffsetStart = view.getUint32(4 + (soundFxCount * 8) + 0xC);
-    const tblOffsetEnd = tblOffsetStart + view.getUint32(4 + (soundFxCount * 8) + 0x14);
+    const tblOffsetStart = view.getUint32(4 + soundFxCount * 8 + 0xc);
+    const tblOffsetEnd =
+      tblOffsetStart + view.getUint32(4 + soundFxCount * 8 + 0x14);
 
     // Extract tbl buffer
-    this.tbl = view.buffer.slice(view.byteOffset + tblOffsetStart, view.byteOffset + tblOffsetEnd);
+    this.tbl = view.buffer.slice(
+      view.byteOffset + tblOffsetStart,
+      view.byteOffset + tblOffsetEnd
+    );
 
     // Extract the sound effects list.
     // This list count is higher than the actual raw sound count,

@@ -2,17 +2,17 @@ export function showDragZone() {
   var dragZone = document.getElementById("dragZone")!;
   dragZone.style.display = "inline-block";
   if (!dragZone.ondragover) {
-    dragZone.ondragover = event => {
+    dragZone.ondragover = (event) => {
       event.preventDefault(); // DragZone supports equality.
     };
   }
   if (!dragZone.ondragenter) {
-    dragZone.ondragenter = event => {
+    dragZone.ondragenter = (event) => {
       dragZone.className = "hover";
     };
   }
   if (!dragZone.ondragleave) {
-    dragZone.ondragleave = event => {
+    dragZone.ondragleave = (event) => {
       dragZone.className = "";
     };
   }

@@ -4,7 +4,7 @@ import { romhandler } from "../romhandler";
 import { getValidationRules as getValidationRulesForMP1 } from "./validation.MP1";
 import {
   getValidationRules as getValidationRulesForMP2,
-  getValidationRulesForBoard as getBoardValidationRulesForMP2
+  getValidationRulesForBoard as getBoardValidationRulesForMP2,
 } from "./validation.MP2";
 import { getValidationRules as getValidationRulesForMP3 } from "./validation.MP3";
 import { get, $setting } from "../views/settings";
@@ -14,8 +14,7 @@ import { dummyBoardInfo, IBoardInfo } from "../adapter/boardinfobase";
 import { isPromiseLike } from "../utils/promise";
 
 function _overwriteAvailable(boardInfo: IBoardInfo) {
-  if (boardInfo.canOverwrite)
-    return true;
+  if (boardInfo.canOverwrite) return true;
   return false;
 }
 
@@ -66,7 +65,10 @@ function _getRulesForGame(gameID: Game): IValidationRule[] {
 }
 
 /** Returns any validation rules specific to a particular game + board. */
-function _getRulesForBoard(gameID: Game, boardIndex: number): IValidationRule[] {
+function _getRulesForBoard(
+  gameID: Game,
+  boardIndex: number
+): IValidationRule[] {
   let rules: IValidationRule[] = [];
 
   switch (gameID) {
@@ -87,10 +89,11 @@ export interface IValidationResult {
   warnings: string[];
 }
 
-export async function validateCurrentBoardForOverwrite(): Promise<IValidationResult[] | null> {
+export async function validateCurrentBoardForOverwrite(): Promise<
+  IValidationResult[] | null
+> {
   let gameID = romhandler.getROMGame()!;
-  if (!gameID)
-    return null;
+  if (!gameID) return null;
 
   let results: IValidationResult[] = [];
   let romBoards = getROMBoards();
@@ -130,8 +133,7 @@ export async function validateCurrentBoardForOverwrite(): Promise<IValidationRes
   if (boardInfos) {
     for (let boardIndex = 0; boardIndex < romBoards.length; boardIndex++) {
       const board = romBoards[boardIndex];
-      if (_dontShowInUI(board, currentBoard.type))
-        continue;
+      if (_dontShowInUI(board, currentBoard.type)) continue;
 
       const boardInfo = boardInfos[boardIndex];
       let unavailable = !_overwriteAvailable(boardInfo);
@@ -143,7 +145,7 @@ export async function validateCurrentBoardForOverwrite(): Promise<IValidationRes
         for (const rule of rules) {
           let failureResult = rule.fails({
             board: currentBoard,
-            boardInfo
+            boardInfo,
           });
           if (isPromiseLike(failureResult)) {
             failureResult = await failureResult;

@@ -1,6 +1,10 @@
 import { hashEqual } from "../../../../utils/arrays";
 import { IEventParseInfo, IEvent, IEventWriteInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+} from "../../../../types";
 import { IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
 
@@ -9,24 +13,29 @@ export const PassStart: IEvent = {
   name: "Pass start",
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.PROCESS,
-  supportedGames: [
-    Game.MP1_USA,
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
-    let hashes = {
+    const hashes = {
       // DK hash:
       METHOD_START: "D87057256E3E3CA9A6878AA03EF4C486", // +0x16
-      METHOD_END: "9AB28DCC38CFBE9AE8FEA4515E86D7B2" //[0x1C]+0x18
+      METHOD_END: "9AB28DCC38CFBE9AE8FEA4515E86D7B2", //[0x1C]+0x18
     };
 
-    if (hashEqual([dataView.buffer, info.offset, 0x16], hashes.METHOD_START) &&
-        hashEqual([dataView.buffer, info.offset + 0x1C, 0x18], hashes.METHOD_END)) {
+    if (
+      hashEqual([dataView.buffer, info.offset, 0x16], hashes.METHOD_START) &&
+      hashEqual([dataView.buffer, info.offset + 0x1c, 0x18], hashes.METHOD_END)
+    ) {
       return true;
     }
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     return `
       addiu SP, SP, -0x18
       sw    RA, 0x10(SP)
@@ -186,6 +195,6 @@ export const PassStart: IEvent = {
       jr    RA
       addiu SP, SP, 0x20
     `;
-  }
+  },
 };
 addEventToLibrary(PassStart);

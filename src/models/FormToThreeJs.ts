@@ -1,4 +1,10 @@
-import { IFormObj, FORM, IFAC1Parsed, IFAC1VertexEntry, IVTX1Vertex } from "./FORM";
+import {
+  IFormObj,
+  FORM,
+  IFAC1Parsed,
+  IFAC1VertexEntry,
+  IVTX1Vertex,
+} from "./FORM";
 import * as THREE from "three";
 import { VertexNormalsHelper } from "three/examples/jsm/helpers/VertexNormalsHelper";
 import { Face3, Geometry } from "three/examples/jsm/deprecated/Geometry";
@@ -9,11 +15,11 @@ import { degreesToRadians } from "../utils/number";
 
 // Converts extracted FORM data into a Three.js scene.
 export class FormToThreeJs {
-  public bgColor: number = 0x000000;
-  public showTextures: boolean = true;
-  public showWireframe: boolean = false;
-  public showVertexNormals: boolean = false;
-  public useFormCamera: boolean = false;
+  public bgColor = 0x000000;
+  public showTextures = true;
+  public showWireframe = false;
+  public showVertexNormals = false;
+  public useFormCamera = false;
 
   private __threeResult: THREE.Object3D | undefined;
   private __promises: Promise<any>[] = [];
@@ -32,14 +38,21 @@ export class FormToThreeJs {
   _parseForm(form: IFormObj, materials: THREE.MeshBasicMaterial[]) {
     const childObjs = this._parseFormObj(form, materials, 0);
     if (childObjs.length !== 1)
-      console.warn(`Expected 1 return object from _parseForm, got ${childObjs.length}`);
+      console.warn(
+        `Expected 1 return object from _parseForm, got ${childObjs.length}`
+      );
     return childObjs[0];
   }
 
-  _parseFormObj(form: IFormObj, materials: THREE.MeshBasicMaterial[], objIndex: number) {
+  _parseFormObj(
+    form: IFormObj,
+    materials: THREE.MeshBasicMaterial[],
+    objIndex: number
+  ) {
     let objs = FORM.getByGlobalIndex(form, "OBJ1", objIndex);
     if (objs === null) {
-      if (objIndex === 0) { // mp2 62/2 doesn't have 0 obj?
+      if (objIndex === 0) {
+        // mp2 62/2 doesn't have 0 obj?
         objs = form.OBJ1[0].parsed.objects[0];
         console.warn("Using first object rather than global index 0 object");
       }
@@ -57,21 +70,26 @@ export class FormToThreeJs {
     for (let o = 0; o < objs.length; o++) {
       const obj = objs[o];
 
-      if (obj.objType === 0x3D) { // Just references other objects, can transform them.
+      if (obj.objType === 0x3d) {
+        // Just references other objects, can transform them.
         const newObj = this._createObject3DFromOBJ1Entry(obj);
 
         for (let i = 0; i < obj.children.length; i++) {
-          const childObjs = this._parseFormObj(form, materials, obj.children[i]);
+          const childObjs = this._parseFormObj(
+            form,
+            materials,
+            obj.children[i]
+          );
           if (childObjs && childObjs.length) {
-            childObjs.forEach(childObj => {
+            childObjs.forEach((childObj) => {
               newObj.add(childObj);
             });
           }
         }
 
         newObjs.push(newObj);
-      }
-      else if (obj.objType === 0x10) { // References a SKL1, which will point back to other objects.
+      } else if (obj.objType === 0x10) {
+        // References a SKL1, which will point back to other objects.
         const newObj = this._createObject3DFromOBJ1Entry(obj);
 
         const skl1GlobalIndex = obj.skeletonGlobalIndex;
@@ -79,8 +97,7 @@ export class FormToThreeJs {
         newObj.add(sklObj);
 
         newObjs.push(newObj);
-      }
-      else if (obj.objType === 0x3A) {
+      } else if (obj.objType === 0x3a) {
         const newObj = this._createObject3DFromOBJ1Entry(obj);
 
         const geometry = new Geometry();
@@ -103,14 +120,21 @@ export class FormToThreeJs {
         if (this.showWireframe) {
           const wireframeMaterial = new THREE.LineBasicMaterial({
             color: invertColor(this.bgColor),
-            linewidth: this.showTextures ? 2 : 1
+            linewidth: this.showTextures ? 2 : 1,
           });
-          const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(bufferGeometry), wireframeMaterial);
+          const wireframe = new THREE.LineSegments(
+            new THREE.EdgesGeometry(bufferGeometry),
+            wireframeMaterial
+          );
           newObj.add(wireframe);
         }
 
         if (this.showVertexNormals) {
-          const normalsHelper = new VertexNormalsHelper(new THREE.Mesh(bufferGeometry, materials), 8, 0x00FF00);
+          const normalsHelper = new VertexNormalsHelper(
+            new THREE.Mesh(bufferGeometry, materials),
+            8,
+            0x00ff00
+          );
           newObj.add(normalsHelper);
         }
 
@@ -159,7 +183,11 @@ export class FormToThreeJs {
     return $$hex(id);
   }
 
-  _parseFormSkl(form: IFormObj, materials: THREE.MeshBasicMaterial[], skl1GlobalIndex: number) {
+  _parseFormSkl(
+    form: IFormObj,
+    materials: THREE.MeshBasicMaterial[],
+    skl1GlobalIndex: number
+  ) {
     const sklMatch = FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
     if (sklMatch === null || Array.isArray(sklMatch))
       throw new Error("Unexpected SKL1 search result");
@@ -167,14 +195,19 @@ export class FormToThreeJs {
     return this._parseFormSklNode(form, materials, sklMatch.skls, 0);
   }
 
-  _parseFormSklNode(form: IFormObj, materials: THREE.MeshBasicMaterial[], skls: any, index: number) {
+  _parseFormSklNode(
+    form: IFormObj,
+    materials: THREE.MeshBasicMaterial[],
+    skls: any,
+    index: number
+  ) {
     const skl = skls[index];
     const sklObj = this._createObject3DFromOBJ1Entry(skl);
 
     const objIndex = skl.objGlobalIndex;
     const childObjs = this._parseFormObj(form, materials, objIndex);
     if (childObjs && childObjs.length) {
-      childObjs.forEach(childObj => {
+      childObjs.forEach((childObj) => {
         sklObj.add(childObj);
       });
     }
@@ -183,13 +216,17 @@ export class FormToThreeJs {
       let currentChildIndex = index + 1;
       while (currentChildIndex) {
         const childSkl = skls[currentChildIndex];
-        const childSklObj = this._parseFormSklNode(form, materials, skls, currentChildIndex);
+        const childSklObj = this._parseFormSklNode(
+          form,
+          materials,
+          skls,
+          currentChildIndex
+        );
         sklObj.add(childSklObj);
 
         if (childSkl.nextSiblingRelativeIndex) {
           currentChildIndex += childSkl.nextSiblingRelativeIndex;
-        }
-        else {
+        } else {
           break;
         }
       }
@@ -198,9 +235,12 @@ export class FormToThreeJs {
     return sklObj;
   }
 
-  _populateGeometryWithFace(form: IFormObj, geometry: Geometry, face: IFAC1Parsed) {
-    if (!face.vtxEntries.length)
-      return;
+  _populateGeometryWithFace(
+    form: IFormObj,
+    geometry: Geometry,
+    face: IFAC1Parsed
+  ) {
+    if (!face.vtxEntries.length) return;
 
     const scale = form.VTX1[0].parsed.scale;
 
@@ -223,32 +263,59 @@ export class FormToThreeJs {
     }
 
     if (vtxEntries.length === 3) {
-      this._addFace(geometry, form, face,
+      this._addFace(
+        geometry,
+        form,
+        face,
         [vtxIndices[0], vtxIndices[1], vtxIndices[2]],
         [vtxEntries[0], vtxEntries[1], vtxEntries[2]]
       );
-    }
-    else if (vtxEntries.length === 4) {
-      this._addFace(geometry, form, face,
+    } else if (vtxEntries.length === 4) {
+      this._addFace(
+        geometry,
+        form,
+        face,
         [vtxIndices[0], vtxIndices[1], vtxIndices[2]],
         [vtxEntries[0], vtxEntries[1], vtxEntries[2]]
       );
 
-      this._addFace(geometry, form, face,
+      this._addFace(
+        geometry,
+        form,
+        face,
         [vtxIndices[3], vtxIndices[4], vtxIndices[5]],
         [vtxEntries[0], vtxEntries[2], vtxEntries[3]]
       );
     }
   }
 
-  _addFace(geometry: Geometry, form: IFormObj, face: IFAC1Parsed, indices: number[], vtxEntries: IFAC1VertexEntry[]) {
+  _addFace(
+    geometry: Geometry,
+    form: IFormObj,
+    face: IFAC1Parsed,
+    indices: number[],
+    vtxEntries: IFAC1VertexEntry[]
+  ) {
     const tri = new Face3(indices[0], indices[1], indices[2]);
-    tri.vertexNormals = this._makeVertexNormals(form, vtxEntries[0].vertexIndex, vtxEntries[1].vertexIndex, vtxEntries[2].vertexIndex);
+    tri.vertexNormals = this._makeVertexNormals(
+      form,
+      vtxEntries[0].vertexIndex,
+      vtxEntries[1].vertexIndex,
+      vtxEntries[2].vertexIndex
+    );
     tri.materialIndex = this._getMaterialIndex(face)!;
     tri.color = new THREE.Color(this._getColorBytes(form, face));
-    tri.vertexColors = this._makeVertexColors(form, face, vtxEntries[0], vtxEntries[1], vtxEntries[2]);
+    tri.vertexColors = this._makeVertexColors(
+      form,
+      face,
+      vtxEntries[0],
+      vtxEntries[1],
+      vtxEntries[2]
+    );
 
-    geometry.faceVertexUvs[0].push(this._makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]));
+    geometry.faceVertexUvs[0].push(
+      this._makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2])
+    );
     geometry.faces.push(tri);
   }
 
@@ -272,8 +339,7 @@ export class FormToThreeJs {
           const textureMaterial = this._createTextureMaterial(atr, bmp);
           materials.push(textureMaterial);
         }
-      }
-      else {
+      } else {
         console.warn("BMPs, but no ATRs");
       }
     }
@@ -305,11 +371,11 @@ export class FormToThreeJs {
 
   _getWrappingBehavior(behavior: THREE.Wrapping) {
     switch (behavior) {
-      case 0x2C:
+      case 0x2c:
         return THREE.MirroredRepeatWrapping;
-      case 0x2D:
+      case 0x2d:
         return THREE.RepeatWrapping;
-      case 0x2E:
+      case 0x2e:
         return THREE.ClampToEdgeWrapping; // default
       default:
         console.warn(`Unknown behavior ${$$hex(behavior)}`);
@@ -318,14 +384,15 @@ export class FormToThreeJs {
   }
 
   _makeVertex(vtx: IVTX1Vertex, scale: number) {
-    return new THREE.Vector3(
-      (vtx.x * scale),
-      (vtx.y * scale),
-      (vtx.z * scale)
-    );
+    return new THREE.Vector3(vtx.x * scale, vtx.y * scale, vtx.z * scale);
   }
 
-  _makeVertexNormals(form: IFormObj, vtxIndex1: number, vtxIndex2: number, vtxIndex3: number) {
+  _makeVertexNormals(
+    form: IFormObj,
+    vtxIndex1: number,
+    vtxIndex2: number,
+    vtxIndex3: number
+  ) {
     return [
       this._makeVertexNormal(form, vtxIndex1),
       this._makeVertexNormal(form, vtxIndex2),
@@ -336,15 +403,19 @@ export class FormToThreeJs {
   _makeVertexNormal(form: IFormObj, vtxIndex: number) {
     const vtx = form.VTX1[0].parsed.vertices[vtxIndex];
     const normalVector = new THREE.Vector3(
-      (vtx.normalX) / (127 + (vtx.normalX < 0 ? 1 : 0)),
-      (vtx.normalY) / (127 + (vtx.normalY < 0 ? 1 : 0)),
-      (vtx.normalZ) / (127 + (vtx.normalZ < 0 ? 1 : 0)),
+      vtx.normalX / (127 + (vtx.normalX < 0 ? 1 : 0)),
+      vtx.normalY / (127 + (vtx.normalY < 0 ? 1 : 0)),
+      vtx.normalZ / (127 + (vtx.normalZ < 0 ? 1 : 0))
     );
     normalVector.normalize();
     return normalVector;
   }
 
-  _makeVertexUVs(vtxEntry1: IFAC1VertexEntry, vtxEntry2: IFAC1VertexEntry, vtxEntry3: IFAC1VertexEntry) {
+  _makeVertexUVs(
+    vtxEntry1: IFAC1VertexEntry,
+    vtxEntry2: IFAC1VertexEntry,
+    vtxEntry3: IFAC1VertexEntry
+  ) {
     return [
       this._makeVertexUV(vtxEntry1),
       this._makeVertexUV(vtxEntry2),
@@ -357,12 +428,13 @@ export class FormToThreeJs {
   }
 
   _getMaterialIndex(face: IFAC1Parsed) {
-    if (face.atrIndex >= 0 || face.mystery3 === 0x36) { // Face colors, or maybe bitmap
+    if (face.atrIndex >= 0 || face.mystery3 === 0x36) {
+      // Face colors, or maybe bitmap
       // If it is 0xFFFF (-1) -> THREE.FaceColors material
       // If greater, it'll be a bitmap material
       return face.atrIndex + 2;
-    }
-    else if (face.mystery3 === 0x37) { // Vertex colors?
+    } else if (face.mystery3 === 0x37) {
+      // Vertex colors?
       return 0; // Vertex colors
     }
   }
@@ -371,9 +443,9 @@ export class FormToThreeJs {
     if (face.mystery3 === 0x36) {
       const materialIndex = face.materialIndex;
       return this._getColorFromMaterial(form, materialIndex);
-    }
-    else if (face.mystery3 === 0x37) { // Vertex colors?
-      return 0xFFFC00; // Puke green, shouldn't see this
+    } else if (face.mystery3 === 0x37) {
+      // Vertex colors?
+      return 0xfffc00; // Puke green, shouldn't see this
     }
 
     console.warn("Could not determine color for face");
@@ -389,13 +461,20 @@ export class FormToThreeJs {
       }
     }
 
-    console.warn(`Could not find color ${colorIndex} specified by material ${materialIndex}`);
-    return 0xFFFC00; // Puke green
+    console.warn(
+      `Could not find color ${colorIndex} specified by material ${materialIndex}`
+    );
+    return 0xfffc00; // Puke green
   }
 
-  _makeVertexColors(form: IFormObj, face: IFAC1Parsed, vtxEntry1: IFAC1VertexEntry, vtxEntry2: IFAC1VertexEntry, vtxEntry3: IFAC1VertexEntry) {
-    if (face.mystery3 !== 0x37)
-      return [];
+  _makeVertexColors(
+    form: IFormObj,
+    face: IFAC1Parsed,
+    vtxEntry1: IFAC1VertexEntry,
+    vtxEntry2: IFAC1VertexEntry,
+    vtxEntry3: IFAC1VertexEntry
+  ) {
+    if (face.mystery3 !== 0x37) return [];
 
     return [
       this._makeVertexColor(form, vtxEntry1)!,
@@ -405,9 +484,10 @@ export class FormToThreeJs {
   }
 
   _makeVertexColor(form: IFormObj, vtxEntry: IFAC1VertexEntry) {
-    if (vtxEntry.materialIndex < 0)
-      return null;
-    return new THREE.Color(this._getColorFromMaterial(form, vtxEntry.materialIndex));
+    if (vtxEntry.materialIndex < 0) return null;
+    return new THREE.Color(
+      this._getColorFromMaterial(form, vtxEntry.materialIndex)
+    );
   }
 
   createCamera(form: IFormObj, width: number, height: number) {
@@ -422,14 +502,15 @@ export class FormToThreeJs {
           cameraEyeObj.posY,
           cameraEyeObj.posZ
         );
-        camera.lookAt(new THREE.Vector3(
-          cameraInterestObj.posX,
-          cameraInterestObj.posY,
-          cameraInterestObj.posZ)
+        camera.lookAt(
+          new THREE.Vector3(
+            cameraInterestObj.posX,
+            cameraInterestObj.posY,
+            cameraInterestObj.posZ
+          )
         );
         return camera;
-      }
-      else {
+      } else {
         console.warn(`Unexpected camera object count: ${cameraObjs.length}`);
       }
     }

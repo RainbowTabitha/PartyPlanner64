@@ -1,7 +1,13 @@
 /** Converts from a set of tiles to a single chunk, and vice-versa. */
 
 /** Takes a set of image tiles and reconstructs the entire image. */
-export function fromTiles(tileViews: DataView[], tileXCount: number, tileYCount: number, tileXWidth: number, tileYWidth: number) {
+export function fromTiles(
+  tileViews: DataView[],
+  tileXCount: number,
+  tileYCount: number,
+  tileXWidth: number,
+  tileYWidth: number
+) {
   let width = tileXCount * tileXWidth;
   let height = tileYCount * tileYWidth;
   let buffer = new ArrayBuffer(width * height);
@@ -22,10 +28,13 @@ export function fromTiles(tileViews: DataView[], tileXCount: number, tileYCount:
       tileIndex = tileIndexPartial + tileX;
       outIndex = outIndexPartial + x;
       //try {
-      outView.setUint32(outIndex, tileViews[tileViewIndex].getUint32(tileIndex));
+      outView.setUint32(
+        outIndex,
+        tileViews[tileViewIndex].getUint32(tileIndex)
+      );
       //} catch(e) {
-        //console.log("Failed Reading Tile #" + tileViewIndex + "[" + tileIndex + "]");
-        //console.log("This was x: " + x + ", y: " + y + ", tileX: " + tileX + ", tileY: " + tileY);
+      //console.log("Failed Reading Tile #" + tileViewIndex + "[" + tileIndex + "]");
+      //console.log("This was x: " + x + ", y: " + y + ", tileX: " + tileX + ", tileY: " + tileY);
       //}
     }
   }
@@ -34,7 +43,13 @@ export function fromTiles(tileViews: DataView[], tileXCount: number, tileYCount:
 }
 
 /** Takes an image and splits it into tiles. */
-export function toTiles(imgArr: ReadonlyArray<number> | Uint8ClampedArray, tileXCount: number, tileYCount: number, tileXWidth: number, tileYWidth: number) {
+export function toTiles(
+  imgArr: ReadonlyArray<number> | Uint8ClampedArray,
+  tileXCount: number,
+  tileYCount: number,
+  tileXWidth: number,
+  tileYWidth: number
+) {
   let width = tileXCount * tileXWidth;
   let height = tileYCount * tileYWidth;
 
@@ -54,8 +69,8 @@ export function toTiles(imgArr: ReadonlyArray<number> | Uint8ClampedArray, tileX
       let tileX = x % tileXWidth;
       let tileY = y % tileYWidth;
 
-      let tileIndex = (tileY * tileXWidth) + tileX;
-      let imgIndex = (y * width) + x;
+      let tileIndex = tileY * tileXWidth + tileX;
+      let imgIndex = y * width + x;
       tileViews[tileViewIndex].setUint8(tileIndex, imgArr[imgIndex]);
     }
   }

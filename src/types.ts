@@ -158,8 +158,7 @@ export type GameVersion = 1 | 2 | 3;
 export function getGameName(id: string): string | null {
   for (const key in Game) {
     const value = (Game as any)[key];
-    if (value === id)
-      return key;
+    if (value === id) return key;
   }
   return null;
 }
@@ -205,7 +204,9 @@ export enum EditorEventActivationType {
   BEGINORWALKOVER = 8,
 }
 
-export function getEventActivationTypeFromEditorType(editorType: EditorEventActivationType): EventActivationType {
+export function getEventActivationTypeFromEditorType(
+  editorType: EditorEventActivationType
+): EventActivationType {
   switch (editorType) {
     case EditorEventActivationType.LANDON:
       return EventActivationType.LANDON;
@@ -241,7 +242,9 @@ export function getExecutionTypeName(executionType: EventExecutionType) {
   throw new Error(`Unknown execution type ${executionType}.`);
 }
 
-export function getExecutionTypeByName(name: string): EventExecutionType | null {
+export function getExecutionTypeByName(
+  name: string
+): EventExecutionType | null {
   switch (name) {
     case "Direct":
       return 1;

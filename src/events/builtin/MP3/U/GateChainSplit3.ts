@@ -1,6 +1,10 @@
 import { IEventInstance, addConnection } from "../../../../boards";
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
-import { EditorEventActivationType, Game, EventExecutionType } from "../../../../types";
+import {
+  EditorEventActivationType,
+  Game,
+  EventExecutionType,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { addEventToLibrary } from "../../../EventLibrary";
 
@@ -14,13 +18,11 @@ export const GateChainSplit: IEvent = {
   fakeEvent: true,
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.PROCESS,
-  supportedGames: [
-    Game.MP3_USA,
-  ],
+  supportedGames: [Game.MP3_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     // Chilly waters 0x8D space, 0x80108DD0, 0x31E940
     let hashes = {
-      GATE_FILTER: "A99A70CBC4A1F9509AAB966831FC584E"
+      GATE_FILTER: "A99A70CBC4A1F9509AAB966831FC584E",
     };
 
     if (!hashEqual([dataView.buffer, info.offset, 0x44], hashes.GATE_FILTER))
@@ -31,15 +33,14 @@ export const GateChainSplit: IEvent = {
 
     // We need to parse the chain split I suppose, can't really reuse code
     // right now but it's the same idea, only different offsets.
-    let upperAddr = dataView.getUint16(info.offset + 0x7E) << 16;
+    let upperAddr = dataView.getUint16(info.offset + 0x7e) << 16;
     let lowerAddr = dataView.getUint16(info.offset + 0x82);
-    let spacesAddr = (upperAddr | lowerAddr) & 0x7FFFFFFF;
-    if (spacesAddr & 0x00008000)
-      spacesAddr = spacesAddr - 0x00010000;
+    let spacesAddr = (upperAddr | lowerAddr) & 0x7fffffff;
+    if (spacesAddr & 0x00008000) spacesAddr = spacesAddr - 0x00010000;
     let spacesOffset = info.offset - (info.addr - spacesAddr);
 
     let destinationSpace = dataView.getUint16(spacesOffset);
-    while (destinationSpace !== 0xFFFF) {
+    while (destinationSpace !== 0xffff) {
       addConnection(info.curSpace, destinationSpace, info.board);
       spacesOffset += 2;
       destinationSpace = dataView.getUint16(spacesOffset);
@@ -47,9 +48,14 @@ export const GateChainSplit: IEvent = {
 
     return true;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     // It's all in ChainSplit3.
     throw new Error(`${GateChainSplit.id} not implemented`);
-  }
+  },
 };
 addEventToLibrary(GateChainSplit);

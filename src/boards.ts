@@ -1,9 +1,27 @@
-import { BoardType, Space, SpaceSubtype, EventExecutionType, GameVersion, EventCodeLanguage, EditorEventActivationType, CostumeType } from "./types";
+import {
+  BoardType,
+  Space,
+  SpaceSubtype,
+  EventExecutionType,
+  GameVersion,
+  EventCodeLanguage,
+  EditorEventActivationType,
+  CostumeType,
+} from "./types";
 import { copyObject } from "./utils/obj";
 import { ICustomEvent } from "./events/customevents";
-import { getEvent, IEventParameter, EventParameterValues } from "./events/events";
+import {
+  getEvent,
+  IEventParameter,
+  EventParameterValues,
+} from "./events/events";
 import { getAdapter, getROMAdapter } from "./adapter/adapters";
-import { boardsChanged, clearUndoHistory, currentBoardChanged, getAppInstance } from "./app/appControl";
+import {
+  boardsChanged,
+  clearUndoHistory,
+  currentBoardChanged,
+  getAppInstance,
+} from "./app/appControl";
 import { IDecisionTreeNode } from "./ai/aitrees";
 
 import defaultThemeBoardSelect from "./img/themes/default/boardselect.png";
@@ -67,7 +85,7 @@ const _themes = {
     conversation: defaultThemeConversation,
     splashscreen: defaultThemeSplashscreen,
     bg: defaultThemeBg,
-    bg2: defaultThemeBg2
+    bg2: defaultThemeBg2,
   },
 };
 
@@ -78,18 +96,18 @@ export interface IBoard {
   type: BoardType;
   difficulty: number;
   spaces: ISpace[];
-  links: { [startingSpaceIndex: number]: (number | number[]) };
+  links: { [startingSpaceIndex: number]: number | number[] };
   events: { [name: string]: IBoardEvent | string };
   boardevents?: IEventInstance[];
   bg: IBoardBgDetails;
   otherbg: {
-    boardselect?: string,
-    boardselecticon?: string,
-    boardlogo?: string,
-    boardlogotext?: string,
-    largescene?: string,
-    conversation?: string,
-    splashscreen?: string,
+    boardselect?: string;
+    boardselecticon?: string;
+    boardlogo?: string;
+    boardlogotext?: string;
+    largescene?: string;
+    conversation?: string;
+    splashscreen?: string;
   };
   animbg?: string[];
   additionalbg?: string[];
@@ -160,7 +178,10 @@ export interface IEventInstance {
   custom?: boolean;
 }
 
-export function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = BoardType.NORMAL): IBoard {
+export function _makeDefaultBoard(
+  gameVersion: 1 | 2 | 3 = 1,
+  type: BoardType = BoardType.NORMAL
+): IBoard {
   const board: any = {
     name: "Untitled",
     description: "Use your Star Power to finish\nthis board.",
@@ -175,9 +196,9 @@ export function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = 
   switch (gameVersion) {
     case 1:
       board.bg = {
-        "width": 960,
-        "height": 720,
-        "src": true, // Replaced with theme url later.
+        width: 960,
+        height: 720,
+        src: true, // Replaced with theme url later.
         fov: 17,
         scaleFactor: 1,
         cameraEyePosX: 0,
@@ -269,19 +290,18 @@ export function _makeDefaultBoard(gameVersion: 1 | 2 | 3 = 1, type: BoardType = 
     board.spaces.push({
       x: 200,
       y: 200,
-      type: Space.DUEL_START_BLUE
+      type: Space.DUEL_START_BLUE,
     });
     board.spaces.push({
       x: board.bg.width - 200,
       y: board.bg.height - 200,
-      type: Space.DUEL_START_RED
+      type: Space.DUEL_START_RED,
     });
-  }
-  else {
+  } else {
     board.spaces.push({
       x: board.bg.width - 200,
       y: board.bg.height - 200,
-      type: Space.START
+      type: Space.START,
     });
   }
   applyTheme(board);
@@ -295,8 +315,7 @@ function applyTheme(board: IBoard, name: "default" = "default") {
     board.otherbg.boardselect = themeImages.boardselect;
   if (board.otherbg.boardselecticon)
     board.otherbg.boardselecticon = themeImages.boardselecticon;
-  if (board.otherbg.boardlogo)
-    board.otherbg.boardlogo = themeImages.boardlogo;
+  if (board.otherbg.boardlogo) board.otherbg.boardlogo = themeImages.boardlogo;
   if (board.otherbg.boardlogotext)
     board.otherbg.boardlogotext = themeImages.boardlogotext;
   if (board.otherbg.largescene)
@@ -324,7 +343,10 @@ function applyTheme(board: IBoard, name: "default" = "default") {
  * @param opts.game Game version for the board
  * @returns The index of the inserted board.
  */
-export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 | 2 | 3, type?: BoardType } = {}) {
+export function addBoard(
+  board?: IBoard | null,
+  opts: { rom?: boolean; game?: 1 | 2 | 3; type?: BoardType } = {}
+) {
   if (!board)
     board = _makeDefaultBoard(opts.game || 1, opts.type || BoardType.NORMAL);
 
@@ -337,8 +359,7 @@ export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 
   store.dispatch(addBoardAction({ board, rom: opts.rom }));
 
   const app = getAppInstance();
-  if (app)
-    boardsChanged();
+  if (app) boardsChanged();
   const storeData = selectData(store.getState());
   const collection = opts.rom ? storeData.romBoards : storeData.boards;
 
@@ -346,7 +367,7 @@ export function addBoard(board?: IBoard | null, opts: { rom?: boolean, game?: 1 
 }
 
 export function getCurrentBoard(): IBoard {
-  let board = selectCurrentBoard(store.getState());
+  const board = selectCurrentBoard(store.getState());
   return board;
 }
 
@@ -355,35 +376,42 @@ export function indexOfBoard(board: IBoard) {
 }
 
 export function setCurrentBoard(index: number, isRom?: boolean) {
-  store.dispatch(setCurrentBoardAction({ index, rom: !!isRom }))
+  store.dispatch(setCurrentBoardAction({ index, rom: !!isRom }));
 
   currentBoardChanged();
 }
 
 export function boardIsROM(board: IBoard) {
-    return !!board._rom;
+  return !!board._rom;
 }
 
 /**
  * Tests if there is a connection from startIdx to endIdx.
  * If endIdx is "*"" or not passed, test if any connection is outbound from startIdx.
  */
-export function hasConnection(startIdx: number, endIdx: number | "*", board: IBoard = getCurrentBoard()) {
+export function hasConnection(
+  startIdx: number,
+  endIdx: number | "*",
+  board: IBoard = getCurrentBoard()
+) {
   if (Array.isArray(board.links[startIdx])) {
-    if (endIdx === "*" || endIdx === undefined)
-      return true; // Asking if any connections exist out of startIdx
+    if (endIdx === "*" || endIdx === undefined) return true; // Asking if any connections exist out of startIdx
     return (board.links[startIdx] as number[]).indexOf(endIdx) >= 0;
   }
   if (board.links[startIdx] !== undefined && board.links[startIdx] !== null) {
-    if (endIdx === "*" || endIdx === undefined)
-      return true;
+    if (endIdx === "*" || endIdx === undefined) return true;
     return board.links[startIdx] === endIdx;
   }
   return false;
 }
 
 interface ForEachEventCallback {
-  (event: IEventInstance, eventIndex: number, space?: ISpace, spaceIndex?: number): void;
+  (
+    event: IEventInstance,
+    eventIndex: number,
+    space?: ISpace,
+    spaceIndex?: number
+  ): void;
 }
 
 export function forEachEvent(board: IBoard, fn: ForEachEventCallback) {
@@ -410,10 +438,20 @@ export function forEachEvent(board: IBoard, fn: ForEachEventCallback) {
 }
 
 interface ForEachEventParameterCallback {
-  (param: IEventParameter, event: IEventInstance, eventIndex: number, space?: ISpace, spaceIndex?: number): void;
+  (
+    param: IEventParameter,
+    event: IEventInstance,
+    eventIndex: number,
+    space?: ISpace,
+    spaceIndex?: number
+  ): void;
 }
 
-export function forEachEventParameter(board: IBoard, eventLibrary: EventMap, fn: ForEachEventParameterCallback) {
+export function forEachEventParameter(
+  board: IBoard,
+  eventLibrary: EventMap,
+  fn: ForEachEventParameterCallback
+) {
   forEachEvent(board, (eventInstance, eventIndex, space, spaceIndex) => {
     const event = getEvent(eventInstance.id, board, eventLibrary);
     assert(!!event);
@@ -441,17 +479,23 @@ export function addEventToSpace(event: IEventInstance, toStart?: boolean) {
 }
 
 export function addEventToSpaceInternal(
-  board: IBoard, space: ISpace, event: IEventInstance, toStart: boolean, eventLibrary: EventMap
+  board: IBoard,
+  space: ISpace,
+  event: IEventInstance,
+  toStart: boolean,
+  eventLibrary: EventMap
 ) {
   space.events = space.events || [];
   if (event) {
-    if (toStart)
-      space.events.unshift(event);
-    else
-      space.events.push(event);
+    if (toStart) space.events.unshift(event);
+    else space.events.push(event);
 
     if (event.custom) {
-      const customEvent = getEvent(event.id, board, eventLibrary) as ICustomEvent;
+      const customEvent = getEvent(
+        event.id,
+        board,
+        eventLibrary
+      ) as ICustomEvent;
       includeEventInBoardInternal(board, customEvent);
     }
   }
@@ -461,7 +505,10 @@ export function removeEventFromSpace(eventIndex: number) {
   store.dispatch(removeEventFromSpaceAction({ eventIndex }));
 }
 
-export function getBoardEvent(board: IBoard, eventId: string): IBoardEvent | null {
+export function getBoardEvent(
+  board: IBoard,
+  eventId: string
+): IBoardEvent | null {
   if (board.events) {
     const boardEvent = board.events[eventId];
     if (typeof boardEvent === "string") {
@@ -477,9 +524,14 @@ export function includeEventInBoard(event: ICustomEvent) {
   store.dispatch(includeEventInBoardAction({ event }));
 }
 
-export function includeEventInBoardInternal(board: IBoard, event: ICustomEvent) {
+export function includeEventInBoardInternal(
+  board: IBoard,
+  event: ICustomEvent
+) {
   if (!event.asm)
-    throw new Error(`Attempting to add event ${event.name} but it doesn't have code`);
+    throw new Error(
+      `Attempting to add event ${event.name} but it doesn't have code`
+    );
   board.events[event.name] = {
     language: event.language!,
     code: event.asm,
@@ -493,7 +545,7 @@ export function excludeEventFromBoard(eventId: string): void {
 
 export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
   if (board.additionalbgcode) {
-    let additionalBgCode = board.additionalbgcode;
+    const additionalBgCode = board.additionalbgcode;
     if (typeof additionalBgCode === "string") {
       return { language: EventCodeLanguage.MIPS, code: additionalBgCode };
     }
@@ -502,7 +554,10 @@ export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
   return null;
 }
 
-export function setAdditionalBackgroundCode(code: string, language: EventCodeLanguage): void {
+export function setAdditionalBackgroundCode(
+  code: string,
+  language: EventCodeLanguage
+): void {
   store.dispatch(setAdditionalBackgroundCodeAction({ code, language }));
 }
 
@@ -510,52 +565,50 @@ export function getAudioSelectCode(board: IBoard): IBoardEvent | null {
   return board.audioSelectCode || null;
 }
 
-export function setAudioSelectCode(code: string, language: EventCodeLanguage): void {
+export function setAudioSelectCode(
+  code: string,
+  language: EventCodeLanguage
+): void {
   store.dispatch(setAudioSelectCodeAction({ code, language }));
 }
 
 export function getDeadEnds(board: IBoard) {
   const deadEnds: number[] = [];
-  let spaces = _getSpacesCopy(board);
+  const spaces = _getSpacesCopy(board);
 
   function _getSpacesCopy(board: IBoard) {
     return copyObject(board.spaces);
   }
 
   function _checkDeadEnd(spaceIndex: number): boolean | undefined {
-    if (spaces[spaceIndex]._seen)
-      return false; // We have reached a previous space - no dead end.
+    if (spaces[spaceIndex]._seen) return false; // We have reached a previous space - no dead end.
     if (!board.links.hasOwnProperty(spaceIndex)) {
       deadEnds.push(spaceIndex);
       return true;
     }
 
     spaces[spaceIndex]._seen = true;
-    let nextSpaces = board.links[spaceIndex];
+    const nextSpaces = board.links[spaceIndex];
     let result;
     if (Array.isArray(nextSpaces)) {
-      for (var i = 0; i < nextSpaces.length; i++) {
+      for (let i = 0; i < nextSpaces.length; i++) {
         result = _checkDeadEnd(nextSpaces[i]);
-        if (result)
-          return result;
+        if (result) return result;
       }
-    }
-    else {
+    } else {
       result = _checkDeadEnd(nextSpaces);
-      if (result)
-        return result;
+      if (result) return result;
     }
   }
 
   // Build a reverse lookup of space to _pointing_ spaces.
-  var pointingMap: { [index: number]: number[] } = {};
+  const pointingMap: { [index: number]: number[] } = {};
   for (let s = 0; s < spaces.length; s++) {
-    if (spaces[s])
-      pointingMap[s] = [];
+    if (spaces[s]) pointingMap[s] = [];
   }
-  for (let startIdx in board.links) {
-    let ends = getConnections(parseInt(startIdx), board)!;
-    ends.forEach(end => {
+  for (const startIdx in board.links) {
+    const ends = getConnections(parseInt(startIdx), board)!;
+    ends.forEach((end) => {
       pointingMap[end].push(Number(startIdx));
     });
   }
@@ -564,31 +617,28 @@ export function getDeadEnds(board: IBoard) {
   // the previous space.
   function spaceIsLinkedFromByAnother(spaceIdx: number, prevIdx?: number) {
     // If no previous index passed, just see if anything points.
-    if (prevIdx === undefined)
-      return !!pointingMap[spaceIdx].length;
+    if (prevIdx === undefined) return !!pointingMap[spaceIdx].length;
 
-    if (!pointingMap[spaceIdx].length)
-      return false;
-    if (pointingMap[spaceIdx].indexOf(Number(prevIdx)) === -1)
-      return true;
-    if (pointingMap[spaceIdx].length > 1)
-      return true; // Assumes prevIdx is not duplicated
+    if (!pointingMap[spaceIdx].length) return false;
+    if (pointingMap[spaceIdx].indexOf(Number(prevIdx)) === -1) return true;
+    if (pointingMap[spaceIdx].length > 1) return true; // Assumes prevIdx is not duplicated
     return false; // length === 1 && only entry is prevIdx
   }
 
-  let startIdx = getStartSpaceIndex(board);
-  if (startIdx >= 0)
-    _checkDeadEnd(startIdx);
+  const startIdx = getStartSpaceIndex(board);
+  if (startIdx >= 0) _checkDeadEnd(startIdx);
 
   for (let s = 0; s < spaces.length; s++) {
-    if (!spaces[s])
-      continue;
-    if (spaces[s]._seen)
-      continue; // Don't even need to check, we already visited it.
+    if (!spaces[s]) continue;
+    if (spaces[s]._seen) continue; // Don't even need to check, we already visited it.
 
     // The latter condition is not totally necessary, but I don't know that
     // we want to or can handle single-space chains.
-    if (!spaceIsLinkedFromByAnother(s) && hasConnection(s, null as any, board)) { // FIXME: passing null?
+    if (
+      !spaceIsLinkedFromByAnother(s) &&
+      hasConnection(s, null as any, board)
+    ) {
+      // FIXME: passing null?
       _checkDeadEnd(s);
     }
   }
@@ -647,8 +697,7 @@ export function _fixPotentiallyOldBoard(board: IBoard): IBoard {
             lookatPointY: 0,
             lookatPointZ: 0,
           });
-        }
-        else {
+        } else {
           Object.assign(board.bg, {
             fov: 15,
             scaleFactor: 0.1,
@@ -704,8 +753,13 @@ function _migrateOldCustomEvents(board: IBoard) {
     // Move any asm into the single collection.
     if ((spaceEvent as ICustomEvent).asm) {
       spaceEvent.id = (spaceEvent as any).name;
-      if (board.events[spaceEvent.id] && (board.events[spaceEvent.id] !== (spaceEvent as ICustomEvent).asm)) {
-        console.warn(`When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`);
+      if (
+        board.events[spaceEvent.id] &&
+        board.events[spaceEvent.id] !== (spaceEvent as ICustomEvent).asm
+      ) {
+        console.warn(
+          `When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`
+        );
       }
       board.events[spaceEvent.id] = (spaceEvent as ICustomEvent).asm;
       delete (spaceEvent as any).asm;
@@ -761,7 +815,11 @@ export function supportsAdditionalBackgrounds(board: IBoard): boolean {
   return board.game !== 2;
 }
 
-export function addDecisionTree(board: IBoard, spaceIndex: number, tree: IDecisionTreeNode[]): void {
+export function addDecisionTree(
+  board: IBoard,
+  spaceIndex: number,
+  tree: IDecisionTreeNode[]
+): void {
   // board.spaces[spaceIndex].aiTree = tree;
 }
 
@@ -792,7 +850,10 @@ export function setBoardCostumeTypeIndex(costumeType: CostumeType): void {
   store.dispatch(setBoardCostumeTypeIndexAction({ costumeType }));
 }
 
-export function setBoardOtherBackground(name: keyof IBoard["otherbg"], value: string): void {
+export function setBoardOtherBackground(
+  name: keyof IBoard["otherbg"],
+  value: string
+): void {
   store.dispatch(setBoardOtherBgAction({ name, value }));
 }
 
@@ -814,32 +875,42 @@ export function setBoardAudio(audioChanges: IBoardAudioChanges): void {
   store.dispatch(setBoardAudioAction({ audioChanges }));
 }
 
-export function addSpace(x: number, y: number, type: Space, subtype?: SpaceSubtype, board?: IBoard): number {
+export function addSpace(
+  x: number,
+  y: number,
+  type: Space,
+  subtype?: SpaceSubtype,
+  board?: IBoard
+): number {
   // Hack for callers not editing redux state.
   if (board) {
     return addSpaceInternal(x, y, type, subtype, board, getEventsInLibrary());
-  }
-  else {
+  } else {
     const newIndex = getCurrentBoard().spaces.length;
     store.dispatch(addSpaceAction({ x, y, type, subtype }));
     return newIndex;
   }
 }
 
-export function addSpaceInternal(x: number, y: number, type: Space, subtype: SpaceSubtype | undefined, board: IBoard, eventLibrary: EventMap): number {
-  let newSpace: any = {
+export function addSpaceInternal(
+  x: number,
+  y: number,
+  type: Space,
+  subtype: SpaceSubtype | undefined,
+  board: IBoard,
+  eventLibrary: EventMap
+): number {
+  const newSpace: any = {
     x,
     y,
     z: 0,
-    type: type
+    type: type,
   };
 
-  if (subtype !== undefined)
-    newSpace.subtype = subtype;
+  if (subtype !== undefined) newSpace.subtype = subtype;
 
-  let adapter = getAdapter(board.game || 1);
-  if (adapter)
-    adapter.hydrateSpace(newSpace, board, eventLibrary);
+  const adapter = getAdapter(board.game || 1);
+  if (adapter) adapter.hydrateSpace(newSpace, board, eventLibrary);
 
   board.spaces.push(newSpace);
   return board.spaces.length - 1;
@@ -854,42 +925,45 @@ export function getSpaceIndex(space: ISpace, board = getCurrentBoard()) {
 }
 
 export function getStartSpaceIndex(board: IBoard) {
-  let spaces = board.spaces;
+  const spaces = board.spaces;
   for (let i = 0; i < spaces.length; i++) {
-    if (!spaces[i])
-      continue;
-    if (spaces[i].type === Space.START)
-      return i;
+    if (!spaces[i]) continue;
+    if (spaces[i].type === Space.START) return i;
   }
   return -1;
 }
 
-export function getSpacesOfType(type: Space, board: IBoard = getCurrentBoard()): number[] {
-  let spaces = board.spaces;
-  let typeSpaces = [];
+export function getSpacesOfType(
+  type: Space,
+  board: IBoard = getCurrentBoard()
+): number[] {
+  const spaces = board.spaces;
+  const typeSpaces = [];
   for (let i = 0; i < spaces.length; i++) {
-    if (!spaces[i])
-      continue;
-    if (spaces[i].type === type)
-      typeSpaces.push(i);
+    if (!spaces[i]) continue;
+    if (spaces[i].type === type) typeSpaces.push(i);
   }
   return typeSpaces;
 }
 
-export function getSpacesOfSubType(subtype: SpaceSubtype, board: IBoard = getCurrentBoard()): number[] {
-  let spaces = board.spaces;
-  let subtypeSpaces = [];
+export function getSpacesOfSubType(
+  subtype: SpaceSubtype,
+  board: IBoard = getCurrentBoard()
+): number[] {
+  const spaces = board.spaces;
+  const subtypeSpaces = [];
   for (let i = 0; i < spaces.length; i++) {
-    if (!spaces[i])
-      continue;
-    if (spaces[i].subtype === subtype)
-      subtypeSpaces.push(i);
+    if (!spaces[i]) continue;
+    if (spaces[i].subtype === subtype) subtypeSpaces.push(i);
   }
   return subtypeSpaces;
 }
 
 /** Returns array of space indices of spaces with a given event. */
-export function getSpacesWithEvent(eventName: string, board: IBoard = getCurrentBoard()): number[] {
+export function getSpacesWithEvent(
+  eventName: string,
+  board: IBoard = getCurrentBoard()
+): number[] {
   const eventSpaces: number[] = [];
   forEachEvent(board, (event, eventIndex, space, spaceIndex) => {
     if (space && event.id === eventName) {
@@ -904,7 +978,13 @@ export function getDeadSpaceIndex(board: IBoard): number {
   if (typeof board._deadSpace === "number") {
     return board._deadSpace;
   }
-  let deadSpaceIndex = addSpace(board.bg.width + 150, board.bg.height + 100, Space.OTHER, undefined, board);
+  const deadSpaceIndex = addSpace(
+    board.bg.width + 150,
+    board.bg.height + 100,
+    Space.OTHER,
+    undefined,
+    board
+  );
   board._deadSpace = deadSpaceIndex;
   return deadSpaceIndex;
 }
@@ -914,14 +994,16 @@ export function getDeadSpace(board: IBoard): ISpace {
   return board.spaces[getDeadSpaceIndex(board)];
 }
 
-  // Returns array of space indices connected to from a space.
-export function getConnections(spaceIndex: number, board: IBoard = getCurrentBoard()) {
-  if (spaceIndex < 0)
-    return null;
+// Returns array of space indices connected to from a space.
+export function getConnections(
+  spaceIndex: number,
+  board: IBoard = getCurrentBoard()
+) {
+  if (spaceIndex < 0) return null;
 
   if (!board.links) {
     return [];
-  };
+  }
 
   if (Array.isArray(board.links[spaceIndex]))
     return (board.links[spaceIndex] as number[]).slice(0);
@@ -932,25 +1014,37 @@ export function getConnections(spaceIndex: number, board: IBoard = getCurrentBoa
   return [];
 }
 
-export function addConnectionInternal(startSpaceIndex: number, endSpaceIndex: number, board: IBoard): void {
-  if (startSpaceIndex === endSpaceIndex || hasConnection(startSpaceIndex, endSpaceIndex, board))
+export function addConnectionInternal(
+  startSpaceIndex: number,
+  endSpaceIndex: number,
+  board: IBoard
+): void {
+  if (
+    startSpaceIndex === endSpaceIndex ||
+    hasConnection(startSpaceIndex, endSpaceIndex, board)
+  )
     return;
 
   board.links = board.links || {};
   if (Array.isArray(board.links[startSpaceIndex]))
     (board.links[startSpaceIndex] as number[]).push(endSpaceIndex);
   else if (typeof board.links[startSpaceIndex] === "number")
-    board.links[startSpaceIndex] = [board.links[startSpaceIndex] as number, endSpaceIndex];
-  else if (endSpaceIndex >= 0)
-    board.links[startSpaceIndex] = endSpaceIndex;
+    board.links[startSpaceIndex] = [
+      board.links[startSpaceIndex] as number,
+      endSpaceIndex,
+    ];
+  else if (endSpaceIndex >= 0) board.links[startSpaceIndex] = endSpaceIndex;
 }
 
-export function addConnection(startSpaceIndex: number, endSpaceIndex: number, board?: IBoard) {
+export function addConnection(
+  startSpaceIndex: number,
+  endSpaceIndex: number,
+  board?: IBoard
+) {
   if (board) {
     // Hack: the places that do pass a board aren't modifying the redux store.
     addConnectionInternal(startSpaceIndex, endSpaceIndex, board);
-  }
-  else {
+  } else {
     store.dispatch(addConnectionAction({ startSpaceIndex, endSpaceIndex }));
   }
 }
@@ -959,17 +1053,22 @@ export function setSpaceRotation(spaceIndex: number, angleYAxisDeg: number) {
   store.dispatch(setSpaceRotationAction({ spaceIndex, angleYAxisDeg }));
 }
 
-export function addEventByIndex(board: IBoard, spaceIdx: number, event: any, toStart: boolean, eventLibrary: EventMap) {
+export function addEventByIndex(
+  board: IBoard,
+  spaceIdx: number,
+  event: any,
+  toStart: boolean,
+  eventLibrary: EventMap
+) {
   const space = board.spaces[spaceIdx];
   addEventToSpaceInternal(board, space, event, toStart, eventLibrary);
 }
 
 export function loadBoardsFromROM() {
-  let adapter = getROMAdapter();
-  if (!adapter)
-    return;
+  const adapter = getROMAdapter();
+  if (!adapter) return;
 
-  let gameBoards = adapter.loadBoards();
+  const gameBoards = adapter.loadBoards();
   for (const gameBoard of gameBoards) {
     gameBoard._rom = true;
     store.dispatch(addBoardAction({ board: gameBoard, rom: true }));

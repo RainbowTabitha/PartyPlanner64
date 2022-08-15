@@ -1,5 +1,10 @@
 import { AdapterBase } from "./AdapterBase";
-import { ISpace, addEventToSpaceInternal, IBoard, getDeadSpaceIndex } from "../boards";
+import {
+  ISpace,
+  addEventToSpaceInternal,
+  IBoard,
+  getDeadSpaceIndex,
+} from "../boards";
 import { Space, SpaceSubtype, GameVersion } from "../types";
 import { createEventInstance } from "../events/events";
 import { parse as parseInst } from "mips-inst";
@@ -23,24 +28,29 @@ import { getEventsInLibrary } from "../events/EventLibrary";
 import { EventMap } from "../app/boardState";
 import { getAudioMapMP1 } from "./MP1.U.audio";
 
-export const MP1 = new class MP1Adapter extends AdapterBase {
+export const MP1 = new (class MP1Adapter extends AdapterBase {
   public gameVersion: GameVersion = 1;
 
   public nintendoLogoFSEntry: number[] = [9, 110];
   public hudsonLogoFSEntry: number[] = [9, 111];
   public boardDefDirectory: number = 10;
 
-  public MAINFS_READ_ADDR: number = 0x000145B0;
+  public MAINFS_READ_ADDR: number = 0x000145b0;
   public HEAP_FREE_ADDR: number = 0x00014730;
-  public TABLE_HYDRATE_ADDR: number = 0x0004C900;
+  public TABLE_HYDRATE_ADDR: number = 0x0004c900;
 
   // Gives a new space the default things it would need.
   hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.STAR) {
       space.star = true;
-    }
-    else if (space.type === Space.CHANCE) {
-      addEventToSpaceInternal(board, space, createEventInstance(ChanceTime), false, eventLibrary);
+    } else if (space.type === Space.CHANCE) {
+      addEventToSpaceInternal(
+        board,
+        space,
+        createEventInstance(ChanceTime),
+        false,
+        eventLibrary
+      );
     }
   }
 
@@ -52,24 +62,34 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     }
   }
 
-  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]) {
+  onCreateBoardOverlay(
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number,
+    audioIndices: number[]
+  ) {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo, boardIndex: number): void {
+  onAfterOverwrite(
+    romView: DataView,
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ): void {
     // this._writeKoopa(board, boardInfo);
     // this._writeBowser(board, boardInfo);
 
     // Patch game to use all 8MB.
-    romView.setUint16(0x3BF62, 0x8040); // Main heap now starts at 0x80400000
-    romView.setUint16(0x3BF6A, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through the reserved event location
-    romView.setUint16(0x3BF76, 0x0020); // Temp heap fills as much as 0x200000
-    romView.setUint16(0x5F3F6, 0x0020);
+    romView.setUint16(0x3bf62, 0x8040); // Main heap now starts at 0x80400000
+    romView.setUint16(0x3bf6a, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through the reserved event location
+    romView.setUint16(0x3bf76, 0x0020); // Temp heap fills as much as 0x200000
+    romView.setUint16(0x5f3f6, 0x0020);
 
     // Patch HVQ decode RAM 0x4a3a4 to redirect to raw decode hook.
-    const romStartOffset = 0xCBFD0;
-    let asmStartOffset = 0xCB3D0;
-    romView.setUint32(0x4AFD4, parseInst(`J ${asmStartOffset}`));
+    const romStartOffset = 0xcbfd0;
+    let asmStartOffset = 0xcb3d0;
+    romView.setUint32(0x4afd4, parseInst(`J ${asmStartOffset}`));
 
     // Patch over some debug strings with logic to handle raw images.
     const hvqAsm = `
@@ -108,13 +128,22 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     assemble(hvqAsm, { buffer: romView.buffer });
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
+  onOverwritePromises(
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ) {
     const bgIndex = boardInfo.bgDir;
     let bgPromises = [
       this.onWriteBoardSelectImg(board, boardInfo), // The board select image/icon
       this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
       this._brandBootSplashscreen(),
-      this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
+      this._writeBackground(
+        bgIndex,
+        board.bg.src,
+        board.bg.width,
+        board.bg.height
+      ),
       this._writeBackground(boardInfo.pauseBgDir!, board.bg.src, 320, 240), // Overview map
       this._writeAdditionalBackgrounds(board),
     ];
@@ -122,63 +151,193 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     switch (boardIndex) {
       case 0: // DK board
         bgPromises = bgPromises.concat([
-          this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2, board.otherbg.conversation!, 320, 240), // Conversation
-          this._writeBackground(bgIndex + 3, board.otherbg.conversation!, 320, 240), // Treasure thing...
+          this._writeBackground(
+            bgIndex + 1,
+            board.otherbg.largescene!,
+            320,
+            240
+          ), // Game start, end
+          this._writeBackground(
+            bgIndex + 2,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation
+          this._writeBackground(
+            bgIndex + 3,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Treasure thing...
           // Pause bg
           this._writeBackground(bgIndex + 5, board.bg.src, 320, 240), // End game overview map
-          this._writeBackground(bgIndex + 6, board.otherbg.splashscreen!, 320, 240), // Splashscreen bg
+          this._writeBackground(
+            bgIndex + 6,
+            board.otherbg.splashscreen!,
+            320,
+            240
+          ), // Splashscreen bg
         ]);
         break;
 
       case 1: // Peach board
         bgPromises = bgPromises.concat([
-          this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2, board.otherbg.conversation!, 320, 240), // Mini-Game results, Boo?
-          this._writeBackground(bgIndex + 3, board.otherbg.conversation!, 320, 240), // Conversation
-          this._writeBackground(bgIndex + 4, board.otherbg.conversation!, 320, 240), // Visit Toad
-          this._writeBackground(bgIndex + 5, board.otherbg.conversation!, 320, 240),
-          this._writeBackground(bgIndex + 6, board.otherbg.largescene!, 320, 240), // Third end game cutscene bg
+          this._writeBackground(
+            bgIndex + 1,
+            board.otherbg.largescene!,
+            320,
+            240
+          ), // Game start, end
+          this._writeBackground(
+            bgIndex + 2,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Mini-Game results, Boo?
+          this._writeBackground(
+            bgIndex + 3,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation
+          this._writeBackground(
+            bgIndex + 4,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Visit Toad
+          this._writeBackground(
+            bgIndex + 5,
+            board.otherbg.conversation!,
+            320,
+            240
+          ),
+          this._writeBackground(
+            bgIndex + 6,
+            board.otherbg.largescene!,
+            320,
+            240
+          ), // Third end game cutscene bg
           // Pause bg
           this._writeBackground(bgIndex + 8, board.bg.src, 320, 240), // First end game cutscene bg
           this._writeBackground(bgIndex + 9, board.bg.src, 320, 240), // Second end game cutscene bg
-          this._writeBackground(bgIndex + 10, board.otherbg.splashscreen!, 320, 240), // Splashscreen
+          this._writeBackground(
+            bgIndex + 10,
+            board.otherbg.splashscreen!,
+            320,
+            240
+          ), // Splashscreen
         ]);
         break;
 
       case 2: // Yoshi board
         bgPromises = bgPromises.concat([
           // 18: bgDir
-          this._writeBackground(bgIndex + 1 /* 19 */, board.otherbg.largescene!, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2 /* 20 */, board.otherbg.conversation!, 320, 240), // Conversation, Boo, Koopa
-          this._writeBackground(bgIndex + 3 /* 21 */, board.otherbg.conversation!, 320, 240), // Conversation
-          this._writeBackground(bgIndex + 4 /* 22 */, board.otherbg.conversation!, 320, 240), // Conversation, Toad
-          this._writeBackground(bgIndex + 5 /* 23 */, board.otherbg.conversation!, 320, 240), // Conversation, Bowser
+          this._writeBackground(
+            bgIndex + 1 /* 19 */,
+            board.otherbg.largescene!,
+            320,
+            240
+          ), // Game start, end
+          this._writeBackground(
+            bgIndex + 2 /* 20 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation, Boo, Koopa
+          this._writeBackground(
+            bgIndex + 3 /* 21 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation
+          this._writeBackground(
+            bgIndex + 4 /* 22 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation, Toad
+          this._writeBackground(
+            bgIndex + 5 /* 23 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation, Bowser
           this._writeBackground(bgIndex + 6 /* 24 */, board.bg.src, 320, 240), //
           // 25: Pause bg
-          this._writeBackground(bgIndex + 8 /* 26 */, board.otherbg.splashscreen!, 320, 240), // Splashscreen
+          this._writeBackground(
+            bgIndex + 8 /* 26 */,
+            board.otherbg.splashscreen!,
+            320,
+            240
+          ), // Splashscreen
         ]);
         break;
 
       case 3: // Wario board
         bgPromises = bgPromises.concat([
           // 27: bgDir
-          this._writeBackground(bgIndex + 1 /* 28 */, board.otherbg.largescene!, 320, 240), // Game start, end
-          this._writeBackground(bgIndex + 2 /* 29 */, board.otherbg.conversation!, 320, 240), // Conversation, Koopa
-          this._writeBackground(bgIndex + 3 /* 30 */, board.otherbg.conversation!, 320, 240), // Conversation, Bowser, Boo
-          this._writeBackground(bgIndex + 4 /* 31 */, board.otherbg.conversation!, 320, 240), //
-          this._writeBackground(bgIndex + 5 /* 32 */, board.otherbg.conversation!, 320, 240), // Conversation, Bowser, Toad
+          this._writeBackground(
+            bgIndex + 1 /* 28 */,
+            board.otherbg.largescene!,
+            320,
+            240
+          ), // Game start, end
+          this._writeBackground(
+            bgIndex + 2 /* 29 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation, Koopa
+          this._writeBackground(
+            bgIndex + 3 /* 30 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation, Bowser, Boo
+          this._writeBackground(
+            bgIndex + 4 /* 31 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), //
+          this._writeBackground(
+            bgIndex + 5 /* 32 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), // Conversation, Bowser, Toad
           this._writeBackground(bgIndex + 6 /* 33 */, board.bg.src, 320, 240), //
-          this._writeBackground(bgIndex + 7 /* 34 */, board.otherbg.conversation!, 320, 240), //
-          this._writeBackground(bgIndex + 8 /* 35 */, board.otherbg.conversation!, 320, 240), //
+          this._writeBackground(
+            bgIndex + 7 /* 34 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), //
+          this._writeBackground(
+            bgIndex + 8 /* 35 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), //
           // 36: Pause bg
-          this._writeBackground(bgIndex + 10 /* 37 */, board.otherbg.conversation!, 320, 240), //
-          this._writeBackground(bgIndex + 11 /* 38 */, board.otherbg.splashscreen!, 320, 240), // Splashscreen
+          this._writeBackground(
+            bgIndex + 10 /* 37 */,
+            board.otherbg.conversation!,
+            320,
+            240
+          ), //
+          this._writeBackground(
+            bgIndex + 11 /* 38 */,
+            board.otherbg.splashscreen!,
+            320,
+            240
+          ), // Splashscreen
         ]);
         break;
     }
 
-    return Promise.all(bgPromises)
+    return Promise.all(bgPromises);
   }
 
   onWriteEvents(board: IBoard) {
@@ -187,25 +346,31 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     const spaces = board.spaces;
     for (let i = 0; i < spaces.length; i++) {
       let space = board.spaces[i];
-      if (!space || !space.star)
-        continue;
+      if (!space || !space.star) continue;
       let events = space.events || [];
-      let hasStarChance = events.some(e => e.id === "STARCHANCE"); // Pretty unlikely
+      let hasStarChance = events.some((e) => e.id === "STARCHANCE"); // Pretty unlikely
       if (!hasStarChance)
-        addEventToSpaceInternal(board, space, createEventInstance(StarChanceEvent), false, getEventsInLibrary());
+        addEventToSpaceInternal(
+          board,
+          space,
+          createEventInstance(StarChanceEvent),
+          false,
+          getEventsInLibrary()
+        );
     }
   }
 
-  onWriteEventAsmHook(romView: DataView, boardInfo: IBoardInfo, boardIndex: number) {
-    
-  }
+  onWriteEventAsmHook(
+    romView: DataView,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ) {}
 
   onParseStrings(board: IBoard, boardInfo: IBoardInfo) {
     let strs = boardInfo.str || {};
     if (strs.boardSelect) {
       let idx = strs.boardSelect;
-      if (Array.isArray(idx))
-        idx = idx[0] as number;
+      if (Array.isArray(idx)) idx = idx[0] as number;
 
       let str = strings.read(idx) as string;
       let lines = str.split("\n");
@@ -218,10 +383,10 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
 
       // Parse difficulty star level
       let difficulty = 0;
-      let lastIndex = str.indexOf(this.getCharacterMap()[0x2A], 0);
+      let lastIndex = str.indexOf(this.getCharacterMap()[0x2a], 0);
       while (lastIndex !== -1) {
         difficulty++;
-        lastIndex = str.indexOf(this.getCharacterMap()[0x2A], lastIndex + 1);
+        lastIndex = str.indexOf(this.getCharacterMap()[0x2a], lastIndex + 1);
       }
       board.difficulty = difficulty;
     }
@@ -231,26 +396,27 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     let strs = boardInfo.str || {};
     if (strs.boardSelect) {
       let bytes = [];
-      bytes.push(0x0B); // Clear?
+      bytes.push(0x0b); // Clear?
       bytes.push(0x05); // Start GREEN
       bytes = bytes.concat(strings._strToBytes(board.name || ""));
       bytes.push(0x02); // Start DEFAULT
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat([0x10, 0x10, 0x10, 0x10, 0x10, 0x10]); // Spaces
       bytes.push(0x06); // Start BLUE
       bytes = bytes.concat(strings._strToBytes("Map Difficulty  "));
-      let star = 0x2A;
-      if (board.difficulty > 5 || board.difficulty < 1) { // Hackers!
+      let star = 0x2a;
+      if (board.difficulty > 5 || board.difficulty < 1) {
+        // Hackers!
         bytes.push(star);
         bytes = bytes.concat(strings._strToBytes(" "));
-        bytes.push(0x3E); // Little x
-        bytes = bytes.concat(strings._strToBytes(" " + board.difficulty.toString()));
-      }
-      else {
-        for (let i = 0; i < board.difficulty; i++)
-          bytes.push(star);
+        bytes.push(0x3e); // Little x
+        bytes = bytes.concat(
+          strings._strToBytes(" " + board.difficulty.toString())
+        );
+      } else {
+        for (let i = 0; i < board.difficulty; i++) bytes.push(star);
       }
       bytes.push(0x02); // Start DEFAULT
       bytes.push(0x00); // Null byte
@@ -262,8 +428,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
         for (let i = 0; i < idx.length; i++) {
           strings.write(idx[i] as number, strBuffer);
         }
-      }
-      else {
+      } else {
         strings.write(idx, strBuffer);
       }
     }
@@ -271,11 +436,17 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     // For now, just make Koopa's intro neutral.
     if (strs.koopaIntro) {
       let bytes: number[] = [];
-      bytes = bytes.concat(strings._strToBytes("Welcome, everybody!\nI am your guide,\nKoopa Troopa."));
-      bytes.push(0xFF); // PAUSE
-      bytes.push(0x0B); // Clear?
-      bytes = bytes.concat(strings._strToBytes("Now then,\nlet's decide turn order."));
-      bytes.push(0xFF); // PAUSE
+      bytes = bytes.concat(
+        strings._strToBytes(
+          "Welcome, everybody!\nI am your guide,\nKoopa Troopa."
+        )
+      );
+      bytes.push(0xff); // PAUSE
+      bytes.push(0x0b); // Clear?
+      bytes = bytes.concat(
+        strings._strToBytes("Now then,\nlet's decide turn order.")
+      );
+      bytes.push(0xff); // PAUSE
       bytes.push(0x00); // Null byte
 
       let strBuffer = arrayToArrayBuffer(bytes);
@@ -285,8 +456,12 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     // For now, just make a generic comment.
     if (strs.starComments) {
       let bytes: number[] = [];
-      bytes = bytes.concat(strings._strToBytes("Good luck!\nWith enough stars, you\ncould be the superstar!"));
-      bytes.push(0xFF); // PAUSE
+      bytes = bytes.concat(
+        strings._strToBytes(
+          "Good luck!\nWith enough stars, you\ncould be the superstar!"
+        )
+      );
+      bytes.push(0xff); // PAUSE
       bytes.push(0x00); // Null byte
 
       let strBuffer = arrayToArrayBuffer(bytes);
@@ -299,12 +474,10 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     // Space types match MP1 exactly.
   }
 
-  onChangeGameSpaceTypesFromBoardSpaceTypes(board: IBoard) {
-  }
+  onChangeGameSpaceTypesFromBoardSpaceTypes(board: IBoard) {}
 
   _extractKoopa(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex)
-      return;
+    if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let koopaSpace = sceneView.getUint16(boardInfo.koopaSpaceInst + 2);
@@ -313,8 +486,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   _writeKoopa(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex)
-      return;
+    if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex) return;
 
     let koopaSpace;
     for (let i = 0; i < board.spaces.length; i++) {
@@ -324,14 +496,14 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       }
     }
 
-    koopaSpace = (koopaSpace === undefined ? getDeadSpaceIndex(board) : koopaSpace);
+    koopaSpace =
+      koopaSpace === undefined ? getDeadSpaceIndex(board) : koopaSpace;
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     sceneView.setUint16(boardInfo.koopaSpaceInst + 2, koopaSpace);
   }
 
   _extractBowser(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex)
-      return;
+    if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let bowserSpace = sceneView.getUint16(boardInfo.bowserSpaceInst + 2);
@@ -340,8 +512,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   _writeBowser(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex)
-      return;
+    if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex) return;
 
     let bowserSpace;
     for (let i = 0; i < board.spaces.length; i++) {
@@ -351,14 +522,14 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       }
     }
 
-    bowserSpace = (bowserSpace === undefined ? getDeadSpaceIndex(board) : bowserSpace);
+    bowserSpace =
+      bowserSpace === undefined ? getDeadSpaceIndex(board) : bowserSpace;
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     sceneView.setUint16(boardInfo.bowserSpaceInst + 2, bowserSpace);
   }
 
   _extractGoomba(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.goombaSpaceInst || !boardInfo.sceneIndex)
-      return;
+    if (!boardInfo.goombaSpaceInst || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     let goombaSpace = sceneView.getUint16(boardInfo.goombaSpaceInst + 2);
@@ -367,8 +538,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   onParseBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img.boardSelectImg)
-      return;
+    if (!boardInfo.img.boardSelectImg) return;
 
     let boardSelectFORM = mainfs.get(9, boardInfo.img.boardSelectImg);
     let boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
@@ -376,14 +546,17 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       new DataView(boardSelectUnpacked.BMP1[0].parsed.src),
       new DataView(boardSelectUnpacked.BMP1[1].parsed.src),
       new DataView(boardSelectUnpacked.BMP1[2].parsed.src),
-      new DataView(boardSelectUnpacked.BMP1[3].parsed.src)
+      new DataView(boardSelectUnpacked.BMP1[3].parsed.src),
     ];
     let boardSelectImg = fromTiles(boardSelectImgTiles, 2, 2, 64 * 4, 32);
     board.otherbg.boardselect = arrayBufferToDataURL(boardSelectImg, 128, 64);
     // $$log(board.otherbg.boardselect);
   }
 
-  async onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
+  async onWriteBoardSelectImg(
+    board: IBoard,
+    boardInfo: IBoardInfo
+  ): Promise<void> {
     let boardSelectIndex = boardInfo.img.boardSelectImg;
     if (!boardSelectIndex) {
       return;
@@ -391,11 +564,21 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
 
     // We need to write the image onto a canvas to get the RGBA32 values.
     let [width, height] = [128, 64];
-    const imgData = await getImageData(board.otherbg.boardselect!, width, height);
+    const imgData = await getImageData(
+      board.otherbg.boardselect!,
+      width,
+      height
+    );
 
     // First, turn the image back into 4 BMP tiles
-    let boardSelectImgTiles = toTiles(imgData.data, 2, 2, (width / 2) * 4, height / 2);
-    let boardSelectBmps = boardSelectImgTiles.map(tile => {
+    let boardSelectImgTiles = toTiles(
+      imgData.data,
+      2,
+      2,
+      (width / 2) * 4,
+      height / 2
+    );
+    let boardSelectBmps = boardSelectImgTiles.map((tile) => {
       return BMPfromRGBA(tile, 32, 8);
     });
 
@@ -420,10 +603,13 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
   }
 
   onParseBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img.pauseLogoImg)
-      return;
+    if (!boardInfo.img.pauseLogoImg) return;
 
-    board.otherbg.boardlogo = this._readImgFromMainFS(10, boardInfo.img.pauseLogoImg, 0);
+    board.otherbg.boardlogo = this._readImgFromMainFS(
+      10,
+      boardInfo.img.pauseLogoImg,
+      0
+    );
   }
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
@@ -439,14 +625,16 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       let [introWidth, introHeight] = boardInfo.img.introLogoImgDimens!;
 
       let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write logos for ${boardInfo.name}`), 45000);
+      let failTimer = setTimeout(
+        () => reject(`Failed to write logos for ${boardInfo.name}`),
+        45000
+      );
       srcImage.onload = () => {
         // Write the intro logo images.
         if (introLogoImgs) {
           let imgBuffer = toArrayBuffer(srcImage, introWidth, introHeight);
 
-          if (!Array.isArray(introLogoImgs))
-            introLogoImgs = [introLogoImgs];
+          if (!Array.isArray(introLogoImgs)) introLogoImgs = [introLogoImgs];
           for (let i = 0; i < introLogoImgs.length; i++) {
             let logoImgIdx = introLogoImgs[i];
 
@@ -460,7 +648,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
                 width: introWidth,
                 height: introHeight,
                 bpp: 32,
-              }
+              },
             ];
             let newPack = toPack(imgInfoArr, 16, 0, oldPack);
             // saveAs(new Blob([newPack]), "imgpack");
@@ -468,7 +656,8 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
           }
         }
 
-        if (pauseLogoImg) { // Always 200x82
+        if (pauseLogoImg) {
+          // Always 200x82
           let imgBuffer = toArrayBuffer(srcImage, 200, 82);
 
           // First, read the old image pack.
@@ -481,7 +670,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
               width: 200,
               height: 82,
               bpp: 32,
-            }
+            },
           ];
           let newPack = toPack(imgInfoArr, 16, 0, oldPack);
           //saveAs(new Blob([newPack]), "newPack");
@@ -500,7 +689,7 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
     // We will just make it totally transparent because it is not important.
     let resultsBoardNameImgPack = mainfs.get(10, 406 + boardIndex);
     let imgPackU8Array = new Uint8Array(resultsBoardNameImgPack);
-    imgPackU8Array.fill(0, 0x2C); // To the end
+    imgPackU8Array.fill(0, 0x2c); // To the end
     mainfs.write(10, 406 + boardIndex, resultsBoardNameImgPack);
   }
 
@@ -524,11 +713,11 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       0x07: "<YELLOW>", // Start yellow font
       0x08: "<WHITE>", // Start white font
       0x09: "<SEIZURE>", // Start flashing font
-      0x0A: "\n",
-      0x0B: "\u3014", // FEED Carriage return / start of bubble?
-      0x0C: "○", // 2ND BYTE OF PLAYER CHOICE
-      0x0D: "\t", // UNCONFIRMED / WRONG
-      0x0E: "\t", // 1ST BYTE OF PLAYER CHOICE
+      0x0a: "\n",
+      0x0b: "\u3014", // FEED Carriage return / start of bubble?
+      0x0c: "○", // 2ND BYTE OF PLAYER CHOICE
+      0x0d: "\t", // UNCONFIRMED / WRONG
+      0x0e: "\t", // 1ST BYTE OF PLAYER CHOICE
       // 0x0F - nothing
       0x10: " ",
       0x11: "{0}", // These are format params that get replaced with various things
@@ -549,39 +738,39 @@ export const MP1 = new class MP1Adapter extends AdapterBase {
       0x27: "\u3006", // ' Z button
       0x28: "\u3007", // ( Analog stick
       0x29: "\u3008", // ) (coin)
-      0x2A: "\u3009", // * Star
-      0x2B: "\u3010", // , S button
-      0x2C: "\u3011", // , R button
+      0x2a: "\u3009", // * Star
+      0x2b: "\u3010", // , S button
+      0x2c: "\u3011", // , R button
       // 0x2D - nothing
       // 0x2E - nothing
       // 0x2F - nothing
       // 0x30 - 0x39: 0-9 ascii
-      0x3A: "\u3012", // Hollow coin
-      0x3B: "\u3013", // Hollow star
-      0x3C: "+", // <
-      0x3D: "-", // =
-      0x3E: "x", // > Little x
-      0x3F: "->", // Little right ARROW
+      0x3a: "\u3012", // Hollow coin
+      0x3b: "\u3013", // Hollow star
+      0x3c: "+", // <
+      0x3d: "-", // =
+      0x3e: "x", // > Little x
+      0x3f: "->", // Little right ARROW
       // 0x40 - nothing
       // 0x41 - 0x5A: A-Z ascii
-      0x5B: "\"", // [ End quotes
-      0x5C: "'", // \ Single quote
-      0x5D: "(", // ] Open parenthesis
-      0x5E: ")",
-      0x5F: "/", // _
+      0x5b: '"', // [ End quotes
+      0x5c: "'", // \ Single quote
+      0x5d: "(", // ] Open parenthesis
+      0x5e: ")",
+      0x5f: "/", // _
       // 0x60 - nothing
       // 0x61 - 0x7A: a-z ascii
-      0x7B: ":", // :
-      0x80: "\"", // Double quote no angle
+      0x7b: ":", // :
+      0x80: '"', // Double quote no angle
       0x81: "°", // . Degree
       0x82: ",", // ,
       0x83: "°", // Low circle FIXME
       0x85: ".", // … Period
-      0xC0: "“", // A`
-      0xC1: "”", // A'
-      0xC2: "!", // A^
-      0xC3: "?", // A~
-      0xFF: "\u3015", // PAUSE
+      0xc0: "“", // A`
+      0xc1: "”", // A'
+      0xc2: "!", // A^
+      0xc3: "?", // A~
+      0xff: "\u3015", // PAUSE
     };
   }
-}();
+})();

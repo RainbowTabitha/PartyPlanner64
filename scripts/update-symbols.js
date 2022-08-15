@@ -11,9 +11,10 @@ const SYMBOLS_DIR = "symbols";
 
 exec("git submodule update --remote", (err, stdout, stderr) => {
   if (err || stderr) {
-    process.stderr.write("Error updating symbols repository! " + err + ", " + stderr);
-  }
-  else {
+    process.stderr.write(
+      "Error updating symbols repository! " + err + ", " + stderr
+    );
+  } else {
     console.log("Updating symbols repository...");
   }
 
@@ -23,7 +24,7 @@ exec("git submodule update --remote", (err, stdout, stderr) => {
       process.exit(1);
     }
 
-    files.forEach(file => {
+    files.forEach((file) => {
       if (!file.toLowerCase().endsWith(".sym")) {
         return;
       }
@@ -60,17 +61,14 @@ function convertSymbols(text) {
   const objs = [];
   lines.forEach(function (line) {
     line = line.trim();
-    if (!line)
-      return;
+    if (!line) return;
 
     const pieces = line.split(",");
-    if (pieces.length < 3)
-      return;
+    if (pieces.length < 3) return;
 
     // Exclude iffy symbols
     const symName = pieces[2];
-    if (symName.endsWith("?") || symName.startsWith("?"))
-      return;
+    if (symName.endsWith("?") || symName.startsWith("?")) return;
 
     let obj = `{
       addr: ${parseInt(pieces[0], 16)}, // 0x${pieces[0]}
@@ -91,4 +89,4 @@ function convertSymbols(text) {
   output += "\n];\n";
 
   return output;
-};
+}

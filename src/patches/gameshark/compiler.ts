@@ -105,10 +105,10 @@ export class Compiler {
   }
 
   getAddrUpper(addr: number) {
-    return (addr & 0xFFFF0000) >>> 16;
+    return (addr & 0xffff0000) >>> 16;
   }
 
   getAddrLower(addr: number) {
-    return addr & 0x0000FFFF;
+    return addr & 0x0000ffff;
   }
 }

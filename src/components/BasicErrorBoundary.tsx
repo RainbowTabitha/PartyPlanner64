@@ -5,12 +5,15 @@ interface IBasicErrorBoundaryState {
 }
 
 /** Component that wraps children in an error boundary. */
-export class BasicErrorBoundary extends React.Component<React.PropsWithChildren, IBasicErrorBoundaryState> {
-  constructor(props: {}) {
+export class BasicErrorBoundary extends React.Component<
+  React.PropsWithChildren,
+  IBasicErrorBoundaryState
+> {
+  constructor(props: React.PropsWithChildren) {
     super(props);
 
     this.state = {
-      hasError: false
+      hasError: false,
     };
   }
 

@@ -1,0 +1,8 @@
+.vscode
+build
+electron
+node_modules
+
+src/adapter/*.boardoverlay.ts
+src/lib
+src/symbols

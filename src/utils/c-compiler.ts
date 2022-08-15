@@ -9,8 +9,7 @@ export async function compile(source: string): Promise<string> {
   try {
     source = await preprocess(source);
     //$$log("preprocessed:", source);
-  }
-  catch (e) {
+  } catch (e) {
     if (typeof e === "string") {
       throw new Error(e);
     }
@@ -21,7 +20,7 @@ export async function compile(source: string): Promise<string> {
 
   const errors: string[] = [];
   const addError = (text: string) => {
-    text = text.replace("in \"/input.c\"", ""); // Input file not useful in error messages.
+    text = text.replace('in "/input.c"', ""); // Input file not useful in error messages.
     errors.push(text);
   };
 
@@ -38,7 +37,7 @@ export async function compile(source: string): Promise<string> {
   });
 
   const smallerCPromise = new Promise<void>((resolve) => {
-    _smallerCPromiseLike.then(Module => {
+    _smallerCPromiseLike.then((Module) => {
       _smallerCInstance = Module;
       resolve();
     });
@@ -53,12 +52,13 @@ export async function compile(source: string): Promise<string> {
 
   try {
     _smallerCInstance!.ccall("main", "number", ["number", "number"], args);
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error("Error during event compile:\n" + errors.join("\n"));
   }
 
-  let result = _smallerCInstance!.FS.readFile(outputFile, { encoding: "utf8" }) as string;
+  let result = _smallerCInstance!.FS.readFile(outputFile, {
+    encoding: "utf8",
+  }) as string;
   result = fuseSections(result);
   result = convertToNamedRegisters(result);
   result = includeFloatHelpers(result);
@@ -74,7 +74,7 @@ function str2ptr(env: EmscriptenModule, s: string): number {
   for (let i = 0; i < s.length; i++) {
     env.setValue(ptr + i, s.charCodeAt(i), "i8");
   }
-  env.setValue(ptr+s.length, 0, "i8");
+  env.setValue(ptr + s.length, 0, "i8");
   return ptr;
 }
 
@@ -86,7 +86,7 @@ function str2ptrs(env: EmscriptenModule, strList: string[]): number {
 
   strList.forEach((s, idx) => {
     const strPtr = str2ptr(env, s);
-    env.setValue(listPtr + (4 * idx), strPtr, "i32");
+    env.setValue(listPtr + 4 * idx, strPtr, "i32");
   });
 
   return listPtr;
@@ -130,7 +130,10 @@ const regNames = [
 function convertToNamedRegisters(assembly: string): string {
   // Backwards to replace $31 before $3
   for (let i = regNames.length - 1; i >= 0; i--) {
-    assembly = assembly.replace(new RegExp("\\" + regNames[i][1], "g"), regNames[i][0]);
+    assembly = assembly.replace(
+      new RegExp("\\" + regNames[i][1], "g"),
+      regNames[i][0]
+    );
   }
   return assembly;
 }
@@ -156,7 +159,7 @@ function fuseSections(assembly: string): string {
 
   let curSection: keyof ISectionStrings = "text";
 
-  assembly.split("\n").forEach(line => {
+  assembly.split("\n").forEach((line) => {
     switch (line.trim()) {
       case ".text":
         curSection = "text";
@@ -188,8 +191,7 @@ ${sections.bss.join("\n")}`;
 
 // The compiler implements soft float operations.
 
-const __floatsisf =
-  `__floatsisf:
+const __floatsisf = `__floatsisf:
 __floatunsisf:
   mtc1 A0, F12
   cvt.s.w F12, F12
@@ -200,13 +202,12 @@ __floatunsisf:
 // TODO: Is this implemented differently?
 // const __floatunsisf =
 //   `__floatunsisf:
-  
+
 //   JR RA
 //   NOP`;
 
 // TODO: __fixunssfsi
-const __fixsfsi =
-  `__fixsfsi:
+const __fixsfsi = `__fixsfsi:
 __fixunssfsi:
   mtc1 A0, F12
   cvt.w.s F12, F12
@@ -214,8 +215,7 @@ __fixunssfsi:
   JR RA
   NOP`;
 
-const __addsf3 =
-  `__addsf3:
+const __addsf3 = `__addsf3:
   mtc1 A0, F12
   mtc1 A1, F13
   add.s F12, F12, F13
@@ -223,8 +223,7 @@ const __addsf3 =
   JR RA
   NOP`;
 
-const __subsf3 =
-  `__subsf3:
+const __subsf3 = `__subsf3:
   mtc1 A0, F12
   mtc1 A1, F13
   sub.s F12, F12, F13
@@ -232,16 +231,14 @@ const __subsf3 =
   JR RA
   NOP`;
 
-const __negsf2 =
-  `__negsf2:
+const __negsf2 = `__negsf2:
   mtc1 A0, F12
   neg.s F12, F12
   mfc1 V0, F12
   JR RA
   NOP`;
 
-const __mulsf3 =
-  `__mulsf3:
+const __mulsf3 = `__mulsf3:
   mtc1 A0, F12
   mtc1 A1, F13
   mul.s F12, F12, F13
@@ -249,8 +246,7 @@ const __mulsf3 =
   JR RA
   NOP`;
 
-const __divsf3 =
-  `__divsf3:
+const __divsf3 = `__divsf3:
   mtc1 A0, F12
   mtc1 A1, F13
   div.s F12, F12, F13
@@ -262,8 +258,7 @@ const __divsf3 =
 // return 0 if a == b
 // return -1 if a < b
 // return +1 if a > b
-const __lesf2 =
-  `__lesf2:
+const __lesf2 = `__lesf2:
   mtc1 A0, F12
   mtc1 A1, F13
 
@@ -287,8 +282,7 @@ __lesf2_ret:
 // return 0 if a == b
 // return -1 if a < b
 // return +1 if a > b
-const __gesf2 =
-  `__gesf2:
+const __gesf2 = `__gesf2:
   mtc1 A0, F12
   mtc1 A1, F13
 
@@ -308,32 +302,20 @@ __gesf2_ret:
   JR RA
   NOP`;
 
-
 function includeFloatHelpers(assembly: string): string {
   let floatOps = "";
 
-  if (assembly.indexOf("__floatsisf") >= 0)
-    floatOps += "\n" + __floatsisf;
-  if (assembly.indexOf("__floatunsisf") >= 0)
-    floatOps += "\n" + __floatsisf;
-  if (assembly.indexOf("__fixsfsi") >= 0)
-    floatOps += "\n" + __fixsfsi;
-  if (assembly.indexOf("__fixunssfsi") >= 0)
-    floatOps += "\n" + __fixsfsi;
-  if (assembly.indexOf("__addsf3") >= 0)
-    floatOps += "\n" + __addsf3;
-  if (assembly.indexOf("__subsf3") >= 0)
-    floatOps += "\n" + __subsf3;
-  if (assembly.indexOf("__negsf2") >= 0)
-    floatOps += "\n" + __negsf2;
-  if (assembly.indexOf("__mulsf3") >= 0)
-    floatOps += "\n" + __mulsf3;
-  if (assembly.indexOf("__divsf3") >= 0)
-    floatOps += "\n" + __divsf3;
-  if (assembly.indexOf("__lesf2") >= 0)
-    floatOps += "\n" + __lesf2;
-  if (assembly.indexOf("__gesf2") >= 0)
-    floatOps += "\n" + __gesf2;
+  if (assembly.indexOf("__floatsisf") >= 0) floatOps += "\n" + __floatsisf;
+  if (assembly.indexOf("__floatunsisf") >= 0) floatOps += "\n" + __floatsisf;
+  if (assembly.indexOf("__fixsfsi") >= 0) floatOps += "\n" + __fixsfsi;
+  if (assembly.indexOf("__fixunssfsi") >= 0) floatOps += "\n" + __fixsfsi;
+  if (assembly.indexOf("__addsf3") >= 0) floatOps += "\n" + __addsf3;
+  if (assembly.indexOf("__subsf3") >= 0) floatOps += "\n" + __subsf3;
+  if (assembly.indexOf("__negsf2") >= 0) floatOps += "\n" + __negsf2;
+  if (assembly.indexOf("__mulsf3") >= 0) floatOps += "\n" + __mulsf3;
+  if (assembly.indexOf("__divsf3") >= 0) floatOps += "\n" + __divsf3;
+  if (assembly.indexOf("__lesf2") >= 0) floatOps += "\n" + __lesf2;
+  if (assembly.indexOf("__gesf2") >= 0) floatOps += "\n" + __gesf2;
 
   if (floatOps) {
     assembly += "\n; .text\n.align 4\n" + floatOps.trim();

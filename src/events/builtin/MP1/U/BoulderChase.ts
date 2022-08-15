@@ -1,5 +1,9 @@
 import { IEvent, IEventParseInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { addEventToLibrary } from "../../../EventLibrary";
 
@@ -9,9 +13,7 @@ export const BoulderChase: IEvent = {
   activationType: EditorEventActivationType.LANDON,
   executionType: EventExecutionType.DIRECT,
   fakeEvent: true,
-  supportedGames: [
-    Game.MP1_USA,
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     const hashes = {
       METHOD_START: "6E26BAB74BC8411901472C0A40E2FC1D", // +0x74
@@ -23,6 +25,6 @@ export const BoulderChase: IEvent = {
     }
 
     return false;
-  }
+  },
 };
 addEventToLibrary(BoulderChase);

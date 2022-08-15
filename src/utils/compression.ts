@@ -1,32 +1,32 @@
 import { $$log } from "./debug";
 
-let WINDOW_START = 0x3BE;
+let WINDOW_START = 0x3be;
 let WINDOW_SIZE = 1024;
 
 let MIN_MATCH_LEN = 3;
 // var MAX_MATCH_LEN = 0x42;
 
 /* Mario Party N64 compression type 01
-  *
-  * This type of compression was used in all three titles, though was the
-  * exclusive type available in the original title. It is similar to LZSS, and
-  * uses a 1KB circular buffer when referencing offsets. Like yaz0 compression,
-  * there are code bytes for every 8 "chunks," though they are read from right
-  * to left (0x01 to 0x80).
-  *
-  * When a '0' code bit is encountered, the next two bytes in the input are
-  * read as offset and length pairs into the sliding window.
-  *
-  *       Byte 1    Byte 2
-  *     [oooooooo][oollllll]
-  *
-  * The two offset bits within Byte 2 are masked and shifted such that they
-  * become the most significant bits. The length is found by adding the value
-  * of MIN_MATCH_LEN, in this case, 3.
-  *
-  * Notably, the circular buffer begins filling not at zero, but at a position
-  * roughly 90% of the way through, WINDOW_START.
-  */
+ *
+ * This type of compression was used in all three titles, though was the
+ * exclusive type available in the original title. It is similar to LZSS, and
+ * uses a 1KB circular buffer when referencing offsets. Like yaz0 compression,
+ * there are code bytes for every 8 "chunks," though they are read from right
+ * to left (0x01 to 0x80).
+ *
+ * When a '0' code bit is encountered, the next two bytes in the input are
+ * read as offset and length pairs into the sliding window.
+ *
+ *       Byte 1    Byte 2
+ *     [oooooooo][oollllll]
+ *
+ * The two offset bits within Byte 2 are masked and shifted such that they
+ * become the most significant bits. The length is found by adding the value
+ * of MIN_MATCH_LEN, in this case, 3.
+ *
+ * Notably, the circular buffer begins filling not at zero, but at a position
+ * roughly 90% of the way through, WINDOW_START.
+ */
 function decompress01(src: DataView, dst: DataView, decompressedSize: number) {
   // Current positions in src/dst buffers and sliding window.
   var srcPlace = 0;
@@ -48,7 +48,7 @@ function decompress01(src: DataView, dst: DataView, decompressedSize: number) {
     // have shifted away all of the code bits.
     if ((curCodeByte & 0x100) === 0) {
       curCodeByte = src.getUint8(srcPlace);
-      curCodeByte |= 0xFF00;
+      curCodeByte |= 0xff00;
       ++srcPlace;
     }
 
@@ -59,16 +59,15 @@ function decompress01(src: DataView, dst: DataView, decompressedSize: number) {
       ++dstPlace;
       ++srcPlace;
       winPlace = (winPlace + 1) % WINDOW_SIZE;
-    }
-    else {
+    } else {
       // Interpret the next two bytes as an offset into the sliding window and
       // a length to read.
       var byte1 = src.getUint8(srcPlace);
       var byte2 = src.getUint8(srcPlace + 1);
       srcPlace += 2;
 
-      var offset = ((byte2 & 0xC0) << 2) | byte1;
-      var count = (byte2 & 0x3F) + MIN_MATCH_LEN;
+      var offset = ((byte2 & 0xc0) << 2) | byte1;
+      var count = (byte2 & 0x3f) + MIN_MATCH_LEN;
 
       // Within the sliding window, locate the offset and copy count bytes.
       var val;
@@ -90,8 +89,8 @@ function decompress01(src: DataView, dst: DataView, decompressedSize: number) {
 }
 
 /* This is a hack for MP3 Strings3 at the moment. Just "wraps" with dummy code
-  * words, so file size will just grow.
-  */
+ * words, so file size will just grow.
+ */
 function compress01(src: DataView) {
   let codeWordCount = Math.ceil(src.byteLength / 8);
   let compressedSize = src.byteLength + codeWordCount;
@@ -102,9 +101,8 @@ function compress01(src: DataView) {
   let srcPlace = 0;
   while (dstPlace < compressedSize) {
     if (!dstPlace || !(dstPlace % 9)) {
-      dst.setUint8(dstPlace, 0xFF);
-    }
-    else {
+      dst.setUint8(dstPlace, 0xff);
+    } else {
       dst.setUint8(dstPlace, src.getUint8(srcPlace));
       srcPlace++;
     }
@@ -115,27 +113,27 @@ function compress01(src: DataView) {
 }
 
 /* Mario Party N64 compression type 02
-  *
-  * This compression algorithm was introduced in Mario Party 2, and is very
-  * similar to yaz0. It uses word sized groups of code bits rather than a
-  * single byte, and reads them in the same left to right order as yaz0. The
-  * interpretation of the bytes when a code bit is 0 is also the same as yaz0.
-  *
-  *       Byte 1    Byte 2     [Byte 3 when l = 0]
-  *     [lllldddd][dddddddd]   [llllllll]
-  *
-  * The values of length and lookback distance are simply split apart and used.
-  * The special case when length == 0 in yaz0 also applies, where a third byte
-  * is read as the value of length and 0x12 is added. When the lookback
-  * distance is farther than the start (out of bounds), 0s are inserted.
-  *
-  * This is also the implementation used for decompression types 03 and 04.
-  * 03 and 04 are considered the same by the game engine.
-  * 02 differs from 03/04 in that it is the only implementation that checks
-  * whether lookback goes out of bounds, and handles it. As far as I know,
-  * it is OK to use that handling for 03/04 as well, since the behavior would
-  * otherwise be undefined.
-  */
+ *
+ * This compression algorithm was introduced in Mario Party 2, and is very
+ * similar to yaz0. It uses word sized groups of code bits rather than a
+ * single byte, and reads them in the same left to right order as yaz0. The
+ * interpretation of the bytes when a code bit is 0 is also the same as yaz0.
+ *
+ *       Byte 1    Byte 2     [Byte 3 when l = 0]
+ *     [lllldddd][dddddddd]   [llllllll]
+ *
+ * The values of length and lookback distance are simply split apart and used.
+ * The special case when length == 0 in yaz0 also applies, where a third byte
+ * is read as the value of length and 0x12 is added. When the lookback
+ * distance is farther than the start (out of bounds), 0s are inserted.
+ *
+ * This is also the implementation used for decompression types 03 and 04.
+ * 03 and 04 are considered the same by the game engine.
+ * 02 differs from 03/04 in that it is the only implementation that checks
+ * whether lookback goes out of bounds, and handles it. As far as I know,
+ * it is OK to use that handling for 03/04 as well, since the behavior would
+ * otherwise be undefined.
+ */
 function decompress02(src: DataView, dst: DataView, decompressedSize: number) {
   // Current positions in src/dst buffers.
   var srcPlace = 0;
@@ -158,16 +156,15 @@ function decompress02(src: DataView, dst: DataView, decompressedSize: number) {
       dst.setUint8(dstPlace, src.getUint8(srcPlace));
       ++dstPlace;
       ++srcPlace;
-    }
-    else {
+    } else {
       // Interpret the next two bytes as a distance to travel backwards and a
       // a length to read.
       var byte1 = src.getUint8(srcPlace);
       var byte2 = src.getUint8(srcPlace + 1);
       srcPlace += 2;
 
-      var back = (((byte1 & 0x0F) << 8) | byte2) + 1;
-      var count = ((byte1 & 0xF0) >> 4) + 2;
+      var back = (((byte1 & 0x0f) << 8) | byte2) + 1;
+      var count = ((byte1 & 0xf0) >> 4) + 2;
 
       if (count === 2) {
         // Special case where 0xF0 masked byte 1 is zero.
@@ -178,10 +175,8 @@ function decompress02(src: DataView, dst: DataView, decompressedSize: number) {
       // Step back and copy count bytes into the dst.
       var i, val;
       for (i = 0; i < count && dstPlace < decompressedSize; ++i) {
-        if (back > dstPlace)
-          val = 0;
-        else
-          val = dst.getUint8(dstPlace - back);
+        if (back > dstPlace) val = 0;
+        else val = dst.getUint8(dstPlace - back);
 
         dst.setUint8(dstPlace, val);
         ++dstPlace;
@@ -197,17 +192,17 @@ function decompress02(src: DataView, dst: DataView, decompressedSize: number) {
 }
 
 /* This is a hack for MP2 HVQ at the moment. Just "wraps" with dummy code
-  * words, so file size just grows.
-  */
+ * words, so file size just grows.
+ */
 function compress02(src: DataView) {
   let codeWordCount = src.byteLength / 32;
-  let compressedSize = src.byteLength + (codeWordCount * 4);
+  let compressedSize = src.byteLength + codeWordCount * 4;
   let compressedBuffer = new ArrayBuffer(compressedSize);
   let dst = new DataView(compressedBuffer);
 
   let srcPlace = 0;
   for (let i = 0; i < compressedSize; i += 36, srcPlace += 32) {
-    dst.setUint32(i, 0xFFFFFFFF);
+    dst.setUint32(i, 0xffffffff);
     dst.setUint32(i + 4, src.getUint32(srcPlace));
     dst.setUint32(i + 8, src.getUint32(srcPlace + 4));
     dst.setUint32(i + 12, src.getUint32(srcPlace + 8));
@@ -222,19 +217,19 @@ function compress02(src: DataView) {
 }
 
 /* Mario Party N64 compression type 05
-  *
-  * This is mostly a run-length encoding. The algorithm can be pretty simply
-  * described:
-  * 1. Read a byte
-  * 2. If the byte has the sign bit (byte & 0x80), then get rid of the sign
-  *    bit and use that to count and copy in that many bytes.
-  * 3. If there is no sign bit, use the byte to count and repeat the next byte
-  *    for that many times.
-  * 4. Repeat until decompressed size reached.
-  *
-  * Typically this is used when there are a lot of zeroes or repeated single
-  * values, like in some images.
-  */
+ *
+ * This is mostly a run-length encoding. The algorithm can be pretty simply
+ * described:
+ * 1. Read a byte
+ * 2. If the byte has the sign bit (byte & 0x80), then get rid of the sign
+ *    bit and use that to count and copy in that many bytes.
+ * 3. If there is no sign bit, use the byte to count and repeat the next byte
+ *    for that many times.
+ * 4. Repeat until decompressed size reached.
+ *
+ * Typically this is used when there are a lot of zeroes or repeated single
+ * values, like in some images.
+ */
 function decompress05(src: DataView, dst: DataView, decompressedSize: number) {
   // Current positions in src/dst buffers.
   let srcPlace = 0;
@@ -244,7 +239,7 @@ function decompress05(src: DataView, dst: DataView, decompressedSize: number) {
     let curCodeByte = src.getUint8(srcPlace);
     srcPlace++;
 
-    let count = curCodeByte & 0x7F;
+    let count = curCodeByte & 0x7f;
     if (curCodeByte & 0x80) {
       // Having the sign bit means we read the next n bytes from the input.
       for (let i = 0; i < count; i++) {
@@ -253,8 +248,7 @@ function decompress05(src: DataView, dst: DataView, decompressedSize: number) {
         dst.setUint8(dstPlace, nextByte);
         dstPlace++;
       }
-    }
-    else {
+    } else {
       // No sign bit means we repeat the next byte n times.
       let repeatedByte = src.getUint8(srcPlace);
       srcPlace++;
@@ -289,7 +283,7 @@ function compress05(src: DataView) {
       for (let i = 0; i < 127; i++) {
         curr_byte = src.getUint8(input_pos + i);
         next_byte = src.getUint8(input_pos + i + 1);
-        if (curr_byte !== next_byte || (input_pos + i) >= src.byteLength) {
+        if (curr_byte !== next_byte || input_pos + i >= src.byteLength) {
           copy_len++;
           break;
         }
@@ -299,18 +293,17 @@ function compress05(src: DataView) {
       outView.setUint8(output_pos + 1, src.getUint8(input_pos));
       output_pos += 2;
       input_pos += copy_len;
-    }
-    else {
+    } else {
       copy_len = 0;
       for (let i = 0; i < 127; i++) {
         curr_byte = src.getUint8(input_pos + i);
         next_byte = src.getUint8(input_pos + i + 1);
-        if (curr_byte === next_byte|| (input_pos + i) >= src.byteLength) {
+        if (curr_byte === next_byte || input_pos + i >= src.byteLength) {
           break;
         }
         copy_len++;
       }
-      outView.setUint8(output_pos, 0x80|copy_len);
+      outView.setUint8(output_pos, 0x80 | copy_len);
       output_pos += 1;
       for (let i = 0; i < copy_len; i++) {
         outView.setUint8(output_pos, src.getUint8(input_pos + i));
@@ -325,7 +318,11 @@ function compress05(src: DataView) {
 
 // Returns a new buffer with the decompressed data.
 // The compressed size is attached as a property to the buffer object.
-export function decompress(type: number, srcDataView: DataView, decompressedSize: number): ArrayBuffer {
+export function decompress(
+  type: number,
+  srcDataView: DataView,
+  decompressedSize: number
+): ArrayBuffer {
   let dstBuffer = new ArrayBuffer(decompressedSize);
   let dstView = new DataView(dstBuffer);
   let compressedSize;
@@ -377,7 +374,11 @@ export function compress(type: number, srcDataView: DataView): ArrayBuffer {
   }
 }
 
-export function getCompressedSize(type: number, srcDataView: DataView, decompressedSize: number) {
+export function getCompressedSize(
+  type: number,
+  srcDataView: DataView,
+  decompressedSize: number
+) {
   let dstBuffer = new ArrayBuffer(decompressedSize);
   let dstView = new DataView(dstBuffer);
 
@@ -396,4 +397,3 @@ export function getCompressedSize(type: number, srcDataView: DataView, decompres
       $$log(`getCompressedSize ${type} not implemented.`);
   }
 }
-

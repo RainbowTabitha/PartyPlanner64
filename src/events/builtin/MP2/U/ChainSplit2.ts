@@ -1,5 +1,10 @@
 import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+  EventParameterType,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { addConnection, IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -14,29 +19,32 @@ export const ChainSplit2: IEvent = {
   parameters: [
     { name: "left_space", type: EventParameterType.Space },
     { name: "right_space", type: EventParameterType.Space },
-    { name: "chains", type: EventParameterType.NumberArray, }
+    { name: "chains", type: EventParameterType.NumberArray },
   ],
   fakeEvent: true,
-  supportedGames: [
-    Game.MP2_USA,
-  ],
+  supportedGames: [Game.MP2_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     let hashes = {
       // From Western Land 0x80107C54 / 0x29CF24:
       METHOD_START: "0C01A009C54E209652DA667F464FB7C0", // +0x2C
       //METHOD_MID1: "", // [0x30]+0x18 // Not sure why this was hashed in MP1
       METHOD_MID2: "FC606B8F8BD2C8D39BB9581B0E4D8398", // [0x4C]+0x1C
-      METHOD_END: "2F3A0045D0AC927FF23ACD73B5B62E1C" // [0xF0]+0x28
+      METHOD_END: "2F3A0045D0AC927FF23ACD73B5B62E1C", // [0xF0]+0x28
     };
 
     // Match a few sections to see if we match.
-    if (hashEqual([dataView.buffer, info.offset, 0x2C], hashes.METHOD_START) &&
-        //hashEqual([dataView.buffer, info.offset + 0x30, 0x18], hashes.METHOD_MID1) &&
-        hashEqual([dataView.buffer, info.offset + 0x4C, 0x1C], hashes.METHOD_MID2) &&
-        hashEqual([dataView.buffer, info.offset + 0xF0, 0x28], hashes.METHOD_END)) {
+    if (
+      hashEqual([dataView.buffer, info.offset, 0x2c], hashes.METHOD_START) &&
+      //hashEqual([dataView.buffer, info.offset + 0x30, 0x18], hashes.METHOD_MID1) &&
+      hashEqual(
+        [dataView.buffer, info.offset + 0x4c, 0x1c],
+        hashes.METHOD_MID2
+      ) &&
+      hashEqual([dataView.buffer, info.offset + 0xf0, 0x28], hashes.METHOD_END)
+    ) {
       // Read the chain indices.
-      let leftChain = dataView.getUint16(info.offset + 0xEA);
-      let rightChain = dataView.getUint16(info.offset + 0xEE);
+      let leftChain = dataView.getUint16(info.offset + 0xea);
+      let rightChain = dataView.getUint16(info.offset + 0xee);
 
       let leftSpace = info.chains[leftChain][0]; // Technically, we should check if A2 is really R0.
       let rightSpace = info.chains[rightChain][0];
@@ -48,7 +56,12 @@ export const ChainSplit2: IEvent = {
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: { helper1addr: number, helper2addr: number }) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: { helper1addr: number; helper2addr: number }
+  ) {
     const chains = event.parameterValues!["chains"] as number[];
     return `
   addiu SP, SP, -0x28
@@ -232,7 +245,7 @@ chainsplit_hide_arrows:
     .word 0
 
 .endstatic
-`
-  }
+`;
+  },
 };
 addEventToLibrary(ChainSplit2);

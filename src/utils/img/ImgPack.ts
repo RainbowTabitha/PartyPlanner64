@@ -77,10 +77,8 @@ export function fromPack(buffer: ArrayBuffer) {
     let imgWidth = curEntryView.getUint16(4);
     let imgHeight = curEntryView.getUint16(6);
     let imgByteCount;
-    if (bitCount >= 8)
-      imgByteCount = ((bitCount * imgWidth * imgHeight) / 8);
-    else
-      imgByteCount = (imgWidth * imgHeight) / (8 / bitCount);
+    if (bitCount >= 8) imgByteCount = (bitCount * imgWidth * imgHeight) / 8;
+    else imgByteCount = (imgWidth * imgHeight) / (8 / bitCount);
     let rawImgBuffer = buffer.slice(imgOffset, imgOffset + imgByteCount);
 
     //console.log("Reading image [offset: " + imgOffset + " / width: " + imgWidth + " / height: " + imgHeight + "] (byteLength: " + imgByteCount + ")");
@@ -88,17 +86,20 @@ export function fromPack(buffer: ArrayBuffer) {
     if (hasPalette)
       rawImgBuffer = BMPtoRGBA(rawImgBuffer, palette, bitCount, 16);
     let imgInfo: IImgInfo = {
-      "width": imgWidth,
-      "height": imgHeight
+      width: imgWidth,
+      height: imgHeight,
     };
     if (bitCount === 32) {
       imgInfo.src = rawImgBuffer;
-    }
-    else if (bitCount === 16 || hasPalette) {
+    } else if (bitCount === 16 || hasPalette) {
       imgInfo.src = RGBA5551toRGBA32(rawImgBuffer, imgWidth, imgHeight);
-    }
-    else if (bitCount === 4 || bitCount === 8) {
-      imgInfo.src = GrayscaleToRGBA32(rawImgBuffer, imgWidth, imgHeight, bitCount);
+    } else if (bitCount === 4 || bitCount === 8) {
+      imgInfo.src = GrayscaleToRGBA32(
+        rawImgBuffer,
+        imgWidth,
+        imgHeight,
+        bitCount
+      );
     }
     output.push(imgInfo);
 
@@ -111,33 +112,40 @@ export function fromPack(buffer: ArrayBuffer) {
 
 // Creates a new ImgPack from an array of image buffers, and optionally:
 //   oldPack: The old pack being replaced, used for grabbing mystery values
-export function toPack(imgInfoArr: IImgInfo[], outBpp: number, bmpBpp: number, oldPack?: ArrayBuffer) {
+export function toPack(
+  imgInfoArr: IImgInfo[],
+  outBpp: number,
+  bmpBpp: number,
+  oldPack?: ArrayBuffer
+) {
   let newPackSize = getByteLength(imgInfoArr, outBpp);
 
   let bmpData, palette;
-  if (bmpBpp) { // FIXME: There could be multiple images and the palette needs to be comprehensive.
+  if (bmpBpp) {
+    // FIXME: There could be multiple images and the palette needs to be comprehensive.
     [bmpData, palette] = BMPfromRGBA(imgInfoArr[0].src!, imgInfoArr[0].bpp!, 8);
     imgInfoArr[0]._bmpData = bmpData;
     newPackSize += palette.colors.length * (outBpp / bmpBpp);
-    newPackSize -= (imgInfoArr[0].src!.byteLength - bmpData.byteLength);
+    newPackSize -= imgInfoArr[0].src!.byteLength - bmpData.byteLength;
   }
 
   let newPack = new ArrayBuffer(newPackSize);
   let newView = new DataView(newPack);
 
   let oldView;
-  if (oldPack)
-    oldView = new DataView(oldPack);
+  if (oldPack) oldView = new DataView(oldPack);
 
   // Write initial header offsets.
   newView.setUint32(0, 0x00000020); // First entry offset.
-  newView.setUint32(4, 0x0000002C); // FIXME: Unknown offset.
-  newView.setUint32(8, 0x0000002C); // First image offset.
+  newView.setUint32(4, 0x0000002c); // FIXME: Unknown offset.
+  newView.setUint32(8, 0x0000002c); // First image offset.
   if (palette) {
-    newView.setUint32(0xC, newPackSize - (palette.colors.length * (outBpp / bmpBpp))); // Palette offset
-  }
-  else {
-    newView.setUint32(0xC, newPackSize); // Palette offset
+    newView.setUint32(
+      0xc,
+      newPackSize - palette.colors.length * (outBpp / bmpBpp)
+    ); // Palette offset
+  } else {
+    newView.setUint32(0xc, newPackSize); // Palette offset
   }
   newView.setUint16(0x10, imgInfoArr.length); // Image count
   newView.setUint16(0x12, 0); // FIXME: Palette presence?
@@ -151,18 +159,16 @@ export function toPack(imgInfoArr: IImgInfo[], outBpp: number, bmpBpp: number, o
   newView.setUint16(0x14, widthSum); // Total width
   newView.setUint16(0x16, heightSum); // Total height
 
-  if (oldView)
-    newView.setUint8(0x18, oldView.getUint8(0x18));
-  else
-    newView.setUint8(0x18, 0);
+  if (oldView) newView.setUint8(0x18, oldView.getUint8(0x18));
+  else newView.setUint8(0x18, 0);
 
   newView.setUint8(0x19, bmpBpp || outBpp); // Bpp of the data in the ImgPack.
 
   if (palette) {
-    newView.setUint8(0x1A, palette.colors.length);
-    let paletteOffset = newPackSize - (palette.colors.length * (outBpp / bmpBpp));
+    newView.setUint8(0x1a, palette.colors.length);
+    let paletteOffset = newPackSize - palette.colors.length * (outBpp / bmpBpp);
     for (let i = 0; i < palette.colors.length; i++) {
-      newView.setUint16(paletteOffset + (i * 2), palette.colors[i]); // FIXME: 16bit hardcoded
+      newView.setUint16(paletteOffset + i * 2, palette.colors[i]); // FIXME: 16bit hardcoded
     }
   }
 
@@ -179,44 +185,52 @@ export function toPack(imgInfoArr: IImgInfo[], outBpp: number, bmpBpp: number, o
 export function getByteLength(imgInfoArr: IImgInfo[], outBpp: number) {
   let len = 0x20; // Fixed-size header
   for (let i = 0; i < imgInfoArr.length; i++) {
-    len += 0xC;
+    len += 0xc;
     if (imgInfoArr[i].bpp === outBpp) {
       len += imgInfoArr[i].src!.byteLength;
-    }
-    else if (imgInfoArr[i].bpp === 32 && outBpp === 16) {
+    } else if (imgInfoArr[i].bpp === 32 && outBpp === 16) {
       len += imgInfoArr[i].src!.byteLength / 2;
     }
   }
   return len;
 }
 
-function _writeEntry(newView: DataView, curOffset: number, imgInfo: IImgInfo, outBpp: number, oldView?: DataView) {
-  newView.setUint32(curOffset, curOffset + 0xC); // Absolute offset of image data.
-  newView.setUint16(curOffset += 4, imgInfo.width);
-  newView.setUint16(curOffset += 2, imgInfo.height);
+function _writeEntry(
+  newView: DataView,
+  curOffset: number,
+  imgInfo: IImgInfo,
+  outBpp: number,
+  oldView?: DataView
+) {
+  newView.setUint32(curOffset, curOffset + 0xc); // Absolute offset of image data.
+  newView.setUint16((curOffset += 4), imgInfo.width);
+  newView.setUint16((curOffset += 2), imgInfo.height);
   if (oldView) {
-    newView.setUint32(curOffset += 2, oldView.getUint32(curOffset)); // Assumes we can directly map mystery values.
+    newView.setUint32((curOffset += 2), oldView.getUint32(curOffset)); // Assumes we can directly map mystery values.
     curOffset += 4;
-  }
-  else { // Is it really just the actual h x w in the buffer?
-    newView.setUint16(curOffset += 2, imgInfo.width / 2); // FIXME
-    newView.setUint16(curOffset += 2, imgInfo.height / 2);
+  } else {
+    // Is it really just the actual h x w in the buffer?
+    newView.setUint16((curOffset += 2), imgInfo.width / 2); // FIXME
+    newView.setUint16((curOffset += 2), imgInfo.height / 2);
     curOffset += 2;
   }
 
   let srcView;
   if (imgInfo._bmpData) {
     srcView = new DataView(imgInfo._bmpData);
-  }
-  else if (imgInfo.bpp === outBpp) {
+  } else if (imgInfo.bpp === outBpp) {
     srcView = new DataView(imgInfo.src!);
-  }
-  else if (imgInfo.bpp === 32 && outBpp === 16) {
-    let rgba16 = RGBA5551fromRGBA32(imgInfo.src!, imgInfo.width, imgInfo.height);
+  } else if (imgInfo.bpp === 32 && outBpp === 16) {
+    let rgba16 = RGBA5551fromRGBA32(
+      imgInfo.src!,
+      imgInfo.width,
+      imgInfo.height
+    );
     srcView = new DataView(rgba16);
-  }
-  else {
-    throw new Error(`Cannot create ImgPack (yet) with inBpp=${imgInfo.bpp} and outBpp=${outBpp}.`);
+  } else {
+    throw new Error(
+      `Cannot create ImgPack (yet) with inBpp=${imgInfo.bpp} and outBpp=${outBpp}.`
+    );
   }
 
   copyRange(newView, srcView, curOffset, 0, srcView.byteLength);

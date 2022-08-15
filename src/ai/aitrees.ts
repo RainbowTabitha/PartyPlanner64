@@ -30,7 +30,12 @@ export enum DecisionTreeNodeType {
   // There are more, but they're in the sequels and less useful.
 }
 
-export function parseDecisionTree(view: DataView, offset: number, base: number, game: GameVersion): IDecisionTreeNode[] {
+export function parseDecisionTree(
+  view: DataView,
+  offset: number,
+  base: number,
+  game: GameVersion
+): IDecisionTreeNode[] {
   const nodes: IDecisionTreeNode[] = [];
 
   let type: number;
@@ -42,44 +47,46 @@ export function parseDecisionTree(view: DataView, offset: number, base: number, 
       nodes.push({
         type,
         data,
-        decision: parseDecisionTree(view, (decision & 0x7FFFFFFF) - base, base, game)
+        decision: parseDecisionTree(
+          view,
+          (decision & 0x7fffffff) - base,
+          base,
+          game
+        ),
       });
-    }
-    else {
+    } else {
       nodes.push({
         type,
         data,
-        decision: parseDecisionTreeResult(decision, game)
+        decision: parseDecisionTreeResult(decision, game),
       });
     }
     offset += 12;
-  }
-  while(type !== DecisionTreeNodeType.leaf);
+  } while (type !== DecisionTreeNodeType.leaf);
 
   return nodes;
 }
 
-function parseDecisionTreeResult(res: number, gameVersion: GameVersion): IDecisionTreeResult {
+function parseDecisionTreeResult(
+  res: number,
+  gameVersion: GameVersion
+): IDecisionTreeResult {
   if (gameVersion === 3) {
     // Decision, Super Hard, Hard, Normal, Easy
     // DDDD SSSS SSSH HHHH HHNN NNNN NEEE EEEE
     return {
-      value: ((res & 0xF0000000) >>> 28) as (1 | 0),
+      value: ((res & 0xf0000000) >>> 28) as 1 | 0,
       probability: [
-        (res & 0x0000007F),
-        (res & 0x00003F80) >>> 7,
-        (res & 0x001FC000) >>> 14,
-        (res & 0x0FE00000) >>> 21,
+        res & 0x0000007f,
+        (res & 0x00003f80) >>> 7,
+        (res & 0x001fc000) >>> 14,
+        (res & 0x0fe00000) >>> 21,
       ],
     };
-  }
-  else {
+  } else {
     return {
-      value: ((res & 0xFFFF0000) >>> 16) as (1 | 0),
-      probability: [
-        (res & 0x000000FF),
-        (res & 0x0000FF00) >>> 8,
-      ],
+      value: ((res & 0xffff0000) >>> 16) as 1 | 0,
+      probability: [res & 0x000000ff, (res & 0x0000ff00) >>> 8],
     };
   }
 }

@@ -36,7 +36,7 @@
   padding: 0 2px;
   margin: 0 5px;
   color: #222222;
-  background-color: #DDDDDD;
+  background-color: #dddddd;
   vertical-align: middle;
 }
 
@@ -166,7 +166,8 @@ $propertySectionHeight: 14px;
   margin-left: auto;
 }
 
-.eventEntryDelete, .eventParameterDelete {
+.eventEntryDelete,
+.eventParameterDelete {
   background-image: var(--delete-list-img);
   background-repeat: no-repeat;
   background-position: center;
@@ -265,7 +266,8 @@ $propertySectionHeight: 14px;
   background-position: center;
   opacity: 0;
 }
-.propertiesActionButton:hover .propertiesActionButtonEyeBtn:not(.propertiesActionButtonEyeBtnShowing) {
+.propertiesActionButton:hover
+  .propertiesActionButtonEyeBtn:not(.propertiesActionButtonEyeBtnShowing) {
   opacity: 0.4;
 }
 .propertiesActionButtonEyeBtnShowing,

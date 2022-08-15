@@ -18,11 +18,11 @@ export class ALEnvelope {
     this.attackTime = B1view.getInt32(envOffset);
     this.decayTime = B1view.getInt32(envOffset + 4);
     this.releaseTime = B1view.getInt32(envOffset + 8);
-    if (this.__smallVolumes) { // MP2/3
+    if (this.__smallVolumes) {
+      // MP2/3
       this.attackVolume = B1view.getUint8(envOffset + 12);
       this.decayVolume = B1view.getUint8(envOffset + 13);
-    }
-    else {
+    } else {
       this.attackVolume = B1view.getInt16(envOffset + 12);
       this.decayVolume = B1view.getInt16(envOffset + 14);
     }

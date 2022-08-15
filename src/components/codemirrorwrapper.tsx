@@ -32,23 +32,30 @@ export class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> 
     }
 
     return (
-      <div ref={el => {this.el = el;}}
-        className={className}></div>
+      <div
+        ref={(el) => {
+          this.el = el;
+        }}
+        className={className}
+      ></div>
     );
   }
 
   componentDidMount() {
     const closureEl = this.el!;
-    this.codemirror = CodeMirror(function(el: HTMLElement) {
-      closureEl.appendChild(el);
-    }, {
-      mode: getCodeMirrorMode(this.props.mode),
-      indentUnit: getCodeMirrorIndent(this.props.mode),
-      value: this.props.value || this.props.defaultValue || "",
-      extraKeys: {"Ctrl-Space": "autocomplete"},
-      readOnly: this.props.readOnly || false,
-      viewportMargin: 3000,
-    }) as CodeMirror.Editor;
+    this.codemirror = CodeMirror(
+      function (el: HTMLElement) {
+        closureEl.appendChild(el);
+      },
+      {
+        mode: getCodeMirrorMode(this.props.mode),
+        indentUnit: getCodeMirrorIndent(this.props.mode),
+        value: this.props.value || this.props.defaultValue || "",
+        extraKeys: { "Ctrl-Space": "autocomplete" },
+        readOnly: this.props.readOnly || false,
+        viewportMargin: 3000,
+      }
+    ) as CodeMirror.Editor;
     this.codemirror.on("change", this.onInternalValueChanged);
   }
 
@@ -57,11 +64,14 @@ export class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> 
   }
 
   componentDidUpdate(prevProps: ICodeMirrorWrapperProps) {
-    if (this.codemirror && this.props.value !== undefined
-      && this.props.value !== prevProps.value
-      && normalizeLineEndings(this.codemirror.getValue())
-        !== normalizeLineEndings(this.props.value)) {
-        this.codemirror.setValue(this.props.value);
+    if (
+      this.codemirror &&
+      this.props.value !== undefined &&
+      this.props.value !== prevProps.value &&
+      normalizeLineEndings(this.codemirror.getValue()) !==
+        normalizeLineEndings(this.props.value)
+    ) {
+      this.codemirror.setValue(this.props.value);
     }
   }
 
@@ -69,7 +79,7 @@ export class CodeMirrorWrapper extends React.Component<ICodeMirrorWrapperProps> 
     if (this.props.onChange && change.origin !== "setValue") {
       this.props.onChange(doc.getValue(), change);
     }
-  }
+  };
 }
 
 function getCodeMirrorMode(modeProp: CodeMirrorMode | undefined): any {

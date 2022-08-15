@@ -1,6 +1,7 @@
 $sidebar-width: 225px;
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -40,7 +41,9 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-color); // Default color before React replaces content.
+  background-color: var(
+    --bg-color
+  ); // Default color before React replaces content.
 }
 
 .content {
@@ -79,7 +82,8 @@ body {
   overflow: auto;
   background-color: var(--bg-color);
 }
-.main:first-child { // No sidebar
+.main:first-child {
+  // No sidebar
   width: 100%;
 }
 

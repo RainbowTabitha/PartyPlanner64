@@ -21,29 +21,29 @@ export interface IBoardInfo {
   animBgSet?: number;
   costumeType?: CostumeType;
   str: {
-    boardSelect?: number | number[] | number[][],
+    boardSelect?: number | number[] | number[][];
     boardNames?: number[] | number[][];
     boardGreeting?: number[];
     boardGreetingDuel?: number[];
     boardWinner?: number;
     boardPlayCount?: number;
-    koopaIntro?: number,
-    starComments?: number[]
-  },
+    koopaIntro?: number;
+    starComments?: number[];
+  };
   img: {
-    boardSelectImg?: number,
+    boardSelectImg?: number;
     boardSelectIconCoords?: number[];
     boardSelectIconMask?: number;
-    pauseLogoImg?: number,
-    introLogoImg?: number | number[],
-    introLogoImgDimens?: number[],
-    titleScreenImg?: number,
-    splashLogoImg?: number,
-    splashLogoTextImg?: number,
-    gateImg?: number,
-    miniMapWithBg?: number,
-    miniMapDots?: number,
-  },
+    pauseLogoImg?: number;
+    introLogoImg?: number | number[];
+    introLogoImgDimens?: number[];
+    titleScreenImg?: number;
+    splashLogoImg?: number;
+    splashLogoTextImg?: number;
+    gateImg?: number;
+    miniMapWithBg?: number;
+    miniMapDots?: number;
+  };
   sceneIndex?: number;
   mainfsEventFile?: number[];
   mainfsBoardFile?: number[];
@@ -77,7 +77,10 @@ export interface IBoardInfo {
 
 const BoardInfoBase = {};
 
-export function createBoardInfo(id: string, props?: Partial<IBoardInfo>): IBoardInfo {
+export function createBoardInfo(
+  id: string,
+  props?: Partial<IBoardInfo>
+): IBoardInfo {
   if (_boardInfos[id])
     throw new Error(`Cannot create an already existing BoardInfo ${id}.`);
   const boardInfo = Object.create(BoardInfoBase);

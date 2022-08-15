@@ -23,7 +23,10 @@ interface IBasicCodeEditorViewState {
   language: EventCodeLanguage;
 }
 
-export class BasicCodeEditorView extends React.Component<IBasicCodeEditorViewProps, IBasicCodeEditorViewState> {
+export class BasicCodeEditorView extends React.Component<
+  IBasicCodeEditorViewProps,
+  IBasicCodeEditorViewState
+> {
   constructor(props: IBasicCodeEditorViewProps) {
     super(props);
 
@@ -31,10 +34,9 @@ export class BasicCodeEditorView extends React.Component<IBasicCodeEditorViewPro
     if (currentCode) {
       this.state = {
         code: currentCode.code,
-        language: currentCode.language
+        language: currentCode.language,
       };
-    }
-    else {
+    } else {
       this.state = {
         code: this.props.getDefaultCode(EventCodeLanguage.C),
         language: EventCodeLanguage.C,
@@ -44,11 +46,20 @@ export class BasicCodeEditorView extends React.Component<IBasicCodeEditorViewPro
 
   render() {
     const languageToggles = [
-      { id: EventCodeLanguage.C, text: "C", selected: this.state.language === EventCodeLanguage.C },
-      { id: EventCodeLanguage.MIPS, text: "MIPS", selected: this.state.language === EventCodeLanguage.MIPS },
+      {
+        id: EventCodeLanguage.C,
+        text: "C",
+        selected: this.state.language === EventCodeLanguage.C,
+      },
+      {
+        id: EventCodeLanguage.MIPS,
+        text: "MIPS",
+        selected: this.state.language === EventCodeLanguage.MIPS,
+      },
     ];
 
-    const codeMirrorMode = this.state.language === EventCodeLanguage.C ? "c" : "mips-pp64";
+    const codeMirrorMode =
+      this.state.language === EventCodeLanguage.C ? "c" : "mips-pp64";
 
     return (
       <div className="basicCodeViewContainer">
@@ -60,12 +71,15 @@ export class BasicCodeEditorView extends React.Component<IBasicCodeEditorViewPro
               mode={codeMirrorMode}
               className="eventcodemirror basiccodemirror"
               value={this.state.code}
-              onChange={this.onCodeChangeInternal} />
+              onChange={this.onCodeChangeInternal}
+            />
           </div>
           <div className="createEventForm">
             <label>Language:</label>
-            <ToggleGroup items={languageToggles}
-              onToggleClick={this.onLanguageToggleClicked} />
+            <ToggleGroup
+              items={languageToggles}
+              onToggleClick={this.onLanguageToggleClicked}
+            />
           </div>
         </div>
       </div>
@@ -82,16 +96,21 @@ export class BasicCodeEditorView extends React.Component<IBasicCodeEditorViewPro
 
   onCodeChangeInternal = (code: string) => {
     this.setState({ code });
-  }
+  };
 
   onLanguageToggleClicked = async (language: EventCodeLanguage) => {
-    if (!this.codeHasChanged({ fromDefaultOnly: true }) || await confirmFromUser("Are you sure you want to switch languages? The current code will not be kept.")) {
+    if (
+      !this.codeHasChanged({ fromDefaultOnly: true }) ||
+      (await confirmFromUser(
+        "Are you sure you want to switch languages? The current code will not be kept."
+      ))
+    ) {
       this.setState({
         language,
-        code: this.props.getDefaultCode(language)
+        code: this.props.getDefaultCode(language),
       });
     }
-  }
+  };
 
   getCode = () => this.state.code;
 
@@ -99,25 +118,31 @@ export class BasicCodeEditorView extends React.Component<IBasicCodeEditorViewPro
 
   getBoard = () => this.props.board;
 
-  getDefaultCodeForLanguage = (language: EventCodeLanguage) => this.props.getDefaultCode(language);
+  getDefaultCodeForLanguage = (language: EventCodeLanguage) =>
+    this.props.getDefaultCode(language);
 
-  onSetCode = (code: string, language: EventCodeLanguage) => this.props.onSetCode(code, language);
+  onSetCode = (code: string, language: EventCodeLanguage) =>
+    this.props.onSetCode(code, language);
 
-  canSaveAndExit = () => this.props.canSaveAndExit(this.state.code, this.state.language);
+  canSaveAndExit = () =>
+    this.props.canSaveAndExit(this.state.code, this.state.language);
 
   promptExit = async () => {
     if (this.codeHasChanged()) {
-      return await confirmFromUser("Are you sure you want to exit without saving your code?");
+      return await confirmFromUser(
+        "Are you sure you want to exit without saving your code?"
+      );
     }
     return true;
-  }
+  };
 
   private codeHasChanged(opts?: { fromDefaultOnly?: boolean }): boolean {
     const code = this.state.code;
     const oldCode = this.props.getExistingCode();
 
     const differentFromOldCode = oldCode && oldCode.code !== code;
-    let differentFromDefaultCode = code !== this.props.getDefaultCode(this.state.language);
+    let differentFromDefaultCode =
+      code !== this.props.getDefaultCode(this.state.language);
     if (differentFromDefaultCode && (!opts || !opts.fromDefaultOnly)) {
       differentFromDefaultCode = !oldCode;
     }
@@ -154,4 +179,3 @@ export function basicCodeViewPromptExit(): Promise<boolean> {
   }
   return Promise.resolve(true);
 }
-

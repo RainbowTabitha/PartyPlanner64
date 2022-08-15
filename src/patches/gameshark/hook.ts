@@ -14,7 +14,7 @@ export function applyHook(romBuffer: ArrayBuffer) {
   }
 
   let gameID = romhandler.getROMGame();
-  switch(gameID) {
+  switch (gameID) {
     case Game.MP1_USA:
       MP1UHook.apply(romBuffer);
       break;
@@ -38,7 +38,7 @@ export function applyHook(romBuffer: ArrayBuffer) {
 
 export function romSupportsCheats() {
   let gameID = romhandler.getROMGame();
-  switch(gameID) {
+  switch (gameID) {
     case Game.MP1_USA:
     case Game.MP2_USA:
     case Game.MP3_USA:

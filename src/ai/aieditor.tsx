@@ -1,5 +1,9 @@
 import * as React from "react";
-import { IDecisionTreeNode, DecisionTreeNodeType, IDecisionTreeResult } from "./aitrees";
+import {
+  IDecisionTreeNode,
+  DecisionTreeNodeType,
+  IDecisionTreeResult,
+} from "./aitrees";
 import { $$hex } from "../utils/debug";
 
 import "../css/aieditor.scss";
@@ -11,20 +15,14 @@ interface IDecisionTreeEditorProps {
 export function DecisionTreeEditor(props: IDecisionTreeEditorProps) {
   const root = props.root;
   if (!root) {
-    return (
-      <div>No decision tree provided.</div>
-    );
+    return <div>No decision tree provided.</div>;
   }
 
-  const list = root.map((node, index) =>
+  const list = root.map((node, index) => (
     <DecisionTreeNodeWrapper node={node} key={index} />
-  );
+  ));
 
-  return (
-    <div className="aiEditor">
-      {list}
-    </div>
-  );
+  return <div className="aiEditor">{list}</div>;
 }
 
 interface IDecisionTreeNodeWrapperProps {
@@ -37,11 +35,10 @@ function DecisionTreeNodeWrapper(props: IDecisionTreeNodeWrapperProps) {
   let hasResult = false;
   let list;
   if (Array.isArray(node.decision)) {
-    list = node.decision.map((node, index) =>
+    list = node.decision.map((node, index) => (
       <DecisionTreeNodeWrapper node={node} key={index} />
-    );
-  }
-  else {
+    ));
+  } else {
     hasResult = true;
   }
 
@@ -60,24 +57,20 @@ function getNodeConditionComponent(node: IDecisionTreeNode) {
       return null;
 
     case DecisionTreeNodeType.hasCoins:
-      return (
-        <div className="aiNodeCondition">Has {node.data} coins</div>
-      );
+      return <div className="aiNodeCondition">Has {node.data} coins</div>;
 
     case DecisionTreeNodeType.star:
-      return (
-        <div className="aiNodeCondition">Stars: {$$hex(node.data)}</div>
-      );
+      return <div className="aiNodeCondition">Stars: {$$hex(node.data)}</div>;
 
     case DecisionTreeNodeType.remainingSpaces:
       return (
-        <div className="aiNodeCondition">Player has {node.data} remaining spaces</div>
+        <div className="aiNodeCondition">
+          Player has {node.data} remaining spaces
+        </div>
       );
 
     case DecisionTreeNodeType.stateComparison:
-      return (
-        <div className="aiNodeCondition">State {$$hex(node.data)}</div>
-      );
+      return <div className="aiNodeCondition">State {$$hex(node.data)}</div>;
 
     case DecisionTreeNodeType.winningHeuristic:
       return (
@@ -86,13 +79,13 @@ function getNodeConditionComponent(node: IDecisionTreeNode) {
 
     case DecisionTreeNodeType.customCode:
       return (
-        <div className="aiNodeCondition">Custom function at {$$hex(node.data)}</div>
+        <div className="aiNodeCondition">
+          Custom function at {$$hex(node.data)}
+        </div>
       );
 
     case DecisionTreeNodeType.turnsElapsed:
-      return (
-        <div className="aiNodeCondition">{node.data} turns elapsed</div>
-      );
+      return <div className="aiNodeCondition">{node.data} turns elapsed</div>;
 
     case DecisionTreeNodeType.hasItem:
       return (
@@ -100,9 +93,7 @@ function getNodeConditionComponent(node: IDecisionTreeNode) {
       );
   }
 
-  return (
-    <div className="aiNodeCondition">Unknown Condition!</div>
-  );
+  return <div className="aiNodeCondition">Unknown Condition!</div>;
 }
 
 interface IDecisionTreeResultProps {
@@ -114,34 +105,48 @@ function DecisionTreeResult(props: IDecisionTreeResultProps) {
 
   let secondProbability;
   if (result.probability.length === 2) {
-    secondProbability =
-      <DecisionTreeResultDifficulty probability={result.probability[1]}
-        difficultyLong="Normal / Hard" difficultyShort="N/H" />;
-  }
-  else {
-    secondProbability =
-      <DecisionTreeResultDifficulty probability={result.probability[1]}
-        difficultyLong="Normal" difficultyShort="N" />;
+    secondProbability = (
+      <DecisionTreeResultDifficulty
+        probability={result.probability[1]}
+        difficultyLong="Normal / Hard"
+        difficultyShort="N/H"
+      />
+    );
+  } else {
+    secondProbability = (
+      <DecisionTreeResultDifficulty
+        probability={result.probability[1]}
+        difficultyLong="Normal"
+        difficultyShort="N"
+      />
+    );
   }
 
   return (
     <div>
       <span className="aiNodeDecision">{result.value}</span>
       {" @ "}
-      <DecisionTreeResultDifficulty probability={result.probability[0]}
-        difficultyLong="Easy" difficultyShort="E" />
-      {" "}
+      <DecisionTreeResultDifficulty
+        probability={result.probability[0]}
+        difficultyLong="Easy"
+        difficultyShort="E"
+      />{" "}
       {secondProbability}
-      {result.probability.length > 2 &&
+      {result.probability.length > 2 && (
         <>
           {" "}
-          <DecisionTreeResultDifficulty probability={result.probability[2]}
-            difficultyLong="Hard" difficultyShort="H" />
-          {" "}
-          <DecisionTreeResultDifficulty probability={result.probability[3]}
-            difficultyLong="Super Hard" difficultyShort="SH" />
+          <DecisionTreeResultDifficulty
+            probability={result.probability[2]}
+            difficultyLong="Hard"
+            difficultyShort="H"
+          />{" "}
+          <DecisionTreeResultDifficulty
+            probability={result.probability[3]}
+            difficultyLong="Super Hard"
+            difficultyShort="SH"
+          />
         </>
-      }
+      )}
     </div>
   );
 }
@@ -152,13 +157,18 @@ interface IDecisionTreeResultDifficultyProps {
   probability: number;
 }
 
-function DecisionTreeResultDifficulty(props: IDecisionTreeResultDifficultyProps) {
-  return <>
-    <span className="aiNodeDifficulty"
-      title={`Probability on ${props.difficultyLong} difficulty`}>
-      {props.difficultyShort}:
-    </span>
-    {" "}
-    <span className="aiNodeDifficulty">{props.probability}</span>
-  </>;
+function DecisionTreeResultDifficulty(
+  props: IDecisionTreeResultDifficultyProps
+) {
+  return (
+    <>
+      <span
+        className="aiNodeDifficulty"
+        title={`Probability on ${props.difficultyLong} difficulty`}
+      >
+        {props.difficultyShort}:
+      </span>{" "}
+      <span className="aiNodeDifficulty">{props.probability}</span>
+    </>
+  );
 }

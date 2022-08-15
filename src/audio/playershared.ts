@@ -1,4 +1,3 @@
-
 let _audioContext: AudioContext;
 let _playing: boolean = false;
 
@@ -31,7 +30,7 @@ export class AudioPlayerController {
     this._onFinishedCallbacks = [];
 
     this._player.on("endOfFile", () => {
-      this._onFinishedCallbacks.forEach(callback => callback());
+      this._onFinishedCallbacks.forEach((callback) => callback());
     });
   }
 
@@ -39,7 +38,7 @@ export class AudioPlayerController {
     if (this._player) {
       this._player.stop();
       setIsPlaying(false);
-      this._onFinishedCallbacks.forEach(callback => callback());
+      this._onFinishedCallbacks.forEach((callback) => callback());
     }
   }
 

@@ -1,9 +1,16 @@
 // This is the top level of the application, and includes the root React view.
 
 import { View, Action, EventCodeLanguage } from "../types";
-import { getAdditionalBackgroundCode, setAdditionalBackgroundCode, getAudioSelectCode, setAudioSelectCode, _fixPotentiallyOldBoard, _makeDefaultBoard } from "../boards";
+import {
+  getAdditionalBackgroundCode,
+  setAdditionalBackgroundCode,
+  getAudioSelectCode,
+  setAudioSelectCode,
+  _fixPotentiallyOldBoard,
+  _makeDefaultBoard,
+} from "../boards";
 import * as React from "react";
-import { createRoot } from 'react-dom/client';
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { Editor } from "../renderer";
 import { Details } from "../views/details";
@@ -16,7 +23,12 @@ import { CreateCEventView } from "../views/createevent_c";
 import { StringsViewer } from "../views/strings";
 import { GamesharkView } from "../views/gameshark";
 import { BoardMenu } from "../boardmenu";
-import { Notification, NotificationBar, NotificationButton, NotificationColor } from "../components/notifications";
+import {
+  Notification,
+  NotificationBar,
+  NotificationButton,
+  NotificationColor,
+} from "../components/notifications";
 import { Header } from "../header";
 import { ToolWindow } from "../toolwindow";
 import { Toolbar } from "../toolbar";
@@ -34,18 +46,56 @@ import { BasicCodeEditorView } from "../views/basiccodeeditorview";
 import { IDecisionTreeNode } from "../ai/aitrees";
 import { DecisionTreeEditor } from "../ai/aieditor";
 import { isElectron } from "../utils/electron";
-import { blockUI, showMessage, changeDecisionTree, undo, redo, clearUndoHistory } from "./appControl";
+import {
+  blockUI,
+  showMessage,
+  changeDecisionTree,
+  undo,
+  redo,
+  clearUndoHistory,
+} from "./appControl";
 import { Blocker } from "../components/blocker";
 import { killEvent } from "../utils/react";
-import { getDefaultAdditionalBgCode, testAdditionalBgCodeAllGames } from "../events/additionalbg";
-import { getDefaultGetAudioCode, testGetAudioCodeAllGames } from "../events/getaudiochoice";
+import {
+  getDefaultAdditionalBgCode,
+  testAdditionalBgCodeAllGames,
+} from "../events/additionalbg";
+import {
+  getDefaultGetAudioCode,
+  testGetAudioCodeAllGames,
+} from "../events/getaudiochoice";
 import { SpriteView } from "../views/sprites";
 import { store } from "./store";
-import { selectCurrentAction, selectCurrentView, selectNotifications, selectRomLoaded, selectUpdateExists, setHideUpdateNotification, setUpdateExistsAction } from "./appState";
+import {
+  selectCurrentAction,
+  selectCurrentView,
+  selectNotifications,
+  selectRomLoaded,
+  selectUpdateExists,
+  setHideUpdateNotification,
+  setUpdateExistsAction,
+} from "./appState";
 import { useCallback } from "react";
-import { useAppDispatch, useAppSelector, useEditorThemeClass, useWindowTitle } from "./hooks";
-import { selectBlocked, selectConfirm, selectMessage, selectMessageHTML, selectOnBlockerFinished, selectPrompt } from "./blocker";
-import { addEventToLibraryAction, selectBoards, selectCurrentBoard, setBoardsAction } from "./boardState";
+import {
+  useAppDispatch,
+  useAppSelector,
+  useEditorThemeClass,
+  useWindowTitle,
+} from "./hooks";
+import {
+  selectBlocked,
+  selectConfirm,
+  selectMessage,
+  selectMessageHTML,
+  selectOnBlockerFinished,
+  selectPrompt,
+} from "./blocker";
+import {
+  addEventToLibraryAction,
+  selectBoards,
+  selectCurrentBoard,
+  setBoardsAction,
+} from "./boardState";
 import { BasicErrorBoundary } from "../components/BasicErrorBoundary";
 import { useHotkeys } from "react-hotkeys-hook";
 import { getSavedBoards, getSavedEvents } from "../utils/localstorage";
@@ -67,16 +117,19 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     error: null,
     errorInfo: null,
     initialized: false,
-  }
+  };
 
   render() {
     if (this.state.error) {
       return (
-        <ErrorDisplay error={this.state.error} errorInfo={this.state.errorInfo}
+        <ErrorDisplay
+          error={this.state.error}
+          errorInfo={this.state.errorInfo}
           onClearError={() => {
             this.setState({ error: null, errorInfo: null });
             blockUI(false);
-          }} />
+          }}
+        />
       );
     }
 
@@ -97,8 +150,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         const ipcRenderer = (window as any).require("electron").ipcRenderer;
         ipcRenderer.on("update-check-hasupdate", this._onUpdateCheckHasUpdate);
         ipcRenderer.send("update-check-start");
-      }
-      catch (e) {
+      } catch (e) {
         console.error("Auto update failed in componentDidMount: ", e);
       }
     }
@@ -113,9 +165,11 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
     if (isElectron) {
       try {
         const ipcRenderer = (window as any).require("electron").ipcRenderer;
-        ipcRenderer.removeListener("update-check-hasupdate", this._onUpdateCheckHasUpdate);
-      }
-      catch (e) {
+        ipcRenderer.removeListener(
+          "update-check-hasupdate",
+          this._onUpdateCheckHasUpdate
+        );
+      } catch (e) {
         console.error("Auto update failed in componentWillUnmount: ", e);
       }
     }
@@ -123,8 +177,8 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
 
   _onUpdateCheckHasUpdate = () => {
     store.dispatch(setUpdateExistsAction(true));
-  }
-};
+  };
+}
 
 interface PP64AppInternalProps {
   aiTree: IDecisionTreeNode[] | null;
@@ -190,20 +244,32 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       mainView = <AudioViewer />;
       break;
     case View.ADDITIONAL_BGS:
-      mainView = <BasicCodeEditorView board={currentBoard}
-        title="Additional Background Configuration"
-        getExistingCode={() => getAdditionalBackgroundCode(currentBoard)}
-        getDefaultCode={lang => getDefaultAdditionalBgCode(lang)}
-        onSetCode={(code, lang) => setAdditionalBackgroundCode(code, lang)}
-        canSaveAndExit={(code, lang) => testAdditionalBgCodeAllGames(code, lang, currentBoard)} />;
+      mainView = (
+        <BasicCodeEditorView
+          board={currentBoard}
+          title="Additional Background Configuration"
+          getExistingCode={() => getAdditionalBackgroundCode(currentBoard)}
+          getDefaultCode={(lang) => getDefaultAdditionalBgCode(lang)}
+          onSetCode={(code, lang) => setAdditionalBackgroundCode(code, lang)}
+          canSaveAndExit={(code, lang) =>
+            testAdditionalBgCodeAllGames(code, lang, currentBoard)
+          }
+        />
+      );
       break;
     case View.AUDIO_SELECTION_CODE:
-      mainView = <BasicCodeEditorView board={currentBoard}
-        title="Background Music Selection Code"
-        getExistingCode={() => getAudioSelectCode(currentBoard)}
-        getDefaultCode={lang => getDefaultGetAudioCode(lang)}
-        onSetCode={(code, lang) => setAudioSelectCode(code, lang)}
-        canSaveAndExit={(code, lang) => testGetAudioCodeAllGames(code, lang, currentBoard)} />;
+      mainView = (
+        <BasicCodeEditorView
+          board={currentBoard}
+          title="Background Music Selection Code"
+          getExistingCode={() => getAudioSelectCode(currentBoard)}
+          getDefaultCode={(lang) => getDefaultGetAudioCode(lang)}
+          onSetCode={(code, lang) => setAudioSelectCode(code, lang)}
+          canSaveAndExit={(code, lang) =>
+            testGetAudioCodeAllGames(code, lang, currentBoard)
+          }
+        />
+      );
       break;
   }
 
@@ -214,50 +280,66 @@ function PP64AppInternal(props: PP64AppInternalProps) {
     case View.EVENTS:
       sidebar = (
         <div className="sidebar">
-          <BoardMenu
-            boards={boards} />
+          <BoardMenu boards={boards} />
         </div>
       );
       break;
   }
 
   let bodyClass = "body";
-  if (currentAction === Action.ERASE)
-    bodyClass += " eraser";
+  if (currentAction === Action.ERASE) bodyClass += " eraser";
 
   return (
     <div className={bodyClass}>
       <PP64NotificationBar />
       <Header view={currentView} romLoaded={romLoaded} board={currentBoard} />
-      <div className="content"
-        onKeyDownCapture={blocked ? killEvent : undefined}>
+      <div
+        className="content"
+        onKeyDownCapture={blocked ? killEvent : undefined}
+      >
         {sidebar}
         <div className="main">
           {mainView}
           <div className="mainOverlay">
-            <ToolWindow name="Toolbox" position="TopRight"
-              visible={currentView === View.EDITOR}>
-              <Toolbar currentAction={currentAction}
+            <ToolWindow
+              name="Toolbox"
+              position="TopRight"
+              visible={currentView === View.EDITOR}
+            >
+              <Toolbar
+                currentAction={currentAction}
                 gameVersion={currentBoard.game}
-                boardType={currentBoard.type} />
+                boardType={currentBoard.type}
+              />
             </ToolWindow>
-            <ToolWindow name="Space Properties" position="BottomRight"
-              visible={currentView === View.EDITOR}>
+            <ToolWindow
+              name="Space Properties"
+              position="BottomRight"
+              visible={currentView === View.EDITOR}
+            >
               <SpaceProperties
                 gameVersion={currentBoard.game}
-                boardType={currentBoard.type} />
+                boardType={currentBoard.type}
+              />
             </ToolWindow>
-            <ToolWindow name="Board Properties" position="BottomLeft"
-              visible={currentView === View.EDITOR}>
+            <ToolWindow
+              name="Board Properties"
+              position="BottomLeft"
+              visible={currentView === View.EDITOR}
+            >
               <BoardProperties currentBoard={currentBoard} />
             </ToolWindow>
-            {props.aiTree &&
-              <ToolWindow name="AI Decision Tree" position="TopLeft"
+            {props.aiTree && (
+              <ToolWindow
+                name="AI Decision Tree"
+                position="TopLeft"
                 visible={currentView === View.EDITOR}
-                canClose onCloseClick={() => changeDecisionTree(null)}>
+                canClose
+                onCloseClick={() => changeDecisionTree(null)}
+              >
                 <DecisionTreeEditor root={props.aiTree} />
               </ToolWindow>
-            }
+            )}
           </div>
           <div id="dragZone"></div>
         </div>
@@ -273,19 +355,27 @@ function usePP64Hotkeys(): void {
 
   const allowUndoRedo = !blocked && currentView === View.EDITOR;
 
-  useHotkeys("ctrl+z", (event, handler) => {
-    undo();
-  }, {
-    enabled: allowUndoRedo,
-    enableOnTags: ["INPUT", "SELECT"],
-  });
+  useHotkeys(
+    "ctrl+z",
+    (event, handler) => {
+      undo();
+    },
+    {
+      enabled: allowUndoRedo,
+      enableOnTags: ["INPUT", "SELECT"],
+    }
+  );
 
-  useHotkeys("ctrl+y", (event, handler) => {
-    redo();
-  }, {
-    enabled: allowUndoRedo,
-    enableOnTags: ["INPUT", "SELECT"],
-  });
+  useHotkeys(
+    "ctrl+y",
+    (event, handler) => {
+      redo();
+    },
+    {
+      enabled: allowUndoRedo,
+      enableOnTags: ["INPUT", "SELECT"],
+    }
+  );
 }
 
 function PP64NotificationBar() {
@@ -305,16 +395,20 @@ function PP64NotificationBar() {
     }
   }, [dispatch]);
 
-  const updateHideNotification = useAppSelector(state => state.app.updateHideNotification);
+  const updateHideNotification = useAppSelector(
+    (state) => state.app.updateHideNotification
+  );
 
   const updateExists = useAppSelector(selectUpdateExists);
   const notifications = useAppSelector(selectNotifications).slice();
 
   if (updateExists && !updateHideNotification) {
     notifications.push(
-      <Notification key="update"
+      <Notification
+        key="update"
         color={NotificationColor.Blue}
-        onClose={onUpdateNotificationClosed}>
+        onClose={onUpdateNotificationClosed}
+      >
         An update is available.
         <NotificationButton onClick={onUpdateNotificationInstallClicked}>
           Install
@@ -323,11 +417,7 @@ function PP64NotificationBar() {
     );
   }
 
-  return (
-    <NotificationBar>
-      {notifications}
-    </NotificationBar>
-  );
+  return <NotificationBar>{notifications}</NotificationBar>;
 }
 
 function PP64Blocker() {
@@ -338,29 +428,31 @@ function PP64Blocker() {
   const confirm = useAppSelector(selectConfirm);
   const onBlockerFinished = useAppSelector(selectOnBlockerFinished);
 
-
   if (!blocked) {
     return null;
   }
 
-  return <Blocker
-    message={message}
-    messageHTML={messageHTML}
-    prompt={prompt}
-    confirm={confirm}
-    onAccept={(value?: string) => {
-      showMessage();
-      if (onBlockerFinished) {
-        onBlockerFinished(value);
-      }
-    }}
-    onCancel={() => {
-      showMessage();
-      if (onBlockerFinished) {
-        onBlockerFinished();
-      }
-    }}
-    onForceClose={() => blockUI(false)} />
+  return (
+    <Blocker
+      message={message}
+      messageHTML={messageHTML}
+      prompt={prompt}
+      confirm={confirm}
+      onAccept={(value?: string) => {
+        showMessage();
+        if (onBlockerFinished) {
+          onBlockerFinished(value);
+        }
+      }}
+      onCancel={() => {
+        showMessage();
+        if (onBlockerFinished) {
+          onBlockerFinished();
+        }
+      }}
+      onForceClose={() => blockUI(false)}
+    />
+  );
 }
 
 // Capture errors that don't happen during rendering.
@@ -369,8 +461,8 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
   if (error) {
     if (app) {
       _onError(app, error, null);
-    }
-    else { // Occurred during ReactDOM.render?
+    } else {
+      // Occurred during ReactDOM.render?
       alert(error);
     }
   }
@@ -380,18 +472,16 @@ function initializeState(): void {
   let boards;
   const cachedBoards = getSavedBoards();
   if (cachedBoards && cachedBoards.length) {
-    boards = cachedBoards.map(board => _fixPotentiallyOldBoard(board));
-  }
-  else {
-    boards = [ _makeDefaultBoard(1) ];
+    boards = cachedBoards.map((board) => _fixPotentiallyOldBoard(board));
+  } else {
+    boards = [_makeDefaultBoard(1)];
   }
   store.dispatch(setBoardsAction({ boards }));
 
   const cachedEvents = getSavedEvents();
   if (cachedEvents && cachedEvents.length) {
     cachedEvents.forEach((eventObj: IEvent) => {
-      if (!eventObj || !(eventObj as ICustomEvent).asm)
-        return;
+      if (!eventObj || !(eventObj as ICustomEvent).asm) return;
       try {
         const customEventObj = eventObj as ICustomEvent;
         const customEvent = createCustomEvent(
@@ -399,8 +489,7 @@ function initializeState(): void {
           customEventObj.asm
         );
         store.dispatch(addEventToLibraryAction({ event: customEvent }));
-      }
-      catch (e) {
+      } catch (e) {
         // Just let the error slide, event format changed or something?
         console.error("Error reading cached event", e);
       }
@@ -414,11 +503,15 @@ const body = document.getElementById("body");
 const root = createRoot(body!);
 root.render(
   <Provider store={store}>
-    <PP64App ref={app => (window as any)._PP64instance = app} />
+    <PP64App ref={(app) => ((window as any)._PP64instance = app)} />
   </Provider>
 );
 
-function _onError(app: PP64App, error: Error, errorInfo: React.ErrorInfo | null) {
+function _onError(
+  app: PP64App,
+  error: Error,
+  errorInfo: React.ErrorInfo | null
+) {
   app.setState({
     error,
     errorInfo,
@@ -427,8 +520,8 @@ function _onError(app: PP64App, error: Error, errorInfo: React.ErrorInfo | null)
 }
 
 interface IErrorDisplayProps {
-  error: Error,
-  errorInfo: React.ErrorInfo | null,
+  error: Error;
+  errorInfo: React.ErrorInfo | null;
   onClearError(): void;
 }
 
@@ -436,24 +529,33 @@ function ErrorDisplay(props: IErrorDisplayProps) {
   const componentStack = props.errorInfo && props.errorInfo.componentStack;
   return (
     <div className="errorDiv selectable">
-      <h2>Hey, it seeems like something's wrong in&nbsp;
+      <h2>
+        Hey, it seeems like something's wrong in&nbsp;
         <span className="errorStrikeoutText">Mushroom Village</span>&nbsp;
-        PartyPlanner64.</h2>
-      <p>Please &nbsp;
-        <a href="https://github.com/PartyPlanner64/PartyPlanner64/issues" target="_blank" rel="noopener noreferrer">
+        PartyPlanner64.
+      </h2>
+      <p>
+        Please &nbsp;
+        <a
+          href="https://github.com/PartyPlanner64/PartyPlanner64/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           file an issue
         </a>
         &nbsp; with the following details, and refresh the page. Or &nbsp;
-        <a href="#" onClick={props.onClearError}>click here</a>&nbsp;
-        to dismiss this error, but you may be in a bad state.
+        <a href="#" onClick={props.onClearError}>
+          click here
+        </a>
+        &nbsp; to dismiss this error, but you may be in a bad state.
       </p>
       <pre>{props.error.toString()}</pre>
-      {props.error.stack ? <React.Fragment>
-        <div>Stack Error Details:</div>
-        <pre>{props.error.stack}</pre>
-      </React.Fragment>
-        : null
-      }
+      {props.error.stack ? (
+        <React.Fragment>
+          <div>Stack Error Details:</div>
+          <pre>{props.error.stack}</pre>
+        </React.Fragment>
+      ) : null}
       <div>Component Stack Error Details:</div>
       <pre>{componentStack || "N/A"}</pre>
     </div>

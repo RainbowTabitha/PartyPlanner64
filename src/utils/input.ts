@@ -11,8 +11,7 @@ type EventHandler = (event: Event) => void;
 
 export function openFile(acceptTypes: string = "", callback: EventHandler) {
   let inputs = _inputs;
-  if (!inputs)
-    inputs = _inputs = {};
+  if (!inputs) inputs = _inputs = {};
 
   let typeKey = acceptTypes || "default";
   let inputEl = inputs[typeKey];

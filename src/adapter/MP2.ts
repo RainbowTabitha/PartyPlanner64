@@ -4,7 +4,11 @@ import { animationfs } from "../fs/animationfs";
 import { CostumeType, Space } from "../types";
 import { createEventInstance } from "../events/events";
 import { strings } from "../fs/strings";
-import { arrayToArrayBuffer, arrayBufferToDataURL, arrayBufferToImageData } from "../utils/arrays";
+import {
+  arrayToArrayBuffer,
+  arrayBufferToDataURL,
+  arrayBufferToImageData,
+} from "../utils/arrays";
 import { hvqfs } from "../fs/hvqfs";
 import { createContext } from "../utils/canvas";
 import { $$log } from "../utils/debug";
@@ -19,7 +23,7 @@ import { createBoardOverlay } from "./MP2.U.boardoverlay";
 
 import mp2boardselectblank1Image from "../img/details/mp2boardselectblank1.png";
 
-export const MP2 = new class MP2Adapter extends AdapterBase {
+export const MP2 = new (class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
 
   public nintendoLogoFSEntry: number[] = [9, 1];
@@ -28,7 +32,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
   public MAINFS_READ_ADDR: number = 0x00017680;
   public HEAP_FREE_ADDR: number = 0x00017800;
-  public TABLE_HYDRATE_ADDR: number = 0x0005568C;
+  public TABLE_HYDRATE_ADDR: number = 0x0005568c;
 
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
@@ -41,16 +45,26 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     this._readAnimationBackgrounds(board, boardInfo);
   }
 
-  onCreateBoardOverlay(board: IBoard, boardInfo: IBoardInfo, boardIndex: number, audioIndices: number[]) {
+  onCreateBoardOverlay(
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number,
+    audioIndices: number[]
+  ) {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
 
-  onAfterOverwrite(romView: DataView, board: IBoard, boardInfo: IBoardInfo, boardIndex: number): void {
+  onAfterOverwrite(
+    romView: DataView,
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ): void {
     // Patch game to use all 8MB.
     romView.setUint16(0x41602, 0x8040); // Main heap now starts at 0x80400000
-    romView.setUint16(0x4160A, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space
-    romView.setUint16(0x41616, 0x001A); // Temp heap fills as much as 0x1A8000 (8000 is ORed in)
-    romView.setUint16(0x7869E, 0x001A);
+    romView.setUint16(0x4160a, (0x00400000 - this.EVENT_MEM_SIZE) >>> 16); // ... and can fill up through reserved event space
+    romView.setUint16(0x41616, 0x001a); // Temp heap fills as much as 0x1A8000 (8000 is ORed in)
+    romView.setUint16(0x7869e, 0x001a);
 
     this._writeCostumeType(romView, board, boardIndex);
 
@@ -60,11 +74,26 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     }
   }
 
-  onOverwritePromises(board: IBoard, boardInfo: IBoardInfo, boardIndex: number) {
+  onOverwritePromises(
+    board: IBoard,
+    boardInfo: IBoardInfo,
+    boardIndex: number
+  ) {
     let bgIndex = boardInfo.bgDir;
     let bgPromises = [
-      this._writeBackground(bgIndex, board.bg.src, board.bg.width, board.bg.height),
-      this._writeAnimationBackgrounds(boardInfo.animBgSet!, board.bg.width, board.bg.height, board.bg.src, board.animbg),
+      this._writeBackground(
+        bgIndex,
+        board.bg.src,
+        board.bg.width,
+        board.bg.height
+      ),
+      this._writeAnimationBackgrounds(
+        boardInfo.animBgSet!,
+        board.bg.width,
+        board.bg.height,
+        board.bg.src,
+        board.animbg
+      ),
       this._writeBackground(bgIndex + 2, board.otherbg.largescene!, 320, 240), // Game start, end
       this._writeOverviewBackground(bgIndex + 6, board.bg.src), // Overview map
       this.onWriteBoardSelectImg(board, boardInfo), // The board select image
@@ -73,15 +102,20 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       this._brandBootSplashscreen(),
     ];
 
-    return Promise.all(bgPromises)
+    return Promise.all(bgPromises);
   }
 
-  onWriteEvents(board: IBoard) {
-  }
+  onWriteEvents(board: IBoard) {}
 
   hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
     if (space.type === Space.BANK) {
-      addEventToSpaceInternal(board, space, createEventInstance(BankEvent), false, eventLibrary);
+      addEventToSpaceInternal(
+        board,
+        space,
+        createEventInstance(BankEvent),
+        false,
+        eventLibrary
+      );
     }
   }
 
@@ -103,10 +137,10 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
 
       // Parse difficulty star level
       let difficulty = 0;
-      let lastIndex = str.indexOf(this.getCharacterMap()[0x3B], 0);
+      let lastIndex = str.indexOf(this.getCharacterMap()[0x3b], 0);
       while (lastIndex !== -1) {
         difficulty++;
-        lastIndex = str.indexOf(this.getCharacterMap()[0x3B], lastIndex + 1);
+        lastIndex = str.indexOf(this.getCharacterMap()[0x3b], lastIndex + 1);
       }
       board.difficulty = difficulty;
     }
@@ -118,27 +152,28 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     // Various details about the board when selecting it
     if (strs.boardSelect) {
       let bytes = [];
-      bytes.push(0x0B); // Clear?
+      bytes.push(0x0b); // Clear?
       bytes.push(0x06); // Start BLUE
       bytes = bytes.concat(strings._strToBytes(board.name || ""));
       bytes.push(0x19);
       bytes.push(0x04); // Start Purple?
-      bytes = bytes.concat([0x0E, 0x0E]); // Tabs
+      bytes = bytes.concat([0x0e, 0x0e]); // Tabs
       bytes = bytes.concat(strings._strToBytes("Difficulty"));
       bytes.push(0x19);
       bytes = bytes.concat(strings._strToBytes(" : "));
-      let star = 0x3B;
-      if (board.difficulty > 5 || board.difficulty < 1) { // Hackers!
+      let star = 0x3b;
+      if (board.difficulty > 5 || board.difficulty < 1) {
+        // Hackers!
         bytes.push(star);
         bytes = bytes.concat(strings._strToBytes(" "));
-        bytes.push(0x3E); // Little x
-        bytes = bytes.concat(strings._strToBytes(" " + board.difficulty.toString()));
+        bytes.push(0x3e); // Little x
+        bytes = bytes.concat(
+          strings._strToBytes(" " + board.difficulty.toString())
+        );
+      } else {
+        for (let i = 0; i < board.difficulty; i++) bytes.push(star);
       }
-      else {
-        for (let i = 0; i < board.difficulty; i++)
-          bytes.push(star);
-      }
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
       bytes.push(0x00); // Null byte
 
@@ -151,7 +186,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     // Simple strings that just have the board name
     if (strs.boardNames && strs.boardNames.length) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes.push(0x06);
       bytes = bytes.concat(strings._strToBytes(board.name || ""));
       bytes.push(0x19);
@@ -168,16 +203,16 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     // One piece is pre-bowser sign, one is after
     if (strs.boardGreeting && strs.boardGreeting.length) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes = bytes.concat(strings._strToBytes("We're here, everyone!"));
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes("This is "));
       bytes.push(0x06); // Blue
-      bytes.push(0x0F);
+      bytes.push(0x0f);
       bytes = bytes.concat(strings._strToBytes((board.name || "") + "!!!"));
       bytes.push(0x16);
       bytes.push(0x19);
-      bytes.push(0xFF);
+      bytes.push(0xff);
       // bytes.push(0x0B);
       // bytes = bytes.concat(strings._strToBytes("Your objective this time,"));
       bytes.push(0x00); // Null byte
@@ -186,11 +221,13 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       strings.write(strs.boardGreeting[0], strBuffer);
 
       bytes = [];
-      bytes.push(0x0B);
-      bytes = bytes.concat(strings._strToBytes("Now, before this adventure begins,"));
-      bytes.push(0x0A); // \n
+      bytes.push(0x0b);
+      bytes = bytes.concat(
+        strings._strToBytes("Now, before this adventure begins,")
+      );
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes("we must decide turn order."));
-      bytes.push(0xFF);
+      bytes.push(0xff);
       bytes.push(0x00); // Null byte
 
       strBuffer = arrayToArrayBuffer(bytes);
@@ -200,21 +237,21 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     // String congratulating a player for winning
     if (strs.boardWinner) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes = bytes.concat(strings._strToBytes("Well done, "));
       bytes.push(0x11); // Player
       bytes = bytes.concat(strings._strToBytes("!"));
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes("You are the "));
       bytes.push(0x07); // Yellow
-      bytes.push(0x0F);
+      bytes.push(0x0f);
       bytes = bytes.concat(strings._strToBytes("Super Star"));
       bytes.push(0x16);
       bytes.push(0x19);
-      bytes.push(0x0A); // \n
+      bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes("of "));
       bytes.push(0x06); // Blue
-      bytes.push(0x0F);
+      bytes.push(0x0f);
       bytes = bytes.concat(strings._strToBytes((board.name || "") + "!!!"));
       bytes.push(0x16);
       bytes.push(0x19);
@@ -227,9 +264,9 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     // "board name   {0} Time(s)"
     if (strs.boardPlayCount) {
       let bytes = [];
-      bytes.push(0x0B);
+      bytes.push(0x0b);
       bytes = bytes.concat(strings._strToBytes(board.name || ""));
-      bytes = bytes.concat([0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E]); // Tabs
+      bytes = bytes.concat([0x0e, 0x0e, 0x0e, 0x0e, 0x0e, 0x0e]); // Tabs
       bytes.push(0x11); // Play count
       bytes = bytes.concat(strings._strToBytes(" Time(s)"));
       bytes.push(0x00); // Null byte
@@ -257,8 +294,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     board.spaces.forEach((space) => {
       let oldType = space.type;
       let newType = typeMap[oldType];
-      if (newType !== undefined)
-        space.type = newType;
+      if (newType !== undefined) space.type = newType;
     });
 
     if (chains.length) {
@@ -289,13 +325,12 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       [Space.DUEL_BASIC]: 0, // N/A
       [Space.DUEL_START_BLUE]: 0, // N/A
       [Space.DUEL_START_RED]: 0, // N/A
-      [Space.DUEL_POWERUP]: 0,// N/A
+      [Space.DUEL_POWERUP]: 0, // N/A
       [Space.DUEL_REVERSE]: 0, // N/A
     };
     board.spaces.forEach((space) => {
       let newType = typeMap[space.type];
-      if (newType !== undefined)
-        space.type = newType;
+      if (newType !== undefined) space.type = newType;
     });
   }
 
@@ -304,154 +339,145 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   }
 
   /** Overwrite character costumes. */
-  _writeCostumeType(romView: DataView, board: IBoard, boardIndex: number): void {
+  _writeCostumeType(
+    romView: DataView,
+    board: IBoard,
+    boardIndex: number
+  ): void {
     const costumeModelMap = {
       [CostumeType.NORMAL]: {
-        small: 0xD3, // 211
-        big: 0xD1, // 209
+        small: 0xd3, // 211
+        big: 0xd1, // 209
         toad: 0x00080000,
         player2d: [
-          0x000A0282, // 10/642
-          0x000A0283,
-          0x000A0285,
-          0x000A0286,
-          0x000A0284,
-          0x000A0287,
+          0x000a0282, // 10/642
+          0x000a0283,
+          0x000a0285,
+          0x000a0286,
+          0x000a0284,
+          0x000a0287,
         ],
         bowser2d: [
-          0x000A029A, // 10/666
-          0x000A029B,
-          0x000A029D,
-          0x000A029E,
-          0x000A029C,
-          0x000A029F,
+          0x000a029a, // 10/666
+          0x000a029b,
+          0x000a029d,
+          0x000a029e,
+          0x000a029c,
+          0x000a029f,
         ],
       },
       [CostumeType.WESTERN]: {
-        small: 0xD4, // 212
-        big: 0xD5, // 213
-        toad: 0x0008000E,
+        small: 0xd4, // 212
+        big: 0xd5, // 213
+        toad: 0x0008000e,
         player2d: [
-          0x000A0264, // 10/612
-          0x000A0265,
-          0x000A0267,
-          0x000A0268,
-          0x000A0266,
-          0x000A0269,
+          0x000a0264, // 10/612
+          0x000a0265,
+          0x000a0267,
+          0x000a0268,
+          0x000a0266,
+          0x000a0269,
         ],
         bowser2d: [
-          0x000A0288, // 10/648
-          0x000A0289,
-          0x000A028B,
-          0x000A028C,
-          0x000A028A,
-          0x000A028D,
+          0x000a0288, // 10/648
+          0x000a0289,
+          0x000a028b,
+          0x000a028c,
+          0x000a028a,
+          0x000a028d,
         ],
       },
       [CostumeType.PIRATE]: {
-        small: 0xD6, // 214
-        big: 0xD7, // 215,
+        small: 0xd6, // 214
+        big: 0xd7, // 215,
         toad: 0x00080016,
         player2d: [
-          0x000A026A, // 10/618
-          0x000A026B,
-          0x000A026D,
-          0x000A026E,
-          0x000A026C,
-          0x000A026F,
+          0x000a026a, // 10/618
+          0x000a026b,
+          0x000a026d,
+          0x000a026e,
+          0x000a026c,
+          0x000a026f,
         ],
         bowser2d: [
-          0x000A028E,
-          0x000A028F,
-          0x000A0291,
-          0x000A0292,
-          0x000A0290,
-          0x000A0293,
+          0x000a028e, 0x000a028f, 0x000a0291, 0x000a0292, 0x000a0290,
+          0x000a0293,
         ],
       },
       [CostumeType.HORROR]: {
-        small: 0xD8, // 216
-        big: 0xD9, // 217
+        small: 0xd8, // 216
+        big: 0xd9, // 217
         toad: 0x00080028,
         player2d: [
-          0x000A0270,
-          0x000A0271,
-          0x000A0273,
-          0x000A0274,
-          0x000A0272,
-          0x000A0275,
+          0x000a0270, 0x000a0271, 0x000a0273, 0x000a0274, 0x000a0272,
+          0x000a0275,
         ],
         bowser2d: [
-          0x000A0294,
-          0x000A0295,
-          0x000A0297,
-          0x000A0298,
-          0x000A0296,
-          0x000A0299,
+          0x000a0294, 0x000a0295, 0x000a0297, 0x000a0298, 0x000a0296,
+          0x000a0299,
         ],
       },
       [CostumeType.SPACE]: {
-        small: 0xDA, // 218
-        big: 0xDB, // 219
-        toad: 0x0008001C,
+        small: 0xda, // 218
+        big: 0xdb, // 219
+        toad: 0x0008001c,
         player2d: [
-          0x000A0276,
-          0x000A0277,
-          0x000A0279,
-          0x000A027A,
-          0x000A0278,
-          0x000A027B,
+          0x000a0276, 0x000a0277, 0x000a0279, 0x000a027a, 0x000a0278,
+          0x000a027b,
         ],
         bowser2d: [
-          0x000A029A, // same as normal
-          0x000A029B,
-          0x000A029D,
-          0x000A029E,
-          0x000A029C,
-          0x000A029F,
+          0x000a029a, // same as normal
+          0x000a029b,
+          0x000a029d,
+          0x000a029e,
+          0x000a029c,
+          0x000a029f,
         ],
       },
       [CostumeType.MYSTERY]: {
-        small: 0xDC, // 220
-        big: 0xDD, // 221
+        small: 0xdc, // 220
+        big: 0xdd, // 221
         toad: 0x00080023,
         player2d: [
-          0x000A027C, // 10/636
-          0x000A027D,
-          0x000A027F,
-          0x000A0280,
-          0x000A027E,
-          0x000A0281,
+          0x000a027c, // 10/636
+          0x000a027d,
+          0x000a027f,
+          0x000a0280,
+          0x000a027e,
+          0x000a0281,
         ],
         bowser2d: [
-          0x000A02A0,
-          0x000A02A1,
-          0x000A02A3,
-          0x000A02A4,
-          0x000A02A2,
-          0x000A02A5,
+          0x000a02a0, 0x000a02a1, 0x000a02a3, 0x000a02a4, 0x000a02a2,
+          0x000a02a5,
         ],
       },
     };
 
-    const costumeInfo = costumeModelMap[board.costumeTypeIndex ?? CostumeType.NORMAL];
+    const costumeInfo =
+      costumeModelMap[board.costumeTypeIndex ?? CostumeType.NORMAL];
 
-    const boardModelRowsIndex = 0xCBF40 + (boardIndex * (16 * 12)); // 16 bytes per model entry * 12 rows (6 big, 6 small models)
+    const boardModelRowsIndex = 0xcbf40 + boardIndex * (16 * 12); // 16 bytes per model entry * 12 rows (6 big, 6 small models)
     const CHARACTER_COUNT = 6;
 
     for (let i = 0; i < CHARACTER_COUNT; i++) {
       // Table at ROM 0xCBF40 has the "small/big" models for each character.
       // Ex: 2/D4 is Western small, 2/D5 is western big, 2/D6 pirate small, 2/D7 pirate big.
-      romView.setUint16(boardModelRowsIndex + (i * 16) + 2, costumeInfo.small);
-      romView.setUint16(boardModelRowsIndex + 96 + (i * 16) + 2, costumeInfo.big);
+      romView.setUint16(boardModelRowsIndex + i * 16 + 2, costumeInfo.small);
+      romView.setUint16(boardModelRowsIndex + 96 + i * 16 + 2, costumeInfo.big);
 
       // Table at ROM 0xCC4C0 has costumed toads.
 
       // Table at ROM 0xCDA28 has list of 2d model renders of themed characters.
-      romView.setUint32(0xCDA28 + (boardIndex * 6 * 4) + (i * 4), costumeInfo.player2d[i]);
+      romView.setUint32(
+        0xcda28 + boardIndex * 6 * 4 + i * 4,
+        costumeInfo.player2d[i]
+      );
 
       // Table at ROM 0xCDAE8 has list of themed bowser suits.
-      romView.setUint32(0xCDAE8 + (boardIndex * 6 * 4) + (i * 4), costumeInfo.bowser2d[i]);
+      romView.setUint32(
+        0xcdae8 + boardIndex * 6 * 4 + i * 4,
+        costumeInfo.bowser2d[i]
+      );
     }
 
     // The following somewhat replaces the toad models, but animations aren't yet replaced.
@@ -485,18 +511,27 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   }
 
   _readAnimationBackgrounds(board: IBoard, boardInfo: IBoardInfo) {
-    if (typeof boardInfo.animBgSet !== "number" || !boardInfo.bgDir)
-      return;
+    if (typeof boardInfo.animBgSet !== "number" || !boardInfo.bgDir) return;
 
     // Perf: This is a bit redundant because we read the data URI previously.
     let mainBgImgData = hvqfs.readBackgroundImgData(boardInfo.bgDir);
 
-    let animBgs = animationfs.readAnimationBackgrounds(boardInfo.animBgSet, mainBgImgData, board.bg.width, board.bg.height);
-    if (animBgs && animBgs.length)
-      board.animbg = animBgs;
+    let animBgs = animationfs.readAnimationBackgrounds(
+      boardInfo.animBgSet,
+      mainBgImgData,
+      board.bg.width,
+      board.bg.height
+    );
+    if (animBgs && animBgs.length) board.animbg = animBgs;
   }
 
-  async _writeAnimationBackgrounds(setIndex: number, width: number, height: number, mainBgSrc: string, animSources?: string[]): Promise<void> {
+  async _writeAnimationBackgrounds(
+    setIndex: number,
+    width: number,
+    height: number,
+    mainBgSrc: string,
+    animSources?: string[]
+  ): Promise<void> {
     if (isNaN(setIndex) || !animSources || !animSources.length) {
       return;
     }
@@ -509,7 +544,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     let animImgData = new Array(animSources.length);
 
     const mainBgPromise = new Promise<void>((resolve) => {
-      getImageData(mainBgSrc, width, height).then(imgData => {
+      getImageData(mainBgSrc, width, height).then((imgData) => {
         mainBgImgData = imgData;
         resolve();
       });
@@ -519,7 +554,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     for (let i = 0; i < animSources.length; i++) {
       const animPromise = new Promise<void>((resolve) => {
         const index = i;
-        getImageData(animSources[i], width, height).then(imgData => {
+        getImageData(animSources[i], width, height).then((imgData) => {
           animImgData[index] = imgData;
           resolve();
         });
@@ -530,17 +565,27 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
     await Promise.all(animPromises);
 
     for (let i = 0; i < animImgData.length; i++) {
-      animationfs.writeAnimationBackground(setIndex, i, mainBgImgData!, animImgData[i], width, height);
+      animationfs.writeAnimationBackground(
+        setIndex,
+        i,
+        mainBgImgData!,
+        animImgData[i],
+        width,
+        height
+      );
     }
     $$log("Wrote animations");
     clearTimeout(failTimer);
   }
 
   onParseBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img.boardSelectImg)
-      return;
+    if (!boardInfo.img.boardSelectImg) return;
 
-    board.otherbg.boardselect = this._readImgFromMainFS(9, boardInfo.img.boardSelectImg, 0);
+    board.otherbg.boardselect = this._readImgFromMainFS(
+      9,
+      boardInfo.img.boardSelectImg,
+      0
+    );
   }
 
   onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
@@ -552,7 +597,10 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       }
 
       let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write board select for ${boardInfo.name}`), 45000);
+      let failTimer = setTimeout(
+        () => reject(`Failed to write board select for ${boardInfo.name}`),
+        45000
+      );
       srcImage.onload = () => {
         let imgBuffer = toArrayBuffer(srcImage, 64, 48);
 
@@ -566,7 +614,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
             width: 64,
             height: 48,
             bpp: 32,
-          }
+          },
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(9, boardSelectImg!, newPack);
@@ -579,12 +627,20 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   }
 
   _parseBoardSelectIcon(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img.boardSelectIconCoords)
-      return;
+    if (!boardInfo.img.boardSelectIconCoords) return;
 
     let bgInfo = this._readImgInfoFromMainFS(9, 15, 0);
     let [x, y] = boardInfo.img.boardSelectIconCoords;
-    let icon = cutFromWhole(bgInfo.src!, bgInfo.width, bgInfo.height, 32, x, y, 32, 32);
+    let icon = cutFromWhole(
+      bgInfo.src!,
+      bgInfo.width,
+      bgInfo.height,
+      32,
+      x,
+      y,
+      32,
+      32
+    );
     let dataUrl = arrayBufferToDataURL(icon, 32, 32);
     board.otherbg.boardselecticon = dataUrl;
   }
@@ -601,84 +657,102 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
         return;
       }
 
-      let failTimer = setTimeout(() => reject(`Failed to write board select icon for ${boardInfo.name}`), 45000);
+      let failTimer = setTimeout(
+        () => reject(`Failed to write board select icon for ${boardInfo.name}`),
+        45000
+      );
 
-      let blankBackImage: HTMLImageElement, newBoardSelectIconImage: HTMLImageElement;
+      let blankBackImage: HTMLImageElement,
+        newBoardSelectIconImage: HTMLImageElement;
 
-      let blankBackPromise = new Promise<void>(function(resolve, reject) {
+      let blankBackPromise = new Promise<void>(function (resolve, reject) {
         blankBackImage = new Image();
-        blankBackImage.onload = function() {
+        blankBackImage.onload = function () {
           resolve();
         };
         blankBackImage.src = mp2boardselectblank1Image;
       });
 
-      let newIconPromise = new Promise<void>(function(resolve, reject) {
+      let newIconPromise = new Promise<void>(function (resolve, reject) {
         newBoardSelectIconImage = new Image();
-        newBoardSelectIconImage.onload = function() {
+        newBoardSelectIconImage.onload = function () {
           resolve();
         };
         newBoardSelectIconImage.src = boardSelectIconSrc!;
       });
 
       let iconPromises = [blankBackPromise, newIconPromise];
-      Promise.all(iconPromises).then(value => {
-        let bgInfo = this._readImgInfoFromMainFS(9, 15, 0); // Read the existing icon select thing
+      Promise.all(iconPromises).then(
+        (value) => {
+          let bgInfo = this._readImgInfoFromMainFS(9, 15, 0); // Read the existing icon select thing
 
-        // Draw the original onto a canvas
-        let canvasCtx = createContext(bgInfo.width, bgInfo.height);
-        let origImageData = arrayBufferToImageData(bgInfo.src!, bgInfo.width, bgInfo.height);
-        canvasCtx.putImageData(origImageData, 0, 0);
+          // Draw the original onto a canvas
+          let canvasCtx = createContext(bgInfo.width, bgInfo.height);
+          let origImageData = arrayBufferToImageData(
+            bgInfo.src!,
+            bgInfo.width,
+            bgInfo.height
+          );
+          canvasCtx.putImageData(origImageData, 0, 0);
 
-        // Then draw the "clean slate" for the icon, and the given icon.
-        let [x, y] = boardInfo.img.boardSelectIconCoords!;
-        canvasCtx.drawImage(blankBackImage, x, y, 32, 32);
-        canvasCtx.drawImage(newBoardSelectIconImage, x, y, 32, 32);
+          // Then draw the "clean slate" for the icon, and the given icon.
+          let [x, y] = boardInfo.img.boardSelectIconCoords!;
+          canvasCtx.drawImage(blankBackImage, x, y, 32, 32);
+          canvasCtx.drawImage(newBoardSelectIconImage, x, y, 32, 32);
 
-        // Place edited icon select thing back into ROM
-        let finalIconSelectThingBuffer = canvasCtx.getImageData(0, 0, bgInfo.width, bgInfo.height).data.buffer;
+          // Place edited icon select thing back into ROM
+          let finalIconSelectThingBuffer = canvasCtx.getImageData(
+            0,
+            0,
+            bgInfo.width,
+            bgInfo.height
+          ).data.buffer;
 
-        // Read the old image pack.
-        let oldPack = mainfs.get(9, 15);
-
-        // Then, pack the image and write it.
-        let imgInfoArr = [
-          {
-            src: finalIconSelectThingBuffer,
-            width: bgInfo.width,
-            height: bgInfo.height,
-            bpp: 32,
-          }
-        ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        mainfs.write(9, 15, newPack);
-
-        // Write the hover mask for the new image
-        if (boardInfo.img.boardSelectIconMask) {
-          let mask = this._createBoardSelectIconHoverMask(newBoardSelectIconImage);
-
-          let oldPack = mainfs.get(9, boardInfo.img.boardSelectIconMask);
+          // Read the old image pack.
+          let oldPack = mainfs.get(9, 15);
 
           // Then, pack the image and write it.
           let imgInfoArr = [
             {
-              src: mask,
-              width: 32,
-              height: 32,
+              src: finalIconSelectThingBuffer,
+              width: bgInfo.width,
+              height: bgInfo.height,
               bpp: 32,
-            }
+            },
           ];
           let newPack = toPack(imgInfoArr, 16, 0, oldPack);
-          mainfs.write(9, boardInfo.img.boardSelectIconMask, newPack);
-        }
+          mainfs.write(9, 15, newPack);
 
-        $$log("Wrote board select icon");
-        clearTimeout(failTimer);
-        resolve();
-      }, reason => {
-        $$log(`Error writing board select icon: ${reason}`);
-        reject();
-      });
+          // Write the hover mask for the new image
+          if (boardInfo.img.boardSelectIconMask) {
+            let mask = this._createBoardSelectIconHoverMask(
+              newBoardSelectIconImage
+            );
+
+            let oldPack = mainfs.get(9, boardInfo.img.boardSelectIconMask);
+
+            // Then, pack the image and write it.
+            let imgInfoArr = [
+              {
+                src: mask,
+                width: 32,
+                height: 32,
+                bpp: 32,
+              },
+            ];
+            let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+            mainfs.write(9, boardInfo.img.boardSelectIconMask, newPack);
+          }
+
+          $$log("Wrote board select icon");
+          clearTimeout(failTimer);
+          resolve();
+        },
+        (reason) => {
+          $$log(`Error writing board select icon: ${reason}`);
+          reject();
+        }
+      );
     });
   }
 
@@ -699,9 +773,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       if (newIconView.getUint32(i) === 0) {
         maskView.setUint32(i, 0);
         hasTransparency = true;
-      }
-      else
-        maskView.setUint32(i, 0xBBBBBBFF);
+      } else maskView.setUint32(i, 0xbbbbbbff);
     }
 
     // If someone gives a totally non-transparent image... well the mask won't
@@ -714,11 +786,13 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
   }
 
   onParseBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
-    if (!boardInfo.img.introLogoImg)
-      return;
+    if (!boardInfo.img.introLogoImg) return;
 
-    board.otherbg.boardlogo =
-      this._readImgFromMainFS(10, boardInfo.img.introLogoImg as number, 0);
+    board.otherbg.boardlogo = this._readImgFromMainFS(
+      10,
+      boardInfo.img.introLogoImg as number,
+      0
+    );
   }
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
@@ -730,7 +804,10 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       }
 
       let srcImage = new Image();
-      let failTimer = setTimeout(() => reject(`Failed to write logos for ${boardInfo.name}`), 45000);
+      let failTimer = setTimeout(
+        () => reject(`Failed to write logos for ${boardInfo.name}`),
+        45000
+      );
       srcImage.onload = () => {
         // Write the intro logo images.
         let imgBuffer = toArrayBuffer(srcImage, 260, 120);
@@ -745,7 +822,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
             width: 260,
             height: 120,
             bpp: 32,
-          }
+          },
         ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(10, introLogoImg as number, newPack);
@@ -759,12 +836,14 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       let pauseLogoImg = boardInfo.img.pauseLogoImg;
       if (pauseLogoImg) {
         let oldPack = mainfs.get(10, pauseLogoImg);
-        let imgInfoArr = [{
-          src: new ArrayBuffer(130 * 60 * 4),
-          width: 130,
-          height: 60,
-          bpp: 32,
-        }];
+        let imgInfoArr = [
+          {
+            src: new ArrayBuffer(130 * 60 * 4),
+            width: 130,
+            height: 60,
+            bpp: 32,
+          },
+        ];
         let newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(10, pauseLogoImg, newPack);
       }
@@ -871,7 +950,7 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       "Coaster (Duo Mix)",
       "Coaster (Hermit Mix)",
       "Coaster (Speed Mix)",
-      "Coaster (Survival Mix)"
+      "Coaster (Survival Mix)",
       //"", 0x50 Two Beeps
       // "Success Mini-Game Result",
       // "Success Mini-Game Result",
@@ -905,11 +984,11 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       0x07: "<YELLOW>",
       0x08: "<WHITE>",
       0x09: "<SEIZURE>",
-      0x0A: "\n",
-      0x0B: "\u3014", // FEED Carriage return / start of bubble?
-      0x0C: "○", // 2ND BYTE OF PLAYER CHOICE
-      0x0D: "\t", // UNCONFIRMED / WRONG
-      0x0E: "\t", // 1ST BYTE OF PLAYER CHOICE
+      0x0a: "\n",
+      0x0b: "\u3014", // FEED Carriage return / start of bubble?
+      0x0c: "○", // 2ND BYTE OF PLAYER CHOICE
+      0x0d: "\t", // UNCONFIRMED / WRONG
+      0x0e: "\t", // 1ST BYTE OF PLAYER CHOICE
       // 0x0F - nothing
       0x10: " ",
       0x11: "{0}", // These are format params that get replaced with various things
@@ -930,39 +1009,39 @@ export const MP2 = new class MP2Adapter extends AdapterBase {
       0x27: "\u3006", // ' Z button
       0x28: "\u3007", // ( Analog stick
       0x29: "\u3008", // ) (coin)
-      0x2A: "\u3009", // * Star
-      0x2B: "\u3010", // , S button
-      0x2C: "\u3011", // , R button
+      0x2a: "\u3009", // * Star
+      0x2b: "\u3010", // , S button
+      0x2c: "\u3011", // , R button
       // 0x2D - nothing
       // 0x2E - nothing
       // 0x2F - nothing
       // 0x30 - 0x39: 0-9 ascii
-      0x3A: "\u3012", // Hollow coin
-      0x3B: "\u3013", // Hollow star
-      0x3C: "+", // <
-      0x3D: "-", // =
-      0x3E: "x", // > Little x
-      0x3F: "->", // Little right ARROW
+      0x3a: "\u3012", // Hollow coin
+      0x3b: "\u3013", // Hollow star
+      0x3c: "+", // <
+      0x3d: "-", // =
+      0x3e: "x", // > Little x
+      0x3f: "->", // Little right ARROW
       // 0x40 - nothing
       // 0x41 - 0x5A: A-Z ascii
-      0x5B: "\"", // [ End quotes
-      0x5C: "'", // \ Single quote
-      0x5D: "(", // ] Open parenthesis
-      0x5E: ")",
-      0x5F: "/", // _
+      0x5b: '"', // [ End quotes
+      0x5c: "'", // \ Single quote
+      0x5d: "(", // ] Open parenthesis
+      0x5e: ")",
+      0x5f: "/", // _
       // 0x60 - nothing
       // 0x61 - 0x7A: a-z ascii
-      0x7B: ":", // :
-      0x80: "\"", // Double quote no angle
+      0x7b: ":", // :
+      0x80: '"', // Double quote no angle
       0x81: "°", // . Degree
       0x82: ",", // ,
       0x83: "°", // Low circle FIXME
       0x85: ".", // … Period
-      0xC0: "“", // A`
-      0xC1: "”", // A'
-      0xC2: "!", // A^
-      0xC3: "?", // A~
-      0xFF: "\u3015", // PAUSE
+      0xc0: "“", // A`
+      0xc1: "”", // A'
+      0xc2: "!", // A^
+      0xc3: "?", // A~
+      0xff: "\u3015", // PAUSE
     };
   }
-}();
+})();

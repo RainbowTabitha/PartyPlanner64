@@ -2,9 +2,23 @@ import { View, EventCodeLanguage } from "../types";
 import * as React from "react";
 import { IEvent, useCustomEvents } from "../events/events";
 import { ICustomEvent, createCustomEvent } from "../events/customevents";
-import { changeCurrentEvent, changeView, confirmFromUser } from "../app/appControl";
-import { IBoard, excludeEventFromBoard, includeEventInBoard, getBoardEvent, getCurrentBoard } from "../boards";
-import { removeEventFromLibrary, getEventFromLibrary, addEventToLibrary } from "../events/EventLibrary";
+import {
+  changeCurrentEvent,
+  changeView,
+  confirmFromUser,
+} from "../app/appControl";
+import {
+  IBoard,
+  excludeEventFromBoard,
+  includeEventInBoard,
+  getBoardEvent,
+  getCurrentBoard,
+} from "../boards";
+import {
+  removeEventFromLibrary,
+  getEventFromLibrary,
+  addEventToLibrary,
+} from "../events/EventLibrary";
 import { saveAs } from "file-saver";
 import { stringComparer } from "../utils/string";
 
@@ -30,65 +44,83 @@ export function EventsView() {
     changeCurrentEvent(eventId, false);
     const event = getEventFromLibrary(eventId)!;
     changeView(_getViewForEventLanguage(event.language));
-  }
+  };
 
   const onEditBoardEvent = (eventId: string) => {
     changeCurrentEvent(eventId, true);
     const event = getBoardEvent(getCurrentBoard(), eventId)!;
     changeView(_getViewForEventLanguage(event.language));
-  }
+  };
 
   const onDeleteEvent = async (event: IEvent) => {
-    if (await confirmFromUser(`Are you sure you want to delete ${event.name}?`)) {
+    if (
+      await confirmFromUser(`Are you sure you want to delete ${event.name}?`)
+    ) {
       removeEventFromLibrary(event.id);
     }
-  }
+  };
 
   const onDeleteBoardEvent = async (event: IEvent) => {
-    if (await confirmFromUser(`Are you sure you want to delete ${event.name} from the board?`)) {
+    if (
+      await confirmFromUser(
+        `Are you sure you want to delete ${event.name} from the board?`
+      )
+    ) {
       excludeEventFromBoard(event.id);
     }
-  }
+  };
 
-  const onCopyToBoard = async (event: ICustomEvent, isDestructiveCopy: boolean) => {
+  const onCopyToBoard = async (
+    event: ICustomEvent,
+    isDestructiveCopy: boolean
+  ) => {
     let proceed = true;
     if (isDestructiveCopy) {
-      proceed = await confirmFromUser(`Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`);
+      proceed = await confirmFromUser(
+        `Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`
+      );
     }
     if (proceed) {
       includeEventInBoard(event);
     }
-  }
+  };
 
-  const onCopyToLibrary = async (event: ICustomEvent, isDestructiveCopy: boolean) => {
+  const onCopyToLibrary = async (
+    event: ICustomEvent,
+    isDestructiveCopy: boolean
+  ) => {
     let proceed = true;
     if (isDestructiveCopy) {
-      proceed = await confirmFromUser(`Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`);
+      proceed = await confirmFromUser(
+        `Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`
+      );
     }
     if (proceed) {
       addEventToLibrary(event);
     }
-  }
+  };
 
   let listing = null;
   if (!customEvents.length) {
     listing = (
-      <tr><td>No custom events present — load or create your own!</td></tr>
+      <tr>
+        <td>No custom events present — load or create your own!</td>
+      </tr>
     );
-  }
-  else {
+  } else {
     customEvents = customEvents.sort((a, b) => stringComparer(a.name, b.name));
-    listing = customEvents.map(customEvent => {
+    listing = customEvents.map((customEvent) => {
       const isDestructive = _copyToBoardWillOverwrite(customEvent, board);
       const isUnchanged = _boardAndLibraryEventAreInSync(customEvent, board);
       return (
-        <EventRow key={customEvent.id}
+        <EventRow
+          key={customEvent.id}
           event={customEvent}
           onEditEvent={onEditEvent}
           onDeleteEvent={onDeleteEvent}
           isDestructiveCopy={isDestructive}
           onCopyToBoard={isUnchanged ? undefined : onCopyToBoard}
-          />
+        />
       );
     });
   }
@@ -100,25 +132,30 @@ export function EventsView() {
     const isDestructive = _copyToLibraryWillOverwrite(customEvent);
     const isUnchanged = _boardAndLibraryEventAreInSync(customEvent, board);
     boardEvents.push(
-      <EventRow key={eventName} event={customEvent}
+      <EventRow
+        key={eventName}
+        event={customEvent}
         onEditEvent={onEditBoardEvent}
         onDeleteEvent={onDeleteBoardEvent}
         isDestructiveCopy={isDestructive}
-        onCopyToLibrary={isUnchanged ? undefined : onCopyToLibrary} />
+        onCopyToLibrary={isUnchanged ? undefined : onCopyToLibrary}
+      />
     );
   }
-  boardEvents = boardEvents.sort((a, b) => stringComparer(a.key as string, b.key as string));
+  boardEvents = boardEvents.sort((a, b) =>
+    stringComparer(a.key as string, b.key as string)
+  );
 
   return (
     <div className="eventsViewContainer">
       <h3>Events for {board.name}</h3>
-        {boardEvents.length ?
-          <EventEntryTable listing={boardEvents} /> :
-          <p>No events are associated with this board.</p>
-        }
+      {boardEvents.length ? (
+        <EventEntryTable listing={boardEvents} />
+      ) : (
+        <p>No events are associated with this board.</p>
+      )}
       <h3>
-        <img src={libraryImage} className="eventsViewHeaderIcon" alt=""></img>
-        {" "}
+        <img src={libraryImage} className="eventsViewHeaderIcon" alt=""></img>{" "}
         Event Library
       </h3>
       <EventEntryTable listing={listing} />
@@ -126,7 +163,9 @@ export function EventsView() {
   );
 }
 
-function _getViewForEventLanguage(language: EventCodeLanguage | undefined): View {
+function _getViewForEventLanguage(
+  language: EventCodeLanguage | undefined
+): View {
   switch (language) {
     case EventCodeLanguage.C:
       return View.CREATEEVENT_C;
@@ -137,16 +176,14 @@ function _getViewForEventLanguage(language: EventCodeLanguage | undefined): View
 }
 
 function EventEntryTable(props: { listing: any }) {
-  return (
-    <div className="eventsViewTable">
-      {props.listing}
-    </div>
-  )
+  return <div className="eventsViewTable">{props.listing}</div>;
 }
 
-function _copyToBoardWillOverwrite(customEvent: ICustomEvent, board: IBoard): boolean {
-  if (!board.events || !(customEvent.id in board.events))
-    return false;
+function _copyToBoardWillOverwrite(
+  customEvent: ICustomEvent,
+  board: IBoard
+): boolean {
+  if (!board.events || !(customEvent.id in board.events)) return false;
   return board.events[customEvent.id] !== customEvent.asm;
 }
 
@@ -155,12 +192,13 @@ function _copyToLibraryWillOverwrite(customEvent: ICustomEvent): boolean {
   return !!libEvent && libEvent.asm !== customEvent.asm;
 }
 
-function _boardAndLibraryEventAreInSync(customEvent: ICustomEvent, board: IBoard): boolean {
-  if (!board.events || !(customEvent.id in board.events))
-    return false;
+function _boardAndLibraryEventAreInSync(
+  customEvent: ICustomEvent,
+  board: IBoard
+): boolean {
+  if (!board.events || !(customEvent.id in board.events)) return false;
   const libEvent = getEventFromLibrary(customEvent.id) as ICustomEvent;
-  if (!libEvent)
-    return false;
+  if (!libEvent) return false;
   return getBoardEvent(board, customEvent.id)!.code === libEvent.asm;
 }
 
@@ -179,30 +217,52 @@ class EventRow extends React.Component<IEventRowProps> {
     if (this.props.onCopyToLibrary) {
       copyOption = (
         <div className="eventTableIconCell">
-          <img src={this.props.isDestructiveCopy ? copytolibrary_destructiveImage : copytolibraryImage}
+          <img
+            src={
+              this.props.isDestructiveCopy
+                ? copytolibrary_destructiveImage
+                : copytolibraryImage
+            }
             alt="Copy this event into the local library"
             title="Copy this event into the local library"
-            onClick={() => this.props.onCopyToLibrary!(this.props.event, this.props.isDestructiveCopy)} />
+            onClick={() =>
+              this.props.onCopyToLibrary!(
+                this.props.event,
+                this.props.isDestructiveCopy
+              )
+            }
+          />
         </div>
       );
-    }
-    else if (this.props.onCopyToBoard) {
+    } else if (this.props.onCopyToBoard) {
       copyOption = (
         <div className="eventTableIconCell">
-          <img src={this.props.isDestructiveCopy ? copytoboard_destructiveImage : copytoboardImage}
+          <img
+            src={
+              this.props.isDestructiveCopy
+                ? copytoboard_destructiveImage
+                : copytoboardImage
+            }
             alt="Copy this event into the board file"
             title="Copy this event into the board file"
-            onClick={() => this.props.onCopyToBoard!(this.props.event, this.props.isDestructiveCopy)} />
+            onClick={() =>
+              this.props.onCopyToBoard!(
+                this.props.event,
+                this.props.isDestructiveCopy
+              )
+            }
+          />
         </div>
       );
-    }
-    else {
+    } else {
       copyOption = (
         <div className="eventTableIconCell">
-          <img src={nocopyoptionImage}
+          <img
+            src={nocopyoptionImage}
             className="eventRowIconNoAction"
             alt="The event is the same in both the board and library"
-            title="The event is the same in both the board and library" />
+            title="The event is the same in both the board and library"
+          />
         </div>
       );
     }
@@ -210,24 +270,40 @@ class EventRow extends React.Component<IEventRowProps> {
     return (
       <div className="eventTableRow">
         <div className="eventTableIconCell">
-          <img src={deleteImage}
-            alt="Delete event" title="Delete event"
-            onClick={() => { this.props.onDeleteEvent(this.props.event)} } />
+          <img
+            src={deleteImage}
+            alt="Delete event"
+            title="Delete event"
+            onClick={() => {
+              this.props.onDeleteEvent(this.props.event);
+            }}
+          />
         </div>
         <div className="eventTableIconCell">
-          <img src={exportImage}
-            alt="Download event code" title="Download event code"
-            onClick={this.onExportEvent} />
+          <img
+            src={exportImage}
+            alt="Download event code"
+            title="Download event code"
+            onClick={this.onExportEvent}
+          />
         </div>
         {copyOption}
-        <div className="eventNameTableCell"
-          onClick={() => this.props.onEditEvent(this.props.event.id)}>
+        <div
+          className="eventNameTableCell"
+          onClick={() => this.props.onEditEvent(this.props.event.id)}
+        >
           <span className="eventNameText">
             {this.props.event.name}
-            <span className="eventNameExtensionText">{getEventFileExtension(this.props.event)}</span>
+            <span className="eventNameExtensionText">
+              {getEventFileExtension(this.props.event)}
+            </span>
           </span>
-          <img src={editImage} className="eventEditCellIcon"
-            alt="Edit event" title="Edit event"/>
+          <img
+            src={editImage}
+            className="eventEditCellIcon"
+            alt="Edit event"
+            title="Edit event"
+          />
         </div>
       </div>
     );
@@ -237,7 +313,7 @@ class EventRow extends React.Component<IEventRowProps> {
     const event = this.props.event;
     const asmBlob = new Blob([event.asm]);
     saveAs(asmBlob, getEventFileName(event));
-  }
+  };
 }
 
 function getEventFileName(event: ICustomEvent): string {

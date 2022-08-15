@@ -16,9 +16,9 @@ The [wiki](https://github.com/PartyPlanner64/PartyPlanner64/wiki) has additional
 
 A ROM is not required to create and edit boards with PartyPlanner64, however to play them you will need to open a Mario Party ROM file. Only the NTSC USA files are supported.
 
-* `Mario Party (U).z64` ROM file (MD5 `8BC2712139FBF0C56C8EA835802C52DC`).
-* `Mario Party 2 (U).z64` ROM file (MD5 `04840612A35ECE222AFDB2DFBF926409`).
-* `Mario Party 3 (U).z64` ROM file (MD5 `76A8BBC81BC2060EC99C9645867237CC`).
+- `Mario Party (U).z64` ROM file (MD5 `8BC2712139FBF0C56C8EA835802C52DC`).
+- `Mario Party 2 (U).z64` ROM file (MD5 `04840612A35ECE222AFDB2DFBF926409`).
+- `Mario Party 3 (U).z64` ROM file (MD5 `76A8BBC81BC2060EC99C9645867237CC`).
 
 ROMs that have been edited can also be re-opened.
 
@@ -28,13 +28,13 @@ ROM files must be ran with Expansion Pak on hardware, emulators must be configur
 
 These emulators are reported to work:
 
-* Project64 2.3
-* Mupen64plus
-* Nemu64
+- Project64 2.3
+- Mupen64plus
+- Nemu64
 
 This emulator has issues, even with the right setup (8MB RAM):
 
-* Project64 1.6
+- Project64 1.6
 
 See the [emulator setup](https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup) page for details on configuring each emulator.
 
@@ -42,14 +42,17 @@ See the [emulator setup](https://github.com/PartyPlanner64/PartyPlanner64/wiki/E
 
 To host a local copy of PartyPlanner64 clone the repository and do the following.
 
-* Install Node.js and a package manager (npm or yarn).
-* Retrieve the dependencies for the editor and development.
-    * `npm install --dev`
+- Install Node.js and a package manager (npm or yarn).
+- Retrieve the dependencies for the editor and development.
 
-      or
-    * `yarn install`
-* `npm run start` will build a development version and run a local web server.
-* `npm run build` will build a production version and copy it into `build/`.
+  - `npm install --dev`
+
+    or
+
+  - `yarn install`
+
+- `npm run start` will build a development version and run a local web server.
+- `npm run build` will build a production version and copy it into `build/`.
 
 ### Electron Builds
 
@@ -59,7 +62,7 @@ After setting up a local dev environment, run the following to create the variou
 
 ## Contributors
 
- Pull requests and other contributions are greatly appreciated.
+Pull requests and other contributions are greatly appreciated.
 
 ## [FAQ](https://github.com/PartyPlanner64/PartyPlanner64/wiki/FAQ)
 

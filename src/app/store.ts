@@ -1,7 +1,18 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
-import undoable, { excludeAction, groupByActionTypes } from 'redux-undo';
+import undoable, { excludeAction, groupByActionTypes } from "redux-undo";
 import appStateReducer from "./appState";
-import boardStateReducer, { addEventToLibraryAction, clearSelectedSpacesAction, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpaceAction, setSelectedSpacesAction, setSelectionBoxCoordsAction, setSpacePositionsAction, setSpaceRotationAction, setTemporaryUIConnections } from "./boardState";
+import boardStateReducer, {
+  addEventToLibraryAction,
+  clearSelectedSpacesAction,
+  setHighlightedSpacesAction,
+  setHoveredBoardEventIndexAction,
+  setSelectedSpaceAction,
+  setSelectedSpacesAction,
+  setSelectionBoxCoordsAction,
+  setSpacePositionsAction,
+  setSpaceRotationAction,
+  setTemporaryUIConnections,
+} from "./boardState";
 import blockerReducer from "./blocker";
 import { boardStateMiddleware } from "./middleware";
 
@@ -21,7 +32,7 @@ const undoableBoardStateReducer = undoable(boardStateReducer, {
     setHighlightedSpacesAction.type,
     setHoveredBoardEventIndexAction.type,
     setTemporaryUIConnections.type,
-  ])
+  ]),
 });
 
 export const store = configureStore({

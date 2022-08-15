@@ -1,5 +1,5 @@
 export class ALADPCMLoop {
-  private __type: string = "ALADPCMLoop";
+  private __type = "ALADPCMLoop";
 
   public start!: number;
   public end!: number;
@@ -16,7 +16,7 @@ export class ALADPCMLoop {
     this.count = view.getUint32(loopOffset + 8);
     this.state = [];
     for (let i = 0; i < 0x10; i++) {
-      this.state[i] = view.getUint16(loopOffset + 12 + (i * 2));
+      this.state[i] = view.getUint16(loopOffset + 12 + i * 2);
     }
   }
 }

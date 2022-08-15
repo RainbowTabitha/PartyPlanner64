@@ -39,7 +39,7 @@ export class ALInst {
 
     const soundCount = B1view.getInt16(instOffset + 14);
     for (let i = 0; i < soundCount; i++) {
-      const soundOffset = B1view.getUint32(instOffset + 16 + (i * 4));
+      const soundOffset = B1view.getUint32(instOffset + 16 + i * 4);
       this.sounds.push(new ALSound(B1view, soundOffset));
     }
   }

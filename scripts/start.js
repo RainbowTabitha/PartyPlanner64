@@ -5,7 +5,7 @@
 const getVersion = require("./version").getVersion;
 const spawn = require("child_process").spawn;
 
-getVersion(version => {
+getVersion((version) => {
   process.env.VITE_PP64_VERSION = version;
 
   const reactAppStart = spawn("npm", ["run", "vite-start"]);

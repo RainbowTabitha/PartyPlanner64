@@ -7,7 +7,7 @@ import { IBoardInfo } from "./boardinfobase";
 import { $$log } from "../utils/debug";
 
 export function getBoardInfos(gameID: Game): IBoardInfo[] | null {
-  switch(gameID) {
+  switch (gameID) {
     case Game.MP1_USA:
       return getMP1UBoardInfos();
     case Game.MP1_JPN:

@@ -2,18 +2,21 @@ import { createContext } from "./canvas";
 import { $$hex } from "./debug";
 import SparkMD5 from "../lib/js-spark-md5/spark-md5";
 
-export function copyRange(outArr: ArrayBuffer | DataView, inArr: ArrayBuffer | DataView | number[], outOffset: number, inOffset: number, len: number) {
-  if (outArr instanceof ArrayBuffer)
-    outArr = new DataView(outArr);
-  if (inArr instanceof ArrayBuffer)
-    inArr = new DataView(inArr);
+export function copyRange(
+  outArr: ArrayBuffer | DataView,
+  inArr: ArrayBuffer | DataView | number[],
+  outOffset: number,
+  inOffset: number,
+  len: number
+) {
+  if (outArr instanceof ArrayBuffer) outArr = new DataView(outArr);
+  if (inArr instanceof ArrayBuffer) inArr = new DataView(inArr);
 
   if (Array.isArray(inArr)) {
     for (let i = 0; i < len; i++) {
       outArr.setUint8(outOffset + i, inArr[inOffset + i]);
     }
-  }
-  else {
+  } else {
     for (let i = 0; i < len; i++) {
       outArr.setUint8(outOffset + i, inArr.getUint8(inOffset + i));
     }
@@ -31,8 +34,7 @@ export function arrayToArrayBuffer(arr: number[]) {
 
 export function hash(arr: any, startOffset: number, len: number) {
   // Can't be equal if our length would extend out of bounds.
-  if (startOffset + len > arr.byteLength)
-    return "";
+  if (startOffset + len > arr.byteLength) return "";
   return SparkMD5.ArrayBuffer.hash(arr, { start: startOffset, length: len });
 }
 
@@ -40,27 +42,37 @@ export function hashEqual(hashArgs: any, expected: string) {
   return hash.apply(null, hashArgs).toLowerCase() === expected.toLowerCase();
 }
 
-export function toHexString(buffer: ArrayBuffer | DataView, len: number = buffer.byteLength, lineLen: number = 0) {
+export function toHexString(
+  buffer: ArrayBuffer | DataView,
+  len: number = buffer.byteLength,
+  lineLen: number = 0
+) {
   let output = "";
   let view: DataView;
-  if (buffer instanceof ArrayBuffer)
-    view = new DataView(buffer);
-  else
-    view = buffer;
+  if (buffer instanceof ArrayBuffer) view = new DataView(buffer);
+  else view = buffer;
   for (let i = 0; i < len; i++) {
-    output += $$hex(view.getUint8(i), "") + ((i && lineLen && ((i + 1) % lineLen === 0)) ? "\n" : " ");
+    output +=
+      $$hex(view.getUint8(i), "") +
+      (i && lineLen && (i + 1) % lineLen === 0 ? "\n" : " ");
   }
   return output;
 }
 
-export function print(buffer: ArrayBuffer | DataView, len = buffer.byteLength, lineLen = 0) {
+export function print(
+  buffer: ArrayBuffer | DataView,
+  len = buffer.byteLength,
+  lineLen = 0
+) {
   console.log(toHexString(buffer, len, lineLen));
 }
 
-export function readBitAtOffset(buffer: ArrayBuffer | DataView, bitOffset: number) {
+export function readBitAtOffset(
+  buffer: ArrayBuffer | DataView,
+  bitOffset: number
+) {
   let bufView = buffer;
-  if (bufView instanceof ArrayBuffer)
-    bufView = new DataView(bufView);
+  if (bufView instanceof ArrayBuffer) bufView = new DataView(bufView);
   const byteOffset = Math.floor(bitOffset / 8);
   const inByteOffset = bitOffset % 8;
   const mask = 0x80 >>> inByteOffset;
@@ -68,18 +80,24 @@ export function readBitAtOffset(buffer: ArrayBuffer | DataView, bitOffset: numbe
   return maskedBit ? 1 : 0;
 }
 
-export function readByteAtBitOffset(buffer: ArrayBuffer | DataView, bitOffset: number) {
+export function readByteAtBitOffset(
+  buffer: ArrayBuffer | DataView,
+  bitOffset: number
+) {
   let bufView = buffer;
-  if (bufView instanceof ArrayBuffer)
-    bufView = new DataView(bufView);
+  if (bufView instanceof ArrayBuffer) bufView = new DataView(bufView);
   const shortOffset = Math.floor(bitOffset / 8);
   const inShortOffset = bitOffset % 8;
-  const mask = 0xFF00 >>> inShortOffset;
+  const mask = 0xff00 >>> inShortOffset;
   const maskedByte = bufView.getUint16(shortOffset) & mask;
   return maskedByte >>> (8 - inShortOffset);
 }
 
-export function arrayBufferToImageData(buffer: ArrayBuffer, width: number, height: number) {
+export function arrayBufferToImageData(
+  buffer: ArrayBuffer,
+  width: number,
+  height: number
+) {
   const canvasCtx = createContext(width, height);
   const bgImageData = canvasCtx.createImageData(width, height);
   const bufView = new Uint8Array(buffer);
@@ -91,8 +109,12 @@ export function arrayBufferToImageData(buffer: ArrayBuffer, width: number, heigh
   return bgImageData;
 }
 
-export function arrayBufferToDataURL(buffer: ArrayBuffer, width: number, height: number) {
-  const bgImageData = arrayBufferToImageData(buffer, width, height)
+export function arrayBufferToDataURL(
+  buffer: ArrayBuffer,
+  width: number,
+  height: number
+) {
+  const bgImageData = arrayBufferToImageData(buffer, width, height);
   const canvasCtx = createContext(width, height);
   canvasCtx.putImageData(bgImageData, 0, 0);
   return canvasCtx.canvas.toDataURL();
@@ -113,13 +135,11 @@ export function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
 }
 
 export function arrayBuffersEqual(first: ArrayBuffer, second: ArrayBuffer) {
-  if (first.byteLength !== second.byteLength)
-    return false;
+  if (first.byteLength !== second.byteLength) return false;
   const firstArr = new Uint8Array(first);
   const secondArr = new Uint8Array(second);
   for (let i = 0; i < firstArr.byteLength; i++) {
-    if (firstArr[i] !== secondArr[i])
-      return false;
+    if (firstArr[i] !== secondArr[i]) return false;
   }
   return true;
 }
@@ -144,14 +164,11 @@ export function join(buffer1: ArrayBuffer, buffer2: ArrayBuffer): ArrayBuffer {
  *   - Each item is === across arrays.
  */
 export function equal(a: any[], b: any[]) {
-  if (a === b)
-    return true;
-  if (a.length !== b.length)
-    return false;
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
 
   for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i])
-      return false;
+    if (a[i] !== b[i]) return false;
   }
   return true;
 }
@@ -160,7 +177,11 @@ export function equal(a: any[], b: any[]) {
  * Creates the intersection of two arrays.
  * equalityFn takes two values and decides if they're equal.
  */
-export function intersection(a: any[], b: any[], equalityFn = (a: any, b: any) => a === b) {
+export function intersection(
+  a: any[],
+  b: any[],
+  equalityFn = (a: any, b: any) => a === b
+) {
   const output = [];
 
   for (let i = 0; i < a.length; i++) {

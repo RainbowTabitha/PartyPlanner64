@@ -1,8 +1,18 @@
 import * as React from "react";
 
-import { IEvent, getAvailableEvents, getEvent, IEventParameter } from "../events/events";
+import {
+  IEvent,
+  getAvailableEvents,
+  getEvent,
+  IEventParameter,
+} from "../events/events";
 import { createCustomEvent } from "../events/customevents";
-import { getBoardEvent, getCurrentBoard, IEventInstance, IBoard } from "../boards";
+import {
+  getBoardEvent,
+  getCurrentBoard,
+  IEventInstance,
+  IBoard,
+} from "../boards";
 import { copyObject } from "../utils/obj";
 import { EventParameterType, EditorEventActivationType } from "../types";
 import { promptUser, showMessage } from "../app/appControl";
@@ -30,7 +40,12 @@ interface IEventsListProps {
   onEventAdded(event: any): void;
   onEventDeleted(event: IEventInstance, eventIndex: number): void;
   onEventActivationTypeToggle(event: IEventInstance, eventIndex: number): void;
-  onEventParameterSet(event: IEventInstance, eventIndex: number, name: string, value: any): void;
+  onEventParameterSet(
+    event: IEventInstance,
+    eventIndex: number,
+    name: string,
+    value: any
+  ): void;
   onEventMouseEnter?(event: IEventInstance, eventIndex: number): void;
   onEventMouseLeave?(event: IEventInstance, eventIndex: number): void;
 }
@@ -39,13 +54,17 @@ interface IEventsListState {
   hoveredEvent: IEventInstance | null;
 }
 
-export class EventsList extends React.Component<IEventsListProps, IEventsListState> {
+export class EventsList extends React.Component<
+  IEventsListProps,
+  IEventsListState
+> {
   render() {
     const events = this.props.events || [];
     let id = 0;
     const entries = events.map((event, eventIndex) => {
       return (
-        <EventEntry key={`${event.id}-${id++}`}
+        <EventEntry
+          key={`${event.id}-${id++}`}
           event={event}
           eventIndex={eventIndex}
           board={this.props.board}
@@ -53,7 +72,8 @@ export class EventsList extends React.Component<IEventsListProps, IEventsListSta
           onEventActivationTypeToggle={this.props.onEventActivationTypeToggle}
           onEventParameterSet={this.props.onEventParameterSet}
           onEventMouseEnter={this.onMouseEnter}
-          onEventMouseLeave={this.onMouseLeave} />
+          onEventMouseLeave={this.onMouseLeave}
+        />
       );
     });
 
@@ -73,7 +93,7 @@ export class EventsList extends React.Component<IEventsListProps, IEventsListSta
     }
 
     this.props.onEventDeleted(event, eventIndex);
-  }
+  };
 
   private onMouseEnter = (event: IEventInstance, eventIndex: number) => {
     this.setState({ hoveredEvent: event });
@@ -81,7 +101,7 @@ export class EventsList extends React.Component<IEventsListProps, IEventsListSta
     if (this.props.onEventMouseEnter) {
       this.props.onEventMouseEnter(event, eventIndex);
     }
-  }
+  };
 
   private onMouseLeave = (event: IEventInstance, eventIndex: number) => {
     this.setState({ hoveredEvent: null });
@@ -89,8 +109,8 @@ export class EventsList extends React.Component<IEventsListProps, IEventsListSta
     if (this.props.onEventMouseLeave) {
       this.props.onEventMouseLeave(event, eventIndex);
     }
-  }
-};
+  };
+}
 
 interface IEventEntryProps {
   event: IEventInstance;
@@ -98,12 +118,17 @@ interface IEventEntryProps {
   board: IBoard;
   onEventDeleted(event: IEventInstance, eventIndex: number): void;
   onEventActivationTypeToggle(event: IEventInstance, eventIndex: number): void;
-  onEventParameterSet(event: IEventInstance, eventIndex: number, name: string, value: number): void;
+  onEventParameterSet(
+    event: IEventInstance,
+    eventIndex: number,
+    name: string,
+    value: number
+  ): void;
   onEventMouseEnter?(event: IEventInstance, eventIndex: number): void;
   onEventMouseLeave?(event: IEventInstance, eventIndex: number): void;
 }
 
-const EventEntry: React.FC<IEventEntryProps> = props => {
+const EventEntry: React.FC<IEventEntryProps> = (props) => {
   const forceUpdate = useForceUpdate();
 
   const onEventDeleted = useCallback(() => {
@@ -113,12 +138,20 @@ const EventEntry: React.FC<IEventEntryProps> = props => {
   const onEventActivationTypeToggle = useCallback(() => {
     props.onEventActivationTypeToggle(props.event, props.eventIndex);
     forceUpdate();
-  }, [props.onEventActivationTypeToggle, props.event, props.eventIndex, forceUpdate]); // eslint-disable-line
+  }, [
+    props.onEventActivationTypeToggle,
+    props.event,
+    props.eventIndex,
+    forceUpdate,
+  ]); // eslint-disable-line
 
-  const onEventParameterSet = useCallback((name: string, value: any) => {
-    props.onEventParameterSet(props.event, props.eventIndex, name, value);
-    forceUpdate();
-  }, [props.onEventParameterSet, props.event, props.eventIndex, forceUpdate]); // eslint-disable-line
+  const onEventParameterSet = useCallback(
+    (name: string, value: any) => {
+      props.onEventParameterSet(props.event, props.eventIndex, name, value);
+      forceUpdate();
+    },
+    [props.onEventParameterSet, props.event, props.eventIndex, forceUpdate]
+  ); // eslint-disable-line
 
   const onEventMouseEnter = useCallback(() => {
     if (props.onEventMouseEnter) {
@@ -136,8 +169,7 @@ const EventEntry: React.FC<IEventEntryProps> = props => {
 
   let eventInstance = props.event;
   const event = getEvent(eventInstance.id, props.board, eventLibrary);
-  if (!event)
-    return null;
+  if (!event) return null;
   let name = event.name || eventInstance.id;
 
   let parameterButtons;
@@ -146,23 +178,33 @@ const EventEntry: React.FC<IEventEntryProps> = props => {
       <EventParameterButtons
         parameters={event.parameters}
         eventInstance={eventInstance}
-        onEventParameterSet={onEventParameterSet} />
+        onEventParameterSet={onEventParameterSet}
+      />
     );
   }
 
   return (
-    <div className="eventEntry"
+    <div
+      className="eventEntry"
       onMouseEnter={onEventMouseEnter}
-      onMouseLeave={onEventMouseLeave}>
+      onMouseLeave={onEventMouseLeave}
+    >
       <div className="eventEntryHeader">
-        <span className="eventEntryName" title={name}>{name}</span>
-        <div role="button" className="eventEntryDelete" onClick={onEventDeleted}
-          title="Remove this event"></div>
+        <span className="eventEntryName" title={name}>
+          {name}
+        </span>
+        <div
+          role="button"
+          className="eventEntryDelete"
+          onClick={onEventDeleted}
+          title="Remove this event"
+        ></div>
       </div>
       <div className="eventEntryOptions">
         <EventActivationTypeToggle
           activationType={eventInstance.activationType}
-          onEventActivationTypeToggle={onEventActivationTypeToggle} />
+          onEventActivationTypeToggle={onEventActivationTypeToggle}
+        />
         {parameterButtons}
       </div>
     </div>
@@ -175,75 +217,94 @@ interface IEventParameterButtonsProps {
   onEventParameterSet(name: string, value: unknown): void;
 }
 
-const EventParameterButtons: React.FC<IEventParameterButtonsProps> = props => {
+const EventParameterButtons: React.FC<IEventParameterButtonsProps> = (
+  props
+) => {
   const { parameters, eventInstance, onEventParameterSet } = props;
   const colorQueue = makeColorQueue();
 
-  return <>{parameters.map((parameter: IEventParameter) => {
-    const parameterValue = eventInstance.parameterValues
-      && eventInstance.parameterValues[parameter.name];
-    switch (parameter.type) {
-      case EventParameterType.Boolean:
-        return (
-          <EventBooleanParameterButton key={parameter.name}
-            parameter={parameter}
-            parameterValue={parameterValue}
-            onEventParameterSet={onEventParameterSet} />
-        );
-
-      case EventParameterType.Number:
-      case EventParameterType.PositiveNumber:
-        return (
-          <EventNumberParameterButton key={parameter.name}
-            parameter={parameter}
-            parameterValue={parameterValue}
-            positiveOnly={parameter.type === "+Number"}
-            onEventParameterSet={onEventParameterSet} />
-        );
-
-      case EventParameterType.Space:
-        return (
-          <EventSpaceParameterButton key={parameter.name}
-            parameter={parameter}
-            parameterValue={parameterValue}
-            colorQueue={colorQueue}
-            onEventParameterSet={onEventParameterSet} />
-        );
-
-      case EventParameterType.SpaceArray:
-        let nodes: React.ReactElement[] = [];
-
-        if (Array.isArray(parameterValue)) {
-          nodes = parameterValue.map((spaceIndex, i) => {
+  return (
+    <>
+      {parameters.map((parameter: IEventParameter) => {
+        const parameterValue =
+          eventInstance.parameterValues &&
+          eventInstance.parameterValues[parameter.name];
+        switch (parameter.type) {
+          case EventParameterType.Boolean:
             return (
-              <EventSpaceParameterButton key={`${parameter.name}[${i}]`}
+              <EventBooleanParameterButton
+                key={parameter.name}
                 parameter={parameter}
                 parameterValue={parameterValue}
-                parameterArrayIndex={i}
-                colorQueue={colorQueue}
-                onEventParameterSet={onEventParameterSet} />
+                onEventParameterSet={onEventParameterSet}
+              />
             );
-          })
+
+          case EventParameterType.Number:
+          case EventParameterType.PositiveNumber:
+            return (
+              <EventNumberParameterButton
+                key={parameter.name}
+                parameter={parameter}
+                parameterValue={parameterValue}
+                positiveOnly={parameter.type === "+Number"}
+                onEventParameterSet={onEventParameterSet}
+              />
+            );
+
+          case EventParameterType.Space:
+            return (
+              <EventSpaceParameterButton
+                key={parameter.name}
+                parameter={parameter}
+                parameterValue={parameterValue}
+                colorQueue={colorQueue}
+                onEventParameterSet={onEventParameterSet}
+              />
+            );
+
+          case EventParameterType.SpaceArray:
+            let nodes: React.ReactElement[] = [];
+
+            if (Array.isArray(parameterValue)) {
+              nodes = parameterValue.map((spaceIndex, i) => {
+                return (
+                  <EventSpaceParameterButton
+                    key={`${parameter.name}[${i}]`}
+                    parameter={parameter}
+                    parameterValue={parameterValue}
+                    parameterArrayIndex={i}
+                    colorQueue={colorQueue}
+                    onEventParameterSet={onEventParameterSet}
+                  />
+                );
+              });
+            }
+
+            nodes.push(
+              <EventSpaceParameterButton
+                key={`${parameter.name}[${nodes.length}]`}
+                parameter={parameter}
+                parameterValue={parameterValue}
+                parameterArrayIndex={nodes.length}
+                colorQueue={colorQueue}
+                onEventParameterSet={onEventParameterSet}
+              />
+            );
+            return nodes;
+
+          case EventParameterType.NumberArray:
+          default:
+            return null;
         }
-
-        nodes.push(
-          <EventSpaceParameterButton key={`${parameter.name}[${nodes.length}]`}
-            parameter={parameter}
-            parameterValue={parameterValue}
-            parameterArrayIndex={nodes.length}
-            colorQueue={colorQueue}
-            onEventParameterSet={onEventParameterSet} />
-        );
-        return nodes;
-
-      case EventParameterType.NumberArray:
-      default:
-        return null;
-    }
-  })}</>;
+      })}
+    </>
+  );
 };
 
-const ActivationTypeImages: { [activationType in EditorEventActivationType]: string | undefined } = {
+const ActivationTypeImages: {
+  [activationType in EditorEventActivationType]: string | undefined;
+} = {
   [EditorEventActivationType.WALKOVER]: eventpassingImage,
   [EditorEventActivationType.LANDON]: eventstandingImage,
   [EditorEventActivationType.BEGINORWALKOVER]: undefined,
@@ -254,7 +315,9 @@ const ActivationTypeImages: { [activationType in EditorEventActivationType]: str
   [EditorEventActivationType.BEFORE_DICE_ROLL]: eventbeforedicerollImage,
 };
 
-const ActivationTypeText: { [activationType in EditorEventActivationType]: string | undefined } = {
+const ActivationTypeText: {
+  [activationType in EditorEventActivationType]: string | undefined;
+} = {
   [EditorEventActivationType.WALKOVER]: "Passing event",
   [EditorEventActivationType.LANDON]: "Land-on event",
   [EditorEventActivationType.BEGINORWALKOVER]: undefined,
@@ -265,15 +328,21 @@ const ActivationTypeText: { [activationType in EditorEventActivationType]: strin
   [EditorEventActivationType.BEFORE_DICE_ROLL]: "Before dice roll",
 };
 
-const ActivationTypeTitles: { [activationType in EditorEventActivationType]: string | undefined } = {
+const ActivationTypeTitles: {
+  [activationType in EditorEventActivationType]: string | undefined;
+} = {
   [EditorEventActivationType.WALKOVER]: "Occurs when passing over the space",
   [EditorEventActivationType.LANDON]: "Occurs when landing on the space",
   [EditorEventActivationType.BEGINORWALKOVER]: undefined,
 
-  [EditorEventActivationType.BEFORE_TURN]: "Occurs once per turn, prior to seeing \"PLAYER START\" for the first player",
-  [EditorEventActivationType.AFTER_TURN]: "Occurs once per turn, prior to the Mini-Game selection list appearing",
-  [EditorEventActivationType.BEFORE_PLAYER_TURN]: "Occurs for each player prior to seeing \"PLAYER START\" on their turn",
-  [EditorEventActivationType.BEFORE_DICE_ROLL]: "Occurs for each player prior to the dice roll",
+  [EditorEventActivationType.BEFORE_TURN]:
+    'Occurs once per turn, prior to seeing "PLAYER START" for the first player',
+  [EditorEventActivationType.AFTER_TURN]:
+    "Occurs once per turn, prior to the Mini-Game selection list appearing",
+  [EditorEventActivationType.BEFORE_PLAYER_TURN]:
+    'Occurs for each player prior to seeing "PLAYER START" on their turn',
+  [EditorEventActivationType.BEFORE_DICE_ROLL]:
+    "Occurs for each player prior to the dice roll",
 };
 
 interface IEventActivationTypeToggleProps {
@@ -284,7 +353,7 @@ interface IEventActivationTypeToggleProps {
 class EventActivationTypeToggle extends React.Component<IEventActivationTypeToggleProps> {
   onTypeToggle = () => {
     this.props.onEventActivationTypeToggle();
-  }
+  };
 
   render() {
     let activationType = this.props.activationType;
@@ -293,18 +362,23 @@ class EventActivationTypeToggle extends React.Component<IEventActivationTypeTogg
     const activationTypeToggleImg = ActivationTypeImages[activationType];
 
     return (
-      <div className="eventEntryItem eventEntryActivationTypeItem"
-        onClick={this.onTypeToggle}>
-        {activationTypeToggleImg &&
-          <img className="eventEntryActivationTypeToggle"
+      <div
+        className="eventEntryItem eventEntryActivationTypeItem"
+        onClick={this.onTypeToggle}
+      >
+        {activationTypeToggleImg && (
+          <img
+            className="eventEntryActivationTypeToggle"
             alt="Activation Type"
             src={activationTypeToggleImg}
-            title={ActivationTypeTitles[activationType]} />}
+            title={ActivationTypeTitles[activationType]}
+          />
+        )}
         <span>{activationTypeText}</span>
       </div>
     );
   }
-};
+}
 
 interface IEventNumberParameterButtonProps {
   parameter: IEventParameter;
@@ -316,17 +390,26 @@ interface IEventNumberParameterButtonProps {
 class EventNumberParameterButton extends React.Component<IEventNumberParameterButtonProps> {
   render() {
     const parameterValue = this.props.parameterValue;
-    const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
-    const tooltip = `(Number) ${this.props.parameter.name}: ${valueHasBeenSet ? parameterValue : "null"}`;
+    const valueHasBeenSet =
+      parameterValue !== undefined && parameterValue !== null;
+    const tooltip = `(Number) ${this.props.parameter.name}: ${
+      valueHasBeenSet ? parameterValue : "null"
+    }`;
     return (
-      <div className="eventEntryItem" title={tooltip}
-        onClick={this.onParameterClicked}>
-        <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
+      <div
+        className="eventEntryItem"
+        title={tooltip}
+        onClick={this.onParameterClicked}
+      >
+        <span className="eventEntryItemParameterName">
+          {this.props.parameter.name}:
+        </span>
         &nbsp;
-        {valueHasBeenSet ?
+        {valueHasBeenSet ? (
           <span>{this.props.parameterValue}</span>
-          : <span className="eventEntryItemParameterUnset">null</span>
-        }
+        ) : (
+          <span className="eventEntryItemParameterUnset">null</span>
+        )}
       </div>
     );
   }
@@ -336,7 +419,9 @@ class EventNumberParameterButton extends React.Component<IEventNumberParameterBu
     const positiveOnly = this.props.positiveOnly;
     // Prompt the user for a value.
     const userValue = await promptUser(
-      `Enter a${positiveOnly ? " positive " : " "}numeric value for the ${name} parameter:`
+      `Enter a${
+        positiveOnly ? " positive " : " "
+      }numeric value for the ${name} parameter:`
     );
     if (!userValue) {
       return; // Enter nothing, ignore response.
@@ -351,8 +436,8 @@ class EventNumberParameterButton extends React.Component<IEventNumberParameterBu
       return;
     }
     this.props.onEventParameterSet(name, value);
-  }
-};
+  };
+}
 
 interface IEventBooleanParameterButtonProps {
   parameter: IEventParameter;
@@ -364,17 +449,26 @@ interface IEventBooleanParameterButtonProps {
 class EventBooleanParameterButton extends React.Component<IEventBooleanParameterButtonProps> {
   render() {
     const parameterValue = this.props.parameterValue;
-    const valueHasBeenSet = parameterValue !== undefined && parameterValue !== null;
-    const tooltip = `(Boolean) ${this.props.parameter.name}: ${valueHasBeenSet ? parameterValue : "null"}`;
+    const valueHasBeenSet =
+      parameterValue !== undefined && parameterValue !== null;
+    const tooltip = `(Boolean) ${this.props.parameter.name}: ${
+      valueHasBeenSet ? parameterValue : "null"
+    }`;
     return (
-      <div className="eventEntryItem" title={tooltip}
-        onClick={this.onParameterClicked}>
-        <span className="eventEntryItemParameterName">{this.props.parameter.name}:</span>
+      <div
+        className="eventEntryItem"
+        title={tooltip}
+        onClick={this.onParameterClicked}
+      >
+        <span className="eventEntryItemParameterName">
+          {this.props.parameter.name}:
+        </span>
         &nbsp;
-        {valueHasBeenSet ?
+        {valueHasBeenSet ? (
           <span>{this.props.parameterValue.toString()}</span>
-          : <span className="eventEntryItemParameterUnset">null</span>
-        }
+        ) : (
+          <span className="eventEntryItemParameterUnset">null</span>
+        )}
       </div>
     );
   }
@@ -382,8 +476,8 @@ class EventBooleanParameterButton extends React.Component<IEventBooleanParameter
   onParameterClicked = () => {
     const parameterValue = this.props.parameterValue;
     this.props.onEventParameterSet(this.props.parameter.name, !parameterValue);
-  }
-};
+  };
+}
 
 interface IEventSpaceParameterButtonProps {
   parameter: any;
@@ -401,12 +495,13 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
     let valueHasBeenSet;
     let displayName = this.props.parameter.name;
     if (isArrayEntry) {
-      const arrValue = parameterValue && parameterValue[this.props.parameterArrayIndex!];
+      const arrValue =
+        parameterValue && parameterValue[this.props.parameterArrayIndex!];
       valueHasBeenSet = typeof arrValue !== "undefined" && arrValue !== null;
       displayName += `[${this.props.parameterArrayIndex}]`;
-    }
-    else {
-      valueHasBeenSet = typeof parameterValue !== "undefined" && parameterValue !== null;
+    } else {
+      valueHasBeenSet =
+        typeof parameterValue !== "undefined" && parameterValue !== null;
     }
 
     let nameClass = "eventEntryItemParameterName";
@@ -420,8 +515,7 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
       if (isDebug()) {
         tooltip += ` (to space index ${parameterValue})`;
       }
-    }
-    else {
+    } else {
       tooltip += "null";
     }
     tooltip += "\nDrag to a space to associate it";
@@ -430,29 +524,42 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
     if (valueHasBeenSet) {
       valueRepresentation = (
         <span className="eventEntryItemParameterSpaceSetWrapper">
-          <span style={{ backgroundColor: `rgb(${this.props.colorQueue.next().join(", ")})` }}
-            className="eventEntryItemParameterColorSwatch"></span> set
+          <span
+            style={{
+              backgroundColor: `rgb(${this.props.colorQueue
+                .next()
+                .join(", ")})`,
+            }}
+            className="eventEntryItemParameterColorSwatch"
+          ></span>{" "}
+          set
         </span>
       );
-    }
-    else if (isArrayEntry) {
+    } else if (isArrayEntry) {
       valueRepresentation = <span>—</span>;
-    }
-    else {
-      valueRepresentation = <span className="eventEntryItemParameterUnset">null</span>;
+    } else {
+      valueRepresentation = (
+        <span className="eventEntryItemParameterUnset">null</span>
+      );
     }
 
     return (
-      <div className="eventEntryItem eventEntryItemDraggable" title={tooltip}
+      <div
+        className="eventEntryItem eventEntryItemDraggable"
+        title={tooltip}
         draggable={true}
         onDragStart={this.onDragStart}
-        onClick={this.onParameterClicked}>
+        onClick={this.onParameterClicked}
+      >
         <img alt="Target" src={targetImage} />
         <span className={nameClass}>{displayName}:</span>
         &nbsp;
         {valueRepresentation}
-        {isArrayEntry && valueHasBeenSet &&
-          <EventParameterArrayDeleteButton onDeleteButtonClicked={this.onDeleteButtonClicked} />}
+        {isArrayEntry && valueHasBeenSet && (
+          <EventParameterArrayDeleteButton
+            onDeleteButtonClicked={this.onDeleteButtonClicked}
+          />
+        )}
       </div>
     );
   }
@@ -460,10 +567,13 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
   onDragStart = (event: React.DragEvent<any>) => {
     setEventParamDropHandler(this.onSpaceDroppedOn);
     event.dataTransfer.setDragImage(getImage("targetImg"), 3, 0);
-    event.dataTransfer.setData("text", JSON.stringify({
-      isEventParamDrop: true
-    }));
-  }
+    event.dataTransfer.setData(
+      "text",
+      JSON.stringify({
+        isEventParamDrop: true,
+      })
+    );
+  };
 
   onSpaceDroppedOn = (spaceIndex: number) => {
     setEventParamDropHandler(null);
@@ -474,12 +584,11 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
         const newArr = [...oldArr];
         newArr[this.props.parameterArrayIndex!] = spaceIndex;
         this.props.onEventParameterSet(this.props.parameter.name, newArr);
-      }
-      else {
+      } else {
         this.props.onEventParameterSet(this.props.parameter.name, spaceIndex);
       }
     }
-  }
+  };
 
   onDeleteButtonClicked = () => {
     const parameterArrayIndex = this.props.parameterArrayIndex;
@@ -491,26 +600,32 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
       newArr.splice(parameterArrayIndex!, 1);
       this.props.onEventParameterSet(this.props.parameter.name, newArr);
     }
-  }
+  };
 
   onParameterClicked = () => {
-    showMessage("To associate a space with this event parameter, click and drag from this list entry and release over the target space.");
-  }
-};
+    showMessage(
+      "To associate a space with this event parameter, click and drag from this list entry and release over the target space."
+    );
+  };
+}
 
 interface IEventParameterArrayDeleteButtonProps {
   onDeleteButtonClicked(): void;
 }
 
-function EventParameterArrayDeleteButton(props: IEventParameterArrayDeleteButtonProps) {
+function EventParameterArrayDeleteButton(
+  props: IEventParameterArrayDeleteButtonProps
+) {
   return (
-    <div role="button"
+    <div
+      role="button"
       className="eventParameterRightAlign eventParameterDelete"
-      onClick={e => {
+      onClick={(e) => {
         e.stopPropagation();
         props.onDeleteButtonClicked();
       }}
-      title="Remove this array entry"></div>
+      title="Remove this array entry"
+    ></div>
   );
 }
 
@@ -533,7 +648,7 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
       selectedValue: -1,
       libraryEvents: eventSets.libraryEvents.sort(_sortEvents),
       boardEvents: eventSets.boardEvents.sort(_sortEvents),
-    }
+    };
   }
 
   private _refreshLists() {
@@ -546,26 +661,26 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
 
   onSelection = (e: any) => {
     let selectedOption = e.target.value;
-    if (selectedOption.toString() === "-1")
-      return;
+    if (selectedOption.toString() === "-1") return;
 
     const [collection, index] = selectedOption.split(",");
 
     let event = copyObject((this as any).state[collection][index]);
-    if (!event)
-      throw new Error(`Could not add event ${selectedOption}`);
+    if (!event) throw new Error(`Could not add event ${selectedOption}`);
 
     this.props.onEventAdded(event);
 
     this._refreshLists();
-  }
+  };
 
   render() {
     if (!this.state.libraryEvents.length && !this.state.boardEvents.length)
       return null;
 
     const eventOptions = [
-      <option value="-1" key="-1" disabled>Add event</option>
+      <option value="-1" key="-1" disabled>
+        Add event
+      </option>,
     ];
 
     let index = 0;
@@ -573,14 +688,14 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
     if (this.state.boardEvents.length) {
       eventOptions.push(
         <optgroup label="Board Events" key="boardEvents">
-          {
-            this.state.boardEvents.map(event => {
-              const identifier = "boardEvents," + index++;
-              return (
-                <option value={identifier} key={identifier}>{event.name}</option>
-              );
-            })
-          }
+          {this.state.boardEvents.map((event) => {
+            const identifier = "boardEvents," + index++;
+            return (
+              <option value={identifier} key={identifier}>
+                {event.name}
+              </option>
+            );
+          })}
         </optgroup>
       );
     }
@@ -588,26 +703,30 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
     index = 0;
     eventOptions.push(
       <optgroup label="Library Events" key="libraryEvents">
-        {
-          this.state.libraryEvents.map(event => {
-            const identifier = "libraryEvents," + index++;
-            return (
-              <option value={identifier} key={identifier}>{event.name}</option>
-            );
-          })
-        }
+        {this.state.libraryEvents.map((event) => {
+          const identifier = "libraryEvents," + index++;
+          return (
+            <option value={identifier} key={identifier}>
+              {event.name}
+            </option>
+          );
+        })}
       </optgroup>
-    )
+    );
 
     return (
       <div className="eventAddSelectEntry">
-        <select className="eventAddSelect" value={this.state.selectedValue} onChange={this.onSelection}>
+        <select
+          className="eventAddSelect"
+          value={this.state.selectedValue}
+          onChange={this.onSelection}
+        >
           {eventOptions}
         </select>
       </div>
     );
   }
-};
+}
 
 function _getEventsForAddList() {
   let libraryEvents = getAvailableEvents();
@@ -622,7 +741,7 @@ function _getEventsForAddList() {
   // Don't show library events that are also in the board events list.
   // Force the user to conscientiously go to Events to "upgrade" the version
   // of an event in use.
-  libraryEvents = libraryEvents.filter(event => {
+  libraryEvents = libraryEvents.filter((event) => {
     return !(event.name in board.events);
   });
 

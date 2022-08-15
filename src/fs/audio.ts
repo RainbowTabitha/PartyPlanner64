@@ -29,15 +29,16 @@ let _parsedCache: (S2 | T3 | MBF0 | SBF0 | FXD0 | null)[] | null;
 
 type AudioOffsetInfo = { [game in Game]: readonly IOffsetObj[] };
 const _audioOffsets: AudioOffsetInfo = {
-  [Game.MP1_USA]: [ // Length 0x7B3DF0
+  [Game.MP1_USA]: [
+    // Length 0x7B3DF0
     // 15396A0
     {
       type: "S2",
       // byteLength: 0x23F520,
       offsets: [
-        { upper: 0x00061746, lower: 0x0006174A },
-        { ovl: 0x6E, upper: 0xE62, lower: 0xE66 }, // ROM: 0x2DA3D2
-      ]
+        { upper: 0x00061746, lower: 0x0006174a },
+        { ovl: 0x6e, upper: 0xe62, lower: 0xe66 }, // ROM: 0x2DA3D2
+      ],
     },
 
     // 1778BC0
@@ -45,12 +46,12 @@ const _audioOffsets: AudioOffsetInfo = {
       type: "S2",
       // byteLength: 0xB9F20,
       offsets: [
-        { upper: 0x0001AF2A, lower: 0x0001AF2E },
-        { upper: 0x0006174E, lower: 0x00061752 },
-        { upper: 0x0006177E, lower: 0x00061782 },
-        { ovl: 0x6E, upper: 0xE6A, lower: 0xE6E }, // ROM: 0x2DA3DA
-        { ovl: 0x6E, upper: 0xE92, lower: 0xE96 }, // ROM: 0x2DA402
-      ]
+        { upper: 0x0001af2a, lower: 0x0001af2e },
+        { upper: 0x0006174e, lower: 0x00061752 },
+        { upper: 0x0006177e, lower: 0x00061782 },
+        { ovl: 0x6e, upper: 0xe6a, lower: 0xe6e }, // ROM: 0x2DA3DA
+        { ovl: 0x6e, upper: 0xe92, lower: 0xe96 }, // ROM: 0x2DA402
+      ],
     },
 
     // 1832AE0
@@ -58,12 +59,12 @@ const _audioOffsets: AudioOffsetInfo = {
       type: "T3",
       byteLength: 0x385980,
       offsets: [
-        { upper: 0x0001AF32, lower: 0x0001AF36 },
-        { upper: 0x0006172E, lower: 0x00061732 },
-        { upper: 0x00061786, lower: 0x0006178A },
-        { ovl: 0x6E, upper: 0xE4E, lower: 0xE52 }, // ROM: 0x2DA3BE
-        { ovl: 0x6E, upper: 0xE9A, lower: 0xE9E }, // ROM: 0x2DA40A
-      ]
+        { upper: 0x0001af32, lower: 0x0001af36 },
+        { upper: 0x0006172e, lower: 0x00061732 },
+        { upper: 0x00061786, lower: 0x0006178a },
+        { ovl: 0x6e, upper: 0xe4e, lower: 0xe52 }, // ROM: 0x2DA3BE
+        { ovl: 0x6e, upper: 0xe9a, lower: 0xe9e }, // ROM: 0x2DA40A
+      ],
     },
 
     // 1BB8460
@@ -71,123 +72,119 @@ const _audioOffsets: AudioOffsetInfo = {
       type: "T3",
       byteLength: 0x134800,
       offsets: [
-        { upper: 0x0001AF0E, lower: 0x0001AF12 },
+        { upper: 0x0001af0e, lower: 0x0001af12 },
         { upper: 0x00061762, lower: 0x00061766 },
-        { ovl: 0x6E, upper: 0xE7A, lower: 0xE7E }, // ROM: 0x2DA3EA
-      ]
+        { ovl: 0x6e, upper: 0xe7a, lower: 0xe7e }, // ROM: 0x2DA3EA
+      ],
     },
 
     // 1CECC60
     {
       type: "FXD0",
       byteLength: 0x830,
-      offsets: [
-        { upper: 0x0001AF5A, lower: 0x0001AF5E },
-      ]
+      offsets: [{ upper: 0x0001af5a, lower: 0x0001af5e }],
     },
 
     // 1CED490, 0xffffffffs EOF
     {
       type: "Pointer",
       byteLength: 0,
-      offsets: [
-        { upper: 0x0001AF66, lower: 0x0001AF6A },
-      ]
+      offsets: [{ upper: 0x0001af66, lower: 0x0001af6a }],
     },
   ],
 
-  [Game.MP1_JPN]: [ // Length ?
+  [Game.MP1_JPN]: [
+    // Length ?
   ],
-  [Game.MP1_PAL]: [ // Length ?
+  [Game.MP1_PAL]: [
+    // Length ?
   ],
 
-  [Game.MP2_USA]: [ // Length 0x6DAB50
+  [Game.MP2_USA]: [
+    // Length 0x6DAB50
     // 0x1750450
     {
       type: "MBF0",
       // byteLength: 0x1B9C40,
       offsets: [
-        { upper: 0x0001D342, lower: 0x0001D346 },
-        { upper: 0x0007A9EE, lower: 0x0007A9F2 },
-        { upper: 0x0007AA12, lower: 0x0007AA16 },
-      ]
+        { upper: 0x0001d342, lower: 0x0001d346 },
+        { upper: 0x0007a9ee, lower: 0x0007a9f2 },
+        { upper: 0x0007aa12, lower: 0x0007aa16 },
+      ],
     },
     // 0x190A090
     {
       type: "SBF0",
-      byteLength: 0x3B5380,
-      offsets: [
-        { upper: 0x0007A9FA, lower: 0x0007A9FE },
-      ]
+      byteLength: 0x3b5380,
+      offsets: [{ upper: 0x0007a9fa, lower: 0x0007a9fe }],
     },
     // 0x1CBF410
     {
       type: "SBF0",
-      byteLength: 0x16B150,
+      byteLength: 0x16b150,
       offsets: [
-        { upper: 0x0001D34E, lower: 0x0001D352 },
-        { upper: 0x0007AA1E, lower: 0x0007AA22 },
-      ]
+        { upper: 0x0001d34e, lower: 0x0001d352 },
+        { upper: 0x0007aa1e, lower: 0x0007aa22 },
+      ],
     },
     // 0x1E2A560
     {
       type: "FXD0",
-      byteLength: 0xA40,
-      offsets: [
-        { upper: 0x0001D382, lower: 0x0001D386 },
-      ]
+      byteLength: 0xa40,
+      offsets: [{ upper: 0x0001d382, lower: 0x0001d386 }],
     },
   ],
 
-  [Game.MP2_JPN]: [ // Length ?
+  [Game.MP2_JPN]: [
+    // Length ?
   ],
-  [Game.MP2_PAL]: [ // Length ?
+  [Game.MP2_PAL]: [
+    // Length ?
   ],
 
-  [Game.MP3_USA]: [ // Length 0x67be40
+  [Game.MP3_USA]: [
+    // Length 0x67be40
     // 0x1881C40
     {
       type: "MBF0",
       // byteLength: 0x1D4C30,
       offsets: [
-        { upper: 0x0000F26A, lower: 0x0000F26E },
-        { upper: 0x0004BEF2, lower: 0x0004BEF6 },
-      ]
+        { upper: 0x0000f26a, lower: 0x0000f26e },
+        { upper: 0x0004bef2, lower: 0x0004bef6 },
+      ],
     },
     // 0x1A56870
     {
       type: "SBF0",
-      byteLength: 0x4A67D0,
+      byteLength: 0x4a67d0,
       offsets: [
-        { upper: 0x0000F276, lower: 0x0000F27A },
-        { upper: 0x0004BEFE, lower: 0x0004BF02 },
-      ]
+        { upper: 0x0000f276, lower: 0x0000f27a },
+        { upper: 0x0004befe, lower: 0x0004bf02 },
+      ],
     },
     // 0x1EFD040
     {
       type: "FXD0",
-      byteLength: 0xA40,
-      offsets: [
-        { upper: 0x0000F29E, lower: 0x0000F2A2 },
-      ]
+      byteLength: 0xa40,
+      offsets: [{ upper: 0x0000f29e, lower: 0x0000f2a2 }],
     },
     // E0F 0x1EFDA80
   ],
 
-  [Game.MP3_JPN]: [ // Length ?
+  [Game.MP3_JPN]: [
+    // Length ?
   ],
-  [Game.MP3_PAL]: [ // Length ?
+  [Game.MP3_PAL]: [
+    // Length ?
   ],
-}
+};
 
 export const audio = {
   getROMOffset(subsection = 0) {
     const infos = this.getPatchInfo();
-    if (!infos || !infos.length)
-      return null;
+    if (!infos || !infos.length) return null;
     let patchInfo = infos[subsection];
-    if (!patchInfo)
-      return null;
+    if (!patchInfo) return null;
     let romPatchInfo = patchInfo.offsets[0];
     let upperReadOffset = romPatchInfo.upper;
     let lowerReadOffset = romPatchInfo.lower;
@@ -196,8 +193,7 @@ export const audio = {
       const sceneView = scenes.getDataView(romPatchInfo.ovl);
       upper = sceneView.getUint16(upperReadOffset);
       lower = sceneView.getUint16(lowerReadOffset);
-    }
-    else {
+    } else {
       const romView = romhandler.getDataView();
       upper = romView.getUint16(upperReadOffset);
       lower = romView.getUint16(lowerReadOffset);
@@ -206,7 +202,8 @@ export const audio = {
     const offset = getRegSetAddress(upper, lower);
     $$log(`Audio.getROMOffset -> ${$$hex(offset)}`);
 
-    if (isDebug()) { // Assert that the rest of the patch offsets are valid.
+    if (isDebug()) {
+      // Assert that the rest of the patch offsets are valid.
       patchInfo.offsets.forEach((offsetInfo, oIndex) => {
         let anotherUpperReadOffset = offsetInfo.upper;
         let anotherLowerReadOffset = offsetInfo.lower;
@@ -215,8 +212,7 @@ export const audio = {
           const sceneView = scenes.getDataView(offsetInfo.ovl);
           anotherUpper = sceneView.getUint16(anotherUpperReadOffset);
           anotherLower = sceneView.getUint16(anotherLowerReadOffset);
-        }
-        else {
+        } else {
           const romView = romhandler.getDataView();
           anotherUpper = romView.getUint16(anotherUpperReadOffset);
           anotherLower = romView.getUint16(anotherLowerReadOffset);
@@ -226,7 +222,9 @@ export const audio = {
         if (anotherOffset !== offset)
           throw new Error(`AudioFS.getROMOffset patch offset ${subsection}/${oIndex} seems wrong:
           offset: ${$$hex(offset)} vs ${$$hex(anotherOffset)}
-          reading upper: ${$$hex(anotherUpperReadOffset)}, lower: ${$$hex(anotherLowerReadOffset)}`);
+          reading upper: ${$$hex(anotherUpperReadOffset)}, lower: ${$$hex(
+            anotherLowerReadOffset
+          )}`);
       });
     }
 
@@ -248,8 +246,7 @@ export const audio = {
           const sceneView = scenes.getDataView(patchOffset.ovl);
           sceneView.setUint16(patchROMUpper, upper);
           sceneView.setUint16(patchROMLower, lower);
-        }
-        else {
+        } else {
           const romView = new DataView(outBuffer);
           romView.setUint16(patchROMUpper, upper);
           romView.setUint16(patchROMLower, lower);
@@ -302,15 +299,13 @@ export const audio = {
     let count = 0;
     for (let i = 0; i < _parsedCache!.length; i++) {
       const cacheEntry = _parsedCache![i];
-      if (cacheEntry && "midis" in cacheEntry)
-        count++;
+      if (cacheEntry && "midis" in cacheEntry) count++;
     }
     return count;
   },
 
   getSequenceTable(index: number): S2 | MBF0 | null {
-    if (!_parsedCache)
-      return null;
+    if (!_parsedCache) return null;
 
     let curIndex = -1;
     for (let i = 0; i < _parsedCache.length; i++) {
@@ -330,15 +325,13 @@ export const audio = {
     let count = 0;
     for (let i = 0; i < _parsedCache!.length; i++) {
       const cacheEntry = _parsedCache![i];
-      if (cacheEntry && "sounds" in cacheEntry)
-        count++;
+      if (cacheEntry && "sounds" in cacheEntry) count++;
     }
     return count;
   },
 
   getSoundTable(index: number): T3 | SBF0 | null {
-    if (!_parsedCache)
-      return null;
+    if (!_parsedCache) return null;
 
     let curIndex = -1;
     for (let i = 0; i < _parsedCache.length; i++) {
@@ -362,8 +355,7 @@ export const audio = {
   extract(): void {
     const buffer = romhandler.getROMBuffer()!;
     let offset = this.getROMOffset();
-    if (offset === null)
-      return;
+    if (offset === null) return;
 
     const infos = this.getPatchInfo();
     _bufferCache = new Array(infos.length);
@@ -373,8 +365,13 @@ export const audio = {
       switch (info.type) {
         case "S2":
           const s2Offset = this.getROMOffset(i)!;
-          const s2 = _parsedCache[i] = new S2(romhandler.getDataView(s2Offset));
-          _bufferCache[i] = buffer.slice(s2Offset, s2Offset + s2.getByteLength());
+          const s2 = (_parsedCache[i] = new S2(
+            romhandler.getDataView(s2Offset)
+          ));
+          _bufferCache[i] = buffer.slice(
+            s2Offset,
+            s2Offset + s2.getByteLength()
+          );
           break;
 
         case "T3":
@@ -386,21 +383,32 @@ export const audio = {
 
         case "MBF0":
           const mbf0Offset = this.getROMOffset(i)!;
-          const mbf0 = _parsedCache[i] = new MBF0(romhandler.getDataView(mbf0Offset));
-          _bufferCache[i] = buffer.slice(mbf0Offset, mbf0Offset + mbf0.getByteLength());
+          const mbf0 = (_parsedCache[i] = new MBF0(
+            romhandler.getDataView(mbf0Offset)
+          ));
+          _bufferCache[i] = buffer.slice(
+            mbf0Offset,
+            mbf0Offset + mbf0.getByteLength()
+          );
           break;
 
         case "SBF0":
           assert(typeof info.byteLength === "number");
           const sbf0Offset = this.getROMOffset(i)!;
-          _bufferCache[i] = buffer.slice(sbf0Offset, sbf0Offset + info.byteLength);
+          _bufferCache[i] = buffer.slice(
+            sbf0Offset,
+            sbf0Offset + info.byteLength
+          );
           _parsedCache[i] = new SBF0(romhandler.getDataView(sbf0Offset));
           break;
 
         case "FXD0":
           assert(typeof info.byteLength === "number");
           const fxd0Offset = this.getROMOffset(i)!;
-          _bufferCache[i] = buffer.slice(fxd0Offset, fxd0Offset + info.byteLength);
+          _bufferCache[i] = buffer.slice(
+            fxd0Offset,
+            fxd0Offset + info.byteLength
+          );
           _parsedCache[i] = new FXD0(romhandler.getDataView(fxd0Offset));
           break;
 
@@ -414,25 +422,25 @@ export const audio = {
     }
 
     // Finds audio offsets relative to overlay binaries
-  //   const infos = getPatchInfo();
-  //   const sceneCount = scenes.count();
-  //   for (let i = 0; i < infos.length; i++) {
-  //     const info = infos[i];
-  //     info.offsets.forEach((oft) => {
-  //       let found = false;
-  //       for (let j = 0; j < sceneCount; j++) {
-  //         const info = scenes.getInfo(j);
-  //         if (oft.upper > info.rom_start && oft.upper < info.rom_end) {
-  // console.log(`Found: { ovl: ${$$hex(j)}, upper: ${$$hex(oft.upper - info.rom_start)}, lower: ${$$hex(oft.lower - info.rom_start)} }, // ROM: ${$$hex(oft.upper)}`)
-  //           found = true;
-  //         }
-  //       }
+    //   const infos = getPatchInfo();
+    //   const sceneCount = scenes.count();
+    //   for (let i = 0; i < infos.length; i++) {
+    //     const info = infos[i];
+    //     info.offsets.forEach((oft) => {
+    //       let found = false;
+    //       for (let j = 0; j < sceneCount; j++) {
+    //         const info = scenes.getInfo(j);
+    //         if (oft.upper > info.rom_start && oft.upper < info.rom_end) {
+    // console.log(`Found: { ovl: ${$$hex(j)}, upper: ${$$hex(oft.upper - info.rom_start)}, lower: ${$$hex(oft.lower - info.rom_start)} }, // ROM: ${$$hex(oft.upper)}`)
+    //           found = true;
+    //         }
+    //       }
 
-  //       if (!found) {
-  //         console.log(`Didn't find: { upper: ${$$hex(oft.upper)}, lower: ${$$hex(oft.lower)} }`);
-  //       }
-  //     });
-  //   }
+    //       if (!found) {
+    //         console.log(`Didn't find: { upper: ${$$hex(oft.upper)}, lower: ${$$hex(oft.lower)} }`);
+    //       }
+    //     });
+    //   }
   },
 
   extractAsync(): Promise<void> {
@@ -456,7 +464,13 @@ export const audio = {
         case "SBF0":
         case "FXD0":
           assert(typeof info.byteLength === "number");
-          copyRange(buffer, _bufferCache[i]!, currentOffset, 0, _bufferCache[i]!.byteLength);
+          copyRange(
+            buffer,
+            _bufferCache[i]!,
+            currentOffset,
+            0,
+            _bufferCache[i]!.byteLength
+          );
           currentOffset += info.byteLength;
           break;
 
@@ -522,5 +536,5 @@ export const audio = {
     }
 
     return byteLength;
-  }
+  },
 };

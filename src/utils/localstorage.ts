@@ -3,7 +3,8 @@ import { IEvent } from "../events/events";
 
 /** Get boards that were saved the last time the browser window closed. */
 export function getSavedBoards(): IBoard[] | null {
-  let boards: string | IBoard[] | null = window.localStorage && localStorage.getItem("boards");
+  let boards: string | IBoard[] | null =
+    window.localStorage && localStorage.getItem("boards");
   if (boards) {
     boards = JSON.parse(boards);
   }
@@ -15,7 +16,8 @@ export function getSavedBoards(): IBoard[] | null {
 
 /** Get events that were saved the last time the browser window closed. */
 export function getSavedEvents(): IEvent[] | null {
-  let events: string | IEvent[] | null = window.localStorage && localStorage.getItem("events");
+  let events: string | IEvent[] | null =
+    window.localStorage && localStorage.getItem("events");
   if (events) {
     events = JSON.parse(events);
   }

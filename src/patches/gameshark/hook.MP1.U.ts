@@ -4,16 +4,16 @@ import { mainfs } from "../../fs/mainfs";
 import { getCheatRoutineBuffer } from "../../views/gameshark";
 
 // Installs a Gameshark hook for MP1 (U)
-export const MP1UHook = new class MP1UHook extends HookBase {
+export const MP1UHook = new (class MP1UHook extends HookBase {
   // File to store the cheat routine.
   protected MAINFS_CHEAT_FILE = [0, 137];
 
   // Location safe to write a small set of hooking code
-  protected HOOK_ROM_START_OFFSET = 0xCB500;
-  protected HOOK_RAM_START_OFFSET = 0xCA900;
+  protected HOOK_ROM_START_OFFSET = 0xcb500;
+  protected HOOK_RAM_START_OFFSET = 0xca900;
 
   // Use controller routine 0x80013E74 (ROM 0x14A74) to reach the hook
-  protected HOOK_JUMP_ROM_OFFSET = 0x14A74; // 0x80013E74
+  protected HOOK_JUMP_ROM_OFFSET = 0x14a74; // 0x80013E74
 
   // Value initially in the spot we cache the hook routine.
   protected HOOK_CACHE_DEFAULT_VALUE = 0x76657221;
@@ -44,6 +44,10 @@ export const MP1UHook = new class MP1UHook extends HookBase {
     romView.setUint32(this.HOOK_JUMP_ROM_OFFSET + 12, 0);
 
     const cheatRoutine = getCheatRoutineBuffer({ endInsts });
-    mainfs.write(this.MAINFS_CHEAT_FILE[0], this.MAINFS_CHEAT_FILE[1], cheatRoutine);
+    mainfs.write(
+      this.MAINFS_CHEAT_FILE[0],
+      this.MAINFS_CHEAT_FILE[1],
+      cheatRoutine
+    );
   }
-}();
+})();

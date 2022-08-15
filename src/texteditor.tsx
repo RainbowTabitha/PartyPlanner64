@@ -1,6 +1,12 @@
 import * as Draft from "draft-js";
 import * as React from "react";
-import { useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
+import {
+  useRef,
+  useState,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { splice } from "./utils/string";
 
 import defaultImage from "./img/richtext/default.png";
@@ -32,23 +38,31 @@ import divotImage from "./img/richtext/divot.png";
 import "./css/texteditor.scss";
 
 // Rich text editor for strings in Mario Party.
-const {Editor, EditorState, ContentState, SelectionState, Modifier, RichUtils, CompositeDecorator} = Draft;
+const {
+  Editor,
+  EditorState,
+  ContentState,
+  SelectionState,
+  Modifier,
+  RichUtils,
+  CompositeDecorator,
+} = Draft;
 
 export enum MPEditorTheme {
   Light = 0,
   Dark = 1,
-};
+}
 
 export enum MPEditorDisplayMode {
   Edit = 0,
   Readonly = 1,
   Display = 2,
-};
+}
 
 export enum MPEditorToolbarPlacement {
   Top = 0,
   Bottom = 1,
-};
+}
 
 export interface IMPEditorProps {
   value?: string;
@@ -72,224 +86,238 @@ export interface IMPEditorRef {
  * Component for rich text editing.
  * Supports controlled or local state editing.
  */
-export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>((props, ref) => {
-  const editor = useRef<Draft.Editor | null>(null);
+export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
+  (props, ref) => {
+    const editor = useRef<Draft.Editor | null>(null);
 
-  const focus = useCallback(() => {
-    editor.current?.focus();
-  }, []);
+    const focus = useCallback(() => {
+      editor.current?.focus();
+    }, []);
 
-  useImperativeHandle(ref, () => ({
-    focus
-  }), [focus]);
-
-  const plaintextRef = useRef<string | undefined>(props.value);
-
-  const createEditorStateFromProps = useCallback(() => {
-    if (props.value) {
-      return MPEditorStringAdapter.stringToEditorState(props.value);
-    }
-    else {
-      return EditorState.createEmpty();
-    }
-  }, [props.value]);
-
-  const [editorStateValue, setEditorStateValue] = useState(createEditorStateFromProps);
-
-  // Compute effective state, based on whether component is controlled or not.
-  let editorState: Draft.EditorState;
-  if ("value" in props) {
-    if (props.value !== plaintextRef.current) {
-      editorState = createEditorStateFromProps();
-    }
-    else {
-      editorState = editorStateValue;
-    }
-  }
-  else {
-    editorState = editorStateValue;
-  }
-
-  const [theme, setTheme] = useState(() => {
-    // Take a specified theme, or make an educated guess.
-    let theme: MPEditorTheme = props.theme as MPEditorTheme;
-    if (typeof props.theme !== "number") {
-      if (props.value && props.value.indexOf("WHITE") >= 0)
-        theme = MPEditorTheme.Dark;
-      else
-        theme = MPEditorTheme.Light;
-    }
-    return theme;
-  });
-
-  const onChange = (newEditorState: Draft.EditorState) => {
-    const newStringValue = MPEditorStringAdapter.editorStateToString(newEditorState, {
-      theme,
-    });
-    plaintextRef.current = newStringValue;
-
-    setEditorStateValue(newEditorState);
-
-    if (props.onValueChange) {
-      props.onValueChange(props.id, newStringValue);
-    }
-  };
-
-  const handleReturn = (e: any, editorState: any) => {
-    if (props.maxlines) {
-      let text = editorState.getCurrentContent().getPlainText();
-
-      // = because Return would create an additional line
-      if (text.split("\n").length >= props.maxlines)
-        return "handled";
-    }
-
-    return "not-handled";
-  };
-
-  const onFocus = (event: any) => {
-    if (props.onFocus)
-      props.onFocus(event);
-  };
-
-  const onBlur = (event: any) => {
-    if (props.onBlur)
-      props.onBlur(event);
-  };
-
-  const onToolbarClick = (item: IToolbarItem) => {
-    switch (item.type) {
-      case "COLOR":
-        toggleColor(item.key);
-        break;
-      case "IMAGE":
-        addImage(item.char!);
-        break;
-      case "ACTION":
-        switch (item.key) {
-          case "DARKLIGHT":
-            const nextTheme = theme === MPEditorTheme.Light
-              ? MPEditorTheme.Dark
-              : MPEditorTheme.Light;
-            setTheme(nextTheme);
-            break;
-        }
-        break;
-    }
-
-    setTimeout(() => {
-      focus();
-    }, 0);
-  };
-
-  const toggleColor = (toggledColor: string) => {
-    const selection = editorState.getSelection();
-    const prevContentState = editorState.getCurrentContent();
-
-    // Let's just allow one color at a time. Turn off all active colors.
-    const nextContentState = Object.keys(colorStyleMap).reduce((contentState, color) => {
-      return Modifier.removeInlineStyle(contentState, selection, color)
-    }, prevContentState);
-
-    let nextEditorState = EditorState.push(
-      editorState,
-      nextContentState,
-      'change-inline-style'
+    useImperativeHandle(
+      ref,
+      () => ({
+        focus,
+      }),
+      [focus]
     );
 
-    const currentStyle = editorState.getCurrentInlineStyle();
+    const plaintextRef = useRef<string | undefined>(props.value);
 
-    // Unset style override for current color.
-    if (selection.isCollapsed()) {
-      nextEditorState = currentStyle.reduce((state, color) => {
-        return RichUtils.toggleInlineStyle(state!, color!);
-      }, nextEditorState);
+    const createEditorStateFromProps = useCallback(() => {
+      if (props.value) {
+        return MPEditorStringAdapter.stringToEditorState(props.value);
+      } else {
+        return EditorState.createEmpty();
+      }
+    }, [props.value]);
+
+    const [editorStateValue, setEditorStateValue] = useState(
+      createEditorStateFromProps
+    );
+
+    // Compute effective state, based on whether component is controlled or not.
+    let editorState: Draft.EditorState;
+    if ("value" in props) {
+      if (props.value !== plaintextRef.current) {
+        editorState = createEditorStateFromProps();
+      } else {
+        editorState = editorStateValue;
+      }
+    } else {
+      editorState = editorStateValue;
     }
 
-    // If the color is being toggled on, apply it.
-    if (!currentStyle.has(toggledColor)) {
-      nextEditorState = RichUtils.toggleInlineStyle(
-        nextEditorState,
-        toggledColor
+    const [theme, setTheme] = useState(() => {
+      // Take a specified theme, or make an educated guess.
+      let theme: MPEditorTheme = props.theme as MPEditorTheme;
+      if (typeof props.theme !== "number") {
+        if (props.value && props.value.indexOf("WHITE") >= 0)
+          theme = MPEditorTheme.Dark;
+        else theme = MPEditorTheme.Light;
+      }
+      return theme;
+    });
+
+    const onChange = (newEditorState: Draft.EditorState) => {
+      const newStringValue = MPEditorStringAdapter.editorStateToString(
+        newEditorState,
+        {
+          theme,
+        }
+      );
+      plaintextRef.current = newStringValue;
+
+      setEditorStateValue(newEditorState);
+
+      if (props.onValueChange) {
+        props.onValueChange(props.id, newStringValue);
+      }
+    };
+
+    const handleReturn = (e: any, editorState: any) => {
+      if (props.maxlines) {
+        let text = editorState.getCurrentContent().getPlainText();
+
+        // = because Return would create an additional line
+        if (text.split("\n").length >= props.maxlines) return "handled";
+      }
+
+      return "not-handled";
+    };
+
+    const onFocus = (event: any) => {
+      if (props.onFocus) props.onFocus(event);
+    };
+
+    const onBlur = (event: any) => {
+      if (props.onBlur) props.onBlur(event);
+    };
+
+    const onToolbarClick = (item: IToolbarItem) => {
+      switch (item.type) {
+        case "COLOR":
+          toggleColor(item.key);
+          break;
+        case "IMAGE":
+          addImage(item.char!);
+          break;
+        case "ACTION":
+          switch (item.key) {
+            case "DARKLIGHT":
+              const nextTheme =
+                theme === MPEditorTheme.Light
+                  ? MPEditorTheme.Dark
+                  : MPEditorTheme.Light;
+              setTheme(nextTheme);
+              break;
+          }
+          break;
+      }
+
+      setTimeout(() => {
+        focus();
+      }, 0);
+    };
+
+    const toggleColor = (toggledColor: string) => {
+      const selection = editorState.getSelection();
+      const prevContentState = editorState.getCurrentContent();
+
+      // Let's just allow one color at a time. Turn off all active colors.
+      const nextContentState = Object.keys(colorStyleMap).reduce(
+        (contentState, color) => {
+          return Modifier.removeInlineStyle(contentState, selection, color);
+        },
+        prevContentState
+      );
+
+      let nextEditorState = EditorState.push(
+        editorState,
+        nextContentState,
+        "change-inline-style"
+      );
+
+      const currentStyle = editorState.getCurrentInlineStyle();
+
+      // Unset style override for current color.
+      if (selection.isCollapsed()) {
+        nextEditorState = currentStyle.reduce((state, color) => {
+          return RichUtils.toggleInlineStyle(state!, color!);
+        }, nextEditorState);
+      }
+
+      // If the color is being toggled on, apply it.
+      if (!currentStyle.has(toggledColor)) {
+        nextEditorState = RichUtils.toggleInlineStyle(
+          nextEditorState,
+          toggledColor
+        );
+      }
+
+      onChange(nextEditorState);
+    };
+
+    const addImage = (char: string) => {
+      const selection = editorState.getSelection();
+
+      // Insert a character that will be styled into an image.
+      const nextContentState = Modifier.replaceText(
+        editorState.getCurrentContent(),
+        selection,
+        char
+      );
+
+      let nextEditorState = EditorState.push(
+        editorState,
+        nextContentState,
+        "insert-characters"
+      );
+
+      onChange(nextEditorState);
+    };
+
+    const displayMode = props.displayMode || MPEditorDisplayMode.Edit;
+
+    let toolbar;
+    const showToolbar = props.showToolbar;
+    if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
+      toolbar = (
+        <MPEditorToolbar
+          onItemClick={onToolbarClick}
+          itemBlacklist={props.itemBlacklist}
+        />
       );
     }
 
-    onChange(nextEditorState);
-  };
+    const toolbarPlacement =
+      props.toolbarPlacement || MPEditorToolbarPlacement.Top;
 
-  const addImage = (char: string) => {
-    const selection = editorState.getSelection();
+    let className = "mpEditor";
 
-    // Insert a character that will be styled into an image.
-    const nextContentState = Modifier.replaceText(
-      editorState.getCurrentContent(),
-      selection,
-      char
-    );
+    if (displayMode === MPEditorDisplayMode.Display) className += " mpDisplay";
 
-    let nextEditorState = EditorState.push(
-      editorState,
-      nextContentState,
-      "insert-characters"
-    );
+    if (theme === MPEditorTheme.Light) className += " mpEditorLight";
+    else if (theme === MPEditorTheme.Dark) className += " mpEditorDark";
 
-    onChange(nextEditorState);
-  };
+    if (toolbar) {
+      if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
+        className += " mpEditorShowToolbarBottom";
+      else className += " mpEditorShowToolbarTop";
+    }
 
-  const displayMode = props.displayMode || MPEditorDisplayMode.Edit;
-
-  let toolbar;
-  const showToolbar = props.showToolbar;
-  if (showToolbar && displayMode === MPEditorDisplayMode.Edit) {
-    toolbar = (
-      <MPEditorToolbar onItemClick={onToolbarClick}
-        itemBlacklist={props.itemBlacklist} />
-    );
-  }
-
-  const toolbarPlacement = props.toolbarPlacement || MPEditorToolbarPlacement.Top;
-
-  let className = "mpEditor";
-
-  if (displayMode === MPEditorDisplayMode.Display)
-    className += " mpDisplay";
-
-  if (theme === MPEditorTheme.Light)
-    className += " mpEditorLight";
-  else if (theme === MPEditorTheme.Dark)
-    className += " mpEditorDark";
-
-  if (toolbar) {
-    if (toolbarPlacement === MPEditorToolbarPlacement.Bottom)
-      className += " mpEditorShowToolbarBottom";
-    else
-      className += " mpEditorShowToolbarTop";
-  }
-
-  return (
-    <div className={className}>
-      {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
-      <div className="mpEditorWrapper">
-        <Editor ref={ref => { editor.current = ref; }}
-          editorState={editorState}
-          stripPastedStyles={true}
-          readOnly={displayMode !== MPEditorDisplayMode.Edit}
-          customStyleMap={colorStyleMap}
-          onChange={onChange}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          handleReturn={handleReturn} />
+    return (
+      <div className={className}>
+        {toolbarPlacement === MPEditorToolbarPlacement.Top && toolbar}
+        <div className="mpEditorWrapper">
+          <Editor
+            ref={(ref) => {
+              editor.current = ref;
+            }}
+            editorState={editorState}
+            stripPastedStyles={true}
+            readOnly={displayMode !== MPEditorDisplayMode.Edit}
+            customStyleMap={colorStyleMap}
+            onChange={onChange}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            handleReturn={handleReturn}
+          />
+        </div>
+        {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
       </div>
-      {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
-    </div>
-  );
-});
+    );
+  }
+);
 
-function imageStrategy(contentBlock: Draft.ContentBlock, callback: any, contentState: unknown) {
+function imageStrategy(
+  contentBlock: Draft.ContentBlock,
+  callback: any,
+  contentState: unknown
+) {
   const text = contentBlock.getText();
   for (let i = 0; i < text.length; i++) {
-    if (_ToolbarCharToKey[text.charAt(i)])
-      callback(i, i + 1);
+    if (_ToolbarCharToKey[text.charAt(i)]) callback(i, i + 1);
   }
 }
 
@@ -300,7 +328,7 @@ const MPImageComponent = (props: any) => {
   className += " mpImageKey-" + key;
 
   // Stop React warnings from unwanted spreaded props...
-  let outerSpanProps = {...props};
+  let outerSpanProps = { ...props };
   delete outerSpanProps.contentState;
   delete outerSpanProps.decoratedText;
   delete outerSpanProps.entityKey;
@@ -318,7 +346,7 @@ export const MPCompositeDecorator = new CompositeDecorator([
   {
     strategy: imageStrategy,
     component: MPImageComponent,
-  }
+  },
 ]);
 
 const colorStyleMap: { [name: string]: { color: string } } = {
@@ -326,16 +354,16 @@ const colorStyleMap: { [name: string]: { color: string } } = {
     color: "#200E71",
   },
   BLACK: {
-    color: '#000000',
+    color: "#000000",
   },
   WHITE: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   RED: {
-    color: '#E70014',
+    color: "#E70014",
   },
   GREEN: {
-    color: '#00AB29',
+    color: "#00AB29",
   },
   BLUE: {
     color: "#003EF9",
@@ -344,7 +372,7 @@ const colorStyleMap: { [name: string]: { color: string } } = {
     color: "#E847CD",
   },
   YELLOW: {
-    color: '#FFEA38',
+    color: "#FFEA38",
   },
 };
 
@@ -358,7 +386,11 @@ interface IToolbarItem {
 }
 
 const _ToolbarItems: IToolbarItem[] = [
-  { key: "COLOR", type: "SUBMENU", icon: defaultImage, desc: "Font color",
+  {
+    key: "COLOR",
+    type: "SUBMENU",
+    icon: defaultImage,
+    desc: "Font color",
     items: [
       { key: "DEFAULT", type: "COLOR", icon: defaultImage, desc: "Default" },
       { key: "BLACK", type: "COLOR", icon: blackImage, desc: "Black" },
@@ -370,29 +402,126 @@ const _ToolbarItems: IToolbarItem[] = [
       { key: "YELLOW", type: "COLOR", icon: yellowImage, desc: "Yellow" },
     ],
   },
-  { key: "IMAGE", type: "SUBMENU", icon: AImage, desc: "Insert image",
+  {
+    key: "IMAGE",
+    type: "SUBMENU",
+    icon: AImage,
+    desc: "Insert image",
     items: [
-      { key: "A", type: "IMAGE", icon: AImage, desc: "A button", "char": "\u3000" },
-      { key: "B", type: "IMAGE", icon: BImage, desc: "B button", "char": "\u3001" },
-      { key: "S", type: "IMAGE", icon: SImage, desc: "Start button", "char": "\u3010" },
-      { key: "CUP", type: "IMAGE", icon: CupImage, desc: "C-up button", "char": "\u3002" },
-      { key: "CDOWN", type: "IMAGE", icon: CdownImage, desc: "C-down button", "char": "\u3005" },
-      { key: "CLEFT", type: "IMAGE", icon: CleftImage, desc: "C-left button", "char": "\u3004" },
-      { key: "CRIGHT", type: "IMAGE", icon: CrightImage, desc: "C-right button", "char": "\u3003" },
-      { key: "Z", type: "IMAGE", icon: ZImage, desc: "Z button", "char": "\u3006" },
-      { key: "R", type: "IMAGE", icon: RImage, desc: "R button", "char": "\u3011" },
-      { key: "ANALOG", type: "IMAGE", icon: analogImage, desc: "Analog stick", "char": "\u3007" },
-      { key: "COIN", type: "IMAGE", icon: coinImage, desc: "Coin", "char": "\u3008" },
-      { key: "STAR", type: "IMAGE", icon: starImage, desc: "Star", "char": "\u3009" },
+      {
+        key: "A",
+        type: "IMAGE",
+        icon: AImage,
+        desc: "A button",
+        char: "\u3000",
+      },
+      {
+        key: "B",
+        type: "IMAGE",
+        icon: BImage,
+        desc: "B button",
+        char: "\u3001",
+      },
+      {
+        key: "S",
+        type: "IMAGE",
+        icon: SImage,
+        desc: "Start button",
+        char: "\u3010",
+      },
+      {
+        key: "CUP",
+        type: "IMAGE",
+        icon: CupImage,
+        desc: "C-up button",
+        char: "\u3002",
+      },
+      {
+        key: "CDOWN",
+        type: "IMAGE",
+        icon: CdownImage,
+        desc: "C-down button",
+        char: "\u3005",
+      },
+      {
+        key: "CLEFT",
+        type: "IMAGE",
+        icon: CleftImage,
+        desc: "C-left button",
+        char: "\u3004",
+      },
+      {
+        key: "CRIGHT",
+        type: "IMAGE",
+        icon: CrightImage,
+        desc: "C-right button",
+        char: "\u3003",
+      },
+      {
+        key: "Z",
+        type: "IMAGE",
+        icon: ZImage,
+        desc: "Z button",
+        char: "\u3006",
+      },
+      {
+        key: "R",
+        type: "IMAGE",
+        icon: RImage,
+        desc: "R button",
+        char: "\u3011",
+      },
+      {
+        key: "ANALOG",
+        type: "IMAGE",
+        icon: analogImage,
+        desc: "Analog stick",
+        char: "\u3007",
+      },
+      {
+        key: "COIN",
+        type: "IMAGE",
+        icon: coinImage,
+        desc: "Coin",
+        char: "\u3008",
+      },
+      {
+        key: "STAR",
+        type: "IMAGE",
+        icon: starImage,
+        desc: "Star",
+        char: "\u3009",
+      },
     ],
   },
-  { key: "ADVANCED", type: "SUBMENU", icon: pauseImage, desc: "Advanced text features",
+  {
+    key: "ADVANCED",
+    type: "SUBMENU",
+    icon: pauseImage,
+    desc: "Advanced text features",
     items: [
-      { key: "PAUSE", type: "IMAGE", icon: pauseImage, desc: "Pause to continue", "char": "\u3015" },
-      { key: "FEED", type: "IMAGE", icon: feedImage, desc: "Feed new page", "char": "\u3014" },
+      {
+        key: "PAUSE",
+        type: "IMAGE",
+        icon: pauseImage,
+        desc: "Pause to continue",
+        char: "\u3015",
+      },
+      {
+        key: "FEED",
+        type: "IMAGE",
+        icon: feedImage,
+        desc: "Feed new page",
+        char: "\u3014",
+      },
     ],
   },
-  { key: "DARKLIGHT", type: "ACTION", icon: darklightImage, desc: "Toggle background color (has no effect on actual game)" },
+  {
+    key: "DARKLIGHT",
+    type: "ACTION",
+    icon: darklightImage,
+    desc: "Toggle background color (has no effect on actual game)",
+  },
 ];
 
 let _ToolbarCharToKey: { [char: string]: string } = {};
@@ -418,17 +547,21 @@ function _toolbarItemToComponent(item: IToolbarItem, onItemClick: any) {
   switch (item.type) {
     case "SUBMENU":
       return (
-        <MPEditorToolbarSubmenu key={item.key}
+        <MPEditorToolbarSubmenu
+          key={item.key}
           item={item}
           onItemClick={onItemClick}
-          items={item.items!} />
+          items={item.items!}
+        />
       );
 
     default:
       return (
-        <MPEditorToolbarButton key={item.key}
+        <MPEditorToolbarButton
+          key={item.key}
           item={item}
-          onItemClick={onItemClick} />
+          onItemClick={onItemClick}
+        />
       );
   }
 }
@@ -439,29 +572,24 @@ interface MPEditorToolbarProps {
 }
 
 class MPEditorToolbar extends React.Component<MPEditorToolbarProps> {
-  state = {}
+  state = {};
 
   render() {
     const blacklist = this.props.itemBlacklist;
-    let items = _ToolbarItems.map(itemDef => {
+    let items = _ToolbarItems.map((itemDef) => {
       if (blacklist && blacklist.indexOf(itemDef.key) !== -1) {
         return null;
       }
 
       return _toolbarItemToComponent(itemDef, this.onItemClick);
     });
-    return (
-      <div className="mpEditorToolbar">
-        {items}
-      </div>
-    );
+    return <div className="mpEditorToolbar">{items}</div>;
   }
 
   onItemClick = (item: any) => {
-    if (this.props.onItemClick)
-      this.props.onItemClick(item);
-  }
-};
+    if (this.props.onItemClick) this.props.onItemClick(item);
+  };
+}
 
 interface MPEditorToolbarSubmenuProps {
   item: IToolbarItem;
@@ -474,27 +602,35 @@ class MPEditorToolbarSubmenu extends React.Component<MPEditorToolbarSubmenuProps
 
   state = {
     expanded: false,
-  }
+  };
 
   render() {
     const item = this.props.item;
 
     let expansion;
     if (this.state.expanded) {
-      const submenuItems = this.props.items.map(itemDef => {
+      const submenuItems = this.props.items.map((itemDef) => {
         return _toolbarItemToComponent(itemDef, this.onItemClick);
       });
       expansion = (
-        <div ref={(expMenu => { this.expMenu = expMenu; })}
+        <div
+          ref={(expMenu) => {
+            this.expMenu = expMenu;
+          }}
           className="mpEditorToolbarSubmenuExp"
           tabIndex={-1}
-          onBlur={this.onBlur}>
+          onBlur={this.onBlur}
+        >
           {submenuItems}
         </div>
       );
     }
     return (
-      <div className="mpEditorToolbarButton" title={item.desc} onClick={this.onClick}>
+      <div
+        className="mpEditorToolbarButton"
+        title={item.desc}
+        onClick={this.onClick}
+      >
         <img src={item.icon} alt={item.desc}></img>
         <img src={divotImage} alt="" />
         {expansion}
@@ -503,28 +639,25 @@ class MPEditorToolbarSubmenu extends React.Component<MPEditorToolbarSubmenuProps
   }
 
   componentDidMount() {
-    if (this.state.expanded)
-      this.expMenu!.focus();
+    if (this.state.expanded) this.expMenu!.focus();
   }
 
   componentDidUpdate() {
-    if (this.state.expanded)
-      this.expMenu!.focus();
+    if (this.state.expanded) this.expMenu!.focus();
   }
 
   onBlur = () => {
     this.setState({ expanded: false });
-  }
+  };
 
   onClick = () => {
     this.setState({ expanded: !this.state.expanded });
-  }
+  };
 
   onItemClick = (item: IToolbarItem) => {
-    if (this.props.onItemClick)
-      this.props.onItemClick(item);
-  }
-};
+    if (this.props.onItemClick) this.props.onItemClick(item);
+  };
+}
 
 interface MPEditorToolbarButtonProps {
   item: IToolbarItem;
@@ -532,41 +665,48 @@ interface MPEditorToolbarButtonProps {
 }
 
 class MPEditorToolbarButton extends React.Component<MPEditorToolbarButtonProps> {
-  state = {}
+  state = {};
 
   onClick = () => {
     this.props.onItemClick(this.props.item);
-  }
+  };
 
   render() {
     const item = this.props.item;
     return (
-      <div className="mpEditorToolbarButton" title={item.desc} onClick={this.onClick}>
+      <div
+        className="mpEditorToolbarButton"
+        title={item.desc}
+        onClick={this.onClick}
+      >
         <img src={item.icon} alt={item.desc}></img>
       </div>
     );
   }
-};
+}
 
-class MPEditorToolbarSeparator extends React.Component { // eslint-disable-line
-  state = {}
+class MPEditorToolbarSeparator extends React.Component {
+  // eslint-disable-line
+  state = {};
 
   render() {
-    return (
-      <div className="mpEditorToolbarSeparator"></div>
-    );
+    return <div className="mpEditorToolbarSeparator"></div>;
   }
-};
+}
 
 /**
  * Converts between game strings and Draft.js editor state.
  */
-export const MPEditorStringAdapter = new class MPEditorStringAdapter {
-  editorStateToString(editorState: Draft.EditorState, args: { theme: MPEditorTheme }) {
+export const MPEditorStringAdapter = new (class MPEditorStringAdapter {
+  editorStateToString(
+    editorState: Draft.EditorState,
+    args: { theme: MPEditorTheme }
+  ) {
     const contentState = editorState.getCurrentContent();
     let textBlocks: string[] = [];
 
-    const defaultColor = args.theme === MPEditorTheme.Light ? "DEFAULT" : "WHITE";
+    const defaultColor =
+      args.theme === MPEditorTheme.Light ? "DEFAULT" : "WHITE";
 
     let currentColor = defaultColor;
     let colorChanged = false;
@@ -574,11 +714,13 @@ export const MPEditorStringAdapter = new class MPEditorStringAdapter {
     const blockMap = contentState.getBlockMap();
     blockMap.forEach((block) => {
       let blockText = block!.getText();
-      const changes: { [index: number]: string} = {};
+      const changes: { [index: number]: string } = {};
       block!.findStyleRanges(
         (characterMetadata) => {
           const style = characterMetadata.getStyle();
-          let color = style.find(value => { return !!colorStyleMap[value!]; });
+          let color = style.find((value) => {
+            return !!colorStyleMap[value!];
+          });
           if (!color) {
             color = defaultColor;
           }
@@ -589,8 +731,7 @@ export const MPEditorStringAdapter = new class MPEditorStringAdapter {
           return true;
         },
         (start, end) => {
-          if (!colorChanged)
-            return; // Avoid always starting strings with color, or repeating same color over again.
+          if (!colorChanged) return; // Avoid always starting strings with color, or repeating same color over again.
 
           changes[start] = "<" + currentColor + ">";
         }
@@ -642,12 +783,19 @@ export const MPEditorStringAdapter = new class MPEditorStringAdapter {
         });
 
         // Remove any pre-existing colors from the tag index to end of string.
-        contentState = Object.keys(colorStyleMap).reduce((contentState, color) => {
-          return Modifier.removeInlineStyle(contentState, selection, color)
-        }, contentState);
+        contentState = Object.keys(colorStyleMap).reduce(
+          (contentState, color) => {
+            return Modifier.removeInlineStyle(contentState, selection, color);
+          },
+          contentState
+        );
 
         // Apply the new tag.
-        contentState = Modifier.applyInlineStyle(contentState, selection, styleTag as string);
+        contentState = Modifier.applyInlineStyle(
+          contentState,
+          selection,
+          styleTag as string
+        );
 
         contentBlocks = contentState.getBlocksAsArray();
         contentBlock = contentBlocks[i];
@@ -658,18 +806,18 @@ export const MPEditorStringAdapter = new class MPEditorStringAdapter {
 
     return EditorState.createWithContent(contentState, MPCompositeDecorator);
   }
-}();
+})();
 
 function _getNextStyleTag(rawString: string) {
   let startingIndex = 0;
   while (startingIndex < rawString.length) {
     let styleStart = rawString.indexOf("<", startingIndex) + 1;
-    if (!styleStart) // indexOf yielded -1
+    if (!styleStart)
+      // indexOf yielded -1
       return [];
 
     let styleEnd = rawString.indexOf(">", styleStart);
-    if (styleEnd === -1)
-      return [];
+    if (styleEnd === -1) return [];
 
     const styleTag = rawString.substring(styleStart, styleEnd);
     if (!colorStyleMap[styleTag]) {

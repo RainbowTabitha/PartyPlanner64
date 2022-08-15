@@ -19,19 +19,20 @@ export class Notification extends React.Component<INotificationProps> {
     const className = "notification " + this.getColorClass(this.props.color);
     return (
       <div className={className}>
-        <div className="notificationContent">
-          {this.props.children}
-        </div>
-        <div className="notificationClose" role="button" tabIndex={0}
-          onClick={this.onCloseClick} />
+        <div className="notificationContent">{this.props.children}</div>
+        <div
+          className="notificationClose"
+          role="button"
+          tabIndex={0}
+          onClick={this.onCloseClick}
+        />
       </div>
     );
   }
 
   onCloseClick = () => {
-    if (this.props.onClose)
-      this.props.onClose();
-  }
+    if (this.props.onClose) this.props.onClose();
+  };
 
   getColorClass(color: NotificationColor): string {
     switch (color) {

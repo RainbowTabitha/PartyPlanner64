@@ -1,4 +1,3 @@
-
 const soundEffectMap: string[] = [];
 
 export function getSoundEffectMapMP1(table: number) {
@@ -1207,4 +1206,3 @@ export function getSoundEffectMapMP1(table: number) {
 // 0x4AB: 0x55
 // 0x4AC: 0x55
 // 0x4AD: 0x55
-

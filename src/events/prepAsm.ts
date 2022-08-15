@@ -5,15 +5,26 @@ import { Game, EventParameterType } from "../types";
 import { $$hex } from "../utils/debug";
 import { IEventInstance } from "../boards";
 import { makeAudioSymbolLabels } from "./getaudiochoice";
-import { getBoardAdditionalBgHvqIndices, makeBgSymbolLabels } from "./additionalbg";
+import {
+  getBoardAdditionalBgHvqIndices,
+  makeBgSymbolLabels,
+} from "./additionalbg";
 
 /**
  * Takes event asm, and makes it assemble (in isolation)
  */
-export function prepAsm(asm: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo) {
+export function prepAsm(
+  asm: string,
+  event: IEvent,
+  spaceEvent: IEventInstance,
+  info: IEventWriteInfo
+) {
   const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
   const audioSymbols = makeAudioSymbolLabels(info.audioIndices);
-  const bgSymbols = makeBgSymbolLabels(info.boardInfo.bgDir, getBoardAdditionalBgHvqIndices(info.board));
+  const bgSymbols = makeBgSymbolLabels(
+    info.boardInfo.bgDir,
+    getBoardAdditionalBgHvqIndices(info.board)
+  );
   const asmWithParamSyms = [
     ...parameterSymbols,
     ...audioSymbols,
@@ -41,15 +52,23 @@ export function prepGenericAsm(asm: string, addr: number, game: Game) {
 }
 
 export function prepSingleEventAsm(
-  asm: string, event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo, keepStatic: boolean, eventNum: number): string
-{
+  asm: string,
+  event: IEvent,
+  spaceEvent: IEventInstance,
+  info: IEventWriteInfo,
+  keepStatic: boolean,
+  eventNum: number
+): string {
   // We either define a label at the top, or an alias to the main: label if present.
-  const hasMainEntry = asm.split("\n").find(value => value.startsWith("main:"));
+  const hasMainEntry = asm
+    .split("\n")
+    .find((value) => value.startsWith("main:"));
   const eventLabel = createEventInstanceLabel(info.curSpaceIndex, eventNum);
   const topLabel = !hasMainEntry && `${eventLabel}:`;
   const bottomLabel = hasMainEntry && `.definelabel ${eventLabel},main`;
 
-  return scopeLabelsStaticByDefault(`
+  return scopeLabelsStaticByDefault(
+    `
     .beginfile ; Scopes static labels
     ${topLabel || ""}
     ${makeParameterSymbolLabels(event, spaceEvent, info).join("\n")}
@@ -57,12 +76,17 @@ export function prepSingleEventAsm(
     ${bottomLabel || ""}
     .align 4
     .endfile
-  `, keepStatic);
+  `,
+    keepStatic
+  );
 }
 
-export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): string[] {
+export function makeGameSymbolLabels(
+  game: Game,
+  needOverlayStubs: boolean
+): string[] {
   const symbols = getSymbols(game);
-  const syms = symbols.map(symbol => {
+  const syms = symbols.map((symbol) => {
     return `.definelabel ${symbol.name},0x${symbol.addr.toString(16)}`;
   });
 
@@ -71,9 +95,10 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
     case Game.MP1_USA:
       if (needOverlayStubs) {
         syms.push(".definelabel GetBoardAudioIndex,0");
-      }
-      else {
-        syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
+      } else {
+        syms.push(
+          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`
+        );
       }
       break;
     case Game.MP2_USA:
@@ -81,11 +106,14 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
         syms.push(".definelabel ViewBoardMap,0");
         syms.push(".definelabel GetBoardAudioIndex,0");
         syms.push(".definelabel GetRandPromptSelection,0");
-      }
-      else {
+      } else {
         syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
-        syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
-        syms.push(".definelabel GetRandPromptSelection,__PP64_INTERNAL_RAND_MESSAGE_CHOICE");
+        syms.push(
+          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`
+        );
+        syms.push(
+          ".definelabel GetRandPromptSelection,__PP64_INTERNAL_RAND_MESSAGE_CHOICE"
+        );
       }
       break;
 
@@ -94,11 +122,14 @@ export function makeGameSymbolLabels(game: Game, needOverlayStubs: boolean): str
         syms.push(".definelabel GetBasicPromptSelection,0");
         syms.push(".definelabel ViewBoardMap,0");
         syms.push(".definelabel GetBoardAudioIndex,0");
-      }
-      else {
-        syms.push(".definelabel GetBasicPromptSelection,__PP64_INTERNAL_BASIC_MESSAGE_CHOICE");
+      } else {
+        syms.push(
+          ".definelabel GetBasicPromptSelection,__PP64_INTERNAL_BASIC_MESSAGE_CHOICE"
+        );
         syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
-        syms.push(`.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`);
+        syms.push(
+          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`
+        );
       }
       break;
   }
@@ -119,7 +150,7 @@ export function makeGenericSymbolsForAddresses(asm: string): string[] {
 
   const funcMatches = asm.match(_funcRegex);
   if (funcMatches) {
-    funcMatches.forEach(match => {
+    funcMatches.forEach((match) => {
       if (asm.indexOf(match + ":") >= 0) {
         // Don't create an alias if there's a label for "func_x" already,
         // since the generated label is most likely going to corrupt things.
@@ -132,7 +163,7 @@ export function makeGenericSymbolsForAddresses(asm: string): string[] {
 
   const addrMatches = asm.match(_addrRegex);
   if (addrMatches) {
-    addrMatches.forEach(match => {
+    addrMatches.forEach((match) => {
       if (asm.indexOf(match + ":") >= 0) {
         return;
       }
@@ -146,21 +177,29 @@ export function makeGenericSymbolsForAddresses(asm: string): string[] {
   return results;
 }
 
-export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInstance, info: IEventWriteInfo): string[] {
+export function makeParameterSymbolLabels(
+  event: IEvent,
+  spaceEvent: IEventInstance,
+  info: IEventWriteInfo
+): string[] {
   let parameterSymbols: string[] = [];
   const parameters = event.parameters;
   const parameterValues = spaceEvent.parameterValues;
   if (parameters && parameters.length && parameterValues) {
-    parameters.forEach(parameter => {
+    parameters.forEach((parameter) => {
       const parameterValue = parameterValues[parameter.name];
       switch (parameter.type) {
-      case EventParameterType.Boolean:
-          parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue ? 1 : 0}`);
+        case EventParameterType.Boolean:
+          parameterSymbols.push(
+            `.definelabel ${parameter.name},${parameterValue ? 1 : 0}`
+          );
           break;
 
         case EventParameterType.Number:
           if (typeof parameterValue === "number") {
-            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+            parameterSymbols.push(
+              `.definelabel ${parameter.name},${parameterValue}`
+            );
           }
           break;
 
@@ -168,16 +207,28 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
           break; // TODO: Maybe expose labels for these?
 
         case EventParameterType.Space:
-          parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+          parameterSymbols.push(
+            `.definelabel ${parameter.name},${parameterValue}`
+          );
           if (info.chains) {
-            const indices = getChainIndexValuesFromAbsoluteIndex(info.chains, parameterValue as number);
-            parameterSymbols.push(`.definelabel ${parameter.name}_chain_index,${indices[0]}`);
-            parameterSymbols.push(`.definelabel ${parameter.name}_chain_space_index,${indices[1]}`);
-          }
-          else {
+            const indices = getChainIndexValuesFromAbsoluteIndex(
+              info.chains,
+              parameterValue as number
+            );
+            parameterSymbols.push(
+              `.definelabel ${parameter.name}_chain_index,${indices[0]}`
+            );
+            parameterSymbols.push(
+              `.definelabel ${parameter.name}_chain_space_index,${indices[1]}`
+            );
+          } else {
             // Mostly for testAssemble
-            parameterSymbols.push(`.definelabel ${parameter.name}_chain_index,-1`);
-            parameterSymbols.push(`.definelabel ${parameter.name}_chain_space_index,-1`);
+            parameterSymbols.push(
+              `.definelabel ${parameter.name}_chain_index,-1`
+            );
+            parameterSymbols.push(
+              `.definelabel ${parameter.name}_chain_space_index,-1`
+            );
           }
           break;
 
@@ -186,28 +237,46 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
             parameterSymbols.push(`${parameter.name} equ 0`);
             parameterSymbols.push(`${parameter.name}_length equ 1`);
             parameterSymbols.push(`${parameter.name}_chain_indices equ 0`);
-            parameterSymbols.push(`${parameter.name}_chain_space_indices equ 0`);
-          }
-          else {
+            parameterSymbols.push(
+              `${parameter.name}_chain_space_indices equ 0`
+            );
+          } else {
             const spaceArr = (parameterValue as number[]) || [];
-            parameterSymbols.push(`${parameter.name} equ ${spaceArr.join(",")}`);
-            parameterSymbols.push(`${parameter.name}_length equ ${spaceArr.length}`);
+            parameterSymbols.push(
+              `${parameter.name} equ ${spaceArr.join(",")}`
+            );
+            parameterSymbols.push(
+              `${parameter.name}_length equ ${spaceArr.length}`
+            );
 
-            const allIndices = spaceArr.map(s => getChainIndexValuesFromAbsoluteIndex(info.chains, s));
-            const chainIndices = allIndices.map(x => x[0]);
-            const chainSpaceIndices = allIndices.map(x => x[1]);
-            parameterSymbols.push(`${parameter.name}_chain_indices equ ${chainIndices.join(",")}`);
-            parameterSymbols.push(`${parameter.name}_chain_space_indices equ ${chainSpaceIndices.join(",")}`);
+            const allIndices = spaceArr.map((s) =>
+              getChainIndexValuesFromAbsoluteIndex(info.chains, s)
+            );
+            const chainIndices = allIndices.map((x) => x[0]);
+            const chainSpaceIndices = allIndices.map((x) => x[1]);
+            parameterSymbols.push(
+              `${parameter.name}_chain_indices equ ${chainIndices.join(",")}`
+            );
+            parameterSymbols.push(
+              `${
+                parameter.name
+              }_chain_space_indices equ ${chainSpaceIndices.join(",")}`
+            );
           }
           break;
 
         default:
-          if (typeof parameterValue !== "undefined" && parameterValue !== null) {
-            parameterSymbols.push(`.definelabel ${parameter.name},${parameterValue}`);
+          if (
+            typeof parameterValue !== "undefined" &&
+            parameterValue !== null
+          ) {
+            parameterSymbols.push(
+              `.definelabel ${parameter.name},${parameterValue}`
+            );
           }
           break;
       }
-    })
+    });
   }
   return parameterSymbols;
 }
@@ -216,18 +285,23 @@ export function makeParameterSymbolLabels(event: IEvent, spaceEvent: IEventInsta
  * Events are written assuming their global labels are scoped to themselves,
  * but during assembly they need to be scoped using the static labels feature.
  */
-export function scopeLabelsStaticByDefault(asm: string, keepStatic: boolean): string {
-  const lines = asm.split("\n").map(line => line.trim())
+export function scopeLabelsStaticByDefault(
+  asm: string,
+  keepStatic: boolean
+): string {
+  const lines = asm.split("\n").map((line) => line.trim());
 
   // We always find labels to scope without static sections...
   const linesWithoutStaticSections = removeStaticSections(lines, keepStatic);
   const labels = findLabelsToScope(linesWithoutStaticSections);
 
   // But only keep the static section when replacing the first time.
-  asm = keepStatic ? replaceStaticRegionDirectives(lines) : linesWithoutStaticSections.join("\n");
+  asm = keepStatic
+    ? replaceStaticRegionDirectives(lines)
+    : linesWithoutStaticSections.join("\n");
 
   const labelCharRegex = /[@\w!?]/;
-  labels.forEach(label => {
+  labels.forEach((label) => {
     let currentIndex = -1;
     do {
       currentIndex = asm.indexOf(label, currentIndex);
@@ -268,7 +342,7 @@ function findLabelsToScope(lines: string[]): string[] {
   const equRegex = /^\s*([@\w!?]+)\s+equ(?:$|\s+)/i;
 
   let foundLabels: string[] = [];
-  lines.forEach(line => {
+  lines.forEach((line) => {
     let match = defineLabelRegex.exec(line);
     if (match) {
       foundLabels.push(match[1]);
@@ -281,7 +355,8 @@ function findLabelsToScope(lines: string[]): string[] {
       return;
     }
 
-    while (match = labelRegex.exec(line)) { // eslint-disable-line no-cond-assign
+    while ((match = labelRegex.exec(line))) {
+      // eslint-disable-line no-cond-assign
       foundLabels.push(match[1]);
       line = line.substr(match[0].length);
     }
@@ -301,7 +376,10 @@ function labelShouldBeScoped(label: string): boolean {
   return true;
 }
 
-function removeStaticSections(lines: string[], keepingStatics: boolean): string[] {
+function removeStaticSections(
+  lines: string[],
+  keepingStatics: boolean
+): string[] {
   let withinStatic = false;
   let filteredLines = [];
   for (let i = 0; i < lines.length; i++) {
@@ -314,8 +392,7 @@ function removeStaticSections(lines: string[], keepingStatics: boolean): string[
         filteredLines.push("; omitted statics");
       }
       continue;
-    }
-    else if (lines[i] === ".endstatic") {
+    } else if (lines[i] === ".endstatic") {
       if (!withinStatic) {
         throw new Error("Saw .endstatic without .beginstatic");
       }
@@ -341,11 +418,9 @@ function replaceStaticRegionDirectives(lines: string[]): string {
   for (let i = 0; i < lines.length; i++) {
     if (lines[i] === ".beginstatic") {
       adjustedLines.push("; .beginstatic");
-    }
-    else if (lines[i] === ".endstatic") {
+    } else if (lines[i] === ".endstatic") {
       adjustedLines.push("; .endstatic");
-    }
-    else {
+    } else {
       adjustedLines.push(lines[i]);
     }
   }
@@ -353,7 +428,10 @@ function replaceStaticRegionDirectives(lines: string[]): string {
   return adjustedLines.join("\n");
 }
 
-export function createEventInstanceLabel(spaceIndex: number, eventNumber: number): string {
-  const strIndex = spaceIndex < 0 ? ("minus" + Math.abs(spaceIndex)) : spaceIndex;
+export function createEventInstanceLabel(
+  spaceIndex: number,
+  eventNumber: number
+): string {
+  const strIndex = spaceIndex < 0 ? "minus" + Math.abs(spaceIndex) : spaceIndex;
   return `__PP64_INTERNAL_EVENT_${strIndex}_${eventNumber}`;
 }

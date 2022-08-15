@@ -36,6 +36,6 @@ export function makeColorQueue(): IColorQueue {
   return {
     next() {
       return getDistinctColor(index++);
-    }
+    },
   };
 }

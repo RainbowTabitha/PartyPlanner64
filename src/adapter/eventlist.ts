@@ -12,16 +12,14 @@ export class SpaceEventList {
   }
 
   /*
-  * Populates this SpaceEventTable from an event table existing in the buffer.
-  */
-  public parse(arr: DataView): void
+   * Populates this SpaceEventTable from an event table existing in the buffer.
+   */
+  public parse(arr: DataView): void;
   public parse(arr: ArrayBuffer, offset: number): void;
   public parse(arr: ArrayBuffer | DataView, offset?: number): void {
     let dataView: DataView;
-    if (arr instanceof ArrayBuffer)
-      dataView = new DataView(arr, offset);
-    else
-      dataView = arr;
+    if (arr instanceof ArrayBuffer) dataView = new DataView(arr, offset);
+    else dataView = arr;
     let currentOffset = 0;
     let activationType, executionType, address;
     while ((activationType = dataView.getUint16(currentOffset)) !== 0) {
@@ -33,17 +31,23 @@ export class SpaceEventList {
   }
 
   /*
-  * Writes the current entries back to the buffer at an offset.
-  * Returns length of bytes written (equal to calling byteLength())
-  */
- public write(buffer: ArrayBuffer, offset: number) {
+   * Writes the current entries back to the buffer at an offset.
+   * Returns length of bytes written (equal to calling byteLength())
+   */
+  public write(buffer: ArrayBuffer, offset: number) {
     let dataView = new DataView(buffer, offset);
     let currentOffset = 0;
-    this.forEach(entry => {
+    this.forEach((entry) => {
       if (typeof entry.address === "string") {
         throw new Error("Cannot write event list with symbolic address");
       }
-      this._writeEntry(dataView, currentOffset, entry.activationType, entry.executionType, entry.address);
+      this._writeEntry(
+        dataView,
+        currentOffset,
+        entry.activationType,
+        entry.executionType,
+        entry.address
+      );
       currentOffset += 8;
     });
     this._writeEntry(dataView, currentOffset, 0, 0);
@@ -59,8 +63,7 @@ export class SpaceEventList {
       asm += `.halfword ${entry.activationType}, ${entry.executionType}\n`;
       if (typeof entry.address === "string") {
         asm += `.word ${entry.address}\n`; // A symbol, write verbatim.
-      }
-      else {
+      } else {
         asm += `.word ${createEventInstanceLabel(this._spaceIndex!, index)}\n`;
       }
     });
@@ -68,10 +71,13 @@ export class SpaceEventList {
     return asm;
   }
 
-  _writeEntry(dataView: DataView, currentOffset: number,
+  _writeEntry(
+    dataView: DataView,
+    currentOffset: number,
     activationType: EventActivationType,
-    executionType: EventExecutionType, address: number = 0)
-  {
+    executionType: EventExecutionType,
+    address: number = 0
+  ) {
     dataView.setUint16(currentOffset, activationType);
     dataView.setUint16(currentOffset + 2, executionType);
     if (!address && (activationType || executionType))
@@ -79,10 +85,14 @@ export class SpaceEventList {
     dataView.setUint32(currentOffset + 4, address);
   }
 
-  public add(activationType: EventActivationType,
-    executionType: EventExecutionType, address: number | string = 0)
-  {
-    this._entries.push(new SpaceEventListEntry(activationType, executionType, address));
+  public add(
+    activationType: EventActivationType,
+    executionType: EventExecutionType,
+    address: number | string = 0
+  ) {
+    this._entries.push(
+      new SpaceEventListEntry(activationType, executionType, address)
+    );
   }
 
   public setAddress(entryIndex: number, address: number = 0) {
@@ -99,11 +109,11 @@ export class SpaceEventList {
 
   public byteLength() {
     // Each entry is 8 bytes, plus the last null entry.
-    return (this._entries.length * 8) + 8;
+    return this._entries.length * 8 + 8;
   }
 
   public static byteLength(entryCount: number) {
-    return (entryCount * 8) + 8;
+    return entryCount * 8 + 8;
   }
 }
 
@@ -112,9 +122,11 @@ export class SpaceEventListEntry {
   public executionType: EventExecutionType;
   public address: number | string;
 
-  constructor(activationType: EventActivationType,
-    executionType: EventExecutionType, address: number | string)
-  {
+  constructor(
+    activationType: EventActivationType,
+    executionType: EventExecutionType,
+    address: number | string
+  ) {
     this.activationType = activationType;
     this.executionType = executionType;
     this.address = address;
@@ -122,6 +134,6 @@ export class SpaceEventListEntry {
 }
 
 export function createSpaceEventListLabel(spaceIndex: number): string {
-  const strIndex = spaceIndex < 0 ? ("minus" + Math.abs(spaceIndex)) : spaceIndex;
+  const strIndex = spaceIndex < 0 ? "minus" + Math.abs(spaceIndex) : spaceIndex;
   return `__PP64_INTERNAL_SPACE_LIST_${strIndex}`;
 }

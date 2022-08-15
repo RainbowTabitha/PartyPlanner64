@@ -156,7 +156,7 @@ export class MtnxToThreeJs {
     let cur3DIndex = -1;
     const objs = this.form.OBJ1[0].parsed.objects;
     for (let i = 0; i < objs.length; i++) {
-      if (objs[i].objType === 0x3D) {
+      if (objs[i].objType === 0x3d) {
         cur3DIndex++;
         if (cur3DIndex === index) {
           return $$hex(objs[i].globalIndex);

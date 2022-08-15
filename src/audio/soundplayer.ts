@@ -1,5 +1,10 @@
 import { audio } from "../fs/audio";
-import { getAudioContext, getIsPlaying, AudioPlayerController, setIsPlaying } from "./playershared";
+import {
+  getAudioContext,
+  getIsPlaying,
+  AudioPlayerController,
+  setIsPlaying,
+} from "./playershared";
 import { extractWavFromSound } from "./wav";
 
 export function playSound(table: number, index: number): AudioPlayerController {
@@ -15,7 +20,7 @@ export function playSound(table: number, index: number): AudioPlayerController {
 
   let onEndedCallback: () => void;
   let node: AudioBufferSourceNode;
-  audioContext.decodeAudioData(wav).then(audioBuffer => {
+  audioContext.decodeAudioData(wav).then((audioBuffer) => {
     node = audioContext.createBufferSource();
     node.buffer = audioBuffer;
     node.connect(audioContext.destination);
@@ -25,7 +30,7 @@ export function playSound(table: number, index: number): AudioPlayerController {
       if (onEndedCallback) {
         onEndedCallback();
       }
-    }
+    };
   });
 
   return new AudioPlayerController({

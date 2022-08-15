@@ -5,14 +5,13 @@ import { romhandler } from "../romhandler";
 
 export function getROMAdapter() {
   let game = romhandler.getGameVersion();
-  if (!game)
-    return null;
+  if (!game) return null;
 
   return getAdapter(game);
 }
 
 export function getAdapter(game: number) {
-  switch(game) {
+  switch (game) {
     case 1:
       return MP1;
     case 2:

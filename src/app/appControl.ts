@@ -4,9 +4,35 @@ import { IEvent } from "../events/events";
 import { Notification } from "../components/notifications";
 import { IDecisionTreeNode } from "../ai/aitrees";
 import { store } from "./store";
-import { blockUIAction, confirmFromUserAction, promptUserAction, showMessageAction, showMessageHTMLAction } from "./blocker";
-import { addNotificationAction, changeCurrentActionAction, changeViewAction, removeNotificationAction, setOverrideBgAction, setRomLoadedAction } from "./appState";
-import { setTemporaryUIConnections, changeCurrentEventAction, clearSelectedSpacesAction, EventType, selectCurrentBoard, selectCurrentEvent, setHighlightedSpacesAction, setHoveredBoardEventIndexAction, setSelectedSpacesAction, SpaceIndexMap, selectCurrentEventType, selectSelectedSpaceIndices } from "./boardState";
+import {
+  blockUIAction,
+  confirmFromUserAction,
+  promptUserAction,
+  showMessageAction,
+  showMessageHTMLAction,
+} from "./blocker";
+import {
+  addNotificationAction,
+  changeCurrentActionAction,
+  changeViewAction,
+  removeNotificationAction,
+  setOverrideBgAction,
+  setRomLoadedAction,
+} from "./appState";
+import {
+  setTemporaryUIConnections,
+  changeCurrentEventAction,
+  clearSelectedSpacesAction,
+  EventType,
+  selectCurrentBoard,
+  selectCurrentEvent,
+  setHighlightedSpacesAction,
+  setHoveredBoardEventIndexAction,
+  setSelectedSpacesAction,
+  SpaceIndexMap,
+  selectCurrentEventType,
+  selectSelectedSpaceIndices,
+} from "./boardState";
 import { ActionCreators as ReduxUndoActionCreators } from "redux-undo";
 
 export function getAppInstance(): import("./app").PP64App {
@@ -89,9 +115,9 @@ export function highlightSpaces(spaceIndices: number[]): void {
 }
 
 export function drawConnection(x1: number, y1: number, x2: number, y2: number) {
-  store.dispatch(setTemporaryUIConnections({ connections: [
-    [x1, y1, x2, y2]
-  ]}));
+  store.dispatch(
+    setTemporaryUIConnections({ connections: [[x1, y1, x2, y2]] })
+  );
 }
 
 export function changeCurrentEvent(eventId: string | null, isBoard?: boolean) {
@@ -99,10 +125,12 @@ export function changeCurrentEvent(eventId: string | null, isBoard?: boolean) {
   if (eventId) {
     eventType = isBoard ? EventType.Board : EventType.Library;
   }
-  store.dispatch(changeCurrentEventAction({
-    id: eventId,
-    type: eventType,
-  }));
+  store.dispatch(
+    changeCurrentEventAction({
+      id: eventId,
+      type: eventType,
+    })
+  );
 }
 
 export function getCurrentEvent(): IEvent | null {
@@ -114,7 +142,9 @@ export function getCurrentEventIsBoardEvent(): boolean {
 }
 
 export function setHoveredBoardEvent(hoveredBoardEventIndex: number) {
-  store.dispatch(setHoveredBoardEventIndexAction({ eventIndex: hoveredBoardEventIndex }));
+  store.dispatch(
+    setHoveredBoardEventIndexAction({ eventIndex: hoveredBoardEventIndex })
+  );
 }
 
 export function setOverrideBg(overrideBg: string | null) {
@@ -138,12 +168,14 @@ export function confirmFromUser(message: string): Promise<boolean> {
   const promise = new Promise<boolean>((resolve) => {
     resolveFunction = resolve;
   });
-  store.dispatch(confirmFromUserAction({
-    message,
-    onConfirmed: (value?: string) => {
-      resolveFunction(value !== undefined);
-    }
-  }));
+  store.dispatch(
+    confirmFromUserAction({
+      message,
+      onConfirmed: (value?: string) => {
+        resolveFunction(value !== undefined);
+      },
+    })
+  );
   return promise;
 }
 
@@ -164,7 +196,9 @@ export function refresh() {
   getAppInstance().forceUpdate();
 }
 
-export function addNotification(notification: React.ReactElement<Notification>) {
+export function addNotification(
+  notification: React.ReactElement<Notification>
+) {
   store.dispatch(addNotificationAction({ notification: notification as any }));
 }
 
@@ -181,9 +215,9 @@ export function undo(): void {
 }
 
 export function redo(): void {
-  store.dispatch(ReduxUndoActionCreators.redo())
+  store.dispatch(ReduxUndoActionCreators.redo());
 }
 
 export function clearUndoHistory(): void {
-  store.dispatch(ReduxUndoActionCreators.clearHistory())
+  store.dispatch(ReduxUndoActionCreators.clearHistory());
 }

@@ -12,7 +12,8 @@ $notification-font-color: var(--notification-text-color);
   color: $notification-font-color;
   flex-shrink: 1;
 
-  a, button {
+  a,
+  button {
     color: $notification-font-color;
   }
 }
@@ -61,7 +62,8 @@ $notification-font-color: var(--notification-text-color);
   background-position: center;
   background-repeat: no-repeat;
 
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     opacity: 1;
   }
 }

@@ -33,37 +33,37 @@ const MP3_CHILLY = createBoardInfo("MP3_CHILLY", {
   sceneIndex: 0x48,
   mainfsEventFile: [19, 618],
   mainfsBoardFile: [19, 619],
-  eventASMStart: 0x14AF0, // 0x00330000 // ballpark, but this is wrong -> // 0x0031E814, // is this 0x8011A490 ?
-  eventASMEnd: 0x16BEC, // 0x003320FC, 0x8011C58C
+  eventASMStart: 0x14af0, // 0x00330000 // ballpark, but this is wrong -> // 0x0031E814, // is this 0x8011A490 ?
+  eventASMEnd: 0x16bec, // 0x003320FC, 0x8011C58C
   // spaceEventsStartAddr: 0x0011E718,
   // spaceEventsStartOffset: 0x00334288,
   // spaceEventsEndOffset: 0x18F18, // 0x00334428,
   spaceEventTables: [
-    { upper: 0x26A8, lower: 0x26B0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
-    { upper: 0x26B4, lower: 0x26BC }, // 0x80108054, 0x8010805C, table 0x8011E718
+    { upper: 0x26a8, lower: 0x26b0 }, // 0x80108048, 0x80108050, table 0x8011E2CC
+    { upper: 0x26b4, lower: 0x26bc }, // 0x80108054, 0x8010805C, table 0x8011E718
     // { upper: 0x31DBD0, lower: 0x31DBD8 }, // 0x80108060, 0x80108068 // This is not a table actually, it is related to the happening spaces
-    { upper: 0x26CC, lower: 0x26D4 }, // 0x8010806C, 0x80108074, table 0x8011E344
+    { upper: 0x26cc, lower: 0x26d4 }, // 0x8010806C, 0x80108074, table 0x8011E344
     // A table, but if we remove it Poison Shrooms break and probably other things
     // { upper: 0x31DBE8, lower: 0x31DBF0 }, // 0x80108078, 0x80108080, table 0x8011E4D8
   ],
   starSpaceArrOffset: [0x17910, 0x17980], // [0x00332E20, 0x00332E90] // 0x8011D2B0, 0x8011D320
   starSpaceCount: 8,
-  toadSpaceArrOffset: [0x17920, 0x179DC], // [0x00332E30, 0x00332EEC] // 0x8011D2C0, 0x8011D37C
-  bankArrOffset: [0x17B64], //  [0x00333074] // 0x8011D504
-  bankCoinArrOffset: [0x17A00], // [0x00332F10] // 0x8011D3A0
+  toadSpaceArrOffset: [0x17920, 0x179dc], // [0x00332E30, 0x00332EEC] // 0x8011D2C0, 0x8011D37C
+  bankArrOffset: [0x17b64], //  [0x00333074] // 0x8011D504
+  bankCoinArrOffset: [0x17a00], // [0x00332F10] // 0x8011D3A0
   bankCount: 2,
-  itemShopArrOffset: [0x17B68], // [0x00333078] // 0x8011D508
+  itemShopArrOffset: [0x17b68], // [0x00333078] // 0x8011D508
   itemShopCount: 2,
-  booArrOffset: [0x179FC], // [0x00332F0C] // 0x8011D39C
+  booArrOffset: [0x179fc], // [0x00332F0C] // 0x8011D39C
   booCount: 1,
-  gateNeighborsOffset: [0x179D4], //  [0x00332EE4] // 0x8011D374
-  gateArrOffset: [0x17A7C], // [0x00332F8C] // 0x8011D41C
+  gateNeighborsOffset: [0x179d4], //  [0x00332EE4] // 0x8011D374
+  gateArrOffset: [0x17a7c], // [0x00332F8C] // 0x8011D41C
   gateCount: 2,
   arrowRotStartOffset: 0x2398, // 0x0031D8A8 // 0x80107D38
   arrowRotEndOffset: 0x2440, // 0x0031D950 // 0x80107DDC
   audioIndexOffset: 0x2682, // 0x0031DB92 // 0x80108022
 
-  onLoad: function(board: IBoard) {
+  onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_CHILLY.bgDir + 1).src;
   },
 });
@@ -99,7 +99,7 @@ const MP3_BLOOBER = createBoardInfo("MP3_BLOOBER", {
   mainfsEventFile: [19, 620],
   mainfsBoardFile: [19, 621],
 
-  onLoad: function(board: IBoard) {
+  onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_BLOOBER.bgDir + 1).src;
   },
 });
@@ -140,11 +140,11 @@ const MP3_SPINY = createBoardInfo("MP3_SPINY", {
     gateImg: 366, // dir 19
   },
 
-  sceneIndex: 0x4A,
+  sceneIndex: 0x4a,
   mainfsEventFile: [19, 622],
   mainfsBoardFile: [19, 623],
 
-  onLoad: function(board: IBoard) {
+  onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_SPINY.bgDir + 1).src;
   },
 });
@@ -177,11 +177,11 @@ const MP3_WOODY = createBoardInfo("MP3_WOODY", {
     gateImg: 373, // dir 19
   },
 
-  sceneIndex: 0x4B,
+  sceneIndex: 0x4b,
   mainfsEventFile: [19, 624],
   mainfsBoardFile: [19, 625],
 
-  onLoad: function(board: IBoard) {
+  onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_WOODY.bgDir + 1).src;
   },
 });
@@ -214,11 +214,11 @@ const MP3_CAVERN = createBoardInfo("MP3_CAVERN", {
     gateImg: 383, // dir 19
   },
 
-  sceneIndex: 0x4C,
+  sceneIndex: 0x4c,
   mainfsEventFile: [19, 626],
   mainfsBoardFile: [19, 627],
 
-  onLoad: function(board: IBoard) {
+  onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_CAVERN.bgDir + 1).src;
   },
 });
@@ -251,11 +251,11 @@ const MP3_WALUIGI = createBoardInfo("MP3_WALUIGI", {
     gateImg: 387, // dir 19
   },
 
-  sceneIndex: 0x4D,
+  sceneIndex: 0x4d,
   mainfsEventFile: [19, 628],
   mainfsBoardFile: [19, 629],
 
-  onLoad: function(board: IBoard) {
+  onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(MP3_WALUIGI.bgDir + 1).src;
   },
 });
@@ -284,21 +284,21 @@ MP3U_GATEGUY.img = {
   miniMapWithBg: 279, // dir 19
   miniMapDots: 280,
 };
-MP3U_GATEGUY.sceneIndex = 0x5B;
+MP3U_GATEGUY.sceneIndex = 0x5b;
 // MP3U_GATEGUY.spaceEventsStartAddr = 0x00118914;
 // MP3U_GATEGUY.spaceEventsStartOffset = 0x003EBA04;
-MP3U_GATEGUY.spaceEventTables = [ // JAL 800EA46C
-  { upper: 0x811C, lower: 0x8124 }, // 0x8010DABC, 0x8010DAC4, table 0x80118914
+MP3U_GATEGUY.spaceEventTables = [
+  // JAL 800EA46C
+  { upper: 0x811c, lower: 0x8124 }, // 0x8010DABC, 0x8010DAC4, table 0x80118914
   { upper: 0x8128, lower: 0x8130 }, // 0x8010DAC8, 0x8010DAD0, table 0x80118DEC
 ];
-MP3U_GATEGUY.onAfterOverwrite = function(board: IBoard) {
+MP3U_GATEGUY.onAfterOverwrite = function (board: IBoard) {
   // TODO Need this for duels?
   // This code (right inbetween 800EBA60 calls) sets up a function pointer for happening spaces.
   // Since we don't use any default events, we can overwrite it.
   // romView.setUint32(, 0);
   // romView.setUint32(, 0);
   // romView.setUint32(, 0);
-
   // TODO: Probably some stuff to NOP around 0x8010DA9C
 };
 

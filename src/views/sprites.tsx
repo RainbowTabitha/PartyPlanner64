@@ -18,7 +18,10 @@ export function SpriteView() {
     setSelectedSprite(entries[0]);
   }, []);
 
-  const onSelectedSpriteChanged = useCallback((sprite: MainFSPair) => setSelectedSprite(sprite), []);
+  const onSelectedSpriteChanged = useCallback(
+    (sprite: MainFSPair) => setSelectedSprite(sprite),
+    []
+  );
 
   if (!spriteFsEntries.length) {
     return null;
@@ -26,9 +29,11 @@ export function SpriteView() {
 
   return (
     <div className="spriteViewerContainer">
-      <SpriteViewerToolbar spriteFsEntries={spriteFsEntries}
+      <SpriteViewerToolbar
+        spriteFsEntries={spriteFsEntries}
         selectedSprite={selectedSprite!}
-        onSelectedSpriteChanged={onSelectedSpriteChanged} />
+        onSelectedSpriteChanged={onSelectedSpriteChanged}
+      />
       <SpriteDisplay selectedSprite={selectedSprite!} />
     </div>
   );
@@ -43,11 +48,13 @@ interface ISpriteViewerToolbarProps {
 function SpriteViewerToolbar(props: ISpriteViewerToolbarProps) {
   return (
     <div className="spriteViewerToolbar">
-      <SpriteSelect spriteFsEntries={props.spriteFsEntries}
+      <SpriteSelect
+        spriteFsEntries={props.spriteFsEntries}
         selectedSprite={props.selectedSprite}
-        onSelectedSpriteChanged={props.onSelectedSpriteChanged} />
+        onSelectedSpriteChanged={props.onSelectedSpriteChanged}
+      />
     </div>
-  )
+  );
 }
 
 interface ISpriteSelectProps {
@@ -57,10 +64,12 @@ interface ISpriteSelectProps {
 }
 
 function SpriteSelect(props: ISpriteSelectProps) {
-  const options = props.spriteFsEntries.map(entry => {
+  const options = props.spriteFsEntries.map((entry) => {
     const value = entry.join("/");
     return (
-      <option value={value} key={value}>{value}</option>
+      <option value={value} key={value}>
+        {value}
+      </option>
     );
   });
   return (
@@ -69,12 +78,15 @@ function SpriteSelect(props: ISpriteSelectProps) {
       <select
         value={props.selectedSprite.join("/")}
         onChange={(e) => {
-          const [d, f] = e.target.value.split("/").map(val => parseInt(val));
-          const selected = props.spriteFsEntries.find(s => s[0] === d && s[1] === f);
+          const [d, f] = e.target.value.split("/").map((val) => parseInt(val));
+          const selected = props.spriteFsEntries.find(
+            (s) => s[0] === d && s[1] === f
+          );
           if (selected) {
             props.onSelectedSpriteChanged(selected);
           }
-        }}>
+        }}
+      >
         {options}
       </select>
     </div>
@@ -92,15 +104,23 @@ function SpriteDisplay(props: ISpriteDisplayProps) {
   }, [d, f]);
 
   const imgs = imgInfos.map((imgInfo, i) => {
-    const dataUri = arrayBufferToDataURL(imgInfo.src!, imgInfo.width, imgInfo.height);
-    return <SpriteImage name={`Sprite ${d}/${f}`} key={`${d}-${f}-${i}`} dataUri={dataUri} height={imgInfo.height} width={imgInfo.width} />
+    const dataUri = arrayBufferToDataURL(
+      imgInfo.src!,
+      imgInfo.width,
+      imgInfo.height
+    );
+    return (
+      <SpriteImage
+        name={`Sprite ${d}/${f}`}
+        key={`${d}-${f}-${i}`}
+        dataUri={dataUri}
+        height={imgInfo.height}
+        width={imgInfo.width}
+      />
+    );
   });
 
-  return (
-    <div className="spriteDisplayContainer">
-      {imgs}
-    </div>
-  );
+  return <div className="spriteDisplayContainer">{imgs}</div>;
 }
 
 interface ISpriteImageProps {
@@ -113,7 +133,13 @@ interface ISpriteImageProps {
 function SpriteImage(props: ISpriteImageProps) {
   return (
     <div className="spriteImageDiv">
-      <img key={props.name} src={props.dataUri} height={props.height} width={props.width} alt={props.name} />
+      <img
+        key={props.name}
+        src={props.dataUri}
+        height={props.height}
+        width={props.width}
+        alt={props.name}
+      />
     </div>
   );
 }
@@ -130,8 +156,7 @@ function getSpriteFSPairs(): MainFSPair[] {
         if (imgInfos) {
           fsPairs.push([d, f]);
         }
-      }
-      catch {}
+      } catch {}
     }
   }
 
@@ -141,8 +166,7 @@ function getSpriteFSPairs(): MainFSPair[] {
 function _readImgsFromMainFS(dir: number, file: number): IImgInfo[] | null {
   let imgPackBuffer = mainfs.get(dir, file);
   let imgArr = fromPack(imgPackBuffer);
-  if (!imgArr || !imgArr.length)
-    return null;
+  if (!imgArr || !imgArr.length) return null;
 
   return imgArr;
 }

@@ -4,22 +4,56 @@ import * as ReactDOM from "react-dom";
 import { useState, useEffect } from "react";
 import { Screenshot } from "./screenshot";
 import { NewBoard } from "./newboard";
-import { setCurrentBoard, addBoard, clearBoardsFromROM, getCurrentBoard, loadBoardsFromROM, indexOfBoard, IBoard, boardIsROM, setBG, copyCurrentBoard } from "./boards";
+import {
+  setCurrentBoard,
+  addBoard,
+  clearBoardsFromROM,
+  getCurrentBoard,
+  loadBoardsFromROM,
+  indexOfBoard,
+  IBoard,
+  boardIsROM,
+  setBG,
+  copyCurrentBoard,
+} from "./boards";
 import { recordEvent } from "./utils/analytics";
 import { $$log } from "./utils/debug";
 import { getROMAdapter } from "./adapter/adapters";
-import { validateCurrentBoardForOverwrite, IValidationResult } from "./validation/validation";
+import {
+  validateCurrentBoardForOverwrite,
+  IValidationResult,
+} from "./validation/validation";
 import { makeKeyClick } from "./utils/react";
 import { equal } from "./utils/arrays";
 import { get, $setting } from "./views/settings";
 import { romhandler } from "./romhandler";
 import { createCustomEvent, validateCustomEvent } from "./events/customevents";
 import { openFile } from "./utils/input";
-import { saveEvent, createEventPromptExit, NewEventDropdown } from "./views/createevent_shared";
-import { boardsChanged, romLoadedChanged, changeCurrentEvent, showMessage, addNotification, removeNotification, blockUI, changeView } from "./app/appControl";
-import { Notification, NotificationColor, NotificationButton } from "./components/notifications";
+import {
+  saveEvent,
+  createEventPromptExit,
+  NewEventDropdown,
+} from "./views/createevent_shared";
+import {
+  boardsChanged,
+  romLoadedChanged,
+  changeCurrentEvent,
+  showMessage,
+  addNotification,
+  removeNotification,
+  blockUI,
+  changeView,
+} from "./app/appControl";
+import {
+  Notification,
+  NotificationColor,
+  NotificationButton,
+} from "./components/notifications";
 import { addEventToLibrary } from "./events/EventLibrary";
-import { saveBasicCodeEditorCode, basicCodeViewPromptExit } from "./views/basiccodeeditorview";
+import {
+  saveBasicCodeEditorCode,
+  basicCodeViewPromptExit,
+} from "./views/basiccodeeditorview";
 import { saveAs } from "file-saver";
 import { isElectron } from "./utils/electron";
 
@@ -63,107 +97,343 @@ interface IHeaderActionItem {
 }
 
 const actions_norom: IHeaderActionItem[] = [
-  { "name": "Load ROM", "icon": romCartImage, "type": Action.ROM_LOAD, "details": "Load a ROM image and read its boards" },
-  { "name": "New board", "icon": newboardImage,
-    "type": Action.BOARD_NEW, "details": "Create a new board",
-    "dropdownFn": newboardDropdown
+  {
+    name: "Load ROM",
+    icon: romCartImage,
+    type: Action.ROM_LOAD,
+    details: "Load a ROM image and read its boards",
   },
-  { "name": "Import board", "icon": loadboardImage, "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
-  { "name": "Export board", "icon": saveboardImage, "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Debug", "icon": debugImage, "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
-  { "name": "Screenshot", "icon": screenshotImage,
-    "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
-    "dropdownFn": screenshotDropdown
+  {
+    name: "New board",
+    icon: newboardImage,
+    type: Action.BOARD_NEW,
+    details: "Create a new board",
+    dropdownFn: newboardDropdown,
   },
-  { "name": "Events", "icon": eventsImage, "type": Action.EVENTS, "details": "View and manage events", "advanced": true },
-  { "name": "Settings", "icon": settingsImage, "type": Action.SETTINGS, "details": "Editor settings" },
-  { "name": "About", "icon": aboutImage, "type": Action.ABOUT, "details": "About PartyPlanner64" },
+  {
+    name: "Import board",
+    icon: loadboardImage,
+    type: Action.BOARD_LOAD,
+    details: "Import a board file into the editor",
+  },
+  {
+    name: "Export board",
+    icon: saveboardImage,
+    type: Action.BOARD_SAVE,
+    details: "Export a board file for distribution",
+  },
+  {
+    name: "Debug",
+    icon: debugImage,
+    type: Action.DEBUG,
+    details: "Debug functionality",
+    advanced: true,
+  },
+  {
+    name: "Screenshot",
+    icon: screenshotImage,
+    type: Action.SCREENSHOT,
+    details: "Take a screenshot of the current board",
+    dropdownFn: screenshotDropdown,
+  },
+  {
+    name: "Events",
+    icon: eventsImage,
+    type: Action.EVENTS,
+    details: "View and manage events",
+    advanced: true,
+  },
+  {
+    name: "Settings",
+    icon: settingsImage,
+    type: Action.SETTINGS,
+    details: "Editor settings",
+  },
+  {
+    name: "About",
+    icon: aboutImage,
+    type: Action.ABOUT,
+    details: "About PartyPlanner64",
+  },
 ];
 
 const actions_rom_romboard: IHeaderActionItem[] = [
-  { "name": "Close ROM", "icon": romcloseImage, "type": Action.ROM_UNLOAD, "details": "Close the ROM file and remove its boards" },
-  { "name": "Save ROM", "icon": romsaveImage, "type": Action.ROM_SAVE, "details": "Save changes out to a ROM file" },
-  { "name": "New board", "icon": newboardImage,
-    "type": Action.BOARD_NEW, "details": "Create a new board",
-    "dropdownFn": newboardDropdown
+  {
+    name: "Close ROM",
+    icon: romcloseImage,
+    type: Action.ROM_UNLOAD,
+    details: "Close the ROM file and remove its boards",
   },
-  { "name": "Import board", "icon": loadboardImage, "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
-  { "name": "Export board", "icon": saveboardImage, "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Debug", "icon": debugImage, "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
-  { "name": "Screenshot", "icon": screenshotImage,
-    "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
-    "dropdownFn": screenshotDropdown
+  {
+    name: "Save ROM",
+    icon: romsaveImage,
+    type: Action.ROM_SAVE,
+    details: "Save changes out to a ROM file",
   },
-  { "name": "Events", "icon": eventsImage, "type": Action.EVENTS, "details": "View and manage events", "advanced": true },
-  { "name": "Patches", "icon": rompatchImage, "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
-  { "name": "Model Viewer", "icon": modelviewerImage, "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
-  { "name": "Sprites", "icon": spritesImage, "type": Action.SPRITE_VIEWER, "details": "View sprite data in the ROM", advanced: true },
+  {
+    name: "New board",
+    icon: newboardImage,
+    type: Action.BOARD_NEW,
+    details: "Create a new board",
+    dropdownFn: newboardDropdown,
+  },
+  {
+    name: "Import board",
+    icon: loadboardImage,
+    type: Action.BOARD_LOAD,
+    details: "Import a board file into the editor",
+  },
+  {
+    name: "Export board",
+    icon: saveboardImage,
+    type: Action.BOARD_SAVE,
+    details: "Export a board file for distribution",
+  },
+  {
+    name: "Debug",
+    icon: debugImage,
+    type: Action.DEBUG,
+    details: "Debug functionality",
+    advanced: true,
+  },
+  {
+    name: "Screenshot",
+    icon: screenshotImage,
+    type: Action.SCREENSHOT,
+    details: "Take a screenshot of the current board",
+    dropdownFn: screenshotDropdown,
+  },
+  {
+    name: "Events",
+    icon: eventsImage,
+    type: Action.EVENTS,
+    details: "View and manage events",
+    advanced: true,
+  },
+  {
+    name: "Patches",
+    icon: rompatchImage,
+    type: Action.PATCHES,
+    details: "Apply patches to the ROM",
+    advanced: true,
+  },
+  {
+    name: "Model Viewer",
+    icon: modelviewerImage,
+    type: Action.MODEL_VIEWER,
+    details: "View 3D model data in the ROM",
+  },
+  {
+    name: "Sprites",
+    icon: spritesImage,
+    type: Action.SPRITE_VIEWER,
+    details: "View sprite data in the ROM",
+    advanced: true,
+  },
   //{ "name": "Strings", "icon": stringseditorImage, "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
-  { "name": "Audio", "icon": audioImage, "type": Action.AUDIO, "details": "Game audio options", advanced: true },
-  { "name": "Settings", "icon": settingsImage, "type": Action.SETTINGS, "details": "Editor settings" },
-  { "name": "About", "icon": aboutImage, "type": Action.ABOUT, "details": "About PartyPlanner64" },
+  {
+    name: "Audio",
+    icon: audioImage,
+    type: Action.AUDIO,
+    details: "Game audio options",
+    advanced: true,
+  },
+  {
+    name: "Settings",
+    icon: settingsImage,
+    type: Action.SETTINGS,
+    details: "Editor settings",
+  },
+  {
+    name: "About",
+    icon: aboutImage,
+    type: Action.ABOUT,
+    details: "About PartyPlanner64",
+  },
 ];
 
 const actions_rom_normalboard: IHeaderActionItem[] = [
-  { "name": "Close ROM", "icon": romcloseImage, "type": Action.ROM_UNLOAD, "details": "Close the ROM file and remove its boards" },
-  { "name": "Save ROM", "icon": romsaveImage, "type": Action.ROM_SAVE, "details": "Save changes out to a ROM file" },
   {
-    "name": "Overwrite", "icon": romoverwriteImage,
-    "type": Action.BOARD_WRITE, "details": "Overwrite a ROM board with the current board",
-    "dropdownFn": overwriteDropdown
+    name: "Close ROM",
+    icon: romcloseImage,
+    type: Action.ROM_UNLOAD,
+    details: "Close the ROM file and remove its boards",
   },
-  { "name": "New board", "icon": newboardImage,
-    "type": Action.BOARD_NEW, "details": "Create a new board",
-    "dropdownFn": newboardDropdown
+  {
+    name: "Save ROM",
+    icon: romsaveImage,
+    type: Action.ROM_SAVE,
+    details: "Save changes out to a ROM file",
   },
-  { "name": "Import board", "icon": loadboardImage, "type": Action.BOARD_LOAD, "details": "Import a board file into the editor" },
-  { "name": "Export board", "icon": saveboardImage, "type": Action.BOARD_SAVE, "details": "Export a board file for distribution" },
-  { "name": "Debug", "icon": debugImage, "type": Action.DEBUG, "details": "Debug functionality", "advanced": true },
-  { "name": "Screenshot", "icon": screenshotImage,
-    "type": Action.SCREENSHOT, "details": "Take a screenshot of the current board",
-    "dropdownFn": screenshotDropdown
+  {
+    name: "Overwrite",
+    icon: romoverwriteImage,
+    type: Action.BOARD_WRITE,
+    details: "Overwrite a ROM board with the current board",
+    dropdownFn: overwriteDropdown,
   },
-  { "name": "Events", "icon": eventsImage, "type": Action.EVENTS, "details": "View and manage events", "advanced": true },
-  { "name": "Patches", "icon": rompatchImage, "type": Action.PATCHES, "details": "Apply patches to the ROM", "advanced": true },
-  { "name": "Model Viewer", "icon": modelviewerImage, "type": Action.MODEL_VIEWER, "details": "View 3D model data in the ROM" },
-  { "name": "Sprites", "icon": spritesImage, "type": Action.SPRITE_VIEWER, "details": "View sprite data in the ROM", advanced: true },
+  {
+    name: "New board",
+    icon: newboardImage,
+    type: Action.BOARD_NEW,
+    details: "Create a new board",
+    dropdownFn: newboardDropdown,
+  },
+  {
+    name: "Import board",
+    icon: loadboardImage,
+    type: Action.BOARD_LOAD,
+    details: "Import a board file into the editor",
+  },
+  {
+    name: "Export board",
+    icon: saveboardImage,
+    type: Action.BOARD_SAVE,
+    details: "Export a board file for distribution",
+  },
+  {
+    name: "Debug",
+    icon: debugImage,
+    type: Action.DEBUG,
+    details: "Debug functionality",
+    advanced: true,
+  },
+  {
+    name: "Screenshot",
+    icon: screenshotImage,
+    type: Action.SCREENSHOT,
+    details: "Take a screenshot of the current board",
+    dropdownFn: screenshotDropdown,
+  },
+  {
+    name: "Events",
+    icon: eventsImage,
+    type: Action.EVENTS,
+    details: "View and manage events",
+    advanced: true,
+  },
+  {
+    name: "Patches",
+    icon: rompatchImage,
+    type: Action.PATCHES,
+    details: "Apply patches to the ROM",
+    advanced: true,
+  },
+  {
+    name: "Model Viewer",
+    icon: modelviewerImage,
+    type: Action.MODEL_VIEWER,
+    details: "View 3D model data in the ROM",
+  },
+  {
+    name: "Sprites",
+    icon: spritesImage,
+    type: Action.SPRITE_VIEWER,
+    details: "View sprite data in the ROM",
+    advanced: true,
+  },
   //{ "name": "Strings", "icon": stringseditorImage, "type": Action.STRINGS_EDITOR, "details": "View and edit strings in the ROM" },
-  { "name": "Audio", "icon": audioImage, "type": Action.AUDIO, "details": "Game audio options", advanced: true },
-  { "name": "Settings", "icon": settingsImage, "type": Action.SETTINGS, "details": "Editor settings" },
-  { "name": "About", "icon": aboutImage, "type": Action.ABOUT, "details": "About PartyPlanner64" },
+  {
+    name: "Audio",
+    icon: audioImage,
+    type: Action.AUDIO,
+    details: "Game audio options",
+    advanced: true,
+  },
+  {
+    name: "Settings",
+    icon: settingsImage,
+    type: Action.SETTINGS,
+    details: "Editor settings",
+  },
+  {
+    name: "About",
+    icon: aboutImage,
+    type: Action.ABOUT,
+    details: "About PartyPlanner64",
+  },
 ];
 
 const actions_back: IHeaderActionItem[] = [
-  { "name": "Back to editor", "icon": backImage, "type": Action.BOARD_EDITOR, "details": "Return to the board editor" },
+  {
+    name: "Back to editor",
+    icon: backImage,
+    type: Action.BOARD_EDITOR,
+    details: "Return to the board editor",
+  },
 ];
 
 const actions_events: IHeaderActionItem[] = actions_back.concat([
-  { "name": "Create Event", "icon": addImage, "type": Action.CREATEEVENT, "details": "Create your own event code",
-    "dropdownFn": newEventDropdown
+  {
+    name: "Create Event",
+    icon: addImage,
+    type: Action.CREATEEVENT,
+    details: "Create your own event code",
+    dropdownFn: newEventDropdown,
   },
-  { "name": "Import Event", "icon": eventloadImage, "type": Action.EVENT_LOAD, "details": "Load event code from a file" },
+  {
+    name: "Import Event",
+    icon: eventloadImage,
+    type: Action.EVENT_LOAD,
+    details: "Load event code from a file",
+  },
 ]);
 
 const actions_createevent: IHeaderActionItem[] = [
-  { "name": "Back to event list", "icon": backImage, "type": Action.BACK_TO_EVENTS, "details": "Return to the event list" },
-  { "name": "Save", "icon": saveImage, "type": Action.SAVE_EVENT, "details": "Save the event" },
+  {
+    name: "Back to event list",
+    icon: backImage,
+    type: Action.BACK_TO_EVENTS,
+    details: "Return to the event list",
+  },
+  {
+    name: "Save",
+    icon: saveImage,
+    type: Action.SAVE_EVENT,
+    details: "Save the event",
+  },
 ];
 
 const actions_additionalbg: IHeaderActionItem[] = [
-  { "name": "Back to editor", "icon": backImage, "type": Action.ADDITIONALBG_BACK, "details": "Return to the board editor" },
-  { "name": "Save", "icon": saveImage, "type": Action.SAVE_ADDITIONALBG, "details": "Save the code" },
+  {
+    name: "Back to editor",
+    icon: backImage,
+    type: Action.ADDITIONALBG_BACK,
+    details: "Return to the board editor",
+  },
+  {
+    name: "Save",
+    icon: saveImage,
+    type: Action.SAVE_ADDITIONALBG,
+    details: "Save the code",
+  },
 ];
 
 const actions_audioselectioncode: IHeaderActionItem[] = [
-  { "name": "Back to editor", "icon": backImage, "type": Action.AUDIOSELECTCODE_BACK, "details": "Return to the board editor" },
-  { "name": "Save", "icon": saveImage, "type": Action.SAVE_AUDIOSELECTCODE, "details": "Save the code" },
+  {
+    name: "Back to editor",
+    icon: backImage,
+    type: Action.AUDIOSELECTCODE_BACK,
+    details: "Return to the board editor",
+  },
+  {
+    name: "Save",
+    icon: saveImage,
+    type: Action.SAVE_AUDIOSELECTCODE,
+    details: "Save the code",
+  },
 ];
 
 //const action_overflow = { "name": "", "icon": moreImage, "type": "MORE", "details": "More options" };
-const action_overflow: IHeaderActionItem = { "name": "", "icon": "", "type": "MORE" as any, "details": "More options" };
+const action_overflow: IHeaderActionItem = {
+  name: "",
+  icon: "",
+  type: "MORE" as any,
+  details: "More options",
+};
 
 async function _handleAction(action: Action) {
-  switch(action) {
+  switch (action) {
     case Action.ROM_LOAD:
       openFile(".z64,.v64,.rom,.n64", romSelected);
       break;
@@ -263,15 +533,12 @@ async function _handleAction(action: Action) {
 
 // Removes any _ prefixed property from a board.
 function stripPrivateProps(obj: any = {}): any {
-  if (typeof obj !== "object")
-    return obj;
+  if (typeof obj !== "object") return obj;
 
   obj = JSON.parse(JSON.stringify(obj));
   for (var prop in obj) {
-    if (!obj.hasOwnProperty(prop))
-      continue;
-    if (prop.charAt(0) === '_')
-      delete obj[prop];
+    if (!obj.hasOwnProperty(prop)) continue;
+    if (prop.charAt(0) === "_") delete obj[prop];
     if (typeof obj[prop] === "object" && obj[prop] !== null)
       obj[prop] = stripPrivateProps(obj[prop]);
   }
@@ -280,8 +547,7 @@ function stripPrivateProps(obj: any = {}): any {
 
 function romSelected(event: any) {
   const file = event.target.files[0];
-  if (!file)
-    return;
+  if (!file) return;
 
   blockUI(true);
   let reader = new FileReader();
@@ -292,26 +558,27 @@ function romSelected(event: any) {
     }
 
     let promise = romhandler.setROMBuffer(e.target.result);
-    if (!promise)
-      return; // The ROM handler showed a message, so we don't need to unblock UI
+    if (!promise) return; // The ROM handler showed a message, so we don't need to unblock UI
 
-    promise.then(value => {
-      romLoadedChanged();
-      loadBoardsFromROM();
-      blockUI(false);
-      $$log("ROM loaded");
-    }, reason => {
-      console.error(reason);
-      showMessage(`Error loading the ROM file.\n\n${reason}`);
-    });
+    promise.then(
+      (value) => {
+        romLoadedChanged();
+        loadBoardsFromROM();
+        blockUI(false);
+        $$log("ROM loaded");
+      },
+      (reason) => {
+        console.error(reason);
+        showMessage(`Error loading the ROM file.\n\n${reason}`);
+      }
+    );
   };
   reader.readAsArrayBuffer(file);
 }
 
 function boardSelected(event: any) {
   const file = event.target.files[0];
-  if (!file)
-    return;
+  if (!file) return;
 
   const reader = new FileReader();
   reader.onload = () => {
@@ -330,8 +597,7 @@ function boardSelected(event: any) {
 
 function bgSelected(event: any) {
   const file = event.target.files[0];
-  if (!file)
-    return;
+  if (!file) return;
 
   let reader = new FileReader();
   reader.onload = () => {
@@ -342,8 +608,7 @@ function bgSelected(event: any) {
 
 function eventFileSelected(event: any) {
   const files = event.target && event.target.files;
-  if (!(files && files[0]))
-    return;
+  if (!(files && files[0])) return;
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -368,41 +633,35 @@ function getCodeLanguageFromFileName(name: string): EventCodeLanguage {
   const lower = name.toLowerCase();
   if (lower.endsWith(".s")) {
     return EventCodeLanguage.MIPS;
-  }
-  else if (lower.endsWith(".c")) {
+  } else if (lower.endsWith(".c")) {
     return EventCodeLanguage.C;
   }
 
-  throw new Error(`Only .s or .c file extensions are recongized. (Saw ${name})`);
+  throw new Error(
+    `Only .s or .c file extensions are recongized. (Saw ${name})`
+  );
 }
 
 function getActions(view: View, board: IBoard, romLoaded: boolean) {
   // Pick the set of actions based on the state.
   let actions;
   if (view !== View.EDITOR) {
-    if (view === View.EVENTS)
-      actions = actions_events;
+    if (view === View.EVENTS) actions = actions_events;
     else if (view === View.CREATEEVENT_ASM || view === View.CREATEEVENT_C)
       actions = actions_createevent;
-    else if (view === View.ADDITIONAL_BGS)
-      actions = actions_additionalbg;
+    else if (view === View.ADDITIONAL_BGS) actions = actions_additionalbg;
     else if (view === View.AUDIO_SELECTION_CODE)
       actions = actions_audioselectioncode;
-    else
-      actions = actions_back;
-  }
-  else if (!romLoaded)
-    actions = actions_norom;
-  else if (boardIsROM(board))
-    actions = actions_rom_romboard;
-  else
-    actions = actions_rom_normalboard;
+    else actions = actions_back;
+  } else if (!romLoaded) actions = actions_norom;
+  else if (boardIsROM(board)) actions = actions_rom_romboard;
+  else actions = actions_rom_normalboard;
 
   if (!get($setting.uiAdvanced)) {
-    actions = actions.filter(a => !a.advanced);
+    actions = actions.filter((a) => !a.advanced);
   }
 
-  actions = actions.filter(a => {
+  actions = actions.filter((a) => {
     return !a.show || a.show();
   });
 
@@ -413,14 +672,23 @@ function _showEmulatorInstructionsNotification() {
   const emulatorNoticeKey = "romSaveNotice";
   const removeNotificationHandler = () => {
     removeNotification(emulatorNoticeKey);
-  }
+  };
 
   addNotification(
-    <Notification key={emulatorNoticeKey}
+    <Notification
+      key={emulatorNoticeKey}
       color={NotificationColor.Green}
-      onClose={removeNotificationHandler}>
+      onClose={removeNotificationHandler}
+    >
       Before trying the game, review{" "}
-      <a href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup" target="_blank" rel="noopener noreferrer">emulator setup instructions</a>.
+      <a
+        href="https://github.com/PartyPlanner64/PartyPlanner64/wiki/Emulator-Setup"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        emulator setup instructions
+      </a>
+      .
       <NotificationButton onClick={removeNotificationHandler}>
         Got it
       </NotificationButton>
@@ -442,7 +710,10 @@ interface IHeaderState {
 
 let _headerMounted: boolean = false;
 
-export const Header = class Header extends React.Component<IHeaderProps, IHeaderState> {
+export const Header = class Header extends React.Component<
+  IHeaderProps,
+  IHeaderState
+> {
   private actionsEl: HTMLElement | null = null;
 
   constructor(props: IHeaderProps) {
@@ -452,40 +723,53 @@ export const Header = class Header extends React.Component<IHeaderProps, IHeader
     this.state = {
       actions: actions,
       totalActions: actions, // Array of actions that never changes despite overflow
-      overflow: []
+      overflow: [],
     };
   }
 
   refresh() {
-    const actions = getActions(this.props.view, this.props.board, this.props.romLoaded);
+    const actions = getActions(
+      this.props.view,
+      this.props.board,
+      this.props.romLoaded
+    );
     this.setState({
       actions: actions,
       totalActions: actions,
-      overflow: []
+      overflow: [],
     });
   }
 
   render() {
     let actionsList = this.state.actions;
-    let actions = actionsList.map(item => {
+    let actions = actionsList.map((item) => {
       if (item.dropdownFn) {
         return (
           <HeaderDropdown key={item.type} action={item} fn={item.dropdownFn} />
         );
       }
-      return (
-        <HeaderButton key={item.type} action={item} />
-      );
+      return <HeaderButton key={item.type} action={item} />;
     });
     let overflowAction;
     if (this.state.overflow.length) {
-      overflowAction = <HeaderDropdown key={action_overflow.type}
-        action={action_overflow} overflow={this.state.overflow} fn={moreDropdown} />;
+      overflowAction = (
+        <HeaderDropdown
+          key={action_overflow.type}
+          action={action_overflow}
+          overflow={this.state.overflow}
+          fn={moreDropdown}
+        />
+      );
     }
     return (
       <div className="header" role="toolbar">
         <HeaderLogo />
-        <div className="headerActions" ref={(actionsEl => { this.actionsEl = actionsEl; })}>
+        <div
+          className="headerActions"
+          ref={(actionsEl) => {
+            this.actionsEl = actionsEl;
+          }}
+        >
           {actions}
           {overflowAction}
         </div>
@@ -502,13 +786,17 @@ export const Header = class Header extends React.Component<IHeaderProps, IHeader
   }
 
   componentDidUpdate() {
-    const newActions = getActions(this.props.view, this.props.board, this.props.romLoaded);
+    const newActions = getActions(
+      this.props.view,
+      this.props.board,
+      this.props.romLoaded
+    );
 
     if (!equal(this.state.totalActions, newActions)) {
       this.setState({
         actions: newActions,
         totalActions: newActions,
-        overflow: []
+        overflow: [],
       });
     }
 
@@ -523,29 +811,39 @@ export const Header = class Header extends React.Component<IHeaderProps, IHeader
   }
 
   handleOverflow() {
-    if (!_headerMounted)
-      return;
+    if (!_headerMounted) return;
 
     let actions = this.state.actions.slice();
     let hasOverflow = this.state.overflow.length;
     let overflow = this.state.overflow.slice();
     let el = ReactDOM.findDOMNode(this) as HTMLElement;
     let actionsEl = this.actionsEl;
-    if (!actionsEl)
-      return;
+    if (!actionsEl) return;
 
-    while (actionsEl.offsetWidth > (el.offsetWidth - 215 - (hasOverflow ? 0 : 80))) { // Cut out logo and more if existing
-      let lastAction = actionsEl.children[actions.length - (hasOverflow ? 2 : 1)] as HTMLElement; // Skip more
-      if (!lastAction)
-        break;
+    while (
+      actionsEl.offsetWidth >
+      el.offsetWidth - 215 - (hasOverflow ? 0 : 80)
+    ) {
+      // Cut out logo and more if existing
+      let lastAction = actionsEl.children[
+        actions.length - (hasOverflow ? 2 : 1)
+      ] as HTMLElement; // Skip more
+      if (!lastAction) break;
       lastAction.style.display = "none";
       overflow.unshift(actions.pop());
     }
-    for (let i = 0; i < actionsEl.children.length - (hasOverflow ? 2 : 1); i++) {
+    for (
+      let i = 0;
+      i < actionsEl.children.length - (hasOverflow ? 2 : 1);
+      i++
+    ) {
       let actionEl = actionsEl.children[i] as HTMLElement;
       actionEl.style.display = "";
     }
-    if (actions.length === this.state.actions.length && overflow.length === this.state.overflow.length)
+    if (
+      actions.length === this.state.actions.length &&
+      overflow.length === this.state.overflow.length
+    )
       return;
     // $$log("Header.handleOverflow -> setState" + actions.length + ", " + overflow.length);
     this.setState({ actions, overflow });
@@ -567,18 +865,28 @@ interface IHeaderButtonProps {
 const HeaderButton = class HeaderButton extends React.Component<IHeaderButtonProps> {
   handleClick = () => {
     _handleAction(this.props.action.type);
-  }
+  };
 
   render() {
     let iconImg;
     if (this.props.action.icon) {
-      iconImg = <img className="headerButtonIcon" src={this.props.action.icon} alt=""></img>;
+      iconImg = (
+        <img
+          className="headerButtonIcon"
+          src={this.props.action.icon}
+          alt=""
+        ></img>
+      );
     }
     return (
-      <div className="headerButton" title={this.props.action.details}
-        role="button" tabIndex={0}
+      <div
+        className="headerButton"
+        title={this.props.action.details}
+        role="button"
+        tabIndex={0}
         onClick={this.handleClick}
-        onKeyDown={makeKeyClick(this.handleClick)}>
+        onKeyDown={makeKeyClick(this.handleClick)}
+      >
         {iconImg}
         <span className="headerButtonText">{this.props.action.name}</span>
       </div>
@@ -595,13 +903,12 @@ interface IHeaderDropdownProps {
 const HeaderDropdown = class HeaderDropdown extends React.Component<IHeaderDropdownProps> {
   private dropdown: HTMLElement | null = null;
 
-  state = { opened: false }
+  state = { opened: false };
 
   globalClickHandler = (event: any) => {
-    if (this.elementIsWithin(event.target))
-      return;
+    if (this.elementIsWithin(event.target)) return;
     this.close();
-  }
+  };
 
   addGlobalHandler() {
     document.addEventListener("click", this.globalClickHandler);
@@ -612,8 +919,7 @@ const HeaderDropdown = class HeaderDropdown extends React.Component<IHeaderDropd
   }
 
   elementIsWithin(el: HTMLElement) {
-    if (!this.dropdown)
-      return true;
+    if (!this.dropdown) return true;
     return this.dropdown.contains(el);
   }
 
@@ -633,16 +939,15 @@ const HeaderDropdown = class HeaderDropdown extends React.Component<IHeaderDropd
       event.nativeEvent.stopImmediatePropagation();
     }
     this.setState({ opened: !this.state.opened });
-  }
+  };
 
   onDropdownClick = (event: any) => {
     event.stopPropagation(); // So that clicking inside the dropdown doesn't call onButtonClick.
-  }
+  };
 
   close = () => {
-    if (this.state.opened)
-      this.setState({ opened: false });
-  }
+    if (this.state.opened) this.setState({ opened: false });
+  };
 
   render() {
     let btnClass = "headerButton";
@@ -658,13 +963,24 @@ const HeaderDropdown = class HeaderDropdown extends React.Component<IHeaderDropd
     }
     let iconImg;
     if (this.props.action.icon) {
-      iconImg = <img className="headerButtonIcon" src={this.props.action.icon} alt=""></img>;
+      iconImg = (
+        <img
+          className="headerButtonIcon"
+          src={this.props.action.icon}
+          alt=""
+        ></img>
+      );
     }
     return (
-      <div className={btnClass} tabIndex={0} role="button" aria-haspopup="true"
+      <div
+        className={btnClass}
+        tabIndex={0}
+        role="button"
+        aria-haspopup="true"
         title={this.props.action.details}
-        ref={(el) => this.dropdown = el}
-        onClick={this.onButtonClick}>
+        ref={(el) => (this.dropdown = el)}
+        onClick={this.onButtonClick}
+      >
         {iconImg}
         <span className="headerButtonText">{this.props.action.name}</span>
         <div className="headerDropdownArrow">▾</div>
@@ -679,7 +995,8 @@ function overwriteDropdown(closeFn: any) {
   return (
     <HeaderOverwriteBoardDropdown
       resultsPromise={validationResultsPromise}
-      onClose={closeFn} />
+      onClose={closeFn}
+    />
   );
 }
 
@@ -688,41 +1005,55 @@ interface IHeaderOverwriteBoardDropdownProps {
   onClose: any;
 }
 
-const HeaderOverwriteBoardDropdown: React.FC<IHeaderOverwriteBoardDropdownProps> = (props) =>
-{
+const HeaderOverwriteBoardDropdown: React.FC<
+  IHeaderOverwriteBoardDropdownProps
+> = (props) => {
   const { resultsPromise, onClose } = props;
 
-  const [validationResults, setValidationResults] = useState<IValidationResult[] | null>(null);
+  const [validationResults, setValidationResults] = useState<
+    IValidationResult[] | null
+  >(null);
 
   useEffect(() => {
-    resultsPromise.then(results => {
-      setValidationResults(results);
-    }, (e) => {
-      onClose();
-      console.error(e);
-      showMessage("An error occurred during board validation, please submit an issue.\n\n" + e.toString());
-    });
+    resultsPromise.then(
+      (results) => {
+        setValidationResults(results);
+      },
+      (e) => {
+        onClose();
+        console.error(e);
+        showMessage(
+          "An error occurred during board validation, please submit an issue.\n\n" +
+            e.toString()
+        );
+      }
+    );
   }, [resultsPromise, onClose]);
 
-  if (!validationResults)
-    return <PendingDropdown />;
+  if (!validationResults) return <PendingDropdown />;
 
   // Fragment only for weird typing bug.
-  return <>
-    {validationResults.map(function(result: IValidationResult, index: number) {
-      return (
-        <HeaderOverwriteBoardDropdownEntry
-          name={result.name}
-          errors={result.errors}
-          warnings={result.warnings}
-          unavailable={result.unavailable}
-          forcedDisabled={result.forcedDisabled}
-          closeCallback={onClose}
-          key={index}
-          boardIndex={index - 1} />
-      );
-    })}
-  </>;
+  return (
+    <>
+      {validationResults.map(function (
+        result: IValidationResult,
+        index: number
+      ) {
+        return (
+          <HeaderOverwriteBoardDropdownEntry
+            name={result.name}
+            errors={result.errors}
+            warnings={result.warnings}
+            unavailable={result.unavailable}
+            forcedDisabled={result.forcedDisabled}
+            closeCallback={onClose}
+            key={index}
+            boardIndex={index - 1}
+          />
+        );
+      })}
+    </>
+  );
 };
 
 interface IHeaderOverwriteBoardDropdownEntryProps {
@@ -748,20 +1079,22 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       return;
     }
 
-    if (!this.hasErrors() && !this.props.unavailable && !this.props.forcedDisabled) {
+    if (
+      !this.hasErrors() &&
+      !this.props.unavailable &&
+      !this.props.forcedDisabled
+    ) {
       this.props.closeCallback();
 
       const adapter = getROMAdapter();
-      if (!adapter)
-        return;
+      if (!adapter) return;
 
       blockUI(true);
 
       let currentBoard = getCurrentBoard();
       try {
         await adapter.overwriteBoard(this.props.boardIndex, currentBoard);
-      }
-      catch (e) {
+      } catch (e) {
         console.error(e);
         showMessage("Error overwriting the board.\n\n" + e);
         return;
@@ -772,19 +1105,18 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       loadBoardsFromROM();
 
       let newBoardIndex = indexOfBoard(currentBoard);
-      if (newBoardIndex < 0)
-        newBoardIndex = 0;
+      if (newBoardIndex < 0) newBoardIndex = 0;
 
       setCurrentBoard(newBoardIndex);
 
       recordEvent("board_write", {
-        "event_category": "action",
-        "event_label": currentBoard.name,
+        event_category: "action",
+        event_label: currentBoard.name,
       });
 
       blockUI(false);
     }
-  }
+  };
 
   hasErrors() {
     return !!this.props.errors.length;
@@ -806,37 +1138,52 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
     if (this.props.unavailable) {
       ddClass += " unavailable";
       failNodes.push(
-        <div className="overwriteBoardMessage" key="unavailable">Board cannot be overwritten currently.</div>
+        <div className="overwriteBoardMessage" key="unavailable">
+          Board cannot be overwritten currently.
+        </div>
       );
-    }
-    else {
+    } else {
       if (this.props.forcedDisabled) {
         ddClass += " unavailable";
         failNodes.push(
-          <div className="overwriteBoardMessage" key="unavailable">Current issues must be resolved.</div>
+          <div className="overwriteBoardMessage" key="unavailable">
+            Current issues must be resolved.
+          </div>
         );
       }
 
       if (this.hasErrors()) {
         ddClass += " failed";
-        failNodes = failNodes.concat(this.props.errors.map((fail, idx) => {
-          return (
-            <div className="overwriteBoardMessage" key={idx + "e"}>
-              <img src={boarderrorImage} alt="" className="overwriteBoardIssueIcon" />
-              <span dangerouslySetInnerHTML={{__html: fail}}></span>
-            </div>
-          );
-        }));
+        failNodes = failNodes.concat(
+          this.props.errors.map((fail, idx) => {
+            return (
+              <div className="overwriteBoardMessage" key={idx + "e"}>
+                <img
+                  src={boarderrorImage}
+                  alt=""
+                  className="overwriteBoardIssueIcon"
+                />
+                <span dangerouslySetInnerHTML={{ __html: fail }}></span>
+              </div>
+            );
+          })
+        );
       }
       if (this.hasWarnings()) {
-        failNodes = failNodes.concat(this.props.warnings.map((fail, idx) => {
-          return (
-            <div className="overwriteBoardMessage" key={idx + "w"}>
-              <img src={boardwarningImage} alt="" className="overwriteBoardIssueIcon" />
-              <span dangerouslySetInnerHTML={{__html: fail}}></span>
-            </div>
-          );
-        }));
+        failNodes = failNodes.concat(
+          this.props.warnings.map((fail, idx) => {
+            return (
+              <div className="overwriteBoardMessage" key={idx + "w"}>
+                <img
+                  src={boardwarningImage}
+                  alt=""
+                  className="overwriteBoardIssueIcon"
+                />
+                <span dangerouslySetInnerHTML={{ __html: fail }}></span>
+              </div>
+            );
+          })
+        );
       }
     }
 
@@ -844,11 +1191,12 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       tooltip = "Issues with the current board.";
       return (
         <div className={ddClass} onClick={this.boardClicked} title={tooltip}>
-          {this.props.name && <>
-            <span className="overwriteBoardName">{this.props.name}</span>
-            <br />
-          </>
-          }
+          {this.props.name && (
+            <>
+              <span className="overwriteBoardName">{this.props.name}</span>
+              <br />
+            </>
+          )}
           {failNodes}
         </div>
       );
@@ -870,8 +1218,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
 
 function moreDropdown(closeFn: Function, props: any) {
   let overflowItems = props.overflow;
-  if (!overflowItems.length)
-    return null;
+  if (!overflowItems.length) return null;
 
   return overflowItems.map((item: IHeaderActionItem) => {
     if (item.dropdownFn) {
@@ -879,9 +1226,7 @@ function moreDropdown(closeFn: Function, props: any) {
         <HeaderDropdown key={item.type} action={item} fn={item.dropdownFn} />
       );
     }
-    return (
-      <HeaderButton key={item.type} action={item} />
-    );
+    return <HeaderButton key={item.type} action={item} />;
   });
 }
 
@@ -894,9 +1239,7 @@ function newboardDropdown(closeFn: Function) {
     });
     setCurrentBoard(newBoardIdx);
   }
-  return (
-    <NewBoard onAccept={onAccept} />
-  );
+  return <NewBoard onAccept={onAccept} />;
 }
 
 function screenshotDropdown(closeFn: Function) {
@@ -906,26 +1249,23 @@ function screenshotDropdown(closeFn: Function) {
       blobPromise.then((blob: Blob) => {
         saveAs(blob, "BoardScreenshot.png");
       });
-    }
-    else {
+    } else {
       let win = window.open();
       if (win) {
         let doc = win.document;
 
         // Normally we can get a document.
         if (doc) {
-          doc.write('');
+          doc.write("");
           doc.close();
-          doc.body.appendChild(doc.createElement('img')).src = dataUri;
+          doc.body.appendChild(doc.createElement("img")).src = dataUri;
         }
       }
     }
 
     closeFn();
   }
-  return (
-    <Screenshot onAccept={onAccept} />
-  );
+  return <Screenshot onAccept={onAccept} />;
 }
 
 function newEventDropdown(closeFn: Function) {
@@ -945,16 +1285,17 @@ function newEventDropdown(closeFn: Function) {
         throw new Error(`Unrecognized event code language ${language}`);
     }
   }
-  return (
-    <NewEventDropdown onAccept={onAccept} />
-  );
+  return <NewEventDropdown onAccept={onAccept} />;
 }
 
-const PendingDropdown: React.FC<{}> = () =>
-{
+const PendingDropdown: React.FC<{}> = () => {
   return (
     <div className="pendingDropdownBox">
-      <img className="pendingDropdownImage" src={loadingSquaresImage} alt="Loading"></img>
+      <img
+        className="pendingDropdownImage"
+        src={loadingSquaresImage}
+        alt="Loading"
+      ></img>
     </div>
   );
 };

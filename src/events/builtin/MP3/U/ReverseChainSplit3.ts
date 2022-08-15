@@ -1,5 +1,9 @@
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
-import { EventExecutionType, Game, EditorEventActivationType } from "../../../../types";
+import {
+  EventExecutionType,
+  Game,
+  EditorEventActivationType,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -13,12 +17,10 @@ export const ReverseChainSplit: IEvent = {
   fakeEvent: true,
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.DIRECT, // Notable difference
-  supportedGames: [
-    Game.MP3_USA,
-  ],
+  supportedGames: [Game.MP3_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     let hashes = {
-      REVERSE_FILTER: "0909C95D982B8A9B1F096AC54FFFB816"
+      REVERSE_FILTER: "0909C95D982B8A9B1F096AC54FFFB816",
     };
 
     if (!hashEqual([dataView.buffer, info.offset, 0x30], hashes.REVERSE_FILTER))
@@ -26,9 +28,14 @@ export const ReverseChainSplit: IEvent = {
 
     return true;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     // It's all in ChainSplit3.
     throw new Error(`${ReverseChainSplit.id} not implemented`);
-  }
+  },
 };
 addEventToLibrary(ReverseChainSplit);

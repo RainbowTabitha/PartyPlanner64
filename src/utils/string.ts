@@ -1,8 +1,10 @@
 export function fromU32(u32: number) {
-  return String.fromCharCode((u32 & 0xFF000000) >>> 24) +
-    String.fromCharCode((u32 & 0xFF0000) >>> 16) +
-    String.fromCharCode((u32 & 0xFF00) >>> 8) +
-    String.fromCharCode(u32 & 0xFF);
+  return (
+    String.fromCharCode((u32 & 0xff000000) >>> 24) +
+    String.fromCharCode((u32 & 0xff0000) >>> 16) +
+    String.fromCharCode((u32 & 0xff00) >>> 8) +
+    String.fromCharCode(u32 & 0xff)
+  );
 }
 
 export function toU32(str: string) {
@@ -17,8 +19,7 @@ export function toU32(str: string) {
 
 export function toCharCodes(str: string) {
   let charCodes = new Array(str.length);
-  for (let i = 0; i < str.length; ++i)
-    charCodes[i] = str.charCodeAt(i);
+  for (let i = 0; i < str.length; ++i) charCodes[i] = str.charCodeAt(i);
   return charCodes;
 }
 
@@ -56,8 +57,15 @@ export function pad(str: string, len: number, padChar: string) {
   return str;
 }
 
-export function splice(value: string, start: number, delCount: number, newSubStr: string) {
-  return value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount));
+export function splice(
+  value: string,
+  start: number,
+  delCount: number,
+  newSubStr: string
+) {
+  return (
+    value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount))
+  );
 }
 
 /** String comparer function compatible with `sort`. */
@@ -68,25 +76,24 @@ export function stringComparer(a: string, b: string): -1 | 0 | 1 {
 }
 
 export function normalizeLineEndings(str: string) {
-  if (!str)
-    return str;
+  if (!str) return str;
   return str.replace(/\r\n|\r/g, "\n");
 }
 
 export function mpFormatToPlainText(value: string) {
-  if (!value)
-    return "";
-  return value.replace(/<\w+>/g, "") // Remove color tags
-    .replace("\u3000", "Ⓐ")  // ! A button
-    .replace("\u3001", "Ⓑ")  // " B button
+  if (!value) return "";
+  return value
+    .replace(/<\w+>/g, "") // Remove color tags
+    .replace("\u3000", "Ⓐ") // ! A button
+    .replace("\u3001", "Ⓑ") // " B button
     .replace("\u3002", "▲") //  C-up button
     .replace("\u3003", "►") //  C-right button
     .replace("\u3004", "◄") //  C-left button
     .replace("\u3005", "▼") // & C-down button
-    .replace("\u3006", "Ⓩ")  // ' Z button
-    .replace("\u3007", "🕹️")    // ( Analog stick
-    .replace("\u3008", "✪")  // ) (coin)
-    .replace("\u3009", "★")    // * Star
-    .replace("\u3010", "Ⓢ")  // , S button
-    .replace("\u3011", "Ⓡ") // , R button
+    .replace("\u3006", "Ⓩ") // ' Z button
+    .replace("\u3007", "🕹️") // ( Analog stick
+    .replace("\u3008", "✪") // ) (coin)
+    .replace("\u3009", "★") // * Star
+    .replace("\u3010", "Ⓢ") // , S button
+    .replace("\u3011", "Ⓡ"); // , R button
 }

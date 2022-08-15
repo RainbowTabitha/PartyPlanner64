@@ -20,7 +20,12 @@ export class spaces {
     spaces._drawOther(ctx, x, y, 12);
   }
 
-  static _drawOther(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
+  static _drawOther(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number
+  ) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -89,7 +94,11 @@ export class spaces {
     ctx.restore();
   }
 
-  static drawMiniGameDuel3(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  static drawMiniGameDuel3(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number
+  ) {
     ctx.save();
     ctx.drawImage(getImage("spaceMiniGameDuel3"), x - 14, y - 14);
     ctx.restore();
@@ -107,7 +116,7 @@ export class spaces {
 
     // Add ? on top
     ctx.fillStyle = "white";
-    ctx.font = 'bold 19px monospace';
+    ctx.font = "bold 19px monospace";
     ctx.fillText("?", x - 6, y + 6);
     ctx.restore();
   }
@@ -118,7 +127,11 @@ export class spaces {
     ctx.restore();
   }
 
-  static drawHappeningDuel3(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  static drawHappeningDuel3(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number
+  ) {
     ctx.save();
     ctx.drawImage(getImage("spaceHappeningDuel3"), x - 14, y - 14);
     ctx.restore();
@@ -132,7 +145,12 @@ export class spaces {
     spaces._drawStarSpace(ctx, x, y, 12);
   }
 
-  static _drawStarSpace(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number) {
+  static _drawStarSpace(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number
+  ) {
     ctx.save();
     // Transparent base circle
     ctx.beginPath();
@@ -201,11 +219,21 @@ export class spaces {
     spaces._drawStart(ctx, x, y, 12, "red");
   }
 
-  static drawStartDuelBlue(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  static drawStartDuelBlue(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number
+  ) {
     spaces._drawStart(ctx, x, y, 12, "blue");
   }
 
-  static _drawStart(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) {
+  static _drawStart(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+    color: string
+  ) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
@@ -231,8 +259,7 @@ export class spaces {
     ctx.beginPath();
     if (ctx.ellipse) {
       ctx.ellipse(x, y, 8, 6, 0, 0, 2 * Math.PI);
-    }
-    else {
+    } else {
       ctx.arc(x, y, 8, 0, 2 * Math.PI);
     }
     ctx.lineWidth = 2;
@@ -349,7 +376,12 @@ export class spaces {
     ctx.restore();
   }
 
-  static drawArrow(ctx: CanvasRenderingContext2D, x: number, y: number, game: number) {
+  static drawArrow(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    game: number
+  ) {
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = "#F647A0";
@@ -357,18 +389,17 @@ export class spaces {
     if (game === 3) {
       ctx.translate(x - 12, y - 12);
       ctx.scale(1.25, 1.25);
-    }
-    else {
+    } else {
       ctx.translate(x - 10, y - 10);
     }
-    ctx.moveTo(10, 1);  // Top point
-    ctx.lineTo(1, 10);  // Left point
-    ctx.lineTo(5, 10);  // Go inward
-    ctx.lineTo(5, 18);  // Bottom left
+    ctx.moveTo(10, 1); // Top point
+    ctx.lineTo(1, 10); // Left point
+    ctx.lineTo(5, 10); // Go inward
+    ctx.lineTo(5, 18); // Bottom left
     ctx.lineTo(15, 18); // Bottom right
     ctx.lineTo(15, 10); // Inner right
     ctx.lineTo(19, 10); // Right point
-    ctx.lineTo(10, 1);  // Back to top
+    ctx.lineTo(10, 1); // Back to top
     ctx.stroke();
     ctx.fill();
     ctx.restore();
@@ -422,14 +453,21 @@ export class spaces {
   }
 
   // Draws any star shape, helper method.
-  static _drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, numPoints: number, radiusInsetFraction: number) {
+  static _drawStar(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    r: number,
+    numPoints: number,
+    radiusInsetFraction: number
+  ) {
     ctx.save();
     ctx.beginPath();
     ctx.translate(x, y);
     ctx.moveTo(0, 0 - r);
     for (let i = 0; i < numPoints; i++) {
       ctx.rotate(Math.PI / numPoints);
-      ctx.lineTo(0, 0 - (r * radiusInsetFraction));
+      ctx.lineTo(0, 0 - r * radiusInsetFraction);
       ctx.rotate(Math.PI / numPoints);
       ctx.lineTo(0, 0 - r);
     }

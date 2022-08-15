@@ -45,9 +45,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
 
   render() {
     if (this.state.hasError) {
-      return (
-        <p>An error was encountered.</p>
-      );
+      return <p>An error was encountered.</p>;
     }
 
     const game = romhandler.getGameVersion()!;
@@ -55,7 +53,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
 
     const advancedSetting = get($setting.uiAdvanced);
 
-    let sequenceRows = [];
+    const sequenceRows = [];
     const sequenceTableCount = audio.getSequenceTableCount();
     for (let t = 0; t < sequenceTableCount; t++) {
       const tableIndex = t;
@@ -64,7 +62,9 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
       if (t > 0) {
         sequenceRows.push(
           <tr key={t + "hr"}>
-            <td colSpan={2}><hr /></td>
+            <td colSpan={2}>
+              <hr />
+            </td>
           </tr>
         );
       }
@@ -76,8 +76,10 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
         let isPlaying: boolean = false;
         let cannotPlay: boolean = false;
         if (this.state.playing) {
-          isPlaying = t === this.state.playing[0] && s === this.state.playing[1]
-            && this.state.playingType === "midi";
+          isPlaying =
+            t === this.state.playing[0] &&
+            s === this.state.playing[1] &&
+            this.state.playingType === "midi";
           cannotPlay = !isPlaying;
         }
 
@@ -85,21 +87,21 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
         const soundName = trackNames[midiIndex];
         const index = `${midiIndex}, 0x${midiIndex.toString(16).toUpperCase()}`;
         if (soundName) {
-          trackName = <span title={index}>
-            {soundName}
-            {advancedSetting &&
-              <span className="audioIndexBesideName">{` (${index})`}</span>
-            }
-          </span>;
-        }
-        else {
-          trackName = <span title={index}>
-            {index}
-          </span>;
+          trackName = (
+            <span title={index}>
+              {soundName}
+              {advancedSetting && (
+                <span className="audioIndexBesideName">{` (${index})`}</span>
+              )}
+            </span>
+          );
+        } else {
+          trackName = <span title={index}>{index}</span>;
         }
 
         sequenceRows.push(
-          <AudioTrackRow key={tableIndex + "-" + midiIndex}
+          <AudioTrackRow
+            key={tableIndex + "-" + midiIndex}
             table={tableIndex}
             index={midiIndex}
             isPlaying={isPlaying}
@@ -110,20 +112,38 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
             expandContent={
               <>
                 <div>
-                  <Button onClick={() => _exportMidi(tableIndex, midiIndex, soundName || "Unknown")}
-                    css="btnAudioExport">
-                    <img src={exportImage} height="16" width="16" alt="Export midi" />
+                  <Button
+                    onClick={() =>
+                      _exportMidi(tableIndex, midiIndex, soundName || "Unknown")
+                    }
+                    css="btnAudioExport"
+                  >
+                    <img
+                      src={exportImage}
+                      height="16"
+                      width="16"
+                      alt="Export midi"
+                    />
                     Download midi
                   </Button>
                   <Button
                     onClick={() => _replaceMidi(tableIndex, midiIndex)}
-                    css="btnAudioExport">
-                    <img src={importImage} height="16" width="16" alt="Import midi" />
+                    css="btnAudioExport"
+                  >
+                    <img
+                      src={importImage}
+                      height="16"
+                      width="16"
+                      alt="Import midi"
+                    />
                     Replace midi
                   </Button>
-                  <label className="audioTableExpandedLabel">Soundbank index: </label>
+                  <label className="audioTableExpandedLabel">
+                    Soundbank index:{" "}
+                  </label>
                   {table.midis[s].soundbankIndex}
-                  <img src={editImage}
+                  <img
+                    src={editImage}
                     className="audioTableSmallEditIcon"
                     title="Change soundbank index"
                     alt="Change soundbank index"
@@ -132,21 +152,24 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
                         this.forceUpdate();
                       }
                     }}
-                 />
+                  />
                 </div>
               </>
-            } />
+            }
+          />
         );
       }
     }
 
-    let soundRows = [];
+    const soundRows = [];
     const soundTableCount = audio.getSoundTableCount();
     for (let t = 0; t < soundTableCount; t++) {
       if (t > 0) {
         soundRows.push(
           <tr key={t + "-s-hr"}>
-            <td colSpan={2}><hr /></td>
+            <td colSpan={2}>
+              <hr />
+            </td>
           </tr>
         );
       }
@@ -157,8 +180,10 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
         let isPlaying: boolean = false;
         let cannotPlay: boolean = false;
         if (this.state.playing) {
-          isPlaying = t === this.state.playing[0] && s === this.state.playing[1]
-            && this.state.playingType === "sound";
+          isPlaying =
+            t === this.state.playing[0] &&
+            s === this.state.playing[1] &&
+            this.state.playingType === "sound";
           cannotPlay = !isPlaying;
         }
 
@@ -166,36 +191,40 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
         const effectName = soundEffectNames[s];
         const index = `${s}, 0x${s.toString(16).toUpperCase()}`;
         if (effectName) {
-          trackName = <span title={index}>
-            {effectName}
-            {advancedSetting &&
-              <span className="audioIndexBesideName">{` (${index})`}</span>
-            }
-          </span>;
-        }
-        else {
-          trackName = <span title={index}>
-            {index}
-          </span>;
+          trackName = (
+            <span title={index}>
+              {effectName}
+              {advancedSetting && (
+                <span className="audioIndexBesideName">{` (${index})`}</span>
+              )}
+            </span>
+          );
+        } else {
+          trackName = <span title={index}>{index}</span>;
         }
 
         const downloadName = effectName ? effectName : `${s}`;
 
         soundRows.push(
-          <AudioTrackRow key={t + "-s-" + s}
-            table={t} index={s}
+          <AudioTrackRow
+            key={t + "-s-" + s}
+            table={t}
+            index={s}
             isPlaying={isPlaying}
             cannotPlay={cannotPlay}
             trackName={trackName}
             onPlay={this.onPlaySound}
             onStop={this.onStop}
             expandContent={
-              <Button onClick={() => _exportWav(t, s, downloadName)}
-                css="btnAudioExport">
+              <Button
+                onClick={() => _exportWav(t, s, downloadName)}
+                css="btnAudioExport"
+              >
                 <img src={exportImage} height="16" width="16" alt="Export" />
                 Download .wav
               </Button>
-            } />
+            }
+          />
         );
       }
     }
@@ -236,7 +265,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
       playingType: "midi",
       playing: [table, index],
     });
-  }
+  };
 
   onPlaySound = (table: number, index: number) => {
     const controller = playSound(table, index);
@@ -251,13 +280,13 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
       playingType: "sound",
       playing: [table, index],
     });
-  }
+  };
 
   onStop = (table: number, index: number) => {
     if (this.state.playbackController) {
       this.state.playbackController.stop();
     }
-  }
+  };
 }
 
 function AudioEntryTable(props: { listing: any }) {
@@ -271,12 +300,10 @@ function AudioEntryTable(props: { listing: any }) {
             <th className="audioViewTableIconColumn"></th>
           </tr>
         </thead>
-      ) : null }
-      <tbody>
-        {props.listing}
-      </tbody>
+      ) : null}
+      <tbody>{props.listing}</tbody>
     </table>
-  )
+  );
 }
 
 interface IAudioTrackRowProps {
@@ -297,29 +324,34 @@ function AudioTrackRow(props: IAudioTrackRowProps) {
   if (props.isPlaying) {
     playbackControls = (
       <td>
-        <img src={stopImage}
-          alt="Stop audio" title="Stop audio"
-          onClick={() => props.onStop(props.table, props.index)} />
+        <img
+          src={stopImage}
+          alt="Stop audio"
+          title="Stop audio"
+          onClick={() => props.onStop(props.table, props.index)}
+        />
       </td>
     );
-  }
-  else {
+  } else {
     const iconCssClass = props.cannotPlay ? "audioRowIconNoAction" : "";
     playbackControls = (
       <td>
-        <img src={playImage}
-          alt={`Play ${props.trackName}`} title={`Play ${props.trackName}`}
+        <img
+          src={playImage}
+          alt={`Play ${props.trackName}`}
+          title={`Play ${props.trackName}`}
           className={iconCssClass}
           onClick={() => {
-            if (props.cannotPlay)
-              return;
+            if (props.cannotPlay) return;
             props.onPlay(props.table, props.index);
-          }} />
+          }}
+        />
       </td>
     );
   }
 
-  const colCount = 1 + (playbackControls ? 1 : 0) + (props.expandContent ? 1 : 0);
+  const colCount =
+    1 + (playbackControls ? 1 : 0) + (props.expandContent ? 1 : 0);
 
   let expandedRow;
   if (expanded && props.expandContent) {
@@ -340,12 +372,15 @@ function AudioTrackRow(props: IAudioTrackRowProps) {
   return (
     <>
       <tr className={rowClassName}>
-        {props.expandContent && <td>
-          <img src={expanded ? collapseImage : expandImage}
-            alt={expanded ? "Collapse" : "Expand"}
-            onClick={() => setExpanded(expanded => !expanded)}
-          />
-        </td>}
+        {props.expandContent && (
+          <td>
+            <img
+              src={expanded ? collapseImage : expandImage}
+              alt={expanded ? "Collapse" : "Expand"}
+              onClick={() => setExpanded((expanded) => !expanded)}
+            />
+          </td>
+        )}
         <td>{props.trackName}</td>
         {playbackControls}
       </tr>
@@ -358,7 +393,10 @@ function _exportMidi(table: number, index: number, name?: string): void {
   name = name || "music";
   const seqTable = audio.getSequenceTable(table)!;
   const gameMidiBuffer = seqTable.midis[index].buffer;
-  const midi = parseGameMidi(new DataView(gameMidiBuffer), gameMidiBuffer.byteLength);
+  const midi = parseGameMidi(
+    new DataView(gameMidiBuffer),
+    gameMidiBuffer.byteLength
+  );
   saveAs(new Blob([midi]), `${name}.mid`);
 }
 
@@ -375,13 +413,14 @@ function _replaceMidi(table: number, index: number): void {
 
   openFile("audio/midi", (event: any) => {
     const file = event.target.files[0];
-    if (!file)
-      return;
+    if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = error => {
+    reader.onload = (error) => {
       assert(reader.result instanceof ArrayBuffer);
-      const gameMidi = createGameMidi(reader.result as ArrayBuffer, { loop: true });
+      const gameMidi = createGameMidi(reader.result as ArrayBuffer, {
+        loop: true,
+      });
       if (!gameMidi) {
         showMessage("Could not process midi for insertion into the game");
         return;
@@ -392,17 +431,26 @@ function _replaceMidi(table: number, index: number): void {
   });
 }
 
-async function _changeSoundbankIndex(table: number, midiIndex: number): Promise<boolean> {
+async function _changeSoundbankIndex(
+  table: number,
+  midiIndex: number
+): Promise<boolean> {
   const seqTable = audio.getSequenceTable(table)!;
   const bankCount = seqTable.soundbanks.banks.length;
 
-  return await promptUser(`Enter new soundbank index (0 through ${bankCount - 1}):`).then(value => {
+  return await promptUser(
+    `Enter new soundbank index (0 through ${bankCount - 1}):`
+  ).then((value) => {
     if (!value) {
       return false;
     }
 
     const newSoundbankIndex = parseInt(value);
-    if (isNaN(newSoundbankIndex) || newSoundbankIndex < 0 || newSoundbankIndex >= bankCount) {
+    if (
+      isNaN(newSoundbankIndex) ||
+      newSoundbankIndex < 0 ||
+      newSoundbankIndex >= bankCount
+    ) {
       showMessage("Invalid soundbank index.");
       return false;
     }

@@ -59,7 +59,8 @@ export class SBF0 {
   public sounds: ALSoundSimple[] = [];
 
   constructor(dataView: DataView) {
-    if (dataView.getUint32(0) !== 0x53424630) // "SBF0"
+    if (dataView.getUint32(0) !== 0x53424630)
+      // "SBF0"
       throw new Error("SBF0 constructor encountered non-SBF0 structure");
 
     this._extract(dataView);
@@ -74,7 +75,10 @@ export class SBF0 {
     }
 
     // Extract sounds
-    const ctlView = new DataView(view.buffer, view.byteOffset + tableEntriesOffset);
+    const ctlView = new DataView(
+      view.buffer,
+      view.byteOffset + tableEntriesOffset
+    );
     for (let i = 0; i < soundCount; i++) {
       this.sounds.push(new ALSoundSimple(ctlView, i * 16));
     }
@@ -83,7 +87,10 @@ export class SBF0 {
     const tblOffsetEnd = tblOffsetStart + view.getUint32(0x58);
 
     // Extract tbl buffer
-    this.tbl = view.buffer.slice(view.byteOffset + tblOffsetStart, view.byteOffset + tblOffsetEnd);
+    this.tbl = view.buffer.slice(
+      view.byteOffset + tblOffsetStart,
+      view.byteOffset + tblOffsetEnd
+    );
 
     // Extract the sound effects list.
     // This list count is higher than the actual raw sound count,
@@ -93,30 +100,40 @@ export class SBF0 {
       const soundFxCount = view.getUint32(4);
       const soundFxListOffset = tblOffsetEnd;
       for (let i = 0; i < soundFxCount; i++) {
-        const offset = view.getUint32(soundFxListOffset + (i * 4));
+        const offset = view.getUint32(soundFxListOffset + i * 4);
 
         const subcount = view.getUint8(soundFxListOffset + offset);
         const substructstart = soundFxListOffset + offset + 8;
         for (let s = 0; s < subcount; s++) {
-          const soundFxInfoOffset = view.getUint32(substructstart + (s * 8) + 4);
+          const soundFxInfoOffset = view.getUint32(substructstart + s * 8 + 4);
 
           let rawSoundIndex: number;
-          const soundFxInfoType = view.getUint8(soundFxListOffset + soundFxInfoOffset);
+          const soundFxInfoType = view.getUint8(
+            soundFxListOffset + soundFxInfoOffset
+          );
           switch (soundFxInfoType) {
             case 0x92:
             case 0x93:
-              rawSoundIndex = view.getUint16(soundFxListOffset + soundFxInfoOffset + 1);
+              rawSoundIndex = view.getUint16(
+                soundFxListOffset + soundFxInfoOffset + 1
+              );
               break;
             case 0x12:
             case 0x13:
-              rawSoundIndex = view.getUint16(soundFxListOffset + soundFxInfoOffset + 2);
+              rawSoundIndex = view.getUint16(
+                soundFxListOffset + soundFxInfoOffset + 2
+              );
               break;
             case 0x01:
-            case 0xA0:
+            case 0xa0:
               continue;
             default:
-              throw new Error("Unrecongized soundFxInfoType " + $$hex(soundFxInfoType)
-                + " at " + $$hex(view.byteOffset + soundFxListOffset + soundFxInfoOffset));
+              throw new Error(
+                "Unrecongized soundFxInfoType " +
+                  $$hex(soundFxInfoType) +
+                  " at " +
+                  $$hex(view.byteOffset + soundFxListOffset + soundFxInfoOffset)
+              );
           }
           details += `\n${$$hex(i)}: ${$$hex(rawSoundIndex)}`;
         }

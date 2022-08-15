@@ -1,7 +1,16 @@
 import { IEventParseInfo, IEventWriteInfo, IEvent } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+  EventParameterType,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
-import { addConnection, IEventInstance, addDecisionTree } from "../../../../boards";
+import {
+  addConnection,
+  IEventInstance,
+  addDecisionTree,
+} from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
 import { getSymbol } from "../../../../symbols/symbols";
 import { findCallsInFunction, getRegSetAddress } from "../../../../utils/MIPS";
@@ -17,32 +26,35 @@ export const ChainSplit1: IEvent = {
   parameters: [
     { name: "left_space", type: EventParameterType.Space },
     { name: "right_space", type: EventParameterType.Space },
-    { name: "chains", type: EventParameterType.NumberArray, }
+    { name: "chains", type: EventParameterType.NumberArray },
   ],
   fakeEvent: true,
-  supportedGames: [
-    Game.MP1_USA,
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
-    let hashes = {
+    const hashes = {
       // From Mario Rainbow Castle / Luigi Engine Room:
       METHOD_START: "597324F65BC9A4D0BCA9527477258625", // +0x2C
       METHOD_MID1: "E276F5BAE352AC662ADCA86793409B62", // [0x30]+0x18
       METHOD_MID2: "24FBEBD7FA3B256016D536690EF70AD8", // [0x4C]+0x1C
-      METHOD_END: "F153076BBD19ECBB4967EFC92CD738DF" // [0xE0]+0x28
+      METHOD_END: "F153076BBD19ECBB4967EFC92CD738DF", // [0xE0]+0x28
     };
 
     // Match a few sections to see if we match.
-    if (hashEqual([dataView.buffer, info.offset, 0x2C], hashes.METHOD_START) &&
-        //hashEqual([dataView.buffer, info.offset + 0x30, 0x18], hashes.METHOD_MID1) &&
-        hashEqual([dataView.buffer, info.offset + 0x4C, 0x1C], hashes.METHOD_MID2) &&
-        hashEqual([dataView.buffer, info.offset + 0xE0, 0x28], hashes.METHOD_END)) {
+    if (
+      hashEqual([dataView.buffer, info.offset, 0x2c], hashes.METHOD_START) &&
+      //hashEqual([dataView.buffer, info.offset + 0x30, 0x18], hashes.METHOD_MID1) &&
+      hashEqual(
+        [dataView.buffer, info.offset + 0x4c, 0x1c],
+        hashes.METHOD_MID2
+      ) &&
+      hashEqual([dataView.buffer, info.offset + 0xe0, 0x28], hashes.METHOD_END)
+    ) {
       // Read the chain indices.
-      let leftChain = dataView.getUint16(info.offset + 0xDA);
-      let rightChain = dataView.getUint16(info.offset + 0xDE);
+      const leftChain = dataView.getUint16(info.offset + 0xda);
+      const rightChain = dataView.getUint16(info.offset + 0xde);
 
-      let leftSpace = info.chains[leftChain][0]; // Technically, we should check if A2 is really R0.
-      let rightSpace = info.chains[rightChain][0];
+      const leftSpace = info.chains[leftChain][0]; // Technically, we should check if A2 is really R0.
+      const rightSpace = info.chains[rightChain][0];
 
       addConnection(info.curSpace, leftSpace, info.board);
       addConnection(info.curSpace, rightSpace, info.board);
@@ -55,11 +67,16 @@ export const ChainSplit1: IEvent = {
         const treeDataUpper = dataView.getUint16(callOffset - 6);
         const treeDataLower = dataView.getUint16(callOffset - 2);
         const treeDataAddr = getRegSetAddress(treeDataUpper, treeDataLower);
-        const noPrefixAddr = (info.addr & 0x7FFFFFFF);
+        const noPrefixAddr = info.addr & 0x7fffffff;
         const addrDiff = treeDataAddr - noPrefixAddr;
         const treeDataOffset = info.offset + addrDiff;
         const addrBase = noPrefixAddr - info.offset;
-        const tree = parseDecisionTree(dataView, treeDataOffset, addrBase, info.gameVersion);
+        const tree = parseDecisionTree(
+          dataView,
+          treeDataOffset,
+          addrBase,
+          info.gameVersion
+        );
         addDecisionTree(info.board, info.curSpaceIndex, tree);
       }
 
@@ -68,7 +85,12 @@ export const ChainSplit1: IEvent = {
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     const chains = event.parameterValues!["chains"] as number[];
     return `
         ADDIU SP SP 0xFFD8
@@ -238,6 +260,6 @@ export const ChainSplit1: IEvent = {
         .word 0
     .endstatic
     `;
-  }
+  },
 };
 addEventToLibrary(ChainSplit1);

@@ -1,5 +1,9 @@
 import { IEvent, IEventParseInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { addEventToLibrary } from "../../../EventLibrary";
 
@@ -11,9 +15,7 @@ export const ThwompChainSplit: IEvent = {
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.PROCESS, // Unconfirmed
   fakeEvent: true,
-  supportedGames: [
-    Game.MP1_USA,
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     var hashes = {
       // One particular thwomp event from DK:

@@ -1,5 +1,10 @@
 import { IEvent, IEventParseInfo, IEventWriteInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+  EventParameterType,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { addConnection, IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -12,19 +17,17 @@ export const ChainSplit3: IEvent = {
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.PROCESS,
   parameters: [
-    { name: "spaceIndexArgs", type: EventParameterType.NumberArray, },
-    { name: "chainArgs", type: EventParameterType.NumberArray, },
+    { name: "spaceIndexArgs", type: EventParameterType.NumberArray },
+    { name: "chainArgs", type: EventParameterType.NumberArray },
     // For ReverseChainSplit
-    { name: "reverse", type: EventParameterType.Boolean, },
+    { name: "reverse", type: EventParameterType.Boolean },
     // For GateChainSplit
-    { name: "hasgate", type: EventParameterType.Boolean, },
-    { name: "prevSpace", type: EventParameterType.Number, },
-    { name: "altChain", type: EventParameterType.NumberArray, },
+    { name: "hasgate", type: EventParameterType.Boolean },
+    { name: "prevSpace", type: EventParameterType.Number },
+    { name: "altChain", type: EventParameterType.NumberArray },
   ],
   fakeEvent: true,
-  supportedGames: [
-    Game.MP3_USA,
-  ],
+  supportedGames: [Game.MP3_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     let hashes = {
       // From Chilly Waters 0x80108D28 / 0x31E898:
@@ -33,18 +36,19 @@ export const ChainSplit3: IEvent = {
     };
 
     // Match a few sections to see if we match.
-    if (hashEqual([dataView.buffer, info.offset, 0x08], hashes.METHOD_START) &&
-        hashEqual([dataView.buffer, info.offset + 0x24, 0x14], hashes.METHOD_END)) {
+    if (
+      hashEqual([dataView.buffer, info.offset, 0x08], hashes.METHOD_START) &&
+      hashEqual([dataView.buffer, info.offset + 0x24, 0x14], hashes.METHOD_END)
+    ) {
       // Read the RAM offset of the space index arguments.
-      let upperAddr = dataView.getUint16(info.offset + 0x0A) << 16;
-      let lowerAddr = dataView.getUint16(info.offset + 0x0E);
-      let spacesAddr = (upperAddr | lowerAddr) & 0x7FFFFFFF;
-      if (spacesAddr & 0x00008000)
-        spacesAddr = spacesAddr - 0x00010000;
+      let upperAddr = dataView.getUint16(info.offset + 0x0a) << 16;
+      let lowerAddr = dataView.getUint16(info.offset + 0x0e);
+      let spacesAddr = (upperAddr | lowerAddr) & 0x7fffffff;
+      if (spacesAddr & 0x00008000) spacesAddr = spacesAddr - 0x00010000;
       let spacesOffset = info.offset - (info.addr - spacesAddr);
 
       let destinationSpace = dataView.getUint16(spacesOffset);
-      while (destinationSpace !== 0xFFFF) {
+      while (destinationSpace !== 0xffff) {
         addConnection(info.curSpace, destinationSpace, info.board);
         spacesOffset += 2;
         destinationSpace = dataView.getUint16(spacesOffset);
@@ -55,10 +59,15 @@ export const ChainSplit3: IEvent = {
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     const spaceIndexArgs = event.parameterValues!["spaceIndexArgs"] as number[];
     const chainArgs = event.parameterValues!["chainArgs"] as number[];
-    const altChain = event.parameterValues!.altChain as number[] || [];
+    const altChain = (event.parameterValues!.altChain as number[]) || [];
     return `
         addiu SP, SP, -0x18
         sw    RA, 0x14(SP)
@@ -90,7 +99,7 @@ export const ChainSplit3: IEvent = {
       sll   V0, V0, 0x10
       sra   V0, V0, 0x10
       ; Check for the previous space being the gate chain's first space.
-      li    V1, ${event.parameterValues!.prevSpace as number || 0}
+      li    V1, ${(event.parameterValues!.prevSpace as number) || 0}
       bne   V0, V1, do_chain_split
       NOP
       lbu   V0, 0x17(S0)
@@ -374,6 +383,6 @@ export const ChainSplit3: IEvent = {
         .word 0
   .endstatic
     `;
-  }
-}
+  },
+};
 addEventToLibrary(ChainSplit3);

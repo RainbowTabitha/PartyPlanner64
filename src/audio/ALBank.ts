@@ -19,11 +19,15 @@ export class ALBank {
 
     let percussionOffset = B1view.getUint32(bankOffset + 8);
     if (percussionOffset)
-      throw new Error(`Need to parse percussion at bank offset 0x${(B1view.byteOffset + bankOffset).toString(16)}`);
+      throw new Error(
+        `Need to parse percussion at bank offset 0x${(
+          B1view.byteOffset + bankOffset
+        ).toString(16)}`
+      );
 
     let instrumentCount = B1view.getUint16(bankOffset);
     for (let i = 0; i < instrumentCount; i++) {
-      let instrumentOffset = B1view.getUint32(bankOffset + 12 + (i * 4));
+      let instrumentOffset = B1view.getUint32(bankOffset + 12 + i * 4);
       this.instruments.push(new ALInst(B1view, instrumentOffset));
     }
   }

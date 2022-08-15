@@ -16,7 +16,12 @@ const WAV_SMPL_CHUNK_SIZE = 0x44;
  * @param instrument Instrument index
  * @param sound Sound index
  */
-export function extractWavSound(tbl: ArrayBuffer, bank: ALBank, instrumentIndex: number, soundIndex: number): ArrayBuffer {
+export function extractWavSound(
+  tbl: ArrayBuffer,
+  bank: ALBank,
+  instrumentIndex: number,
+  soundIndex: number
+): ArrayBuffer {
   if (instrumentIndex >= bank.instruments.length || !bank.instruments.length) {
     throw new Error("Invalid bank instrument index" + instrumentIndex);
   }
@@ -31,17 +36,22 @@ export function extractWavSound(tbl: ArrayBuffer, bank: ALBank, instrumentIndex:
   return extractWavFromSound(tbl, sound, bank.sampleRate);
 }
 
-export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRate: number): ArrayBuffer {
+export function extractWavFromSound(
+  tbl: ArrayBuffer,
+  sound: ISound,
+  samplingRate: number
+): ArrayBuffer {
   const wave = sound.wave;
   const tblView = new DataView(tbl, wave.waveBase);
 
   if (wave.type === ALWaveType.AL_RAW16_WAVE) {
-    const wavFileSize = RIFF_CHUNK_HEADER_SIZE
-      + 4 // "WAVE"
-      + WAV_FMT_CHUNK_SIZE
-      + WAV_DATA_CHUNK_HEADER_SIZE
-      + (wave.waveLen - 2)
-      + WAV_SMPL_CHUNK_SIZE;
+    const wavFileSize =
+      RIFF_CHUNK_HEADER_SIZE +
+      4 + // "WAVE"
+      WAV_FMT_CHUNK_SIZE +
+      WAV_DATA_CHUNK_HEADER_SIZE +
+      (wave.waveLen - 2) +
+      WAV_SMPL_CHUNK_SIZE;
     const outBuffer = new ArrayBuffer(wavFileSize);
     const outView = new DataView(outBuffer);
 
@@ -53,13 +63,13 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
     outView.setUint32(8, 0x57415645); // "WAVE"
 
     // fmt section
-    outView.setUint32(12, 0x666D7420); // "fmt "
+    outView.setUint32(12, 0x666d7420); // "fmt "
 
     outView.setUint32(0x10, 0x10, true); // Subchunk "fmt " size
     outView.setUint16(0x14, 1, true); // Audio format (PCM = 1)
     outView.setUint16(0x16, 1, true); // Num Channels (Mono = 1, Stereo = 2)
     outView.setUint32(0x18, samplingRate, true); // Sample Rate
-    outView.setUint32(0x1C, samplingRate * 2, true); // Byte rate
+    outView.setUint32(0x1c, samplingRate * 2, true); // Byte rate
     outView.setUint16(0x20, 2, true); // Block align
     outView.setUint16(0x22, 16, true); // Bits per sample
 
@@ -71,16 +81,16 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
 
     // Grab the wave data from the tbl.
     // Skip first and last byte for some reason?
-    let position = 0x2C;
+    let position = 0x2c;
     for (let tblIndex = 0; tblIndex < dataChunkSize; tblIndex++, position++) {
       outView.setUint8(position, tblView.getUint8(tblIndex + 1));
     }
 
     // smpl section
-    outView.setUint32(position, 0x736D706C); // "smpl"
+    outView.setUint32(position, 0x736d706c); // "smpl"
     position += 4;
 
-    outView.setUint32(position, 0x3C, true); // smpl chunk size
+    outView.setUint32(position, 0x3c, true); // smpl chunk size
     position += 4;
 
     outView.setUint32(position, 0); // Manufacturer
@@ -90,7 +100,7 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
     outView.setUint32(position, 0); // Sample Period
     position += 4;
 
-    let keyBase: number = 0x3C;
+    let keyBase: number = 0x3c;
     if (sound.keymap && sound.keymap.keyBase !== 0) {
       keyBase = sound.keymap.keyBase;
     }
@@ -130,10 +140,10 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
         position += 4;
 
         // wavHeader[0x40] Play Count
-        if (wave.rawWave.loop.count === 0xFFFFFFFF) { // -1
+        if (wave.rawWave.loop.count === 0xffffffff) {
+          // -1
           outView.setUint32(position, 0);
-        }
-        else {
+        } else {
           outView.setUint32(position, wave.rawWave.loop.count, true);
         }
         position += 4;
@@ -141,23 +151,31 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
     }
 
     return outBuffer;
-  }
-  else if (wave.type === ALWaveType.AL_ADPCM_WAVE) {
+  } else if (wave.type === ALWaveType.AL_ADPCM_WAVE) {
     const adpcmWave = wave.adpcmWave;
     if (!adpcmWave || !adpcmWave.book) {
       throw new Error("Cannot decode AL_ADPCM_WAVE without book");
     }
 
-    const outRawData = new ArrayBuffer(wave.waveLen * 4 * 2 /* sizeof(signed short) */);
-    const numSamples = decodeVADPCM(tblView, outRawData, wave.waveLen, adpcmWave.book, (wave.flags & 0x30) === 0x30);
+    const outRawData = new ArrayBuffer(
+      wave.waveLen * 4 * 2 /* sizeof(signed short) */
+    );
+    const numSamples = decodeVADPCM(
+      tblView,
+      outRawData,
+      wave.waveLen,
+      adpcmWave.book,
+      (wave.flags & 0x30) === 0x30
+    );
 
     //0x2C + (numSamples * 2) + 0x44;
-    const wavFileSize = RIFF_CHUNK_HEADER_SIZE
-      + 4 // "WAVE"
-      + WAV_FMT_CHUNK_SIZE
-      + WAV_DATA_CHUNK_HEADER_SIZE
-      + (numSamples * 2)
-      + WAV_SMPL_CHUNK_SIZE;
+    const wavFileSize =
+      RIFF_CHUNK_HEADER_SIZE +
+      4 + // "WAVE"
+      WAV_FMT_CHUNK_SIZE +
+      WAV_DATA_CHUNK_HEADER_SIZE +
+      numSamples * 2 +
+      WAV_SMPL_CHUNK_SIZE;
 
     const outBuffer = new ArrayBuffer(wavFileSize);
     const outView = new DataView(outBuffer);
@@ -170,13 +188,13 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
     outView.setUint32(8, 0x57415645); // "WAVE"
 
     // fmt section
-    outView.setUint32(12, 0x666D7420); // "fmt "
+    outView.setUint32(12, 0x666d7420); // "fmt "
 
     outView.setUint32(0x10, WAV_FMT_CHUNK_SIZE - 8, true); // Subchunk "fmt " size
     outView.setUint16(0x14, 1, true); // Audio format (PCM = 1)
     outView.setUint16(0x16, 1, true); // Num Channels (Mono = 1, Stereo = 2)
     outView.setUint32(0x18, samplingRate, true); // Sample Rate
-    outView.setUint32(0x1C, samplingRate * 2, true); // Byte rate
+    outView.setUint32(0x1c, samplingRate * 2, true); // Byte rate
     outView.setUint16(0x20, 2, true); // Block align
     outView.setUint16(0x22, 16, true); // Bits per sample
 
@@ -188,16 +206,16 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
 
     // Copy the samples to the data section.
     const outRawView = new DataView(outRawData);
-    let position = 0x2C;
+    let position = 0x2c;
     for (let s = 0; s < numSamples * 2; s++, position++) {
       outView.setUint8(position, outRawView.getUint8(s));
     }
 
     // smpl section
-    outView.setUint32(position, 0x736D706C); // "smpl"
+    outView.setUint32(position, 0x736d706c); // "smpl"
     position += 4;
 
-    outView.setUint32(position, 0x3C, true); // smpl chunk size
+    outView.setUint32(position, 0x3c, true); // smpl chunk size
     position += 4;
 
     outView.setUint32(position, 0); // Manufacturer
@@ -207,7 +225,7 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
     outView.setUint32(position, 0); // Sample Period
     position += 4;
 
-    let keyBase: number = 0x3C;
+    let keyBase: number = 0x3c;
     if (sound.keymap && sound.keymap.keyBase !== 0) {
       keyBase = sound.keymap.keyBase;
     }
@@ -247,10 +265,10 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
         position += 4;
 
         // wavHeader[0x40] Play Count
-        if (adpcmWave.loop.count === 0xFFFFFFFF) { // -1
+        if (adpcmWave.loop.count === 0xffffffff) {
+          // -1
           outView.setUint32(position, 0);
-        }
-        else {
+        } else {
           outView.setUint32(position, adpcmWave.loop.count, true);
         }
         position += 4;
@@ -258,8 +276,7 @@ export function extractWavFromSound(tbl: ArrayBuffer, sound: ISound, samplingRat
     }
 
     return outBuffer;
-  }
-  else {
+  } else {
     throw new Error(`Unsupported wave type ${wave.type}`);
   }
 }

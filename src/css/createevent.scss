@@ -51,7 +51,8 @@ $codeMirrorReadonlyBackground: var(--code-readonly-bg-color);
   width: 260px;
   padding: 0 1em;
 
-  &, * {
+  &,
+  * {
     color: var(--text-color);
   }
 

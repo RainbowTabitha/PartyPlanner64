@@ -8,19 +8,19 @@ import { getCheatRoutineBuffer } from "../../views/gameshark";
 // 810657EE 0005
 
 // Installs a Gameshark hook for MP2 (U)
-export const MP2UHook = new class MP2UHook extends HookBase {
+export const MP2UHook = new (class MP2UHook extends HookBase {
   // File to store the cheat routine.
   protected MAINFS_CHEAT_FILE = [0, 140];
 
   // Location safe to write a small set of hooking code
-  protected HOOK_ROM_START_OFFSET = 0xD2BC0;
-  protected HOOK_RAM_START_OFFSET = 0xD1FC0;
+  protected HOOK_ROM_START_OFFSET = 0xd2bc0;
+  protected HOOK_RAM_START_OFFSET = 0xd1fc0;
 
   // Use controller routine 0x800A2038 (ROM 0xA2C38) to reach the hook
-  protected HOOK_JUMP_ROM_OFFSET = 0xA2C38;
+  protected HOOK_JUMP_ROM_OFFSET = 0xa2c38;
 
   // Value initially in the spot we cache the hook routine.
-  protected HOOK_CACHE_DEFAULT_VALUE = 0x4661756C;
+  protected HOOK_CACHE_DEFAULT_VALUE = 0x4661756c;
 
   apply(romBuffer: ArrayBuffer) {
     const romView = new DataView(romBuffer);
@@ -33,7 +33,7 @@ export const MP2UHook = new class MP2UHook extends HookBase {
     // Jump out from the controller routine to a small fixed position hook.
     // This hook will read the cheat buffer (if not already read) and jump to it.
 
-    let hookJ = parse(`J ${this.HOOK_RAM_START_OFFSET + 4}`);
+    const hookJ = parse(`J ${this.HOOK_RAM_START_OFFSET + 4}`);
 
     // Remember the stack adjustment, and NOP it out here.
     const endInsts = [
@@ -46,6 +46,10 @@ export const MP2UHook = new class MP2UHook extends HookBase {
     romView.setUint32(this.HOOK_JUMP_ROM_OFFSET + 8, 0);
 
     const cheatRoutine = getCheatRoutineBuffer({ endInsts });
-    mainfs.write(this.MAINFS_CHEAT_FILE[0], this.MAINFS_CHEAT_FILE[1], cheatRoutine);
+    mainfs.write(
+      this.MAINFS_CHEAT_FILE[0],
+      this.MAINFS_CHEAT_FILE[1],
+      cheatRoutine
+    );
   }
-}();
+})();

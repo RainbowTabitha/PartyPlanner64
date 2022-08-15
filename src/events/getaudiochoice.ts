@@ -34,7 +34,7 @@ export const defaultGetAudioC = `// Customize the background music used each tur
 
 int PickAudioIndex() {
     return MUSIC_TRACK_INDEX_1;
-}`
+}`;
 
 export function getDefaultGetAudioCode(language: EventCodeLanguage): string {
   switch (language) {
@@ -48,27 +48,39 @@ export function getDefaultGetAudioCode(language: EventCodeLanguage): string {
   throw new Error(`Unrecognized event code language ${language}`);
 }
 
-export async function testGetAudioCodeAllGames(code: string, language: EventCodeLanguage, board: IBoard): Promise<string[]> {
+export async function testGetAudioCodeAllGames(
+  code: string,
+  language: EventCodeLanguage,
+  board: IBoard
+): Promise<string[]> {
   const possibleGameVersions = getGameVersionsToTestCompile(board);
 
   let failures: string[] = [];
 
   for (const game of possibleGameVersions) {
-    failures = failures.concat(await testGetAudioCodeWithGame(code, language, board, game));
+    failures = failures.concat(
+      await testGetAudioCodeWithGame(code, language, board, game)
+    );
   }
 
   // If it doesn't fail all, that means it's OK for some game and that's good enough.
   if (failures.length === possibleGameVersions.length) {
-    failures.unshift("All possible target game versions failed to compile/assemble.");
-  }
-  else {
+    failures.unshift(
+      "All possible target game versions failed to compile/assemble."
+    );
+  } else {
     failures = [];
   }
 
   return failures;
 }
 
-export async function testGetAudioCodeWithGame(code: string, language: EventCodeLanguage, board: IBoard, game: Game): Promise<string[]> {
+export async function testGetAudioCodeWithGame(
+  code: string,
+  language: EventCodeLanguage,
+  board: IBoard,
+  game: Game
+): Promise<string[]> {
   let failures: string[] = [];
 
   const fakeAudioIndices = makeFakeGetAudioIndices(board);
@@ -82,19 +94,18 @@ export async function testGetAudioCodeWithGame(code: string, language: EventCode
       $$log(asm);
       const preppedAsm = prepGenericAsm(asm, 0x80000000, game);
       assemble(preppedAsm);
+    } catch (e) {
+      failures.push(
+        `Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`
+      );
     }
-    catch (e) {
-      failures.push(`Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`);
-    }
-  }
-  else {
+  } else {
     const asmWithSyms = prepGetAudioAsm(code, fakeAudioIndices);
     try {
       const preppedAsm = prepGenericAsm(asmWithSyms, 0x80000000, game);
       $$log(preppedAsm);
       assemble(preppedAsm);
-    }
-    catch (e) {
+    } catch (e) {
       failures.push(`Failed test assembly for ${getGameName(game)}:\n${e}\n`);
     }
   }
@@ -113,7 +124,10 @@ function getGameVersionsToTestCompile(board: IBoard): Game[] {
   }
 }
 
-export async function getAudioIndexAsmForOverlay(board: IBoard, audioIndices: number[]) {
+export async function getAudioIndexAsmForOverlay(
+  board: IBoard,
+  audioIndices: number[]
+) {
   const audioSelectCode = getAudioSelectCode(board);
   if (!audioSelectCode) {
     return prepGetAudioAsm(defaultGetAudioAsm, audioIndices);
@@ -125,39 +139,46 @@ export async function getAudioIndexAsmForOverlay(board: IBoard, audioIndices: nu
       const game = romhandler.getROMGame()!;
       const preppedC = prepGenericC(cWithDefines, game);
       const asm = await compile(preppedC);
-      return scopeLabelsStaticByDefault(`
+      return scopeLabelsStaticByDefault(
+        `
         .beginfile ; Scopes static labels
         ${asm}
         .align 4
         .endfile
-      `, true);
+      `,
+        true
+      );
 
     case EventCodeLanguage.MIPS:
       return prepGetAudioAsm(audioSelectCode.code, audioIndices);
 
     default:
-      throw new Error(`Unrecognized event code language ${audioSelectCode.language}`);
+      throw new Error(
+        `Unrecognized event code language ${audioSelectCode.language}`
+      );
   }
 }
 
 /** Surrounds the audio index code with the necessary symbols. */
 export function prepGetAudioAsm(asm: string, audioIndices: number[]): string {
-  return scopeLabelsStaticByDefault(`
+  return scopeLabelsStaticByDefault(
+    `
     .beginfile ; Scopes static labels
     __PP64_INTERNAL_GET_BOARD_AUDIO_INDEX:
     ${makeAudioSymbolLabels(audioIndices).join("\n")}
     ${asm}
     .align 4
     .endfile
-  `, true);
+  `,
+    true
+  );
 }
 
 export function makeFakeGetAudioIndices(board: IBoard): number[] {
-  if (!board.audioData || !board.audioData.length)
-    return [1]; // One for the in-game audio track.
+  if (!board.audioData || !board.audioData.length) return [1]; // One for the in-game audio track.
 
   let i = 0;
-  return board.audioData.map(_ => ++i);
+  return board.audioData.map((_) => ++i);
 }
 
 export function makeAudioSymbolLabels(audioIndices: number[]): string[] {
@@ -178,7 +199,9 @@ ${code}
 }
 
 /** Creates defines for music tracks. */
-export function makeAudioDefines(audioIndices: number[] | null | undefined): string[] {
+export function makeAudioDefines(
+  audioIndices: number[] | null | undefined
+): string[] {
   if (!audioIndices) {
     return [];
   }

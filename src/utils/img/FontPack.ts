@@ -27,7 +27,7 @@ interface SizeConfig {
  */
 const SIZE_CONFIGS: SizeConfig[] = [
   { w: 10, h: 12 },
-  { w: 8, h: 8},
+  { w: 8, h: 8 },
 ];
 
 /** Does the given file appear to be a font pack? */
@@ -53,26 +53,30 @@ export function isFontPack(buffer: ArrayBuffer): boolean {
   }
 
   const paletteSize = imagesOffset - paletteOffset;
-  if ((paletteSize % 2) !== 0) {
+  if (paletteSize % 2 !== 0) {
     return false;
   }
 
   return !!findMatchingSizeConfig(imagesOffset, charsOffset, view.byteLength);
 }
 
-function findMatchingSizeConfig(imagesOffset: number, charsOffset: number, byteLength: number): SizeConfig | null {
+function findMatchingSizeConfig(
+  imagesOffset: number,
+  charsOffset: number,
+  byteLength: number
+): SizeConfig | null {
   for (const config of SIZE_CONFIGS) {
     const CHAR_PIXELS = config.w * config.h;
 
     if (imagesOffset > 0) {
       const imagesSize = charsOffset - imagesOffset;
-      if ((imagesSize % CHAR_PIXELS) !== 0) {
+      if (imagesSize % CHAR_PIXELS !== 0) {
         continue;
       }
     }
 
     const charsSize = byteLength - charsOffset;
-    if ((charsSize % (CHAR_PIXELS / 2)) !== 0) {
+    if (charsSize % (CHAR_PIXELS / 2) !== 0) {
       continue;
     }
 
@@ -83,7 +87,11 @@ function findMatchingSizeConfig(imagesOffset: number, charsOffset: number, byteL
 }
 
 /** Checks if file is a known font pack from a specific game. */
-export function isKnownFontPack(game: Game, dir: number, file: number): boolean {
+export function isKnownFontPack(
+  game: Game,
+  dir: number,
+  file: number
+): boolean {
   // switch (game) {
   //   case Game.MP1_USA:
   //     if (dir === 0) {
@@ -111,7 +119,11 @@ export function fontPackToRGBA32(buffer: ArrayBuffer): IFontPack {
   const imagesOffset = view.getUint32(4);
   const charsOffset = view.getUint32(8);
 
-  const config = findMatchingSizeConfig(imagesOffset, charsOffset, view.byteLength);
+  const config = findMatchingSizeConfig(
+    imagesOffset,
+    charsOffset,
+    view.byteLength
+  );
   if (!config) {
     throw new Error("Unrecongized font size");
   }
@@ -131,14 +143,19 @@ export function fontPackToRGBA32(buffer: ArrayBuffer): IFontPack {
   if (paletteOffset > 0) {
     const paletteLen = (imagesOffset - paletteOffset) / 2;
     for (let i = 0; i < paletteLen; i++) {
-      palette5551.push(view.getUint16(paletteOffset + (i * 2)));
+      palette5551.push(view.getUint16(paletteOffset + i * 2));
     }
   }
 
   if (imagesOffset > 0) {
     let curImageOffset = imagesOffset;
     while (curImageOffset < charsOffset) {
-      const rgba5551 = BMPtoRGBA(new DataView(buffer, curImageOffset, CHAR_PIXELS), palette5551, 8, 16);
+      const rgba5551 = BMPtoRGBA(
+        new DataView(buffer, curImageOffset, CHAR_PIXELS),
+        palette5551,
+        8,
+        16
+      );
       const rgba32 = RGBA5551toRGBA32(rgba5551, config.w, config.h);
       pack.images.push(rgba32);
 
@@ -149,12 +166,17 @@ export function fontPackToRGBA32(buffer: ArrayBuffer): IFontPack {
   // Intensity palette.
   const fakePalette = [0];
   for (let i = 1; i < 16; i++) {
-    fakePalette.push(Math.floor(0xFF * ((i + 1) / 16)));
+    fakePalette.push(Math.floor(0xff * ((i + 1) / 16)));
   }
 
   let curCharOffset = charsOffset;
   while (curCharOffset < buffer.byteLength) {
-    const rgba32 = BMPtoRGBA(new DataView(buffer, curCharOffset, CHAR_PIXELS / 2), fakePalette, 4, 32);
+    const rgba32 = BMPtoRGBA(
+      new DataView(buffer, curCharOffset, CHAR_PIXELS / 2),
+      fakePalette,
+      4,
+      32
+    );
     pack.chars.push(rgba32);
 
     curCharOffset += CHAR_PIXELS / 2;

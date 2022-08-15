@@ -16,10 +16,10 @@ export interface ISceneInfo {
   bss_end: number;
 }
 
-const SIZEOF_SCENE_TABLE_ENTRY = (9 * 4);
+const SIZEOF_SCENE_TABLE_ENTRY = 9 * 4;
 
 /** Handles the overlays used in the game. */
-export const scenes = new class Scenes {
+export const scenes = new (class Scenes {
   private _overlays: ArrayBuffer[] | null;
   private _sceneInfo: ISceneInfo[] | null;
 
@@ -47,16 +47,16 @@ export const scenes = new class Scenes {
 
   getCodeDataView(index: number) {
     const info = this._sceneInfo![index];
-    const startAddr = info.code_start & 0x7FFFFFFF;
-    const endAddr = info.code_end & 0x7FFFFFFF;
+    const startAddr = info.code_start & 0x7fffffff;
+    const endAddr = info.code_end & 0x7fffffff;
     return new DataView(this._overlays![index], 0, endAddr - startAddr);
   }
 
   getRoDataView(index: number) {
     const info = this._sceneInfo![index];
-    const startAddr = info.rodata_start & 0x7FFFFFFF;
-    const endAddr = info.rodata_end & 0x7FFFFFFF;
-    const ramStart = info.ram_start & 0x7FFFFFFF;
+    const startAddr = info.rodata_start & 0x7fffffff;
+    const endAddr = info.rodata_end & 0x7fffffff;
+    const ramStart = info.ram_start & 0x7fffffff;
     return new DataView(
       this._overlays![index],
       startAddr - ramStart,
@@ -142,9 +142,15 @@ export const scenes = new class Scenes {
     }
   }
 
-  replace(index: number, buffer: ArrayBuffer, newInfoValues?: Partial<ISceneInfo>) {
+  replace(
+    index: number,
+    buffer: ArrayBuffer,
+    newInfoValues?: Partial<ISceneInfo>
+  ) {
     if (buffer.byteLength % 16) {
-      throw new Error("Cannot have overlay byte length that is not divisible by 16");
+      throw new Error(
+        "Cannot have overlay byte length that is not divisible by 16"
+      );
     }
 
     this._overlays![index] = buffer;
@@ -171,6 +177,11 @@ export const scenes = new class Scenes {
       }
     }
 
-    $$log(`Replaced overlay ${$$hex(index)} with new buffer of length ${buffer.byteLength}`, newInfoValues);
+    $$log(
+      `Replaced overlay ${$$hex(index)} with new buffer of length ${
+        buffer.byteLength
+      }`,
+      newInfoValues
+    );
   }
-}();
+})();

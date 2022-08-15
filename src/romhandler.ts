@@ -19,27 +19,24 @@ import { saveAs } from "file-saver";
 
 // The ROM Handler handles the ROM... it holds the ROM buffer reference and
 // orchestrates ROM loading and saving via adapter code.
-export const romhandler = new class RomHandler {
+export const romhandler = new (class RomHandler {
   _rom: ArrayBuffer | null = null;
   _u8array: Uint8Array | null = null;
   _gameId: Game | null = null;
   _gameVersion: number | null = null;
 
   getROMGame(): Game | null {
-    if (!this._rom)
-      return null;
+    if (!this._rom) return null;
 
-    if (this._gameId)
-      return this._gameId as Game;
+    if (this._gameId) return this._gameId as Game;
 
-    if (this._rom.byteLength < 0x40)
-      return null;
+    if (this._rom.byteLength < 0x40) return null;
 
     this._gameId = String.fromCharCode(
-      this._u8array![0x3B],
-      this._u8array![0x3C],
-      this._u8array![0x3D],
-      this._u8array![0x3E]
+      this._u8array![0x3b],
+      this._u8array![0x3c],
+      this._u8array![0x3d],
+      this._u8array![0x3e]
     ) as Game;
     return this._gameId;
   }
@@ -94,14 +91,11 @@ export const romhandler = new class RomHandler {
     let promises = [];
     promises.push(scenes.extractAsync());
     promises.push(mainfs.extractAsync());
-    if (gameVersion === 3)
-      promises.push(strings3.extractAsync());
-    else
-      promises.push(strings.extractAsync());
+    if (gameVersion === 3) promises.push(strings3.extractAsync());
+    else promises.push(strings.extractAsync());
     promises.push(hvqfs.extractAsync());
     promises.push(audio.extractAsync());
-    if (gameVersion === 2)
-      promises.push(animationfs.extractAsync());
+    if (gameVersion === 2) promises.push(animationfs.extractAsync());
 
     return Promise.all(promises).then(() => {
       // Now that we've extracted, shrink _rom to just be the initial part of the ROM.
@@ -111,8 +105,7 @@ export const romhandler = new class RomHandler {
   }
 
   saveROM() {
-    if (!this._rom)
-      throw new Error("Cannot save ROM, buffer was not present");
+    if (!this._rom) throw new Error("Cannot save ROM, buffer was not present");
 
     let gameVersion = this.getGameVersion();
 
@@ -124,8 +117,7 @@ export const romhandler = new class RomHandler {
     let strsLen;
     if (gameVersion === 3)
       strsLen = makeDivisibleBy(strings3.getByteLength(), 16);
-    else
-      strsLen = makeDivisibleBy(strings.getByteLength(), 16);
+    else strsLen = makeDivisibleBy(strings.getByteLength(), 16);
     let hvqLen = makeDivisibleBy(hvqfs.getByteLength(), 16);
     let audioLen = makeDivisibleBy(audio.getByteLength(), 16);
     let animationLen = 0;
@@ -138,7 +130,13 @@ export const romhandler = new class RomHandler {
     }
 
     let newROMBuffer = new ArrayBuffer(
-      initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen + audioLen
+      initialLen +
+        sceneLen +
+        mainLen +
+        strsLen +
+        hvqLen +
+        animationLen +
+        audioLen
     );
 
     copyRange(newROMBuffer, this._rom, 0, 0, initialLen);
@@ -151,8 +149,7 @@ export const romhandler = new class RomHandler {
     if (gameVersion === 3) {
       strings3.pack(newROMBuffer, initialLen + sceneLen + mainLen);
       strings3.setROMOffset(initialLen + sceneLen + mainLen, newROMBuffer);
-    }
-    else {
+    } else {
       strings.pack(newROMBuffer, initialLen + sceneLen + mainLen);
       strings.setROMOffset(initialLen + sceneLen + mainLen, newROMBuffer);
     }
@@ -161,19 +158,30 @@ export const romhandler = new class RomHandler {
     hvqfs.setROMOffset(initialLen + mainLen + sceneLen + strsLen, newROMBuffer);
 
     if (gameVersion === 2) {
-      animationfs.pack(newROMBuffer, initialLen + sceneLen + mainLen + strsLen + hvqLen);
-      animationfs.setROMOffset(initialLen + sceneLen + mainLen + strsLen + hvqLen, newROMBuffer);
+      animationfs.pack(
+        newROMBuffer,
+        initialLen + sceneLen + mainLen + strsLen + hvqLen
+      );
+      animationfs.setROMOffset(
+        initialLen + sceneLen + mainLen + strsLen + hvqLen,
+        newROMBuffer
+      );
     }
 
-    audio.pack(newROMBuffer, initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen);
-    audio.setROMOffset(initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen, newROMBuffer);
+    audio.pack(
+      newROMBuffer,
+      initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen
+    );
+    audio.setROMOffset(
+      initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen,
+      newROMBuffer
+    );
 
     // Do this last, so that any patches made to scenes just prior take effect.
     scenes.pack(newROMBuffer, initialLen);
 
     let adapter = getROMAdapter()!;
-    if (adapter.onAfterSave)
-      adapter.onAfterSave(new DataView(newROMBuffer));
+    if (adapter.onAfterSave) adapter.onAfterSave(new DataView(newROMBuffer));
 
     fixChecksum(newROMBuffer);
 
@@ -189,23 +197,24 @@ export const romhandler = new class RomHandler {
   }
 
   getDataView(startingOffset = 0, endOffset = 0) {
-    if (!this._rom)
-      throw new Error("ROM not loaded, cannot get DataView.");
+    if (!this._rom) throw new Error("ROM not loaded, cannot get DataView.");
     if (endOffset) {
-      return new DataView(this._rom, startingOffset, endOffset - startingOffset);
+      return new DataView(
+        this._rom,
+        startingOffset,
+        endOffset - startingOffset
+      );
     }
     return new DataView(this._rom, startingOffset);
   }
 
   getGameVersion() {
-    if (this._gameVersion !== null)
-      return this._gameVersion;
+    if (this._gameVersion !== null) return this._gameVersion;
 
     let gameID = this.getROMGame();
-    if (!gameID)
-      return null;
+    if (!gameID) return null;
 
-    switch(gameID) {
+    switch (gameID) {
       case Game.MP1_USA:
       case Game.MP1_JPN:
       case Game.MP1_PAL:
@@ -235,33 +244,44 @@ export const romhandler = new class RomHandler {
       case Game.MP2_USA:
       case Game.MP3_USA:
         supported = true;
-    };
+    }
     return supported || !!get($setting.uiAllowAllRoms);
   }
 
   byteSwapIfNeeded(): void {
-    if (!this._rom || this._rom.byteLength < 4 || !this._u8array)
-      return;
+    if (!this._rom || this._rom.byteLength < 4 || !this._u8array) return;
     let romView = this.getDataView();
     let magic = romView.getUint32(0);
-    if (magic === 0x80371240)
-      return; // Normal, big endian ROM.
+    if (magic === 0x80371240) return; // Normal, big endian ROM.
 
     $$log("Byteswapping ROM...");
     let evenLen = this._rom.byteLength - (this._rom.byteLength % 2);
     let fourLen = this._rom.byteLength - (this._rom.byteLength % 4);
-    if (magic === 0x37804012) { // BADC, .v64 format
+    if (magic === 0x37804012) {
+      // BADC, .v64 format
       for (let i = 0; i < evenLen; i += 2) {
-        [this._u8array[i], this._u8array[i + 1]] = [this._u8array[i + 1], this._u8array[i]];
+        [this._u8array[i], this._u8array[i + 1]] = [
+          this._u8array[i + 1],
+          this._u8array[i],
+        ];
       }
-    }
-    else if (magic === 0x40123780) { // DCBA, little endian
+    } else if (magic === 0x40123780) {
+      // DCBA, little endian
       for (let i = 0; i < fourLen; i += 4) {
-        [this._u8array[i], this._u8array[i + 1], this._u8array[i + 2], this._u8array[i + 3]]
-          = [this._u8array[i + 3], this._u8array[i + 2], this._u8array[i + 1], this._u8array[i]];
+        [
+          this._u8array[i],
+          this._u8array[i + 1],
+          this._u8array[i + 2],
+          this._u8array[i + 3],
+        ] = [
+          this._u8array[i + 3],
+          this._u8array[i + 2],
+          this._u8array[i + 1],
+          this._u8array[i],
+        ];
       }
-    }
-    else if (magic === 0x12408037) { // CDAB, wordswapped
+    } else if (magic === 0x12408037) {
+      // CDAB, wordswapped
       for (let i = 0; i < fourLen; i += 4) {
         let last = romView.getUint16(i + 2);
         romView.setUint16(i + 2, romView.getUint16(i));
@@ -269,4 +289,4 @@ export const romhandler = new class RomHandler {
       }
     }
   }
-}();
+})();

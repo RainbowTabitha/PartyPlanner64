@@ -4,7 +4,12 @@ import { parseGameMidi } from "./midi";
 import { extractWavSound } from "./wav";
 import { ALKeyMap } from "./ALKeyMap";
 import { $$log } from "../utils/debug";
-import { getAudioContext, getIsPlaying, setIsPlaying, AudioPlayerController } from "./playershared";
+import {
+  getAudioContext,
+  getIsPlaying,
+  setIsPlaying,
+  AudioPlayerController,
+} from "./playershared";
 
 export function playMidi(table: number, index: number): AudioPlayerController {
   if (getIsPlaying()) {
@@ -15,7 +20,10 @@ export function playMidi(table: number, index: number): AudioPlayerController {
   const seqTable = audio.getSequenceTable(table)!;
   console.log(seqTable);
   const gameMidiBuffer = seqTable.midis[index].buffer;
-  const midi = parseGameMidi(new DataView(gameMidiBuffer), gameMidiBuffer.byteLength);
+  const midi = parseGameMidi(
+    new DataView(gameMidiBuffer),
+    gameMidiBuffer.byteLength
+  );
   $$log(midi);
 
   const promises = [];
@@ -32,7 +40,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
       middt.push(null);
       const insertIndex = middt.length - 1;
       const instrumentVolume = instrument.volume;
-      const prom = audioContext.decodeAudioData(wav).then(value => {
+      const prom = audioContext.decodeAudioData(wav).then((value) => {
         middt[insertIndex] = {
           audioBuffer: value,
           keymap: sound.keymap,
@@ -73,8 +81,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
 
     if (name === "Program Change") {
       channelInstrumentMap[event.channel] = event.value;
-    }
-    else if (name === "Controller Change") {
+    } else if (name === "Controller Change") {
       switch (event.number) {
         case 7:
           if ("value" in event) {
@@ -86,19 +93,15 @@ export function playMidi(table: number, index: number): AudioPlayerController {
           $$log(`Unrecongized controller change event`, event);
           break;
       }
-    }
-    else if (name === "Note on") {
+    } else if (name === "Note on") {
       _noteOn(event);
-    }
-    else if (event.running) {
+    } else if (event.running) {
       if ("track" in event && "noteNumber" in event && "velocity" in event) {
         _noteOn(event);
       }
-    }
-    else if (name === "End of Track") {
+    } else if (name === "End of Track") {
       // Do nothing
-    }
-    else {
+    } else {
       $$log(`Ignored event`, event);
     }
   }
@@ -121,7 +124,9 @@ export function playMidi(table: number, index: number): AudioPlayerController {
 
     const sampleInfo = findSampleToPlay(midiData[inst], event.noteNumber);
     if (!sampleInfo) {
-      console.warn(`No note for channel ${channel} instrument ${inst} note number ${event.noteNumber}`);
+      console.warn(
+        `No note for channel ${channel} instrument ${inst} note number ${event.noteNumber}`
+      );
       return;
     }
 
@@ -129,26 +134,31 @@ export function playMidi(table: number, index: number): AudioPlayerController {
     if (!event.velocity) {
       if (playingNode) {
         playingNode.stop();
-      }
-      else {
-        console.warn(`There wasn't a node to stop playing for channel ${channel} track ${track} note number ${event.noteNumber}`);
+      } else {
+        console.warn(
+          `There wasn't a node to stop playing for channel ${channel} track ${track} note number ${event.noteNumber}`
+        );
       }
       activeNodes[channel][track][event.noteNumber] = null;
-    }
-    else {
+    } else {
       if (playingNode) {
-        console.warn(`There was a previous node playing for ${channel} note number ${event.noteNumber}`);
+        console.warn(
+          `There was a previous node playing for ${channel} note number ${event.noteNumber}`
+        );
       }
 
       const newPlayingNode = createAudioNode(
-        sampleInfo, event.noteNumber, event.velocity, channelVolumes[channel]
+        sampleInfo,
+        event.noteNumber,
+        event.velocity,
+        channelVolumes[channel]
       );
       newPlayingNode.start(0);
       activeNodes[channel][track][event.noteNumber] = newPlayingNode;
     }
   }
 
-  const player = new MidiPlayer.Player(function(event: any) {
+  const player = new MidiPlayer.Player(function (event: any) {
     $$log(event);
 
     //const name = event.running ? runningStatus : event.name;
@@ -158,7 +168,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
     //   runningStatus = event.name;
     // }
   });
-  player.on("endOfFile", function() {
+  player.on("endOfFile", function () {
     setIsPlaying(false);
   });
   player.loadArrayBuffer(midi);
@@ -172,13 +182,16 @@ export function playMidi(table: number, index: number): AudioPlayerController {
 }
 
 type SampleInfo = {
-  audioBuffer: AudioBuffer,
-  keymap: ALKeyMap,
-  instrumentVolume: number,
-  soundVolume: number,
+  audioBuffer: AudioBuffer;
+  keymap: ALKeyMap;
+  instrumentVolume: number;
+  soundVolume: number;
 };
 
-function findSampleToPlay(infos: SampleInfo[], noteNumber: number): SampleInfo | null {
+function findSampleToPlay(
+  infos: SampleInfo[],
+  noteNumber: number
+): SampleInfo | null {
   for (const info of infos) {
     if (noteNumber >= info.keymap.keyMin && noteNumber <= info.keymap.keyMax) {
       return info;
@@ -187,7 +200,7 @@ function findSampleToPlay(infos: SampleInfo[], noteNumber: number): SampleInfo |
   return null;
 }
 
-const VELOCITY_MAX = 0x7F;
+const VELOCITY_MAX = 0x7f;
 
 function createAudioNode(
   sampleInfo: SampleInfo,
@@ -216,11 +229,11 @@ function createAudioNode(
   //   node.connect(psNode);
   // }
 
-  const gainNode = audioContext.createGain()
+  const gainNode = audioContext.createGain();
   gainNode.gain.value = sampleInfo.instrumentVolume / VELOCITY_MAX;
-  gainNode.gain.value *= (sampleInfo.soundVolume / VELOCITY_MAX);
-  gainNode.gain.value *= (channelVelocity / VELOCITY_MAX);
-  gainNode.gain.value *= (targetVelocity / VELOCITY_MAX);
+  gainNode.gain.value *= sampleInfo.soundVolume / VELOCITY_MAX;
+  gainNode.gain.value *= channelVelocity / VELOCITY_MAX;
+  gainNode.gain.value *= targetVelocity / VELOCITY_MAX;
 
   gainNode.connect(audioContext.destination);
   node.connect(gainNode);

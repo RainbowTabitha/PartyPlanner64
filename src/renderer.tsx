@@ -1,7 +1,32 @@
 import * as React from "react";
-import { useRef, useCallback, useEffect, useImperativeHandle, forwardRef, useState, useMemo, useContext, useLayoutEffect } from "react";
-import { ISpace, IBoard, getConnections, getCurrentBoard, forEachEventParameter, IEventInstance } from "./boards";
-import { BoardType, Space, SpaceSubtype, GameVersion, EventParameterType, isArrayEventParameterType, Action } from "./types";
+import {
+  useRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+  useState,
+  useMemo,
+  useContext,
+  useLayoutEffect,
+} from "react";
+import {
+  ISpace,
+  IBoard,
+  getConnections,
+  getCurrentBoard,
+  forEachEventParameter,
+  IEventInstance,
+} from "./boards";
+import {
+  BoardType,
+  Space,
+  SpaceSubtype,
+  GameVersion,
+  EventParameterType,
+  isArrayEventParameterType,
+  Action,
+} from "./types";
 import { degreesToRadians } from "./utils/number";
 import { spaces } from "./spaces";
 import { getImage } from "./images";
@@ -15,16 +40,28 @@ import { takeScreeny } from "./screenshot";
 import { getMouseCoordsOnCanvas } from "./utils/canvas";
 import { setOverrideBg } from "./app/appControl";
 import { useAppSelector, useCurrentBoard } from "./app/hooks";
-import { selectCurrentBoard, selectHighlightedSpaceIndices, selectHoveredBoardEventIndex, selectSelectedSpaceIndices, selectSelectionBoxCoords, selectTemporaryConnections, SpaceIndexMap } from "./app/boardState";
+import {
+  selectCurrentBoard,
+  selectHighlightedSpaceIndices,
+  selectHoveredBoardEventIndex,
+  selectSelectedSpaceIndices,
+  selectSelectionBoxCoords,
+  selectTemporaryConnections,
+  SpaceIndexMap,
+} from "./app/boardState";
 import { isEmpty } from "./utils/obj";
 import { getEventsInLibrary } from "./events/EventLibrary";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;
 
-function _renderConnections(lineCanvas: Canvas, lineCtx: CanvasContext, board: IBoard, clear: boolean = true) {
-  if (clear)
-    lineCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+function _renderConnections(
+  lineCanvas: Canvas,
+  lineCtx: CanvasContext,
+  board: IBoard,
+  clear: boolean = true
+) {
+  if (clear) lineCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
 
   // Draw connecting lines.
   const links = board.links;
@@ -40,8 +77,7 @@ function _renderConnections(lineCanvas: Canvas, lineCtx: CanvasContext, board: I
         x2 = board.spaces[endLinks[i]].x;
         y2 = board.spaces[endLinks[i]].y;
         bidirectional = _isConnectedTo(links, endLinks[i], startSpace);
-        if (bidirectional && parseInt(startSpace) > endLinks[i])
-          continue;
+        if (bidirectional && parseInt(startSpace) > endLinks[i]) continue;
         _drawConnection(lineCtx, x1, y1, x2, y2, bidirectional);
       }
     }
@@ -56,10 +92,11 @@ function _renderAssociations(
 ) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!selectedSpacesIndices)
-    return;
+  if (!selectedSpacesIndices) return;
 
-  const selectedIndices = Object.keys(selectedSpacesIndices).map(s => parseInt(s, 10));
+  const selectedIndices = Object.keys(selectedSpacesIndices).map((s) =>
+    parseInt(s, 10)
+  );
   if (selectedIndices.length !== 1) {
     return;
   }
@@ -70,51 +107,62 @@ function _renderAssociations(
   // Draw associated spaces in event params.
   let lastEvent: IEventInstance;
   let associationNum = 0;
-  forEachEventParameter(board, eventLibrary, (parameter, event, eventIndex, space, spaceIndex) => {
-    if (selectedSpaceIndex !== spaceIndex)
-      return; // Only draw associations for the selected space.
+  forEachEventParameter(
+    board,
+    eventLibrary,
+    (parameter, event, eventIndex, space, spaceIndex) => {
+      if (selectedSpaceIndex !== spaceIndex) return; // Only draw associations for the selected space.
 
-    // Reset coloring for each event.
-    if (lastEvent !== event) {
-      associationNum = 0;
+      // Reset coloring for each event.
+      if (lastEvent !== event) {
+        associationNum = 0;
+      }
+      lastEvent = event;
+
+      let spaceIndicesToAssociate: number[] | undefined;
+      switch (parameter.type) {
+        case EventParameterType.Space:
+          const associatedSpaceIndex =
+            event.parameterValues && event.parameterValues[parameter.name];
+          if (typeof associatedSpaceIndex === "number") {
+            spaceIndicesToAssociate = [associatedSpaceIndex];
+          }
+          break;
+
+        case EventParameterType.SpaceArray:
+          spaceIndicesToAssociate =
+            event.parameterValues &&
+            (event.parameterValues[parameter.name] as number[]);
+          break;
+      }
+
+      if (spaceIndicesToAssociate) {
+        spaceIndicesToAssociate.forEach((spaceIndex) => {
+          const associatedSpace = board.spaces[spaceIndex];
+          if (!associatedSpace) return; // Probably shouldn't happen.
+
+          const dotsColor = `rgba(${getDistinctColor(associationNum).join(
+            ", "
+          )}, 0.9)`;
+          drawAssociation(
+            context,
+            space!.x,
+            space!.y,
+            associatedSpace.x,
+            associatedSpace.y,
+            dotsColor
+          );
+          associationNum++;
+        });
+      }
     }
-    lastEvent = event;
-
-    let spaceIndicesToAssociate: number[] | undefined;
-    switch (parameter.type) {
-      case EventParameterType.Space:
-        const associatedSpaceIndex =
-          event.parameterValues && event.parameterValues[parameter.name];
-        if (typeof associatedSpaceIndex === "number") {
-          spaceIndicesToAssociate = [associatedSpaceIndex];
-        }
-        break;
-
-      case EventParameterType.SpaceArray:
-        spaceIndicesToAssociate = event.parameterValues && (event.parameterValues[parameter.name] as number[]);
-        break;
-    }
-
-    if (spaceIndicesToAssociate) {
-      spaceIndicesToAssociate.forEach(spaceIndex => {
-        const associatedSpace = board.spaces[spaceIndex];
-        if (!associatedSpace)
-          return; // Probably shouldn't happen.
-
-        const dotsColor = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.9)`;
-        drawAssociation(context, space!.x, space!.y, associatedSpace.x, associatedSpace.y, dotsColor);
-        associationNum++;
-      });
-    }
-  });
+  );
 }
 
 function _isConnectedTo(links: any, start: number, end: any) {
   let startLinks = links[start];
-  if (Array.isArray(startLinks))
-    return startLinks.indexOf(parseInt(end)) >= 0;
-  else
-    return startLinks == end; /* eslint-disable-line */ // Can be string vs int?
+  if (Array.isArray(startLinks)) return startLinks.indexOf(parseInt(end)) >= 0;
+  else return startLinks == end; /* eslint-disable-line */ // Can be string vs int?
 }
 
 export interface ISpaceRenderOpts {
@@ -126,21 +174,31 @@ export interface ISpaceRenderOpts {
 // opts:
 //   skipHiddenSpaces: true to not render start, invisible spaces
 //   skipBadges: false to skip event and star badges
-function _renderSpaces(spaceCanvas: Canvas, spaceCtx: CanvasContext, board: IBoard, clear: boolean = true, opts: ISpaceRenderOpts = {}) {
-  if (clear)
-    spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
+function _renderSpaces(
+  spaceCanvas: Canvas,
+  spaceCtx: CanvasContext,
+  board: IBoard,
+  clear: boolean = true,
+  opts: ISpaceRenderOpts = {}
+) {
+  if (clear) spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
   // Draw spaces
   for (let index = 0; index < board.spaces.length; index++) {
     let space = board.spaces[index];
-    if (space === null)
-      continue;
+    if (space === null) continue;
 
     drawSpace(spaceCtx, board, space, index, opts);
   }
 }
 
-function drawSpace(spaceCtx: CanvasContext, board: IBoard, space: ISpace, spaceIndex: number, opts: ISpaceRenderOpts = {}) {
+function drawSpace(
+  spaceCtx: CanvasContext,
+  board: IBoard,
+  space: ISpace,
+  spaceIndex: number,
+  opts: ISpaceRenderOpts = {}
+) {
   const game = board.game || 1;
   const boardType = board.type || BoardType.NORMAL;
   const x = space.x;
@@ -159,89 +217,62 @@ function drawSpace(spaceCtx: CanvasContext, board: IBoard, space: ISpace, spaceI
 
   switch (type) {
     case Space.OTHER:
-      if (opts.skipHiddenSpaces)
-        break;
-      if (game === 3)
-        spaces.drawOther3(spaceCtx, x, y);
-      else
-        spaces.drawOther(spaceCtx, x, y);
+      if (opts.skipHiddenSpaces) break;
+      if (game === 3) spaces.drawOther3(spaceCtx, x, y);
+      else spaces.drawOther(spaceCtx, x, y);
       break;
     case Space.BLUE:
-      if (game === 3)
-        spaces.drawBlue3(spaceCtx, x, y);
-      else
-        spaces.drawBlue(spaceCtx, x, y);
+      if (game === 3) spaces.drawBlue3(spaceCtx, x, y);
+      else spaces.drawBlue(spaceCtx, x, y);
       break;
     case Space.RED:
-      if (game === 3)
-        spaces.drawRed3(spaceCtx, x, y);
-      else
-        spaces.drawRed(spaceCtx, x, y);
+      if (game === 3) spaces.drawRed3(spaceCtx, x, y);
+      else spaces.drawRed(spaceCtx, x, y);
       break;
     case Space.MINIGAME:
       if (boardType === BoardType.DUEL)
         spaces.drawMiniGameDuel3(spaceCtx, x, y);
-      else
-        spaces.drawMiniGame(spaceCtx, x, y);
+      else spaces.drawMiniGame(spaceCtx, x, y);
       break;
     case Space.HAPPENING:
       if (game === 3) {
         if (boardType === BoardType.DUEL)
           spaces.drawHappeningDuel3(spaceCtx, x, y);
-        else
-          spaces.drawHappening3(spaceCtx, x, y);
-      }
-      else
-        spaces.drawHappening(spaceCtx, x, y);
+        else spaces.drawHappening3(spaceCtx, x, y);
+      } else spaces.drawHappening(spaceCtx, x, y);
       break;
     case Space.STAR:
-      if (game === 3)
-        spaces.drawStar3(spaceCtx, x, y);
-      else
-        spaces.drawStar(spaceCtx, x, y);
+      if (game === 3) spaces.drawStar3(spaceCtx, x, y);
+      else spaces.drawStar(spaceCtx, x, y);
       break;
     case Space.CHANCE:
-      if (game === 3)
-        spaces.drawChance3(spaceCtx, x, y);
-      else if (game === 2)
-        spaces.drawChance2(spaceCtx, x, y);
-      else
-        spaces.drawChance(spaceCtx, x, y);
+      if (game === 3) spaces.drawChance3(spaceCtx, x, y);
+      else if (game === 2) spaces.drawChance2(spaceCtx, x, y);
+      else spaces.drawChance(spaceCtx, x, y);
       break;
     case Space.START:
-      if (opts.skipHiddenSpaces)
-        break;
-      if (game === 3)
-        spaces.drawStart3(spaceCtx, x, y);
-      else
-        spaces.drawStart(spaceCtx, x, y);
+      if (opts.skipHiddenSpaces) break;
+      if (game === 3) spaces.drawStart3(spaceCtx, x, y);
+      else spaces.drawStart(spaceCtx, x, y);
       break;
     case Space.SHROOM:
       spaces.drawShroom(spaceCtx, x, y);
       break;
     case Space.BOWSER:
-      if (game === 3)
-        spaces.drawBowser3(spaceCtx, x, y);
-      else
-        spaces.drawBowser(spaceCtx, x, y);
+      if (game === 3) spaces.drawBowser3(spaceCtx, x, y);
+      else spaces.drawBowser(spaceCtx, x, y);
       break;
     case Space.ITEM:
-      if (game === 3)
-        spaces.drawItem3(spaceCtx, x, y);
-      else
-        spaces.drawItem2(spaceCtx, x, y);
+      if (game === 3) spaces.drawItem3(spaceCtx, x, y);
+      else spaces.drawItem2(spaceCtx, x, y);
       break;
     case Space.BATTLE:
-      if (game === 3)
-        spaces.drawBattle3(spaceCtx, x, y);
-      else
-        spaces.drawBattle2(spaceCtx, x, y);
+      if (game === 3) spaces.drawBattle3(spaceCtx, x, y);
+      else spaces.drawBattle2(spaceCtx, x, y);
       break;
     case Space.BANK:
-      if (game === 3)
-        spaces.drawBank3(spaceCtx, x, y);
-      else
-        spaces.drawBank2(spaceCtx, x, y);
+      if (game === 3) spaces.drawBank3(spaceCtx, x, y);
+      else spaces.drawBank2(spaceCtx, x, y);
       break;
     case Space.ARROW:
       spaces.drawArrow(spaceCtx, x, y, game);
@@ -250,22 +281,18 @@ function drawSpace(spaceCtx: CanvasContext, board: IBoard, space: ISpace, spaceI
       spaces.drawBlackStar2(spaceCtx, x, y);
       break;
     case Space.GAMEGUY:
-      if (boardType === BoardType.DUEL)
-        spaces.drawGameGuyDuel3(spaceCtx, x, y);
-      else
-        spaces.drawGameGuy3(spaceCtx, x, y);
+      if (boardType === BoardType.DUEL) spaces.drawGameGuyDuel3(spaceCtx, x, y);
+      else spaces.drawGameGuy3(spaceCtx, x, y);
       break;
     case Space.DUEL_BASIC:
       spaces.drawDuelBasic(spaceCtx, x, y);
       break;
     case Space.DUEL_START_BLUE:
-      if (opts.skipHiddenSpaces)
-        break;
+      if (opts.skipHiddenSpaces) break;
       spaces.drawStartDuelBlue(spaceCtx, x, y);
       break;
     case Space.DUEL_START_RED:
-      if (opts.skipHiddenSpaces)
-        break;
+      if (opts.skipHiddenSpaces) break;
       spaces.drawStartDuelRed(spaceCtx, x, y);
       break;
     case Space.DUEL_POWERUP:
@@ -289,18 +316,20 @@ function drawSpace(spaceCtx: CanvasContext, board: IBoard, space: ISpace, spaceI
 
   if (!opts.skipBadges) {
     let offset = game === 3 ? 5 : 2;
-    let startOffset = game === 3 ? 16 : 12
+    let startOffset = game === 3 ? 16 : 12;
     if (space.events && space.events.length) {
       let iconY = y + offset;
-      if (type === Space.START)
-        iconY -= startOffset;
-      spaceCtx.drawImage(__determineSpaceEventImg(space, board), x + offset, iconY);
+      if (type === Space.START) iconY -= startOffset;
+      spaceCtx.drawImage(
+        __determineSpaceEventImg(space, board),
+        x + offset,
+        iconY
+      );
     }
 
     if (space.star) {
       let iconY = y + offset;
-      if (type === Space.START)
-        iconY -= startOffset;
+      if (type === Space.START) iconY -= startOffset;
       spaceCtx.drawImage(getImage("starImg"), x - offset - 9, iconY);
     }
 
@@ -329,13 +358,17 @@ function drawSpace(spaceCtx: CanvasContext, board: IBoard, space: ISpace, spaceI
   }
 }
 
-function drawCharacters(spaceCtx: CanvasContext, x: number, y: number, subtype: SpaceSubtype | undefined, game: number) {
+function drawCharacters(
+  spaceCtx: CanvasContext,
+  x: number,
+  y: number,
+  subtype: SpaceSubtype | undefined,
+  game: number
+) {
   // Draw the standing Toad.
   if (subtype === SpaceSubtype.TOAD) {
-    if (game === 3)
-      spaceCtx.drawImage(getImage("mstarImg"), x - 15, y - 22);
-    else
-      spaceCtx.drawImage(getImage("toadImg"), x - 9, y - 22);
+    if (game === 3) spaceCtx.drawImage(getImage("mstarImg"), x - 15, y - 22);
+    else spaceCtx.drawImage(getImage("toadImg"), x - 9, y - 22);
   }
 
   // Draw the standing Bowser.
@@ -360,10 +393,8 @@ function drawCharacters(spaceCtx: CanvasContext, x: number, y: number, subtype: 
 
   // Draw the bank.
   if (subtype === SpaceSubtype.BANK) {
-    if (game === 2)
-      spaceCtx.drawImage(getImage("bank2Img"), x - 9, y - 10);
-    else
-      spaceCtx.drawImage(getImage("bank3Img"), x - 17, y - 20);
+    if (game === 2) spaceCtx.drawImage(getImage("bank2Img"), x - 9, y - 10);
+    else spaceCtx.drawImage(getImage("bank3Img"), x - 17, y - 20);
   }
 
   // Draw the bank coin.
@@ -373,15 +404,20 @@ function drawCharacters(spaceCtx: CanvasContext, x: number, y: number, subtype: 
 
   // Draw the item shop.
   if (subtype === SpaceSubtype.ITEMSHOP) {
-    if (game === 2)
-      spaceCtx.drawImage(getImage("itemShop2Img"), x - 9, y - 10);
-    else
-      spaceCtx.drawImage(getImage("itemShop3Img"), x - 16, y - 20);
+    if (game === 2) spaceCtx.drawImage(getImage("itemShop2Img"), x - 9, y - 10);
+    else spaceCtx.drawImage(getImage("itemShop3Img"), x - 16, y - 20);
   }
 }
 
-const _PIOver1 = (Math.PI / 1);
-function _drawConnection(lineCtx: CanvasContext, x1: number, y1: number, x2: number, y2: number, bidirectional?: boolean) {
+const _PIOver1 = Math.PI / 1;
+function _drawConnection(
+  lineCtx: CanvasContext,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  bidirectional?: boolean
+) {
   lineCtx.save();
   lineCtx.beginPath();
   lineCtx.strokeStyle = "rgba(255, 185, 105, 0.75)";
@@ -413,8 +449,12 @@ function _drawConnection(lineCtx: CanvasContext, x1: number, y1: number, x2: num
   lineCtx.restore();
 }
 
-function drawAssociation(lineCtx: CanvasContext,
-  x1: number, y1: number, x2: number, y2: number,
+function drawAssociation(
+  lineCtx: CanvasContext,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
   dotsColor: string
 ) {
   lineCtx.save();
@@ -441,11 +481,15 @@ function drawAssociation(lineCtx: CanvasContext,
 }
 
 /** Adds a glow around the selected spaces in the editor. */
-function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, board: IBoard, spaceIndices: SpaceIndexMap | null) {
+function _renderSelectedSpaces(
+  canvas: Canvas,
+  context: CanvasContext,
+  board: IBoard,
+  spaceIndices: SpaceIndexMap | null
+) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!spaceIndices || isEmpty(spaceIndices))
-    return;
+  if (!spaceIndices || isEmpty(spaceIndices)) return;
 
   for (const spaceIndex in spaceIndices) {
     const space = board.spaces[parseInt(spaceIndex, 10)];
@@ -469,7 +513,11 @@ function _renderSelectedSpaces(canvas: Canvas, context: CanvasContext, board: IB
 }
 
 /** Does a strong red highlight around some spaces. */
-function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number[]) {
+function _highlightSpaces(
+  canvas: Canvas,
+  context: CanvasContext,
+  spaces: number[]
+) {
   const currentBoard = getCurrentBoard();
   const radius = currentBoard.game === 3 ? 18 : 12;
 
@@ -488,7 +536,11 @@ function _highlightSpaces(canvas: Canvas, context: CanvasContext, spaces: number
   }
 }
 
-function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, eventInstance: IEventInstance) {
+function _highlightBoardEventSpaces(
+  canvas: Canvas,
+  context: CanvasContext,
+  eventInstance: IEventInstance
+) {
   const currentBoard = getCurrentBoard();
   const eventLibrary = getEventsInLibrary();
   const radius = currentBoard.game === 3 ? 18 : 12;
@@ -524,7 +576,9 @@ function _highlightBoardEventSpaces(canvas: Canvas, context: CanvasContext, even
             context.arc(space.x, space.y, radius, 0, 2 * Math.PI);
             context.shadowColor = "rgba(225, 225, 225, 1)";
             context.shadowBlur = 2;
-            context.fillStyle = `rgba(${getDistinctColor(associationNum).join(", ")}, 0.9)`;
+            context.fillStyle = `rgba(${getDistinctColor(associationNum).join(
+              ", "
+            )}, 0.9)`;
             context.fill();
             context.restore();
 
@@ -541,15 +595,17 @@ function __determineSpaceEventImg(space: ISpace, board: IBoard) {
     for (let i = 0; i < space.events.length; i++) {
       const spaceEvent = space.events[i];
       const event = getEvent(spaceEvent.id, board, getEventsInLibrary());
-      if (!event)
-        return getImage("eventErrorImg");
+      if (!event) return getImage("eventErrorImg");
       if (event.parameters) {
         for (let p = 0; p < event.parameters.length; p++) {
           const parameter = event.parameters[p];
           if (isArrayEventParameterType(parameter.type)) {
             continue;
           }
-          if (!spaceEvent.parameterValues || !spaceEvent.parameterValues.hasOwnProperty(parameter.name)) {
+          if (
+            !spaceEvent.parameterValues ||
+            !spaceEvent.parameterValues.hasOwnProperty(parameter.name)
+          ) {
             return getImage("eventErrorImg");
           }
         }
@@ -562,14 +618,21 @@ function __determineSpaceEventImg(space: ISpace, board: IBoard) {
 const BoardBG: React.FC = () => {
   const [boardWidth, boardHeight] = useBoardDimensions();
   const [editorWidth, editorHeight] = useContext(EditorSizeContext);
-  const boardBgSrc = useAppSelector(state => selectCurrentBoard(state).bg.src);
-  const overrideBg = useAppSelector(state => state.app.overrideBg);
+  const boardBgSrc = useAppSelector(
+    (state) => selectCurrentBoard(state).bg.src
+  );
+  const overrideBg = useAppSelector((state) => state.app.overrideBg);
 
   const imgEl = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     const bgImgEl = imgEl.current!;
-    const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
+    const transformStyle = getEditorContentTransform(
+      boardWidth,
+      boardHeight,
+      editorWidth,
+      editorHeight
+    );
     bgImgEl.style.transform = transformStyle;
     bgImgEl.width = boardWidth;
     bgImgEl.height = boardHeight;
@@ -578,7 +641,12 @@ const BoardBG: React.FC = () => {
   const imgSrcToUse = overrideBg || boardBgSrc;
 
   return (
-    <img ref={imgEl} className="editor_bg" alt="Board Background" src={imgSrcToUse} />
+    <img
+      ref={imgEl}
+      className="editor_bg"
+      alt="Board Background"
+      src={imgSrcToUse}
+    />
   );
 };
 
@@ -609,13 +677,10 @@ function _animationStep() {
   if (!animbgs || !animbgs.length) {
     stopAnimation();
     return;
-  }
-
-  else if (_currentFrame >= 0 && _currentFrame < animbgs.length) {
+  } else if (_currentFrame >= 0 && _currentFrame < animbgs.length) {
     setOverrideBg(animbgs[_currentFrame]);
     _currentFrame++;
-  }
-  else {
+  } else {
     _currentFrame = -1;
   }
 
@@ -648,9 +713,7 @@ const BoardLines = () => {
     }
   }, [board, tempConnections]);
 
-  return (
-    <canvas ref={canvasRef} className="editor_line_canvas"></canvas>
-  );
+  return <canvas ref={canvasRef} className="editor_line_canvas"></canvas>;
 };
 
 const BoardAssociations = () => {
@@ -665,7 +728,12 @@ const BoardAssociations = () => {
   useEffect(() => {
     // Update space parameter association lines
     const assocCanvas = canvasRef.current!;
-    _renderAssociations(assocCanvas, assocCanvas.getContext("2d")!, currentBoard, selectedSpaceIndices);
+    _renderAssociations(
+      assocCanvas,
+      assocCanvas.getContext("2d")!,
+      currentBoard,
+      selectedSpaceIndices
+    );
   }, [currentBoard, selectedSpaceIndices]);
 
   return (
@@ -690,19 +758,34 @@ const BoardSelectedSpaces = () => {
     // Update the current space indication
     const selectedSpacesCanvas = canvasRef.current!;
     const context = selectedSpacesCanvas.getContext("2d")!;
-    _renderSelectedSpaces(selectedSpacesCanvas, context, currentBoard, selectedSpaceIndices);
+    _renderSelectedSpaces(
+      selectedSpacesCanvas,
+      context,
+      currentBoard,
+      selectedSpaceIndices
+    );
 
     if (highlightedSpaceIndices) {
       _highlightSpaces(selectedSpacesCanvas, context, highlightedSpaceIndices);
     }
 
     if (hoveredBoardEventIndex >= 0) {
-      const hoveredBoardEvent = currentBoard.boardevents?.[hoveredBoardEventIndex];
+      const hoveredBoardEvent =
+        currentBoard.boardevents?.[hoveredBoardEventIndex];
       if (hoveredBoardEvent) {
-        _highlightBoardEventSpaces(selectedSpacesCanvas, context, hoveredBoardEvent);
+        _highlightBoardEventSpaces(
+          selectedSpacesCanvas,
+          context,
+          hoveredBoardEvent
+        );
       }
     }
-  }, [currentBoard, selectedSpaceIndices, highlightedSpaceIndices, hoveredBoardEventIndex]);
+  }, [
+    currentBoard,
+    selectedSpaceIndices,
+    highlightedSpaceIndices,
+    hoveredBoardEventIndex,
+  ]);
 
   return (
     <canvas ref={canvasRef} className="editor_current_space_canvas"></canvas>
@@ -714,7 +797,7 @@ const BoardSpaces = () => {
 
   const board = useCurrentBoard();
   const [boardWidth, boardHeight] = useBoardDimensions();
-  const imagesLoaded = useAppSelector(state => state.app.imagesLoaded);
+  const imagesLoaded = useAppSelector((state) => state.app.imagesLoaded);
 
   useDimensionsOnCanvas(canvasRef, boardWidth, boardHeight);
 
@@ -735,9 +818,12 @@ const BoardSpaces = () => {
   }, []);
 
   return (
-    <canvas className="editor_space_canvas" tabIndex={-1}
+    <canvas
+      className="editor_space_canvas"
+      tabIndex={-1}
       ref={canvasRef}
-      onDragOver={undefined}></canvas>
+      onDragOver={undefined}
+    ></canvas>
   );
 };
 
@@ -761,8 +847,18 @@ const BoardSelectionBox = () => {
       ctx.beginPath();
       ctx.fillStyle = "rgba(47, 70, 95, 0.5)";
       ctx.strokeStyle = "rgba(47, 70, 95, 1)";
-      ctx.fillRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
-      ctx.strokeRect(Math.min(xs, xf), Math.min(ys, yf), Math.abs(xs - xf), Math.abs(ys - yf));
+      ctx.fillRect(
+        Math.min(xs, xf),
+        Math.min(ys, yf),
+        Math.abs(xs - xf),
+        Math.abs(ys - yf)
+      );
+      ctx.strokeRect(
+        Math.min(xs, xf),
+        Math.min(ys, yf),
+        Math.abs(xs - xf),
+        Math.abs(ys - yf)
+      );
       ctx.restore();
       hasBoxDrawn.current = true;
     }
@@ -780,9 +876,12 @@ const BoardSelectionBox = () => {
   }, []);
 
   return (
-    <canvas className="editor_space_canvas" tabIndex={-1}
+    <canvas
+      className="editor_space_canvas"
+      tabIndex={-1}
       ref={canvasRef}
-      onDragOver={undefined}></canvas>
+      onDragOver={undefined}
+    ></canvas>
   );
 };
 
@@ -795,7 +894,12 @@ const BoardOverlay = forwardRef<BoardOverlayRef>((props, ref) => {
 
   const renderContent = useCallback(() => {
     const overlay = overlayDiv.current!;
-    const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
+    const transformStyle = getEditorContentTransform(
+      boardWidth,
+      boardHeight,
+      editorWidth,
+      editorHeight
+    );
     overlay.style.transform = transformStyle;
   }, [boardWidth, boardHeight, editorWidth, editorHeight]);
 
@@ -807,11 +911,15 @@ const BoardOverlay = forwardRef<BoardOverlayRef>((props, ref) => {
     return rightClickSpace >= 0;
   }, [rightClickSpace]);
 
-  useImperativeHandle(ref, () => ({
-    renderContent,
-    setRightClickMenu,
-    rightClickOpen
-  }), [renderContent, setRightClickMenu, rightClickOpen]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      renderContent,
+      setRightClickMenu,
+      rightClickOpen,
+    }),
+    [renderContent, setRightClickMenu, rightClickOpen]
+  );
 
   useEffect(() => {
     renderContent();
@@ -821,7 +929,9 @@ const BoardOverlay = forwardRef<BoardOverlayRef>((props, ref) => {
   const space = currentBoard.spaces[rightClickSpace] || null;
   return (
     <div ref={overlayDiv} className="editor_menu_overlay">
-      {rightClickOpen() && <RightClickMenu space={space} spaceIndex={rightClickSpace} />}
+      {rightClickOpen() && (
+        <RightClickMenu space={space} spaceIndex={rightClickSpace} />
+      )}
     </div>
   );
 });
@@ -843,11 +953,11 @@ function getZoomedN64SizeForTelescope(gameVersion: GameVersion) {
       break;
   }
 
-  const N64_WIDTH_ZOOMED = (N64_SCREEN_WIDTH * WIDTH_ZOOM_FACTOR);
-  const N64_HEIGHT_ZOOMED = (N64_SCREEN_HEIGHT * HEIGHT_ZOOM_FACTOR);
+  const N64_WIDTH_ZOOMED = N64_SCREEN_WIDTH * WIDTH_ZOOM_FACTOR;
+  const N64_HEIGHT_ZOOMED = N64_SCREEN_HEIGHT * HEIGHT_ZOOM_FACTOR;
   return {
     N64_WIDTH_ZOOMED,
-    N64_HEIGHT_ZOOMED
+    N64_HEIGHT_ZOOMED,
   };
 }
 
@@ -855,9 +965,16 @@ function addRecommendedBoundaryLine(board: IBoard, canvas: Canvas): void {
   const context = canvas.getContext("2d")!;
   context.lineWidth = 1;
   context.strokeStyle = "rgba(0, 0, 0, 0.5)";
-  const { width, height} = board.bg;
-  const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(board.game);
-  context.strokeRect(N64_WIDTH_ZOOMED / 2, N64_HEIGHT_ZOOMED / 2, width - N64_WIDTH_ZOOMED, height - N64_HEIGHT_ZOOMED);
+  const { width, height } = board.bg;
+  const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(
+    board.game
+  );
+  context.strokeRect(
+    N64_WIDTH_ZOOMED / 2,
+    N64_HEIGHT_ZOOMED / 2,
+    width - N64_WIDTH_ZOOMED,
+    height - N64_HEIGHT_ZOOMED
+  );
 }
 
 const TelescopeViewer: React.FC = () => {
@@ -882,51 +999,69 @@ const TelescopeViewer: React.FC = () => {
     })();
   }, [board]);
 
-  const onMouseMove = useCallback((ev: React.MouseEvent<Canvas>) => {
-    const canvas = canvasRef.current!;
-    const context = canvas.getContext("2d")!;
+  const onMouseMove = useCallback(
+    (ev: React.MouseEvent<Canvas>) => {
+      const canvas = canvasRef.current!;
+      const context = canvas.getContext("2d")!;
 
-    const screenshotCanvas = screenshotCanvasRef.current;
-    if (!screenshotCanvas) {
-      return;
-    }
+      const screenshotCanvas = screenshotCanvasRef.current;
+      if (!screenshotCanvas) {
+        return;
+      }
 
-    const [clickX, clickY] = getMouseCoordsOnCanvas(canvas, ev.clientX, ev.clientY);
-    const { width, height } = board.bg;
-    const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } = getZoomedN64SizeForTelescope(board.game);
+      const [clickX, clickY] = getMouseCoordsOnCanvas(
+        canvas,
+        ev.clientX,
+        ev.clientY
+      );
+      const { width, height } = board.bg;
+      const { N64_WIDTH_ZOOMED, N64_HEIGHT_ZOOMED } =
+        getZoomedN64SizeForTelescope(board.game);
 
-    // The cutout from the board image, bounded like the game camera is.
-    let sx = Math.max(0, clickX - (N64_WIDTH_ZOOMED / 2));
-    let sy = Math.max(0, clickY - (N64_HEIGHT_ZOOMED / 2));
-    const sWidth = N64_WIDTH_ZOOMED;
-    const sHeight = N64_HEIGHT_ZOOMED;
+      // The cutout from the board image, bounded like the game camera is.
+      let sx = Math.max(0, clickX - N64_WIDTH_ZOOMED / 2);
+      let sy = Math.max(0, clickY - N64_HEIGHT_ZOOMED / 2);
+      const sWidth = N64_WIDTH_ZOOMED;
+      const sHeight = N64_HEIGHT_ZOOMED;
 
-    if (width - sx < N64_WIDTH_ZOOMED) {
-      sx = width - N64_WIDTH_ZOOMED;
-    }
-    if (height - sy < N64_HEIGHT_ZOOMED) {
-      sy = height - N64_HEIGHT_ZOOMED;
-    }
+      if (width - sx < N64_WIDTH_ZOOMED) {
+        sx = width - N64_WIDTH_ZOOMED;
+      }
+      if (height - sy < N64_HEIGHT_ZOOMED) {
+        sy = height - N64_HEIGHT_ZOOMED;
+      }
 
-    $$log(`Viewing (${sx}, ${sy}) - (${sx + sWidth}, ${sy + sHeight})\nMouse: (${clickX}, ${clickY}`);
+      $$log(
+        `Viewing (${sx}, ${sy}) - (${sx + sWidth}, ${
+          sy + sHeight
+        })\nMouse: (${clickX}, ${clickY}`
+      );
 
-    context.drawImage(
-      screenshotCanvas,
-      sx, sy, sWidth, sHeight,
-      0, 0, width, height
-    );
+      context.drawImage(
+        screenshotCanvas,
+        sx,
+        sy,
+        sWidth,
+        sHeight,
+        0,
+        0,
+        width,
+        height
+      );
 
-    // Simulate the black bars the game has, which restrict the viewing area further.
-    const n64WidthRatio = width / N64_SCREEN_WIDTH;
-    const n64HeightRatio = height / N64_SCREEN_HEIGHT;
-    const horzBarHeight = 12 * n64HeightRatio;
-    const vertBarWidth = 16 * n64WidthRatio;
-    context.fillStyle = "black";
-    context.fillRect(0, 0, width, horzBarHeight); // top
-    context.fillRect(width - vertBarWidth, 0, vertBarWidth, height); // right
-    context.fillRect(0, height - horzBarHeight, width, horzBarHeight); // bottom
-    context.fillRect(0, 0, vertBarWidth, height); // left
-  }, [board]);
+      // Simulate the black bars the game has, which restrict the viewing area further.
+      const n64WidthRatio = width / N64_SCREEN_WIDTH;
+      const n64HeightRatio = height / N64_SCREEN_HEIGHT;
+      const horzBarHeight = 12 * n64HeightRatio;
+      const vertBarWidth = 16 * n64WidthRatio;
+      context.fillStyle = "black";
+      context.fillRect(0, 0, width, horzBarHeight); // top
+      context.fillRect(width - vertBarWidth, 0, vertBarWidth, height); // right
+      context.fillRect(0, height - horzBarHeight, width, horzBarHeight); // bottom
+      context.fillRect(0, 0, vertBarWidth, height); // left
+    },
+    [board]
+  );
 
   const onMouseLeave = useCallback(() => {
     const canvas = canvasRef.current!;
@@ -937,10 +1072,12 @@ const TelescopeViewer: React.FC = () => {
   }, [board]);
 
   return (
-    <canvas ref={canvasRef}
+    <canvas
+      ref={canvasRef}
       className="editor_telescope_viewer"
       onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave} />
+      onMouseLeave={onMouseLeave}
+    />
   );
 };
 
@@ -977,7 +1114,9 @@ export const Editor: React.FC = () => {
     return () => window.removeEventListener("resize", editorWidthChanged);
   }, [editorWidthChanged]);
 
-  const telescoping = useAppSelector(state => state.app.currentAction === Action.TELESCOPE);
+  const telescoping = useAppSelector(
+    (state) => state.app.currentAction === Action.TELESCOPE
+  );
 
   return (
     <div ref={editorRef} className="editor">
@@ -988,7 +1127,7 @@ export const Editor: React.FC = () => {
         <BoardSelectedSpaces />
         <BoardSpaces />
         <BoardSelectionBox />
-        <BoardOverlay ref={c => _boardOverlay = c} />
+        <BoardOverlay ref={(c) => (_boardOverlay = c)} />
         {telescoping && <TelescopeViewer />}
       </EditorSizeContext.Provider>
     </div>
@@ -996,12 +1135,10 @@ export const Editor: React.FC = () => {
 };
 
 export function updateRightClickMenu(spaceIndex: number) {
-  if (_boardOverlay)
-    _boardOverlay.setRightClickMenu(spaceIndex);
+  if (_boardOverlay) _boardOverlay.setRightClickMenu(spaceIndex);
 }
 export function rightClickOpen() {
-  if (_boardOverlay)
-    return _boardOverlay.rightClickOpen();
+  if (_boardOverlay) return _boardOverlay.rightClickOpen();
   return false;
 }
 
@@ -1011,10 +1148,15 @@ export function animationPlaying() {
 
 export const external = {
   renderConnections: _renderConnections,
-  renderSpaces: _renderSpaces
+  renderSpaces: _renderSpaces,
 };
 
-function getEditorContentTransform(boardWidth: number, boardHeight: number, editorWidth: number, editorHeight: number): string {
+function getEditorContentTransform(
+  boardWidth: number,
+  boardHeight: number,
+  editorWidth: number,
+  editorHeight: number
+): string {
   let board_offset_x = Math.floor((editorWidth - boardWidth) / 2);
   board_offset_x = Math.max(0, board_offset_x);
   let board_offset_y = Math.floor((editorHeight - boardHeight) / 2);
@@ -1023,12 +1165,21 @@ function getEditorContentTransform(boardWidth: number, boardHeight: number, edit
   return `translateX(${board_offset_x}px) translateY(${board_offset_y}px)`;
 }
 
-function useDimensionsOnCanvas(canvasRef: React.RefObject<Canvas>, boardWidth: number, boardHeight: number) {
+function useDimensionsOnCanvas(
+  canvasRef: React.RefObject<Canvas>,
+  boardWidth: number,
+  boardHeight: number
+) {
   const [editorWidth, editorHeight] = useContext(EditorSizeContext);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current!;
-    const transformStyle = getEditorContentTransform(boardWidth, boardHeight, editorWidth, editorHeight);
+    const transformStyle = getEditorContentTransform(
+      boardWidth,
+      boardHeight,
+      editorWidth,
+      editorHeight
+    );
     canvas.style.transform = transformStyle;
     if (canvas.width !== boardWidth || canvas.height !== boardHeight) {
       canvas.width = boardWidth;
@@ -1038,7 +1189,7 @@ function useDimensionsOnCanvas(canvasRef: React.RefObject<Canvas>, boardWidth: n
 }
 
 function useBoardDimensions() {
-  const width = useAppSelector(state => selectCurrentBoard(state).bg.width);
-  const height = useAppSelector(state => selectCurrentBoard(state).bg.height);
+  const width = useAppSelector((state) => selectCurrentBoard(state).bg.width);
+  const height = useAppSelector((state) => selectCurrentBoard(state).bg.height);
   return useMemo(() => [width, height], [width, height]);
 }

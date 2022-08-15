@@ -26,7 +26,11 @@ export async function takeScreeny(opts: ITakeScreenyOpts = {}) {
   screenCtx.fillRect(0, 0, curBoard.bg.width, curBoard.bg.height);
 
   const bgImageSrc = getCurrentBackgroundSrc();
-  const bgImage = await getImageData(bgImageSrc, curBoard.bg.width, curBoard.bg.height);
+  const bgImage = await getImageData(
+    bgImageSrc,
+    curBoard.bg.width,
+    curBoard.bg.height
+  );
   screenCtx.putImageData(bgImage, 0, 0);
 
   // Disable debug temporarily for the render
@@ -64,13 +68,16 @@ interface IScreenshotState {
   renderBadges?: boolean;
 }
 
-export const Screenshot = class Screenshot extends React.Component<IScreenshotProps, IScreenshotState> {
+export const Screenshot = class Screenshot extends React.Component<
+  IScreenshotProps,
+  IScreenshotState
+> {
   state = {
     renderConnections: true,
     renderCharacters: true,
     renderHiddenSpaces: true,
     renderBadges: true,
-  }
+  };
 
   takeScreenshot = async () => {
     const { dataUri, blobPromise } = await takeScreeny({
@@ -79,31 +86,48 @@ export const Screenshot = class Screenshot extends React.Component<IScreenshotPr
       renderHiddenSpaces: this.state.renderHiddenSpaces,
       renderBadges: this.state.renderBadges,
     });
-    if (this.props.onAccept)
-      this.props.onAccept(dataUri, blobPromise);
-  }
+    if (this.props.onAccept) this.props.onAccept(dataUri, blobPromise);
+  };
 
   onCheckChanged = (id: any) => {
     let partialState: any = {};
-    partialState[id] = !(this as any).state[id]
+    partialState[id] = !(this as any).state[id];
     this.setState(partialState);
-  }
+  };
 
   render() {
     return (
       <div className="screenshotContainer">
         <label className="nbLabel">Screenshot Options</label>
         <br />
-        <Checkbox id="renderConnections" text="Render connections"
-          checked={this.state.renderConnections} onChange={this.onCheckChanged} />
-        <Checkbox id="renderCharacters" text="Render characters"
-          checked={this.state.renderCharacters} onChange={this.onCheckChanged} />
-        <Checkbox id="renderHiddenSpaces" text="Render hidden spaces"
-          checked={this.state.renderHiddenSpaces} onChange={this.onCheckChanged} />
-        <Checkbox id="renderBadges" text="Render badges"
-          checked={this.state.renderBadges} onChange={this.onCheckChanged} />
+        <Checkbox
+          id="renderConnections"
+          text="Render connections"
+          checked={this.state.renderConnections}
+          onChange={this.onCheckChanged}
+        />
+        <Checkbox
+          id="renderCharacters"
+          text="Render characters"
+          checked={this.state.renderCharacters}
+          onChange={this.onCheckChanged}
+        />
+        <Checkbox
+          id="renderHiddenSpaces"
+          text="Render hidden spaces"
+          checked={this.state.renderHiddenSpaces}
+          onChange={this.onCheckChanged}
+        />
+        <Checkbox
+          id="renderBadges"
+          text="Render badges"
+          checked={this.state.renderBadges}
+          onChange={this.onCheckChanged}
+        />
         <br />
-        <Button onClick={this.takeScreenshot} css="ssCreate">Take Screenshot</Button>
+        <Button onClick={this.takeScreenshot} css="ssCreate">
+          Take Screenshot
+        </Button>
       </div>
     );
   }
@@ -118,20 +142,22 @@ interface ICheckboxProps {
 }
 
 const Checkbox = class Checkbox extends React.Component<ICheckboxProps> {
-  state = {
-  }
+  state = {};
 
   onChange = () => {
     this.props.onChange(this.props.id);
-  }
+  };
 
   render() {
     let css = "ssCheck";
-    if (this.props.css)
-      css += " " + this.props.css;
+    if (this.props.css) css += " " + this.props.css;
     return (
       <label className={css} title="">
-        <input type="checkbox" onChange={this.onChange} checked={this.props.checked} />
+        <input
+          type="checkbox"
+          onChange={this.onChange}
+          checked={this.props.checked}
+        />
         {this.props.text}
       </label>
     );

@@ -5,7 +5,8 @@ export class FXD0 {
   public hunks!: ArrayBuffer[];
 
   constructor(dataView: DataView) {
-    if (dataView.getUint32(0) !== 0x46584430) // "FXD0"
+    if (dataView.getUint32(0) !== 0x46584430)
+      // "FXD0"
       throw new Error("FXD0 constructor encountered non-FXD0 structure");
 
     this._extract(dataView);
@@ -19,10 +20,12 @@ export class FXD0 {
     let currentOffset = 0x10;
     for (let i = 0; i < hunkCount; i++, currentOffset += 0x208) {
       const hunkOffsetEnd = currentOffset + 0x208;
-      this.hunks.push(view.buffer.slice(
-        view.byteOffset + currentOffset,
-        view.byteOffset + hunkOffsetEnd
-      ));
+      this.hunks.push(
+        view.buffer.slice(
+          view.byteOffset + currentOffset,
+          view.byteOffset + hunkOffsetEnd
+        )
+      );
     }
   }
 }

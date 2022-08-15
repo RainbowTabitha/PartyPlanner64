@@ -14,29 +14,26 @@ interface IOffsetInfo {
 let _strFsInstance: StringTable | null;
 
 let _stringOffsets: { [game: string]: IOffsetInfo[] } = {};
-_stringOffsets[Game.MP1_USA] = [
-  { upper: 0x0001AE6E, lower: 0x0001AE76 },
-];
-_stringOffsets[Game.MP1_JPN] = [
-  { upper: 0x0001AD9E, lower: 0x0001ADA6 },
-];
+_stringOffsets[Game.MP1_USA] = [{ upper: 0x0001ae6e, lower: 0x0001ae76 }];
+_stringOffsets[Game.MP1_JPN] = [{ upper: 0x0001ad9e, lower: 0x0001ada6 }];
 // TODO: PAL has more tables for other langs. Defining ENG only for now.
-_stringOffsets[Game.MP1_PAL] = [ // Default at 0x0FF0850
-  { upper: 0x0001BA32, lower: 0x0001BA36 },
+_stringOffsets[Game.MP1_PAL] = [
+  // Default at 0x0FF0850
+  { upper: 0x0001ba32, lower: 0x0001ba36 },
 ];
-_stringOffsets[Game.MP2_USA] = [ // Default at 0x1142DD0
-  { upper: 0x0001D22A, lower: 0x0001D232 },
-  { upper: 0x00089356, lower: 0x0008935E },
-  { upper: 0x0008936A, lower: 0x00089372 },
+_stringOffsets[Game.MP2_USA] = [
+  // Default at 0x1142DD0
+  { upper: 0x0001d22a, lower: 0x0001d232 },
+  { upper: 0x00089356, lower: 0x0008935e },
+  { upper: 0x0008936a, lower: 0x00089372 },
 ];
 // MP2_JPN 0x113E720
-
 
 export class StringTable {
   private strs: ArrayBuffer[];
 
   constructor(dataView: DataView) {
-    this.strs = this._extract(dataView)
+    this.strs = this._extract(dataView);
   }
 
   _extract(view: DataView) {
@@ -56,7 +53,10 @@ export class StringTable {
     let entryOffset = this._getStringOffsetFromView(view, index);
     let entryView = new DataView(view.buffer, view.byteOffset + entryOffset);
     let strSize = entryView.getUint16(0);
-    return view.buffer.slice(view.byteOffset + entryOffset + 2, view.byteOffset + entryOffset + 2 + strSize);
+    return view.buffer.slice(
+      view.byteOffset + entryOffset + 2,
+      view.byteOffset + entryOffset + 2 + strSize
+    );
   }
 
   _getStringOffsetFromView(view: DataView, index: number) {
@@ -71,8 +71,7 @@ export class StringTable {
       throw new Error("Requesting non-existent string entry");
 
     let bytes = this.strs[index];
-    if (raw)
-      return bytes;
+    if (raw) return bytes;
     let entryView = new DataView(bytes);
     let result = "";
     for (let i = 0; i < bytes.byteLength; i++)
@@ -82,8 +81,7 @@ export class StringTable {
 
   _byteToStr(val: number) {
     let map = getROMAdapter()!.getCharacterMap();
-    if (map.hasOwnProperty(val))
-      return map[val];
+    if (map.hasOwnProperty(val)) return map[val];
     return String.fromCharCode(val);
   }
 
@@ -108,8 +106,9 @@ export class StringTable {
       byteLen = makeDivisibleBy(byteLen, 2);
     }
 
-    if (applyCompression) { // Assuming dumb compress01
-      byteLen += (byteLen / 8) + 16; // to be safe
+    if (applyCompression) {
+      // Assuming dumb compress01
+      byteLen += byteLen / 8 + 16; // to be safe
     }
 
     return byteLen;
@@ -122,7 +121,7 @@ export class StringTable {
     view.setUint32(0, strCount);
 
     let curStrIndexOffset = 4;
-    let curStrWriteOffset = 4 + (strCount * 4);
+    let curStrWriteOffset = 4 + strCount * 4;
     for (let s = 0; s < strCount; s++) {
       view.setUint32(curStrIndexOffset, curStrWriteOffset);
       curStrIndexOffset += 4;
@@ -145,19 +144,17 @@ export const strings = {
   getROMOffset() {
     let romView = romhandler.getDataView();
     let patchOffsets = strings.getPatchOffsets();
-    if (!patchOffsets)
-      return null;
+    if (!patchOffsets) return null;
     let romOffset = patchOffsets[0];
-    if (!romOffset)
-      return null;
+    if (!romOffset) return null;
     let upper = romView.getUint16(romOffset.upper) << 16;
     let lower = romView.getUint16(romOffset.lower);
     let offset = upper | lower;
-    if (lower & 0x8000)
-      offset = offset - 0x00010000; // Signed ASM addition workaround.
+    if (lower & 0x8000) offset = offset - 0x00010000; // Signed ASM addition workaround.
     $$log(`Strings.getROMOffset -> ${$$hex(offset)}`);
 
-    if (isDebug()) { // Assert that the rest of the patch offsets are valid.
+    if (isDebug()) {
+      // Assert that the rest of the patch offsets are valid.
       for (let i = 1; i < patchOffsets.length; i++) {
         let anotherUpper = romView.getUint16(patchOffsets[i].upper) << 16;
         let anotherLower = romView.getUint16(patchOffsets[i].lower);
@@ -172,10 +169,9 @@ export const strings = {
   setROMOffset(newOffset: number, buffer: ArrayBuffer) {
     let romView = new DataView(buffer);
     let patchOffsets = strings.getPatchOffsets();
-    let upper = (newOffset & 0xFFFF0000) >>> 16;
-    let lower = newOffset & 0x0000FFFF;
-    if (lower & 0x8000)
-      upper += 1; // Adjust for signed addition in ASM.
+    let upper = (newOffset & 0xffff0000) >>> 16;
+    let lower = newOffset & 0x0000ffff;
+    if (lower & 0x8000) upper += 1; // Adjust for signed addition in ASM.
     for (let i = 0; i < patchOffsets.length; i++) {
       romView.setUint16(patchOffsets[i].upper, upper);
       romView.setUint16(patchOffsets[i].lower, lower);
@@ -197,8 +193,7 @@ export const strings = {
       let lastMatchLen = 0;
       let lastMatch: string | number;
       for (let byte in map) {
-        if (!map.hasOwnProperty(byte))
-          continue;
+        if (!map.hasOwnProperty(byte)) continue;
 
         let chars = map[byte];
         if (str.substr(curIdx, chars.length) === chars) {
@@ -214,8 +209,7 @@ export const strings = {
         lastMatch = str.charCodeAt(curIdx);
       }
 
-      if (typeof lastMatch! === "string")
-        lastMatch = parseInt(lastMatch);
+      if (typeof lastMatch! === "string") lastMatch = parseInt(lastMatch);
 
       result.push(lastMatch!);
       curIdx += lastMatchLen;
@@ -230,7 +224,7 @@ export const strings = {
       return;
     }
     let view = romhandler.getDataView(romOffset);
-    return _strFsInstance = new strings.StringTable(view);
+    return (_strFsInstance = new strings.StringTable(view));
   },
 
   extractAsync(): Promise<void> {
@@ -267,5 +261,5 @@ export const strings = {
   // Gets the required byte length of the string section of the ROM.
   getByteLength() {
     return _strFsInstance!.getByteLength();
-  }
-}
+  },
+};

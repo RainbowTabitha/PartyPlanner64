@@ -548,7 +548,7 @@ const soundEffectMap = [
   "",
   "Crowd sounds",
   "",
-  ""
+  "",
 ];
 
 export function getSoundEffectMapMP3(table: number) {

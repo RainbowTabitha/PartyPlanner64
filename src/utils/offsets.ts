@@ -3,7 +3,7 @@
  * Does not handle overlay offsets, only simple ones.
  */
 export function romToRAM(romOffset: number): number {
-  return ((romOffset - 0xC00) | 0x80000000) >>> 0;
+  return ((romOffset - 0xc00) | 0x80000000) >>> 0;
 }
 
 /**
@@ -11,5 +11,5 @@ export function romToRAM(romOffset: number): number {
  * Does not handle overlay offsets, only simple ones.
  */
 export function ramToROM(ramOffset: number): number {
-  return ((ramOffset + 0xC00) & 0x7FFFFFFF) >>> 0;
+  return ((ramOffset + 0xc00) & 0x7fffffff) >>> 0;
 }

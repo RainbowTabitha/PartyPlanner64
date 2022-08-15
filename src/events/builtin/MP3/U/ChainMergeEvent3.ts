@@ -1,5 +1,10 @@
 import { IEvent, IEventWriteInfo, IEventParseInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game, EventParameterType } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+  EventParameterType,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { addConnection, IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -12,14 +17,12 @@ export const ChainMerge3: IEvent = {
   activationType: EditorEventActivationType.WALKOVER,
   executionType: EventExecutionType.DIRECT,
   parameters: [
-    { name: "prevSpace", type: EventParameterType.Number, },
-    { name: "chain", type: EventParameterType.Number, },
-    { name: "spaceIndex", type: EventParameterType.Number, },
+    { name: "prevSpace", type: EventParameterType.Number },
+    { name: "chain", type: EventParameterType.Number },
+    { name: "spaceIndex", type: EventParameterType.Number },
   ],
   fakeEvent: true,
-  supportedGames: [
-    Game.MP3_USA,
-  ],
+  supportedGames: [Game.MP3_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     // ChainMerge in 3 uses a helper function. It passes the space index of the
     // _previous_ space the player was before reaching the event space.
@@ -29,24 +32,28 @@ export const ChainMerge3: IEvent = {
       END: "0855E7309F121915D7A762AB85A7FDB6", // [0x18]+0x08
     };
     const mergeJALs = [
-      0x0C03B666, // JAL 0x800ED998
-      0x0C042307, // JAL 0x80108C1C
+      0x0c03b666, // JAL 0x800ED998
+      0x0c042307, // JAL 0x80108C1C
     ];
 
     let nextChain, nextSpace;
 
-    if (hashEqual([dataView.buffer, info.offset, 0x08], hashes.START) &&
+    if (
+      hashEqual([dataView.buffer, info.offset, 0x08], hashes.START) &&
       mergeJALs.indexOf(dataView.getUint32(info.offset + 0x10)) >= 0 &&
-      hashEqual([dataView.buffer, info.offset + 0x18, 0x08], hashes.END)) {
+      hashEqual([dataView.buffer, info.offset + 0x18, 0x08], hashes.END)
+    ) {
       // Read the chain we are going to.
-      nextChain = dataView.getUint16(info.offset + 0x0E);
+      nextChain = dataView.getUint16(info.offset + 0x0e);
       nextChain = nextChain > 1000 ? 0 : nextChain; // R0 will be 0x2821 - just check for "way to big".
 
       // Read the offset into the chain.
-      if (dataView.getUint16(info.offset + 0x14) === 0) // Usually this is an add with R0.
+      if (dataView.getUint16(info.offset + 0x14) === 0)
+        // Usually this is an add with R0.
         nextSpace = info.chains[nextChain][0];
       else
-        nextSpace = info.chains[nextChain][dataView.getUint16(info.offset + 0x16)];
+        nextSpace =
+          info.chains[nextChain][dataView.getUint16(info.offset + 0x16)];
 
       // This isn't an event really - write directly to the board links.
       if (!isNaN(nextSpace)) {
@@ -62,7 +69,12 @@ export const ChainMerge3: IEvent = {
     }
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     // TODO: Could just use "prevSpace" etc below, the definelabels should work...
     return `
       ADDIU SP, SP, -0x18
@@ -115,5 +127,5 @@ export const ChainMerge3: IEvent = {
   .endstatic
     `;
   },
-}
+};
 addEventToLibrary(ChainMerge3);

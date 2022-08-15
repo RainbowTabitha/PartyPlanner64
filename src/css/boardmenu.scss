@@ -23,7 +23,8 @@
     transform: translateX(8px);
   }
 
-  &:focus:active, &.boardEntryCurrent:focus {
+  &:focus:active,
+  &.boardEntryCurrent:focus {
     outline: none;
   }
   &:focus:not(.boardEntryCurrent):not(:active) {
@@ -89,6 +90,7 @@
   color: var(--context-menu-text-color);
 }
 
-.basicContext__item:hover:not(.basicContext__item--disabled) .basicContext__data {
+.basicContext__item:hover:not(.basicContext__item--disabled)
+  .basicContext__data {
   background-color: rgba(0, 0, 0, 0.3);
 }

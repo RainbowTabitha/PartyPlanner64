@@ -35,7 +35,10 @@ export const blockerSlice = createSlice({
       state.messageHTML = "";
       state.onBlockerFinished = undefined;
     },
-    showMessageHTMLAction: (state, action: PayloadAction<string | undefined>) => {
+    showMessageHTMLAction: (
+      state,
+      action: PayloadAction<string | undefined>
+    ) => {
       const html = action.payload;
       state.blocked = !!html;
       state.prompt = false;
@@ -44,10 +47,13 @@ export const blockerSlice = createSlice({
       state.messageHTML = html || "";
       state.onBlockerFinished = undefined;
     },
-    confirmFromUserAction: (state, action: PayloadAction<{
-      message: string,
-      onConfirmed: (value?: string) => void
-    }>) => {
+    confirmFromUserAction: (
+      state,
+      action: PayloadAction<{
+        message: string;
+        onConfirmed: (value?: string) => void;
+      }>
+    ) => {
       const { message, onConfirmed } = action.payload;
       state.blocked = true;
       state.prompt = false;
@@ -56,10 +62,13 @@ export const blockerSlice = createSlice({
       state.messageHTML = "";
       state.onBlockerFinished = onConfirmed;
     },
-    promptUserAction: (state, action: PayloadAction<{
-      message: string,
-      onSubmit: (value?: string) => void
-    }>) => {
+    promptUserAction: (
+      state,
+      action: PayloadAction<{
+        message: string;
+        onSubmit: (value?: string) => void;
+      }>
+    ) => {
       const { message, onSubmit } = action.payload;
       state.blocked = true;
       state.prompt = true;
@@ -81,9 +90,11 @@ export const {
 
 export const selectBlocked = (state: RootState) => state.blocker.blocked;
 export const selectMessage = (state: RootState) => state.blocker.message;
-export const selectMessageHTML = (state: RootState) => state.blocker.messageHTML;
+export const selectMessageHTML = (state: RootState) =>
+  state.blocker.messageHTML;
 export const selectPrompt = (state: RootState) => state.blocker.prompt;
 export const selectConfirm = (state: RootState) => state.blocker.confirm;
-export const selectOnBlockerFinished = (state: RootState) => state.blocker.onBlockerFinished;
+export const selectOnBlockerFinished = (state: RootState) =>
+  state.blocker.onBlockerFinished;
 
 export default blockerSlice.reducer;

@@ -1,5 +1,9 @@
 import { IEventParseInfo, IEvent, IEventWriteInfo } from "../../../events";
-import { EditorEventActivationType, EventExecutionType, Game } from "../../../../types";
+import {
+  EditorEventActivationType,
+  EventExecutionType,
+  Game,
+} from "../../../../types";
 import { hashEqual } from "../../../../utils/arrays";
 import { IEventInstance } from "../../../../boards";
 import { addEventToLibrary } from "../../../EventLibrary";
@@ -9,22 +13,25 @@ export const ChanceTime: IEvent = {
   name: "Chance Time",
   activationType: EditorEventActivationType.LANDON,
   executionType: EventExecutionType.DIRECT,
-  supportedGames: [
-    Game.MP1_USA,
-  ],
+  supportedGames: [Game.MP1_USA],
   parse(dataView: DataView, info: IEventParseInfo) {
     let hashes = {
       // Peach hash, 0x24699C, 0x800F79BC
       METHOD: "18F44B4AA1F4AAAA839C100E3B0FD863", // +0x6C
     };
 
-    if (hashEqual([dataView.buffer, info.offset, 0x6C], hashes.METHOD)) {
+    if (hashEqual([dataView.buffer, info.offset, 0x6c], hashes.METHOD)) {
       return true;
     }
 
     return false;
   },
-  write(dataView: DataView, event: IEventInstance, info: IEventWriteInfo, temp: any) {
+  write(
+    dataView: DataView,
+    event: IEventInstance,
+    info: IEventWriteInfo,
+    temp: any
+  ) {
     return `
       ADDIU SP SP 0xFFE0
       SW RA 0x18(SP)
@@ -55,6 +62,6 @@ export const ChanceTime: IEvent = {
       JR RA
       ADDIU SP SP 0x20
     `;
-  }
+  },
 };
 addEventToLibrary(ChanceTime);
