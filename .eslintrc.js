@@ -8,6 +8,7 @@ module.exports = {
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:jsx-a11y/recommended",
+    "prettier",
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
@@ -17,6 +18,7 @@ module.exports = {
   plugins: ["react", "@typescript-eslint", "jsx-a11y"],
   rules: {
     "no-empty": 0,
+    "no-prototype-builtins": 0,
     "@typescript-eslint/no-non-null-assertion": 0,
   },
   overrides: [

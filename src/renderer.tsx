@@ -59,14 +59,14 @@ function _renderConnections(
   lineCanvas: Canvas,
   lineCtx: CanvasContext,
   board: IBoard,
-  clear: boolean = true
+  clear = true
 ) {
   if (clear) lineCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
 
   // Draw connecting lines.
   const links = board.links;
   if (links) {
-    for (let startSpace in links) {
+    for (const startSpace in links) {
       const x1 = board.spaces[startSpace].x;
       const y1 = board.spaces[startSpace].y;
 
@@ -122,10 +122,12 @@ function _renderAssociations(
       let spaceIndicesToAssociate: number[] | undefined;
       switch (parameter.type) {
         case EventParameterType.Space:
-          const associatedSpaceIndex =
-            event.parameterValues && event.parameterValues[parameter.name];
-          if (typeof associatedSpaceIndex === "number") {
-            spaceIndicesToAssociate = [associatedSpaceIndex];
+          {
+            const associatedSpaceIndex =
+              event.parameterValues && event.parameterValues[parameter.name];
+            if (typeof associatedSpaceIndex === "number") {
+              spaceIndicesToAssociate = [associatedSpaceIndex];
+            }
           }
           break;
 
@@ -160,7 +162,7 @@ function _renderAssociations(
 }
 
 function _isConnectedTo(links: any, start: number, end: any) {
-  let startLinks = links[start];
+  const startLinks = links[start];
   if (Array.isArray(startLinks)) return startLinks.indexOf(parseInt(end)) >= 0;
   else return startLinks == end; /* eslint-disable-line */ // Can be string vs int?
 }
@@ -178,14 +180,14 @@ function _renderSpaces(
   spaceCanvas: Canvas,
   spaceCtx: CanvasContext,
   board: IBoard,
-  clear: boolean = true,
+  clear = true,
   opts: ISpaceRenderOpts = {}
 ) {
   if (clear) spaceCtx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
   // Draw spaces
   for (let index = 0; index < board.spaces.length; index++) {
-    let space = board.spaces[index];
+    const space = board.spaces[index];
     if (space === null) continue;
 
     drawSpace(spaceCtx, board, space, index, opts);
@@ -315,8 +317,8 @@ function drawSpace(
   }
 
   if (!opts.skipBadges) {
-    let offset = game === 3 ? 5 : 2;
-    let startOffset = game === 3 ? 16 : 12;
+    const offset = game === 3 ? 5 : 2;
+    const startOffset = game === 3 ? 16 : 12;
     if (space.events && space.events.length) {
       let iconY = y + offset;
       if (type === Space.START) iconY -= startOffset;
@@ -334,8 +336,8 @@ function drawSpace(
     }
 
     if (space.subtype === SpaceSubtype.GATE) {
-      let iconX = x - offset - 9;
-      let iconY = y + offset - 5;
+      const iconX = x - offset - 9;
+      const iconY = y + offset - 5;
       spaceCtx.drawImage(getImage("gateImg"), iconX, iconY);
     }
   }
@@ -428,12 +430,12 @@ function _drawConnection(
   lineCtx.stroke();
 
   // Draw the little triangle arrow on top at halfway.
-  let midX = (x1 + x2) / 2;
-  let midY = (y1 + y2) / 2;
+  const midX = (x1 + x2) / 2;
+  const midY = (y1 + y2) / 2;
   lineCtx.translate(midX, midY);
   lineCtx.rotate(-Math.atan2(x1 - midX, y1 - midY) + _PIOver1);
   lineCtx.fillStyle = "#A15000";
-  let adjust = bidirectional ? 3 : 0;
+  const adjust = bidirectional ? 3 : 0;
   lineCtx.moveTo(-4, -2 + adjust);
   lineCtx.lineTo(0, 2 + adjust);
   lineCtx.lineTo(4, -2 + adjust);
@@ -553,16 +555,21 @@ function _highlightBoardEventSpaces(
       let spacesIndicesToHighlight: number[] | undefined;
       switch (parameter.type) {
         case EventParameterType.Space:
-          const spaceIndex = eventInstance.parameterValues?.[parameter.name];
-          if (typeof spaceIndex === "number") {
-            spacesIndicesToHighlight = [spaceIndex];
+          {
+            const spaceIndex = eventInstance.parameterValues?.[parameter.name];
+            if (typeof spaceIndex === "number") {
+              spacesIndicesToHighlight = [spaceIndex];
+            }
           }
           break;
 
         case EventParameterType.SpaceArray:
-          const spaceIndices = eventInstance.parameterValues?.[parameter.name];
-          if (Array.isArray(spaceIndices)) {
-            spacesIndicesToHighlight = spaceIndices;
+          {
+            const spaceIndices =
+              eventInstance.parameterValues?.[parameter.name];
+            if (Array.isArray(spaceIndices)) {
+              spacesIndicesToHighlight = spaceIndices;
+            }
           }
           break;
       }
@@ -935,6 +942,7 @@ const BoardOverlay = forwardRef<BoardOverlayRef>((props, ref) => {
     </div>
   );
 });
+BoardOverlay.displayName = "BoardOverlay";
 
 const N64_SCREEN_WIDTH = 320;
 const N64_SCREEN_HEIGHT = 240;
