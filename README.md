@@ -6,7 +6,7 @@ PartyPlanner64 allows players to create and import customized boards into a Mari
 
 ## Getting Started
 
-PartyPlanner64 is web-based so installation is not needed. A [running copy](http://partyplanner64.github.io/PartyPlanner64) is hosted from this repository. Chrome and Firefox are the supported browsers for this project.
+PartyPlanner64 is web-based so installation is not needed. A [running copy](https://partyplanner64.github.io/PartyPlanner64) is hosted from this repository. Chrome and Firefox are the supported browsers for this project.
 
 It is highly recommended to read [**this**](https://github.com/PartyPlanner64/PartyPlanner64/wiki/Creating-a-Board) before creating a board. This documentation highlights some common mistakes made while using PartyPlanner64.
 
