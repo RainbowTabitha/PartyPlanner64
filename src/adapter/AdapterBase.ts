@@ -77,7 +77,7 @@ import { makeAudioSymbolLabels } from "../events/getaudiochoice";
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
-  public EVENT_MEM_SIZE: number = 0x50000;
+  public EVENT_MEM_SIZE = 0x50000;
 
   /**
    * Location that custom ASM will be placed in RAM.
@@ -101,9 +101,9 @@ export abstract class AdapterBase {
   public abstract HEAP_FREE_ADDR: number;
 
   public loadBoards(): IBoard[] {
-    let boards = [];
+    const boards = [];
     const game = romhandler.getROMGame()!;
-    let boardInfos = getBoardInfos(game);
+    const boardInfos = getBoardInfos(game);
     if (!boardInfos) {
       $$log(`Game ${game} has no board infos defined in PP64`);
       return [];
@@ -123,19 +123,19 @@ export abstract class AdapterBase {
         newBoard.bg = background;
         newBoard.otherbg = {};
       } else {
-        let partialBoard = {
+        const partialBoard = {
           game: this.gameVersion,
           type: boardInfo.type || BoardType.NORMAL,
           bg: background,
           otherbg: {},
           events: {},
         };
-        let boardBuffer = mainfs.get(
+        const boardBuffer = mainfs.get(
           this.boardDefDirectory,
           boardInfo.boardDefFile
         );
         newBoard = parseBoardDef(boardBuffer, partialBoard);
-        let chains: number[][] = (newBoard as any)._chains;
+        const chains: number[][] = (newBoard as any)._chains;
         delete (newBoard as any)._chains;
         $$log(`Board ${i} chains: `, chains);
 
@@ -168,7 +168,7 @@ export abstract class AdapterBase {
 
     if (isDebug()) {
       // Debug if audio offsets are right.
-      let audioSectionCount = audio.getPatchInfo().length;
+      const audioSectionCount = audio.getPatchInfo().length;
       for (let i = 0; i < audioSectionCount; i++) audio.getROMOffset(i);
     }
 
@@ -189,10 +189,10 @@ export abstract class AdapterBase {
   protected abstract onWriteEvents?(board: IBoard): void;
 
   async overwriteBoard(boardIndex: number, board: IBoard) {
-    let boardCopy = copyObject(board);
+    const boardCopy = copyObject(board);
     const boardInfo = getBoardInfoByIndex(romhandler.getROMGame()!, boardIndex);
 
-    let chains = determineChains(boardCopy);
+    const chains = determineChains(boardCopy);
     padChains(boardCopy, chains);
 
     // If the user didn't place enough 3d characters, banish them to this dead space off screen.
@@ -201,13 +201,13 @@ export abstract class AdapterBase {
     this.onChangeGameSpaceTypesFromBoardSpaceTypes(boardCopy);
     this._reversePerspective(boardCopy);
 
-    let boarddef = createBoardDef(boardCopy, chains);
+    const boarddef = createBoardDef(boardCopy, chains);
     mainfs.write(this.boardDefDirectory, boardInfo.boardDefFile, boarddef);
 
     this._createGateEvents(boardCopy, boardInfo, chains);
     const audioIndices = this.onWriteAudio(boardCopy, boardInfo, boardIndex);
 
-    let eventSyms: string = await this._writeNewBoardOverlay(
+    const eventSyms: string = await this._writeNewBoardOverlay(
       boardCopy,
       boardInfo,
       boardIndex,
@@ -351,7 +351,7 @@ export abstract class AdapterBase {
     camera.updateProjectionMatrix();
 
     for (let spaceIdx = 0; spaceIdx < board.spaces.length; spaceIdx++) {
-      let space = board.spaces[spaceIdx];
+      const space = board.spaces[spaceIdx];
 
       const spacePoint = new THREE.Vector3(space.x, space.y, space.z || 0);
       if (board.game === 2 || board.game === 3) {
@@ -400,7 +400,7 @@ export abstract class AdapterBase {
     camera.updateProjectionMatrix();
 
     for (let spaceIdx = 0; spaceIdx < board.spaces.length; spaceIdx++) {
-      let space = board.spaces[spaceIdx];
+      const space = board.spaces[spaceIdx];
 
       const vec2d = new THREE.Vector3(
         (space.x / width) * 2 - 1,
@@ -504,8 +504,8 @@ export abstract class AdapterBase {
 
   // Handles any _deadSpace we may have added in overwriteBoard
   _cleanLoadedBoard(board: IBoard) {
-    let lastIdx = board.spaces.length - 1;
-    let lastSpace = board.spaces[board.spaces.length - 1];
+    const lastIdx = board.spaces.length - 1;
+    const lastSpace = board.spaces[board.spaces.length - 1];
     if (
       lastSpace &&
       lastSpace.x > board.bg.width + 50 &&
@@ -558,9 +558,9 @@ export abstract class AdapterBase {
     // be able to parse both that or the stock boards.
     let buffer: ArrayBuffer | undefined;
     let bufferView: DataView | undefined;
-    let eventTable = new SpaceEventTable();
+    const eventTable = new SpaceEventTable();
     if (boardInfo.mainfsEventFile) {
-      let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
+      const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
       if (mainfs.has(mainFsDir, mainFsFile)) {
         buffer = mainfs.get(mainFsDir, mainFsFile);
         bufferView = new DataView(buffer);
@@ -583,10 +583,10 @@ export abstract class AdapterBase {
         if (tableDeflateCall.tableOffset) {
           tableOffset = tableDeflateCall.tableOffset;
         } else {
-          let upper = bufferView!.getUint32(tableDeflateCall.upper);
-          let lower = bufferView!.getUint32(tableDeflateCall.lower);
+          const upper = bufferView!.getUint32(tableDeflateCall.upper);
+          const lower = bufferView!.getUint32(tableDeflateCall.lower);
           if (!upper && !lower) return;
-          let tableAddr = getRegSetAddress(upper, lower);
+          const tableAddr = getRegSetAddress(upper, lower);
           tableOffset = this._addrToOffsetBase(tableAddr, sceneInfo.ram_start);
         }
 
@@ -595,13 +595,13 @@ export abstract class AdapterBase {
     }
 
     eventTable.forEach((eventTableEntry: any) => {
-      let curSpaceIndex = eventTableEntry.spaceIndex;
+      const curSpaceIndex = eventTableEntry.spaceIndex;
       if (curSpaceIndex < 0) {
         $$log(`Space event on negative space ${curSpaceIndex}`);
       }
 
       // Figure out the current info struct offset in the ROM.
-      let curInfoAddr = eventTableEntry.address & 0x7fffffff;
+      const curInfoAddr = eventTableEntry.address & 0x7fffffff;
       let curInfoOffset;
       if (curInfoAddr > (this.EVENT_RAM_LOC & 0x7fffffff))
         curInfoOffset = this._addrToOffsetBase(curInfoAddr, this.EVENT_RAM_LOC);
@@ -610,11 +610,11 @@ export abstract class AdapterBase {
           curInfoAddr,
           sceneInfo.ram_start
         );
-      let boardList = new SpaceEventList();
+      const boardList = new SpaceEventList();
       boardList.parse(buffer!, curInfoOffset);
       boardList.forEach((listEntry) => {
         // Figure out the event ASM info in ROM.
-        let asmAddr = (listEntry.address as number) & 0x7fffffff;
+        const asmAddr = (listEntry.address as number) & 0x7fffffff;
         let asmOffset, codeView;
         if (asmAddr > (this.EVENT_RAM_LOC & 0x7fffffff)) {
           asmOffset = this._addrToOffsetBase(asmAddr, this.EVENT_RAM_LOC);
@@ -625,7 +625,7 @@ export abstract class AdapterBase {
           codeView = scenes.getDataView(boardInfo.sceneIndex!);
         }
 
-        let eventInfo = parseEvent(codeView, {
+        const eventInfo = parseEvent(codeView, {
           addr: asmAddr,
           offset: asmOffset,
           board,
@@ -677,13 +677,13 @@ export abstract class AdapterBase {
   onCreateChainEvents(board: IBoard, chains: number[][]) {
     // There is either a merge or a split at the end of each chain.
     for (let i = 0; i < chains.length; i++) {
-      let chain = chains[i];
-      let lastSpace = chain[chain.length - 1];
-      let links = getConnections(lastSpace, board)!;
+      const chain = chains[i];
+      const lastSpace = chain[chain.length - 1];
+      const links = getConnections(lastSpace, board)!;
       let event;
       if (links.length > 1) {
         // A split, figure out the end points.
-        let endpoints: number[] = [];
+        const endpoints: number[] = [];
         links.forEach((link) => {
           endpoints.push(_getChainWithSpace(link)!);
         });
@@ -727,10 +727,10 @@ export abstract class AdapterBase {
   // Adds the star events we abstract in the UI.
   _createStarEvents(board: IBoard) {
     for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
+      const space = board.spaces[i];
       if (!space || !space.star) continue;
-      let events = space.events || [];
-      let hasStarEvent = events.some((e) => {
+      const events = space.events || [];
+      const hasStarEvent = events.some((e) => {
         return e.id === "STAR";
       }); // Pretty unlikely
       if (!hasStarEvent)
@@ -748,31 +748,31 @@ export abstract class AdapterBase {
   _createGateEvents(board: IBoard, boardInfo: IBoardInfo, chains: number[][]) {
     let gateIndex = 0;
     for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
+      const space = board.spaces[i];
       if (!space || space.subtype !== SpaceSubtype.GATE) continue;
 
       // We actually put an event before and after the gate, not actually on it.
-      let entrySpaceIndex = _getPointingSpaceIndex(i);
-      let entrySpace = board.spaces[entrySpaceIndex];
+      const entrySpaceIndex = _getPointingSpaceIndex(i);
+      const entrySpace = board.spaces[entrySpaceIndex];
       if (!entrySpace) throw new Error(`Gate did not have entry space`);
 
-      let prevSpaceIndex = _getPointingSpaceIndex(entrySpaceIndex);
-      let prevSpace = board.spaces[prevSpaceIndex];
+      const prevSpaceIndex = _getPointingSpaceIndex(entrySpaceIndex);
+      const prevSpace = board.spaces[prevSpaceIndex];
       if (!prevSpace) throw new Error(`Gate did not have previous space`);
 
-      let prevChainIndex = _getChainWithSpace(prevSpaceIndex)!;
-      let prevChainSpaceIndex = chains[prevChainIndex].indexOf(prevSpaceIndex);
+      const prevChainIndex = _getChainWithSpace(prevSpaceIndex)!;
+      const prevChainSpaceIndex = chains[prevChainIndex].indexOf(prevSpaceIndex);
 
-      let exitSpaceIndex = _getNextSpaceIndex(i);
-      let exitSpace = board.spaces[exitSpaceIndex];
+      const exitSpaceIndex = _getNextSpaceIndex(i);
+      const exitSpace = board.spaces[exitSpaceIndex];
       if (!exitSpace) throw new Error(`Gate did not have exit space`);
 
-      let nextSpaceIndex = _getNextSpaceIndex(exitSpaceIndex);
-      let nextSpace = board.spaces[nextSpaceIndex];
+      const nextSpaceIndex = _getNextSpaceIndex(exitSpaceIndex);
+      const nextSpace = board.spaces[nextSpaceIndex];
       if (!nextSpace) throw new Error(`Gate did not have next space`);
 
-      let nextChainIndex = _getChainWithSpace(nextSpaceIndex)!;
-      let nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
+      const nextChainIndex = _getChainWithSpace(nextSpaceIndex)!;
+      const nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
 
       // Redundant to write event twice, except we need it attached to both spaces.
       const gateEvent = createEventInstance(Gate, {
@@ -828,8 +828,8 @@ export abstract class AdapterBase {
     }
 
     function _getPointingSpaceIndex(pointedAtIndex: number) {
-      for (let startIdx in board.links) {
-        let ends = getConnections(parseInt(startIdx), board)!;
+      for (const startIdx in board.links) {
+        const ends = getConnections(parseInt(startIdx), board)!;
         for (let i = 0; i < ends.length; i++) {
           if (ends[i] === pointedAtIndex) return Number(startIdx);
         }
@@ -838,7 +838,7 @@ export abstract class AdapterBase {
     }
 
     function _getNextSpaceIndex(spaceIndex: number) {
-      let ends = getConnections(spaceIndex, board)!;
+      const ends = getConnections(spaceIndex, board)!;
       return ends[0];
     }
 
@@ -890,13 +890,13 @@ export abstract class AdapterBase {
     const eventTemp: any = {};
     const staticsWritten: { [eventName: string]: boolean } = {};
     for (let i = 0; i < board.spaces.length; i++) {
-      let space = board.spaces[i];
+      const space = board.spaces[i];
       if (!space.events || !space.events.length) continue;
       eventTable.add(i, 0);
 
-      let eventList = new SpaceEventList(i);
+      const eventList = new SpaceEventList(i);
       for (let e = 0; e < space.events.length; e++) {
-        let eventInstance = space.events[e];
+        const eventInstance = space.events[e];
         const activationType = getEventActivationTypeFromEditorType(
           eventInstance.activationType
         );
@@ -906,8 +906,8 @@ export abstract class AdapterBase {
           0
         );
 
-        let temp = eventTemp[eventInstance.id] || {};
-        let info: IEventWriteInfo = {
+        const temp = eventTemp[eventInstance.id] || {};
+        const info: IEventWriteInfo = {
           boardIndex,
           board,
           boardInfo,
@@ -919,7 +919,7 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let eventAsm = await writeEvent(
+        const eventAsm = await writeEvent(
           new ArrayBuffer(0),
           eventInstance,
           info,
@@ -980,8 +980,8 @@ export abstract class AdapterBase {
         const eventInstance = events[e];
         list.add(activationType, eventInstance.executionType, 0);
 
-        let temp = eventTemp[eventInstance.id] || {};
-        let info: IEventWriteInfo = {
+        const temp = eventTemp[eventInstance.id] || {};
+        const info: IEventWriteInfo = {
           boardIndex,
           board,
           boardInfo,
@@ -993,7 +993,7 @@ export abstract class AdapterBase {
           gameVersion: this.gameVersion,
         };
 
-        let eventAsm = await writeEvent(
+        const eventAsm = await writeEvent(
           new ArrayBuffer(0),
           eventInstance,
           info,
@@ -1084,7 +1084,7 @@ ${eventAsmCombinedString}
 
     // We write list blob of ASM/structures into the MainFS, in a location
     // that is not used by the game.
-    let [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
+    const [mainFsDir, mainFsFile] = boardInfo.mainfsEventFile;
     mainfs.write(mainFsDir, mainFsFile, buffer);
 
     //saveAs(new Blob([buffer]), "eventBuffer");
@@ -1094,8 +1094,8 @@ ${eventAsmCombinedString}
     syms: { [symbol: string]: number },
     sceneInfo: ISceneInfo
   ): string {
-    let result: string = "";
-    for (let symName in syms) {
+    let result = "";
+    for (const symName in syms) {
       if (symName.indexOf("__PP64_INTERNAL_VAL_") === 0) {
         result += `.definelabel ${symName},${$$hex(syms[symName])}\n`;
       } else if (symName.indexOf("__PP64_INTERNAL") === 0) {
@@ -1132,7 +1132,7 @@ ${eventAsmCombinedString}
 
     // Training writes the toad directly.
     if (boardInfo.toadSpaceInst) {
-      let toadSpace = sceneView.getUint16(boardInfo.toadSpaceInst + 2);
+      const toadSpace = sceneView.getUint16(boardInfo.toadSpaceInst + 2);
       if (board.spaces[toadSpace])
         board.spaces[toadSpace].subtype = SpaceSubtype.TOAD;
     }
@@ -1143,7 +1143,7 @@ ${eventAsmCombinedString}
       if (Array.isArray(starSpacesOffset))
         starSpacesOffset = starSpacesOffset[0];
       for (let i = 0; i < boardInfo.starSpaceCount; i++) {
-        let starSpace = sceneView.getUint16(starSpacesOffset + i * 2);
+        const starSpace = sceneView.getUint16(starSpacesOffset + i * 2);
         if (board.spaces[starSpace]) {
           board.spaces[starSpace].star = true;
         }
@@ -1154,7 +1154,7 @@ ${eventAsmCombinedString}
         let toadSpacesOffset = boardInfo.toadSpaceArrOffset!;
         if (Array.isArray(toadSpacesOffset))
           toadSpacesOffset = toadSpacesOffset[0];
-        let toadSpace = sceneView.getUint16(toadSpacesOffset + i * 2);
+        const toadSpace = sceneView.getUint16(toadSpacesOffset + i * 2);
         if (board.spaces[toadSpace])
           board.spaces[toadSpace].subtype = SpaceSubtype.TOAD;
       }
@@ -1162,11 +1162,11 @@ ${eventAsmCombinedString}
   }
 
   _writeStarInfo(board: IBoard, boardInfo: IBoardInfo) {
-    let starCount = boardInfo.starSpaceCount;
+    const starCount = boardInfo.starSpaceCount;
     if (starCount) {
       const sceneView = scenes.getDataView(boardInfo.sceneIndex!);
 
-      let starIndices = [];
+      const starIndices = [];
       for (let i = 0; i < board.spaces.length; i++) {
         if (board.spaces[i].star) starIndices.push(i);
       }
@@ -1175,30 +1175,30 @@ ${eventAsmCombinedString}
       if (!Array.isArray(starSpacesOffsets))
         starSpacesOffsets = [starSpacesOffsets];
       for (let i = 0; i < starSpacesOffsets.length; i++) {
-        let offset = starSpacesOffsets[i];
+        const offset = starSpacesOffsets[i];
         for (let j = 0; j < starCount; j++) {
-          let starIdx = j < starIndices.length ? j : starIndices.length - 1; // Keep writing last space to fill
+          const starIdx = j < starIndices.length ? j : starIndices.length - 1; // Keep writing last space to fill
           sceneView.setUint16(offset + j * 2, starIndices[starIdx]);
         }
       }
 
-      let toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
+      const toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
 
       // Write the toad spaces, using distance formula for now.
       let toadSpacesOffsets = boardInfo.toadSpaceArrOffset!;
       if (!Array.isArray(toadSpacesOffsets))
         toadSpacesOffsets = [toadSpacesOffsets];
       for (let i = 0; i < toadSpacesOffsets.length; i++) {
-        let offset = toadSpacesOffsets[i];
+        const offset = toadSpacesOffsets[i];
         for (let j = 0; j < starCount; j++) {
-          let starIdx = j < starIndices.length ? j : starIndices.length - 1;
-          let starSpace = board.spaces[starIndices[starIdx]];
+          const starIdx = j < starIndices.length ? j : starIndices.length - 1;
+          const starSpace = board.spaces[starIndices[starIdx]];
           let bestDistance = Number.MAX_VALUE;
           let bestToadIdx = starIndices[starIdx]; // By default, no toad spaces = put toad on star space for now.
           for (let t = 0; t < toadSpaces.length; t++) {
-            let toadIdx = toadSpaces[t];
-            let toadSpace = board.spaces[toadIdx];
-            let dist = distance(
+            const toadIdx = toadSpaces[t];
+            const toadSpace = board.spaces[toadIdx];
+            const dist = distance(
               starSpace.x,
               starSpace.y,
               toadSpace.x,
@@ -1255,7 +1255,7 @@ ${eventAsmCombinedString}
       for (let b = 0; b < booArrOffset.length; b++) {
         let curBooSpaceIndexOffset = booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
-          let booSpace = sceneView.getUint16(curBooSpaceIndexOffset);
+          const booSpace = sceneView.getUint16(curBooSpaceIndexOffset);
           if (board.spaces[booSpace])
             board.spaces[booSpace].subtype = SpaceSubtype.BOO;
           curBooSpaceIndexOffset += 2;
@@ -1268,7 +1268,7 @@ ${eventAsmCombinedString}
     if (!boardInfo.sceneIndex) return;
 
     // Find the boo spaces
-    let booSpaces = getSpacesOfSubType(SpaceSubtype.BOO, board);
+    const booSpaces = getSpacesOfSubType(SpaceSubtype.BOO, board);
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     if (boardInfo.boosLoopFnOffset) {
@@ -1296,13 +1296,13 @@ ${eventAsmCombinedString}
       );
 
       for (let i = 0; i < booCount; i++) {
-        let booSpace =
+        const booSpace =
           booSpaces[i] === undefined ? getDeadSpaceIndex(board) : booSpaces[i];
         sceneView.setUint16(booSpacesOffset + 2 * i, booSpace!);
       }
     } else if (boardInfo.booSpaceInst) {
       // Just one Boo
-      let booSpace =
+      const booSpace =
         booSpaces[0] === undefined ? getDeadSpaceIndex(board) : booSpaces[0];
       sceneView.setUint16(boardInfo.booSpaceInst + 2, booSpace!);
     } else if (boardInfo.booCount) {
@@ -1310,7 +1310,7 @@ ${eventAsmCombinedString}
       for (let b = 0; b < booArrOffset.length; b++) {
         let curBooSpaceIndexOffset = booArrOffset[b];
         for (let i = 0; i < boardInfo.booCount; i++) {
-          let booSpace =
+          const booSpace =
             booSpaces[i] === undefined
               ? getDeadSpaceIndex(board)
               : booSpaces[i];
@@ -1329,7 +1329,7 @@ ${eventAsmCombinedString}
     for (let b = 0; b < bankArrOffset.length; b++) {
       let curBankSpaceIndexOffset = bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankSpace = sceneView.getUint16(curBankSpaceIndexOffset);
+        const bankSpace = sceneView.getUint16(curBankSpaceIndexOffset);
         if (board.spaces[bankSpace])
           board.spaces[bankSpace].subtype = SpaceSubtype.BANK;
         curBankSpaceIndexOffset += 2;
@@ -1338,7 +1338,7 @@ ${eventAsmCombinedString}
     for (let b = 0; b < boardInfo.bankCoinArrOffset!.length; b++) {
       let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset![b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankCoinSpace = sceneView.getUint16(curBankCoinSpaceIndexOffset);
+        const bankCoinSpace = sceneView.getUint16(curBankCoinSpaceIndexOffset);
         if (board.spaces[bankCoinSpace])
           board.spaces[bankCoinSpace].subtype = SpaceSubtype.BANKCOIN;
         curBankCoinSpaceIndexOffset += 2;
@@ -1350,12 +1350,12 @@ ${eventAsmCombinedString}
     if (!boardInfo.bankCount || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let bankSpaces = getSpacesOfSubType(SpaceSubtype.BANK, board);
+    const bankSpaces = getSpacesOfSubType(SpaceSubtype.BANK, board);
     const bankArrOffset = boardInfo.bankArrOffset!;
     for (let b = 0; b < bankArrOffset.length; b++) {
       let curBankSpaceIndexOffset = bankArrOffset[b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankSpace =
+        const bankSpace =
           bankSpaces[i] === undefined
             ? getDeadSpaceIndex(board)
             : bankSpaces[i];
@@ -1364,11 +1364,11 @@ ${eventAsmCombinedString}
       }
     }
 
-    let bankCoinSpaces = getSpacesOfSubType(SpaceSubtype.BANKCOIN, board);
+    const bankCoinSpaces = getSpacesOfSubType(SpaceSubtype.BANKCOIN, board);
     for (let b = 0; b < boardInfo.bankCoinArrOffset!.length; b++) {
       let curBankCoinSpaceIndexOffset = boardInfo.bankCoinArrOffset![b];
       for (let i = 0; i < boardInfo.bankCount; i++) {
-        let bankCoinSpace =
+        const bankCoinSpace =
           bankCoinSpaces[i] === undefined
             ? getDeadSpaceIndex(board)
             : bankCoinSpaces[i];
@@ -1385,7 +1385,7 @@ ${eventAsmCombinedString}
     for (let b = 0; b < boardInfo.itemShopArrOffset!.length; b++) {
       let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset![b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
-        let itemShopSpace = sceneView.getUint16(curItemShopSpaceIndexOffset);
+        const itemShopSpace = sceneView.getUint16(curItemShopSpaceIndexOffset);
         if (board.spaces[itemShopSpace])
           board.spaces[itemShopSpace].subtype = SpaceSubtype.ITEMSHOP;
         curItemShopSpaceIndexOffset += 2;
@@ -1397,11 +1397,11 @@ ${eventAsmCombinedString}
     if (!boardInfo.itemShopCount || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let itemShopSpaces = getSpacesOfSubType(SpaceSubtype.ITEMSHOP, board);
+    const itemShopSpaces = getSpacesOfSubType(SpaceSubtype.ITEMSHOP, board);
     for (let b = 0; b < boardInfo.itemShopArrOffset!.length; b++) {
       let curItemShopSpaceIndexOffset = boardInfo.itemShopArrOffset![b];
       for (let i = 0; i < boardInfo.itemShopCount; i++) {
-        let ItemShopSpace =
+        const ItemShopSpace =
           itemShopSpaces[i] === undefined
             ? getDeadSpaceIndex(board)
             : itemShopSpaces[i];
@@ -1416,7 +1416,7 @@ ${eventAsmCombinedString}
     if (!boardInfo.gateCount || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let gateSpaces = [];
+    const gateSpaces = [];
     for (let i = 0; i < board.spaces.length; i++) {
       if (board.spaces[i].subtype === SpaceSubtype.GATE) gateSpaces.push(i);
     }
@@ -1425,7 +1425,7 @@ ${eventAsmCombinedString}
     for (let b = 0; b < gateArrOffset.length; b++) {
       let curGateSpaceIndexOffset = gateArrOffset[b];
       for (let i = 0; i < boardInfo.gateCount; i++) {
-        let gateSpace =
+        const gateSpace =
           gateSpaces[i] === undefined
             ? getDeadSpaceIndex(board)
             : gateSpaces[i];
@@ -1515,23 +1515,23 @@ ${eventAsmCombinedString}
         return;
       }
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(
+      const srcImage = new Image();
+      const failTimer = setTimeout(
         () => reject(`Failed to overwrite boot logo`),
         45000
       );
       srcImage.onload = () => {
         this._combineSplashcreenLogos();
 
-        let pp64Splash32Buffer = toArrayBuffer(srcImage, 320, 240);
-        let pp64Splash16Buffer = RGBA5551fromRGBA32(
+        const pp64Splash32Buffer = toArrayBuffer(srcImage, 320, 240);
+        const pp64Splash16Buffer = RGBA5551fromRGBA32(
           pp64Splash32Buffer,
           320,
           240
         );
 
         // Then, pack the image and write it.
-        let imgInfoArr = [
+        const imgInfoArr = [
           {
             src: pp64Splash16Buffer,
             width: 320,
@@ -1539,7 +1539,7 @@ ${eventAsmCombinedString}
             bpp: 16,
           },
         ];
-        let newPack = toPack(imgInfoArr, 16, 8);
+        const newPack = toPack(imgInfoArr, 16, 8);
         //saveAs(new Blob([newPack]));
         mainfs.write(
           this.hudsonLogoFSEntry![0],
@@ -1555,27 +1555,27 @@ ${eventAsmCombinedString}
   }
 
   _combineSplashcreenLogos() {
-    let nintendoPack = mainfs.get(
+    const nintendoPack = mainfs.get(
       this.nintendoLogoFSEntry![0],
       this.nintendoLogoFSEntry![1]
     ); // (NINTENDO) logo
     if (new Uint8Array(nintendoPack)[0x1a] !== 0x20) return; // We already replaced the splashscreen.
 
-    let hudsonPack = mainfs.get(
+    const hudsonPack = mainfs.get(
       this.hudsonLogoFSEntry![0],
       this.hudsonLogoFSEntry![1]
     ); // Hudson logo
 
-    let nintendoImgInfo = fromPack(nintendoPack)[0];
-    let hudsonImgInfo = fromPack(hudsonPack)[0];
+    const nintendoImgInfo = fromPack(nintendoPack)[0];
+    const hudsonImgInfo = fromPack(hudsonPack)[0];
 
-    let nintendoArr = new Uint8Array(nintendoImgInfo.src!);
-    let hudsonArr = new Uint8Array(hudsonImgInfo.src!);
+    const nintendoArr = new Uint8Array(nintendoImgInfo.src!);
+    const hudsonArr = new Uint8Array(hudsonImgInfo.src!);
 
-    let comboCanvasCtx = createContext(320, 240);
+    const comboCanvasCtx = createContext(320, 240);
     comboCanvasCtx.fillStyle = "black";
     comboCanvasCtx.fillRect(0, 0, 320, 240);
-    let comboImageData = comboCanvasCtx.getImageData(0, 0, 320, 240);
+    const comboImageData = comboCanvasCtx.getImageData(0, 0, 320, 240);
 
     for (let i = 320 * 88 * 4; i < 320 * 154 * 4; i++) {
       comboImageData.data[i - 320 * 40 * 4] = nintendoArr[i];
@@ -1587,12 +1587,12 @@ ${eventAsmCombinedString}
     //comboCanvasCtx.putImageData(comboImageData, 0, 0);
     //$$log(comboCanvasCtx.canvas.toDataURL());
 
-    let combo16Buffer = RGBA5551fromRGBA32(
+    const combo16Buffer = RGBA5551fromRGBA32(
       comboImageData.data.buffer,
       320,
       240
     );
-    let imgInfoArr = [
+    const imgInfoArr = [
       {
         src: combo16Buffer,
         width: 320,
@@ -1600,7 +1600,7 @@ ${eventAsmCombinedString}
         bpp: 16,
       },
     ];
-    let newPack = toPack(imgInfoArr, 16, 8);
+    const newPack = toPack(imgInfoArr, 16, 8);
     //saveAs(new Blob([newPack]));
     mainfs.write(
       this.nintendoLogoFSEntry![0],
@@ -1614,11 +1614,11 @@ ${eventAsmCombinedString}
   }
 
   _readPackedFromMainFS(dir: number, file: number) {
-    let imgPackBuffer = mainfs.get(dir, file);
-    let imgArr = fromPack(imgPackBuffer);
+    const imgPackBuffer = mainfs.get(dir, file);
+    const imgArr = fromPack(imgPackBuffer);
     if (!imgArr || !imgArr.length) return;
 
-    let dataViews = imgArr.map((imgInfo) => {
+    const dataViews = imgArr.map((imgInfo) => {
       return new DataView(imgInfo.src!);
     });
 
@@ -1626,27 +1626,27 @@ ${eventAsmCombinedString}
   }
 
   _readImgsFromMainFS(dir: number, file: number) {
-    let imgPackBuffer = mainfs.get(dir, file);
-    let imgArr = fromPack(imgPackBuffer);
+    const imgPackBuffer = mainfs.get(dir, file);
+    const imgArr = fromPack(imgPackBuffer);
     if (!imgArr || !imgArr.length) return;
 
     return imgArr;
   }
 
   _readImgInfoFromMainFS(dir: number, file: number, imgArrIndex: number) {
-    let imgArr = this._readImgsFromMainFS(dir, file)!;
+    const imgArr = this._readImgsFromMainFS(dir, file)!;
     return imgArr[imgArrIndex || 0];
   }
 
   _readImgFromMainFS(dir: number, file: number, imgArrIndex: number) {
-    let imgInfo = this._readImgInfoFromMainFS(dir, file, imgArrIndex);
+    const imgInfo = this._readImgInfoFromMainFS(dir, file, imgArrIndex);
     return arrayBufferToDataURL(imgInfo.src!, imgInfo.width, imgInfo.height);
   }
 
   _parseAudio(board: IBoard, boardInfo: IBoardInfo) {
     if (!boardInfo.audioIndexOffset || !boardInfo.sceneIndex) return;
 
-    let sceneView = scenes.getDataView(boardInfo.sceneIndex);
+    const sceneView = scenes.getDataView(boardInfo.sceneIndex);
     board.audioIndex = sceneView.getUint16(boardInfo.audioIndexOffset);
   }
 
@@ -1662,16 +1662,18 @@ ${eventAsmCombinedString}
     let audioIndices: number[] = [];
     switch (board.audioType) {
       case BoardAudioType.Custom:
-        const seqTable = audio.getSequenceTable(0)!;
-        assert(!!seqTable);
-        for (const audioEntry of board.audioData!) {
-          audioIndices.push(seqTable.midis.length);
-          seqTable.midis.push({
-            buffer: createGameMidi(dataUrlToArrayBuffer(audioEntry.data), {
-              loop: true,
-            })!,
-            soundbankIndex: audioEntry.soundbankIndex,
-          });
+        {
+          const seqTable = audio.getSequenceTable(0)!;
+          assert(!!seqTable);
+          for (const audioEntry of board.audioData!) {
+            audioIndices.push(seqTable.midis.length);
+            seqTable.midis.push({
+              buffer: createGameMidi(dataUrlToArrayBuffer(audioEntry.data), {
+                loop: true,
+              })!,
+              soundbankIndex: audioEntry.soundbankIndex,
+            });
+          }
         }
         break;
 

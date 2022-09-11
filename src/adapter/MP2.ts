@@ -28,11 +28,11 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
 
   public nintendoLogoFSEntry: number[] = [9, 1];
   public hudsonLogoFSEntry: number[] = [9, 2];
-  public boardDefDirectory: number = 10;
+  public boardDefDirectory = 10;
 
-  public MAINFS_READ_ADDR: number = 0x00017680;
-  public HEAP_FREE_ADDR: number = 0x00017800;
-  public TABLE_HYDRATE_ADDR: number = 0x0005568c;
+  public MAINFS_READ_ADDR = 0x00017680;
+  public HEAP_FREE_ADDR = 0x00017800;
+  public TABLE_HYDRATE_ADDR = 0x0005568c;
 
   onLoad(board: IBoard, boardInfo: IBoardInfo, boardWasStashed: boolean) {
     if (!boardWasStashed) {
@@ -79,8 +79,8 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
     boardInfo: IBoardInfo,
     boardIndex: number
   ) {
-    let bgIndex = boardInfo.bgDir;
-    let bgPromises = [
+    const bgIndex = boardInfo.bgDir;
+    const bgPromises = [
       this._writeBackground(
         bgIndex,
         board.bg.src,
@@ -120,18 +120,18 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
   }
 
   onParseStrings(board: IBoard, boardInfo: IBoardInfo) {
-    let strs = boardInfo.str || {};
+    const strs = boardInfo.str || {};
     if (strs.boardSelect) {
-      let idx = strs.boardSelect;
+      const idx = strs.boardSelect;
       // if (Array.isArray(idx))
       //   idx = idx[0];
 
-      let str = strings.read(idx as number) as string;
-      let lines = str.split("\n");
+      const str = strings.read(idx as number) as string;
+      const lines = str.split("\n");
 
       // Read the board name and description.
-      let nameStart = lines[0].indexOf(">") + 1;
-      let nameEnd = lines[0].indexOf("\u0019", nameStart);
+      const nameStart = lines[0].indexOf(">") + 1;
+      const nameEnd = lines[0].indexOf("\u0019", nameStart);
       board.name = lines[0].substring(nameStart, nameEnd);
       board.description = [lines[1], lines[2]].join("\n");
 
@@ -147,7 +147,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
   }
 
   onWriteStrings(board: IBoard, boardInfo: IBoardInfo) {
-    let strs = boardInfo.str || {};
+    const strs = boardInfo.str || {};
 
     // Various details about the board when selecting it
     if (strs.boardSelect) {
@@ -161,7 +161,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       bytes = bytes.concat(strings._strToBytes("Difficulty"));
       bytes.push(0x19);
       bytes = bytes.concat(strings._strToBytes(" : "));
-      let star = 0x3b;
+      const star = 0x3b;
       if (board.difficulty > 5 || board.difficulty < 1) {
         // Hackers!
         bytes.push(star);
@@ -177,9 +177,9 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       bytes = bytes.concat(strings._strToBytes(board.description || "")); // Assumes \n's are correct within.
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
 
-      let idx = strs.boardSelect as number;
+      const idx = strs.boardSelect as number;
       strings.write(idx, strBuffer);
     }
 
@@ -191,10 +191,10 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       bytes = bytes.concat(strings._strToBytes(board.name || ""));
       bytes.push(0x19);
       bytes.push(0x00); // Null byte
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
 
       for (let i = 0; i < strs.boardNames.length; i++) {
-        let idx = strs.boardNames[i] as number;
+        const idx = strs.boardNames[i] as number;
         strings.write(idx, strBuffer);
       }
     }
@@ -257,7 +257,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       bytes.push(0x19);
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
       strings.write(strs.boardWinner, strBuffer);
     }
 
@@ -271,13 +271,13 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       bytes = bytes.concat(strings._strToBytes(" Time(s)"));
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
       strings.write(strs.boardPlayCount, strBuffer);
     }
   }
 
   onChangeBoardSpaceTypesFromGameSpaceTypes(board: IBoard, chains: number[][]) {
-    let typeMap: { [index: number]: Space } = {
+    const typeMap: { [index: number]: Space } = {
       0: Space.OTHER, // Sometimes START
       3: Space.OTHER,
       5: Space.CHANCE,
@@ -292,20 +292,20 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       17: Space.OTHER, // Baby Bowser the COHORT
     };
     board.spaces.forEach((space) => {
-      let oldType = space.type;
-      let newType = typeMap[oldType];
+      const oldType = space.type;
+      const newType = typeMap[oldType];
       if (newType !== undefined) space.type = newType;
     });
 
     if (chains.length) {
-      let startSpaceIndex = chains[0][0];
+      const startSpaceIndex = chains[0][0];
       if (!isNaN(startSpaceIndex))
         board.spaces[startSpaceIndex].type = Space.START;
     }
   }
 
   onChangeGameSpaceTypesFromBoardSpaceTypes(board: IBoard) {
-    let typeMap: { [space in Space]: number } = {
+    const typeMap: { [space in Space]: number } = {
       [Space.OTHER]: 0,
       [Space.BLUE]: 1,
       [Space.RED]: 2,
@@ -329,7 +329,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       [Space.DUEL_REVERSE]: 0, // N/A
     };
     board.spaces.forEach((space) => {
-      let newType = typeMap[space.type];
+      const newType = typeMap[space.type];
       if (newType !== undefined) space.type = newType;
     });
   }
@@ -514,9 +514,9 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
     if (typeof boardInfo.animBgSet !== "number" || !boardInfo.bgDir) return;
 
     // Perf: This is a bit redundant because we read the data URI previously.
-    let mainBgImgData = hvqfs.readBackgroundImgData(boardInfo.bgDir);
+    const mainBgImgData = hvqfs.readBackgroundImgData(boardInfo.bgDir);
 
-    let animBgs = animationfs.readAnimationBackgrounds(
+    const animBgs = animationfs.readAnimationBackgrounds(
       boardInfo.animBgSet,
       mainBgImgData,
       board.bg.width,
@@ -541,7 +541,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
     }, 45000);
 
     let mainBgImgData: ImageData;
-    let animImgData = new Array(animSources.length);
+    const animImgData = new Array(animSources.length);
 
     const mainBgPromise = new Promise<void>((resolve) => {
       getImageData(mainBgSrc, width, height).then((imgData) => {
@@ -590,25 +590,25 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
 
   onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
-      let boardSelectImg = boardInfo.img.boardSelectImg;
+      const boardSelectImg = boardInfo.img.boardSelectImg;
       if (!boardSelectImg) {
         resolve();
         return;
       }
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(
+      const srcImage = new Image();
+      const failTimer = setTimeout(
         () => reject(`Failed to write board select for ${boardInfo.name}`),
         45000
       );
       srcImage.onload = () => {
-        let imgBuffer = toArrayBuffer(srcImage, 64, 48);
+        const imgBuffer = toArrayBuffer(srcImage, 64, 48);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(9, boardSelectImg!);
+        const oldPack = mainfs.get(9, boardSelectImg!);
 
         // Then, pack the image and write it.
-        let imgInfoArr = [
+        const imgInfoArr = [
           {
             src: imgBuffer,
             width: 64,
@@ -616,7 +616,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
             bpp: 32,
           },
         ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(9, boardSelectImg!, newPack);
 
         clearTimeout(failTimer);
@@ -629,9 +629,9 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
   _parseBoardSelectIcon(board: IBoard, boardInfo: IBoardInfo) {
     if (!boardInfo.img.boardSelectIconCoords) return;
 
-    let bgInfo = this._readImgInfoFromMainFS(9, 15, 0);
-    let [x, y] = boardInfo.img.boardSelectIconCoords;
-    let icon = cutFromWhole(
+    const bgInfo = this._readImgInfoFromMainFS(9, 15, 0);
+    const [x, y] = boardInfo.img.boardSelectIconCoords;
+    const icon = cutFromWhole(
       bgInfo.src!,
       bgInfo.width,
       bgInfo.height,
@@ -641,7 +641,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       32,
       32
     );
-    let dataUrl = arrayBufferToDataURL(icon, 32, 32);
+    const dataUrl = arrayBufferToDataURL(icon, 32, 32);
     board.otherbg.boardselecticon = dataUrl;
   }
 
@@ -651,13 +651,13 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
         resolve();
         return;
       }
-      let boardSelectIconSrc = board.otherbg.boardselecticon;
+      const boardSelectIconSrc = board.otherbg.boardselecticon;
       if (!boardSelectIconSrc) {
         resolve();
         return;
       }
 
-      let failTimer = setTimeout(
+      const failTimer = setTimeout(
         () => reject(`Failed to write board select icon for ${boardInfo.name}`),
         45000
       );
@@ -665,7 +665,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       let blankBackImage: HTMLImageElement,
         newBoardSelectIconImage: HTMLImageElement;
 
-      let blankBackPromise = new Promise<void>(function (resolve, reject) {
+      const blankBackPromise = new Promise<void>(function (resolve, reject) {
         blankBackImage = new Image();
         blankBackImage.onload = function () {
           resolve();
@@ -673,7 +673,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
         blankBackImage.src = mp2boardselectblank1Image;
       });
 
-      let newIconPromise = new Promise<void>(function (resolve, reject) {
+      const newIconPromise = new Promise<void>(function (resolve, reject) {
         newBoardSelectIconImage = new Image();
         newBoardSelectIconImage.onload = function () {
           resolve();
@@ -681,14 +681,14 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
         newBoardSelectIconImage.src = boardSelectIconSrc!;
       });
 
-      let iconPromises = [blankBackPromise, newIconPromise];
+      const iconPromises = [blankBackPromise, newIconPromise];
       Promise.all(iconPromises).then(
         (value) => {
-          let bgInfo = this._readImgInfoFromMainFS(9, 15, 0); // Read the existing icon select thing
+          const bgInfo = this._readImgInfoFromMainFS(9, 15, 0); // Read the existing icon select thing
 
           // Draw the original onto a canvas
-          let canvasCtx = createContext(bgInfo.width, bgInfo.height);
-          let origImageData = arrayBufferToImageData(
+          const canvasCtx = createContext(bgInfo.width, bgInfo.height);
+          const origImageData = arrayBufferToImageData(
             bgInfo.src!,
             bgInfo.width,
             bgInfo.height
@@ -696,12 +696,12 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
           canvasCtx.putImageData(origImageData, 0, 0);
 
           // Then draw the "clean slate" for the icon, and the given icon.
-          let [x, y] = boardInfo.img.boardSelectIconCoords!;
+          const [x, y] = boardInfo.img.boardSelectIconCoords!;
           canvasCtx.drawImage(blankBackImage, x, y, 32, 32);
           canvasCtx.drawImage(newBoardSelectIconImage, x, y, 32, 32);
 
           // Place edited icon select thing back into ROM
-          let finalIconSelectThingBuffer = canvasCtx.getImageData(
+          const finalIconSelectThingBuffer = canvasCtx.getImageData(
             0,
             0,
             bgInfo.width,
@@ -709,10 +709,10 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
           ).data.buffer;
 
           // Read the old image pack.
-          let oldPack = mainfs.get(9, 15);
+          const oldPack = mainfs.get(9, 15);
 
           // Then, pack the image and write it.
-          let imgInfoArr = [
+          const imgInfoArr = [
             {
               src: finalIconSelectThingBuffer,
               width: bgInfo.width,
@@ -720,19 +720,19 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
               bpp: 32,
             },
           ];
-          let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+          const newPack = toPack(imgInfoArr, 16, 0, oldPack);
           mainfs.write(9, 15, newPack);
 
           // Write the hover mask for the new image
           if (boardInfo.img.boardSelectIconMask) {
-            let mask = this._createBoardSelectIconHoverMask(
+            const mask = this._createBoardSelectIconHoverMask(
               newBoardSelectIconImage
             );
 
-            let oldPack = mainfs.get(9, boardInfo.img.boardSelectIconMask);
+            const oldPack = mainfs.get(9, boardInfo.img.boardSelectIconMask);
 
             // Then, pack the image and write it.
-            let imgInfoArr = [
+            const imgInfoArr = [
               {
                 src: mask,
                 width: 32,
@@ -740,7 +740,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
                 bpp: 32,
               },
             ];
-            let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+            const newPack = toPack(imgInfoArr, 16, 0, oldPack);
             mainfs.write(9, boardInfo.img.boardSelectIconMask, newPack);
           }
 
@@ -761,11 +761,11 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
   // mask can have some semi-transparent edges, but this just either adds
   // a #00000000 or #BBBBBBFF pixel based on the given icon.
   _createBoardSelectIconHoverMask(newIconImage: HTMLImageElement) {
-    let newIconBuffer = toArrayBuffer(newIconImage, 32, 32);
-    let maskBuffer = new ArrayBuffer(newIconBuffer.byteLength);
+    const newIconBuffer = toArrayBuffer(newIconImage, 32, 32);
+    const maskBuffer = new ArrayBuffer(newIconBuffer.byteLength);
 
-    let newIconView = new DataView(newIconBuffer);
-    let maskView = new DataView(maskBuffer);
+    const newIconView = new DataView(newIconBuffer);
+    const maskView = new DataView(maskBuffer);
 
     let hasTransparency = false;
 
@@ -797,26 +797,26 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
-      let introLogoImg = boardInfo.img.introLogoImg;
+      const introLogoImg = boardInfo.img.introLogoImg;
       if (!introLogoImg) {
         resolve();
         return;
       }
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(
+      const srcImage = new Image();
+      const failTimer = setTimeout(
         () => reject(`Failed to write logos for ${boardInfo.name}`),
         45000
       );
       srcImage.onload = () => {
         // Write the intro logo images.
-        let imgBuffer = toArrayBuffer(srcImage, 260, 120);
+        const imgBuffer = toArrayBuffer(srcImage, 260, 120);
 
         // First, read the old image pack.
-        let oldPack = mainfs.get(10, introLogoImg as number);
+        const oldPack = mainfs.get(10, introLogoImg as number);
 
         // Then, pack the image and write it.
-        let imgInfoArr = [
+        const imgInfoArr = [
           {
             src: imgBuffer,
             width: 260,
@@ -824,7 +824,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
             bpp: 32,
           },
         ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(10, introLogoImg as number, newPack);
 
         clearTimeout(failTimer);
@@ -833,10 +833,10 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       srcImage.src = board.otherbg.boardlogo!;
 
       // Just blank out the pause logo, it is not worth replacing.
-      let pauseLogoImg = boardInfo.img.pauseLogoImg;
+      const pauseLogoImg = boardInfo.img.pauseLogoImg;
       if (pauseLogoImg) {
-        let oldPack = mainfs.get(10, pauseLogoImg);
-        let imgInfoArr = [
+        const oldPack = mainfs.get(10, pauseLogoImg);
+        const imgInfoArr = [
           {
             src: new ArrayBuffer(130 * 60 * 4),
             width: 130,
@@ -844,7 +844,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
             bpp: 32,
           },
         ];
-        let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(10, pauseLogoImg, newPack);
       }
     });

@@ -33,11 +33,11 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
 
   public nintendoLogoFSEntry: number[] = [9, 110];
   public hudsonLogoFSEntry: number[] = [9, 111];
-  public boardDefDirectory: number = 10;
+  public boardDefDirectory = 10;
 
-  public MAINFS_READ_ADDR: number = 0x000145b0;
-  public HEAP_FREE_ADDR: number = 0x00014730;
-  public TABLE_HYDRATE_ADDR: number = 0x0004c900;
+  public MAINFS_READ_ADDR = 0x000145b0;
+  public HEAP_FREE_ADDR = 0x00014730;
+  public TABLE_HYDRATE_ADDR = 0x0004c900;
 
   // Gives a new space the default things it would need.
   hydrateSpace(space: ISpace, board: IBoard, eventLibrary: EventMap) {
@@ -88,7 +88,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
 
     // Patch HVQ decode RAM 0x4a3a4 to redirect to raw decode hook.
     const romStartOffset = 0xcbfd0;
-    let asmStartOffset = 0xcb3d0;
+    const asmStartOffset = 0xcb3d0;
     romView.setUint32(0x4afd4, parseInst(`J ${asmStartOffset}`));
 
     // Patch over some debug strings with logic to handle raw images.
@@ -345,10 +345,10 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     // so we will just automate adding the post-star chance event.
     const spaces = board.spaces;
     for (let i = 0; i < spaces.length; i++) {
-      let space = board.spaces[i];
+      const space = board.spaces[i];
       if (!space || !space.star) continue;
-      let events = space.events || [];
-      let hasStarChance = events.some((e) => e.id === "STARCHANCE"); // Pretty unlikely
+      const events = space.events || [];
+      const hasStarChance = events.some((e) => e.id === "STARCHANCE"); // Pretty unlikely
       if (!hasStarChance)
         addEventToSpaceInternal(
           board,
@@ -367,17 +367,17 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
   ) {}
 
   onParseStrings(board: IBoard, boardInfo: IBoardInfo) {
-    let strs = boardInfo.str || {};
+    const strs = boardInfo.str || {};
     if (strs.boardSelect) {
       let idx = strs.boardSelect;
       if (Array.isArray(idx)) idx = idx[0] as number;
 
-      let str = strings.read(idx) as string;
-      let lines = str.split("\n");
+      const str = strings.read(idx) as string;
+      const lines = str.split("\n");
 
       // Read the board name and description.
-      let nameStart = lines[0].indexOf(">") + 1;
-      let nameEnd = lines[0].indexOf("<", nameStart);
+      const nameStart = lines[0].indexOf(">") + 1;
+      const nameEnd = lines[0].indexOf("<", nameStart);
       board.name = lines[0].substring(nameStart, nameEnd);
       board.description = [lines[1], lines[2]].join("\n");
 
@@ -393,7 +393,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
   }
 
   onWriteStrings(board: IBoard, boardInfo: IBoardInfo) {
-    let strs = boardInfo.str || {};
+    const strs = boardInfo.str || {};
     if (strs.boardSelect) {
       let bytes = [];
       bytes.push(0x0b); // Clear?
@@ -406,7 +406,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
       bytes = bytes.concat([0x10, 0x10, 0x10, 0x10, 0x10, 0x10]); // Spaces
       bytes.push(0x06); // Start BLUE
       bytes = bytes.concat(strings._strToBytes("Map Difficulty  "));
-      let star = 0x2a;
+      const star = 0x2a;
       if (board.difficulty > 5 || board.difficulty < 1) {
         // Hackers!
         bytes.push(star);
@@ -421,9 +421,9 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
       bytes.push(0x02); // Start DEFAULT
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
 
-      let idx = strs.boardSelect;
+      const idx = strs.boardSelect;
       if (Array.isArray(idx)) {
         for (let i = 0; i < idx.length; i++) {
           strings.write(idx[i] as number, strBuffer);
@@ -449,7 +449,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
       bytes.push(0xff); // PAUSE
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
       strings.write(strs.koopaIntro, strBuffer);
     }
 
@@ -464,7 +464,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
       bytes.push(0xff); // PAUSE
       bytes.push(0x00); // Null byte
 
-      let strBuffer = arrayToArrayBuffer(bytes);
+      const strBuffer = arrayToArrayBuffer(bytes);
       for (let i = 0; i < strs.starComments.length; i++)
         strings.write(strs.starComments[i], strBuffer);
     }
@@ -480,7 +480,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     if (!boardInfo.koopaSpaceInst || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let koopaSpace = sceneView.getUint16(boardInfo.koopaSpaceInst + 2);
+    const koopaSpace = sceneView.getUint16(boardInfo.koopaSpaceInst + 2);
     if (board.spaces[koopaSpace])
       board.spaces[koopaSpace].subtype = SpaceSubtype.KOOPA;
   }
@@ -506,7 +506,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     if (!boardInfo.bowserSpaceInst || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let bowserSpace = sceneView.getUint16(boardInfo.bowserSpaceInst + 2);
+    const bowserSpace = sceneView.getUint16(boardInfo.bowserSpaceInst + 2);
     if (board.spaces[bowserSpace])
       board.spaces[bowserSpace].subtype = SpaceSubtype.BOWSER;
   }
@@ -532,7 +532,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     if (!boardInfo.goombaSpaceInst || !boardInfo.sceneIndex) return;
 
     const sceneView = scenes.getDataView(boardInfo.sceneIndex);
-    let goombaSpace = sceneView.getUint16(boardInfo.goombaSpaceInst + 2);
+    const goombaSpace = sceneView.getUint16(boardInfo.goombaSpaceInst + 2);
     if (board.spaces[goombaSpace])
       board.spaces[goombaSpace].subtype = SpaceSubtype.GOOMBA;
   }
@@ -540,15 +540,15 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
   onParseBoardSelectImg(board: IBoard, boardInfo: IBoardInfo) {
     if (!boardInfo.img.boardSelectImg) return;
 
-    let boardSelectFORM = mainfs.get(9, boardInfo.img.boardSelectImg);
-    let boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
-    let boardSelectImgTiles = [
+    const boardSelectFORM = mainfs.get(9, boardInfo.img.boardSelectImg);
+    const boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
+    const boardSelectImgTiles = [
       new DataView(boardSelectUnpacked.BMP1[0].parsed.src),
       new DataView(boardSelectUnpacked.BMP1[1].parsed.src),
       new DataView(boardSelectUnpacked.BMP1[2].parsed.src),
       new DataView(boardSelectUnpacked.BMP1[3].parsed.src),
     ];
-    let boardSelectImg = fromTiles(boardSelectImgTiles, 2, 2, 64 * 4, 32);
+    const boardSelectImg = fromTiles(boardSelectImgTiles, 2, 2, 64 * 4, 32);
     board.otherbg.boardselect = arrayBufferToDataURL(boardSelectImg, 128, 64);
     // $$log(board.otherbg.boardselect);
   }
@@ -557,13 +557,13 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     board: IBoard,
     boardInfo: IBoardInfo
   ): Promise<void> {
-    let boardSelectIndex = boardInfo.img.boardSelectImg;
+    const boardSelectIndex = boardInfo.img.boardSelectImg;
     if (!boardSelectIndex) {
       return;
     }
 
     // We need to write the image onto a canvas to get the RGBA32 values.
-    let [width, height] = [128, 64];
+    const [width, height] = [128, 64];
     const imgData = await getImageData(
       board.otherbg.boardselect!,
       width,
@@ -571,22 +571,22 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     );
 
     // First, turn the image back into 4 BMP tiles
-    let boardSelectImgTiles = toTiles(
+    const boardSelectImgTiles = toTiles(
       imgData.data,
       2,
       2,
       (width / 2) * 4,
       height / 2
     );
-    let boardSelectBmps = boardSelectImgTiles.map((tile) => {
+    const boardSelectBmps = boardSelectImgTiles.map((tile) => {
       return BMPfromRGBA(tile, 32, 8);
     });
 
     // Now write the BMPs back into the FORM.
-    let boardSelectFORM = mainfs.get(9, boardSelectIndex!);
-    let boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
+    const boardSelectFORM = mainfs.get(9, boardSelectIndex!);
+    const boardSelectUnpacked = FORM.unpack(boardSelectFORM)!;
     for (let i = 0; i < 4; i++) {
-      let palette = boardSelectBmps[i][1];
+      const palette = boardSelectBmps[i][1];
 
       // FIXME: This is padding the palette count a bit.
       // For some reason, the images get corrupt with very low palette count.
@@ -597,7 +597,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
     }
 
     // Now write the FORM.
-    let boardSelectPacked = FORM.pack(boardSelectUnpacked);
+    const boardSelectPacked = FORM.pack(boardSelectUnpacked);
     //saveAs(new Blob([boardSelectPacked]), "formPacked");
     mainfs.write(9, boardSelectIndex!, boardSelectPacked);
   }
@@ -615,34 +615,34 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     return new Promise((resolve, reject) => {
       let introLogoImgs = boardInfo.img.introLogoImg;
-      let pauseLogoImg = boardInfo.img.pauseLogoImg;
+      const pauseLogoImg = boardInfo.img.pauseLogoImg;
       if (!introLogoImgs && !pauseLogoImg) {
         resolve();
         return;
       }
 
       // We need to write the image onto a canvas to get the RGBA32 values.
-      let [introWidth, introHeight] = boardInfo.img.introLogoImgDimens!;
+      const [introWidth, introHeight] = boardInfo.img.introLogoImgDimens!;
 
-      let srcImage = new Image();
-      let failTimer = setTimeout(
+      const srcImage = new Image();
+      const failTimer = setTimeout(
         () => reject(`Failed to write logos for ${boardInfo.name}`),
         45000
       );
       srcImage.onload = () => {
         // Write the intro logo images.
         if (introLogoImgs) {
-          let imgBuffer = toArrayBuffer(srcImage, introWidth, introHeight);
+          const imgBuffer = toArrayBuffer(srcImage, introWidth, introHeight);
 
           if (!Array.isArray(introLogoImgs)) introLogoImgs = [introLogoImgs];
           for (let i = 0; i < introLogoImgs.length; i++) {
-            let logoImgIdx = introLogoImgs[i];
+            const logoImgIdx = introLogoImgs[i];
 
             // First, read the old image pack.
-            let oldPack = mainfs.get(10, logoImgIdx);
+            const oldPack = mainfs.get(10, logoImgIdx);
 
             // Then, pack the image and write it.
-            let imgInfoArr = [
+            const imgInfoArr = [
               {
                 src: imgBuffer,
                 width: introWidth,
@@ -650,7 +650,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
                 bpp: 32,
               },
             ];
-            let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+            const newPack = toPack(imgInfoArr, 16, 0, oldPack);
             // saveAs(new Blob([newPack]), "imgpack");
             mainfs.write(10, logoImgIdx, newPack);
           }
@@ -658,13 +658,13 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
 
         if (pauseLogoImg) {
           // Always 200x82
-          let imgBuffer = toArrayBuffer(srcImage, 200, 82);
+          const imgBuffer = toArrayBuffer(srcImage, 200, 82);
 
           // First, read the old image pack.
-          let oldPack = mainfs.get(10, pauseLogoImg);
+          const oldPack = mainfs.get(10, pauseLogoImg);
           //saveAs(new Blob([oldPack]), "oldpauseimgpack");
           // Then, pack the image and write it.
-          let imgInfoArr = [
+          const imgInfoArr = [
             {
               src: imgBuffer,
               width: 200,
@@ -672,7 +672,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
               bpp: 32,
             },
           ];
-          let newPack = toPack(imgInfoArr, 16, 0, oldPack);
+          const newPack = toPack(imgInfoArr, 16, 0, oldPack);
           //saveAs(new Blob([newPack]), "newPack");
           mainfs.write(10, pauseLogoImg, newPack);
         }
@@ -687,8 +687,8 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
   _clearOtherBoardNames(boardIndex: number) {
     // There is an ugly comic-sansy board name graphic in the after-game results.
     // We will just make it totally transparent because it is not important.
-    let resultsBoardNameImgPack = mainfs.get(10, 406 + boardIndex);
-    let imgPackU8Array = new Uint8Array(resultsBoardNameImgPack);
+    const resultsBoardNameImgPack = mainfs.get(10, 406 + boardIndex);
+    const imgPackU8Array = new Uint8Array(resultsBoardNameImgPack);
     imgPackU8Array.fill(0, 0x2c); // To the end
     mainfs.write(10, 406 + boardIndex, resultsBoardNameImgPack);
   }
