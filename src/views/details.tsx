@@ -184,7 +184,7 @@ const _details_mp3: IDetailsItemBase[] = [
   {
     type: "image",
     id: "detailBoardLogoImg",
-    desc: "Board logo",
+    desc: "Board logo (large)",
     width: 226,
     height: 120,
   },
@@ -194,6 +194,21 @@ const _details_mp3: IDetailsItemBase[] = [
     desc: "Board logo text",
     width: 226,
     height: 36,
+  },
+  { type: "br" },
+  {
+    type: "image",
+    id: "detailBoardLogoMediumImg",
+    desc: "Board logo (medium)",
+    width: 150,
+    height: 50,
+  },
+  {
+    type: "image",
+    id: "detailBoardLogoSmallImg",
+    desc: "Board logo (small)",
+    width: 100,
+    height: 46,
   },
   { type: "br" },
   {
@@ -280,6 +295,10 @@ function _getValue(id: string | undefined, props: IDetailsProps) {
       return props.board.otherbg.boardlogo;
     case "detailBoardLogoTextImg":
       return props.board.otherbg.boardlogotext;
+    case "detailBoardLogoMediumImg":
+      return props.board.otherbg.boardlogomedium;
+    case "detailBoardLogoSmallImg":
+      return props.board.otherbg.boardlogosmall;
     case "detailBoardAudio":
       return props.board.audioIndex;
     case "detailBoardLargeSceneBg":
@@ -319,6 +338,12 @@ function _setValue(id: string, value: any, board: IBoard) {
     case "detailBoardLogoTextImg":
       setBoardOtherBackground("boardlogotext", value);
       break;
+    case "detailBoardLogoMediumImg":
+      setBoardOtherBackground("boardlogomedium", value);
+      break;
+    case "detailBoardLogoSmallImg":
+      setBoardOtherBackground("boardlogosmall", value);
+      break;
     case "detailBoardLargeSceneBg":
       setBoardOtherBackground("largescene", value);
       break;
@@ -329,9 +354,11 @@ function _setValue(id: string, value: any, board: IBoard) {
       setBoardOtherBackground("splashscreen", value);
       break;
     case "detailBoardAudio":
-      const audioChanges = value as IBoardAudioChanges;
-      setBoardAudio(audioChanges);
-      refresh();
+      {
+        const audioChanges = value as IBoardAudioChanges;
+        setBoardAudio(audioChanges);
+        refresh();
+      }
       break;
   }
 }
@@ -339,7 +366,7 @@ function _setValue(id: string, value: any, board: IBoard) {
 function _processImage(id: string, buffer: ArrayBuffer) {
   if (id === "detailBoardSelectImg" && getCurrentBoard().game === 1) {
     // Apply masking
-    let rgba32 = new Uint32Array(buffer);
+    const rgba32 = new Uint32Array(buffer);
 
     // Do the two full rows on each edge...
     for (let y = 0; y < 128; y++) {
@@ -391,25 +418,25 @@ function _processImage(id: string, buffer: ArrayBuffer) {
 
     // Validate that the image meets the color limits
     // Technically this is 256 colors when split into 4 tiles
-    let colors: { [color: number]: boolean } = {};
+    const colors: { [color: number]: boolean } = {};
     for (let y = 0; y < 32; y++) {
       for (let x = 0; x < 64; x++) {
         colors[rgba32[y * 128 + x]] = true;
       }
     }
-    let colors2: { [color: number]: boolean } = {};
+    const colors2: { [color: number]: boolean } = {};
     for (let y = 0; y < 32; y++) {
       for (let x = 64; x < 128; x++) {
         colors2[rgba32[y * 128 + 64 + x]] = true;
       }
     }
-    let colors3: { [color: number]: boolean } = {};
+    const colors3: { [color: number]: boolean } = {};
     for (let y = 32; y < 64; y++) {
       for (let x = 0; x < 64; x++) {
         colors3[rgba32[y * 128 + x]] = true;
       }
     }
-    let colors4: { [color: number]: boolean } = {};
+    const colors4: { [color: number]: boolean } = {};
     for (let y = 32; y < 64; y++) {
       for (let x = 64; x < 128; x++) {
         colors4[rgba32[y * 128 + 64 + x]] = true;
@@ -456,11 +483,11 @@ export class Details extends React.Component<IDetailsProps> {
   render() {
     if (!this.props.board) return null;
     let keyId = 0;
-    let readonly = boardIsROM(this.props.board);
-    let formEls = _getGameDetails().map((detail) => {
-      let value = _getValue(detail.id, this.props);
+    const readonly = boardIsROM(this.props.board);
+    const formEls = _getGameDetails().map((detail) => {
+      const value = _getValue(detail.id, this.props);
       switch (detail.type) {
-        case "richtext":
+        case "richtext": {
           const displayMode = readonly
             ? MPEditorDisplayMode.Readonly
             : MPEditorDisplayMode.Edit;
@@ -478,6 +505,7 @@ export class Details extends React.Component<IDetailsProps> {
               />
             </div>
           );
+        }
         case "image":
           return (
             <DetailsImage
@@ -572,14 +600,13 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
   };
 
   imageSelected(event: any) {
-    let file = event.target.files[0];
+    const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async (e) => {
       const onImageSelected = this.props.onImageSelected;
       const id = this.props.id;
-      const detailImg = document.getElementById(id) as HTMLImageElement;
       const width = this.props.width;
       const height = this.props.height;
 
@@ -594,23 +621,22 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
       rgba32 = _processImage(id, rgba32);
 
       const newSrc = arrayBufferToDataURL(rgba32, width, height);
-      detailImg.src = newSrc;
       onImageSelected(id, newSrc);
     };
     reader.readAsDataURL(file);
   }
 
   render() {
-    let id = this.props.id;
-    let desc = this.props.desc;
-    let width = this.props.width;
-    let height = this.props.height;
+    const id = this.props.id;
+    const desc = this.props.desc;
+    const width = this.props.width;
+    const height = this.props.height;
 
     let hoverCover = null;
     if (!this.props.readonly) {
-      let hoverCoverSize = `${width} × ${height}`;
+      const hoverCoverSize = `${width} × ${height}`;
       if (width > 100 && height > 50) {
-        let hoverCoverMsg = "Choose a new image";
+        const hoverCoverMsg = "Choose a new image";
         hoverCover = (
           <div className="detailImgHoverCover">
             <span>{hoverCoverMsg}</span>
@@ -625,7 +651,12 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
       }
     }
 
-    let imgSelectStyle = { width, height, minWidth: width, minHeight: height };
+    const imgSelectStyle = {
+      width,
+      height,
+      minWidth: width,
+      minHeight: height,
+    };
     return (
       <div className="detailImgContainer">
         <label>{desc}</label>
@@ -634,15 +665,19 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
           style={imgSelectStyle}
           onClick={this.handleClick}
         >
-          <img
-            id={id}
-            className="detailImg"
-            height={height}
-            width={width}
-            style={imgSelectStyle}
-            src={this.props.value}
-            alt={desc}
-          />
+          {this.props.value ? (
+            <img
+              id={id}
+              className="detailImg"
+              height={height}
+              width={width}
+              style={imgSelectStyle}
+              src={this.props.value}
+              alt={desc}
+            />
+          ) : (
+            <div className="detailImg" style={imgSelectStyle}></div>
+          )}
           {hoverCover}
         </div>
       </div>
@@ -737,27 +772,29 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
     let audioInputUI;
     switch (currentBoard.audioType) {
       case BoardAudioType.InGame:
-        let index = 0;
-        let audioNames = getAdapter(currentBoard.game)!.getAudioMap(0);
-        let audioOptions = audioNames.map((song: string) => {
-          let curIndex = index++;
-          if (!song) return null;
-          return (
-            <option value={curIndex} key={curIndex}>
-              {song}
-            </option>
+        {
+          let index = 0;
+          const audioNames = getAdapter(currentBoard.game)!.getAudioMap(0);
+          const audioOptions = audioNames.map((song: string) => {
+            const curIndex = index++;
+            if (!song) return null;
+            return (
+              <option value={curIndex} key={curIndex}>
+                {song}
+              </option>
+            );
+          });
+          audioInputUI = (
+            <select
+              className="audioSelect"
+              value={this.props.value}
+              disabled={this.props.readonly}
+              onChange={this.onGameMusicIndexSelection}
+            >
+              {audioOptions}
+            </select>
           );
-        });
-        audioInputUI = (
-          <select
-            className="audioSelect"
-            value={this.props.value}
-            disabled={this.props.readonly}
-            onChange={this.onGameMusicIndexSelection}
-          >
-            {audioOptions}
-          </select>
-        );
+        }
         break;
 
       case BoardAudioType.Custom:

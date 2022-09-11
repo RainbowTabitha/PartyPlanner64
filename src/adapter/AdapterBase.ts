@@ -761,7 +761,8 @@ export abstract class AdapterBase {
       if (!prevSpace) throw new Error(`Gate did not have previous space`);
 
       const prevChainIndex = _getChainWithSpace(prevSpaceIndex)!;
-      const prevChainSpaceIndex = chains[prevChainIndex].indexOf(prevSpaceIndex);
+      const prevChainSpaceIndex =
+        chains[prevChainIndex].indexOf(prevSpaceIndex);
 
       const exitSpaceIndex = _getNextSpaceIndex(i);
       const exitSpace = board.spaces[exitSpaceIndex];
@@ -772,7 +773,8 @@ export abstract class AdapterBase {
       if (!nextSpace) throw new Error(`Gate did not have next space`);
 
       const nextChainIndex = _getChainWithSpace(nextSpaceIndex)!;
-      const nextChainSpaceIndex = chains[nextChainIndex].indexOf(nextSpaceIndex);
+      const nextChainSpaceIndex =
+        chains[nextChainIndex].indexOf(nextSpaceIndex);
 
       // Redundant to write event twice, except we need it attached to both spaces.
       const gateEvent = createEventInstance(Gate, {
@@ -1486,9 +1488,7 @@ ${eventAsmCombinedString}
 
   onWriteBoardSelectImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
     $$log("Adapter does not implement onWriteBoardSelectImg");
-    return new Promise((resolve, reject) => {
-      resolve();
-    });
+    return Promise.resolve();
   }
 
   onParseBoardLogoImg(board: IBoard, boardInfo: IBoardInfo) {
@@ -1496,10 +1496,8 @@ ${eventAsmCombinedString}
   }
 
   onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
-    $$log("Adapter does not implement onWriteBoardLogoImgs");
-    return new Promise((resolve, reject) => {
-      resolve();
-    });
+    $$log("Adapter does not implement onWriteBoardLogoImg");
+    return Promise.resolve();
   }
 
   _brandBootSplashscreen(): Promise<void> {

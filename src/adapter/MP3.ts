@@ -127,7 +127,6 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
       this._writeAdditionalBackgrounds(board),
       this.onWriteBoardSelectImg(board, boardInfo),
       this.onWriteBoardLogoImg(board, boardInfo), // Various board logos
-      this.onWriteBoardLogoTextImg(board, boardInfo),
       this._onWriteGateImg(board, boardInfo),
       this._brandBootSplashscreen(),
     ];
@@ -728,117 +727,139 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
     );
   }
 
-  onWriteBoardLogoImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
-      if (!splashLogoImg) {
-        resolve();
-        return;
-      }
-
-      const srcImage = new Image();
-      const failTimer = setTimeout(
-        () => reject(`Failed to write logos for ${boardInfo.name}`),
-        45000
-      );
-      srcImage.onload = () => {
-        // Write the intro logo images.
-        const imgBuffer = toArrayBuffer(srcImage, 226, 120);
-
-        // First, read the old image pack.
-        const oldPack = mainfs.get(19, splashLogoImg!);
-
-        // Then, pack the image and write it.
-        const imgInfoArr = [
-          {
-            src: imgBuffer,
-            width: 226,
-            height: 120,
-            bpp: 32,
-          },
-        ];
-        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        // saveAs(new Blob([newPack]), "imgpack");
-        mainfs.write(19, splashLogoImg!, newPack);
-
-        clearTimeout(failTimer);
-        resolve();
-      };
-      srcImage.src = board.otherbg.boardlogo!;
-
-      // Just blank out the pause logo, it is not worth replacing.
-      const pauseLogoImg = boardInfo.img.pauseLogoImg;
-      if (pauseLogoImg) {
-        const oldPack = mainfs.get(19, pauseLogoImg);
-        const imgInfoArr = [
-          {
-            src: new ArrayBuffer(150 * 50 * 4),
-            width: 150,
-            height: 50,
-            bpp: 32,
-          },
-        ];
-        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        mainfs.write(19, pauseLogoImg, newPack);
-      }
-
-      // Blank the stats logo. (Small logo shown at end of game.)
-      const statsLogoImg = boardInfo.img.statsLogoImg;
-      if (statsLogoImg) {
-        const oldPack = mainfs.get(statsLogoImg[0], statsLogoImg[1]);
-        const imgInfoArr = [
-          {
-            src: new ArrayBuffer(100 * 46 * 4),
-            width: 100,
-            height: 46,
-            bpp: 32,
-          },
-        ];
-        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        mainfs.write(statsLogoImg[0], statsLogoImg[1], newPack);
-      }
-    });
+  async onWriteBoardLogoImg(
+    board: IBoard,
+    boardInfo: IBoardInfo
+  ): Promise<void> {
+    await Promise.all([
+      this._writeBoardLogoLarge(board, boardInfo),
+      this._writeBoardLogoTextImg(board, boardInfo),
+      this._writeBoardLogoMedium(board, boardInfo),
+      this._writeBoardLogoSmall(board, boardInfo),
+    ]);
   }
 
-  onWriteBoardLogoTextImg(board: IBoard, boardInfo: IBoardInfo): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const splashLogoTextImg =
-        boardInfo.img && boardInfo.img.splashLogoTextImg;
-      if (!splashLogoTextImg) {
-        resolve();
-        return;
-      }
+  async _writeBoardLogoLarge(
+    board: IBoard,
+    boardInfo: IBoardInfo
+  ): Promise<void> {
+    const splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
+    if (!splashLogoImg) {
+      return;
+    }
 
-      const srcImage = new Image();
-      const failTimer = setTimeout(
-        () => reject(`Failed to write logo text for ${boardInfo.name}`),
-        45000
-      );
-      srcImage.onload = () => {
-        // Write the intro logo text image.
-        const imgBuffer = toArrayBuffer(srcImage, 226, 36);
+    const boardlogo = board.otherbg.boardlogo;
+    const [width, height] = [226, 110];
+    const imgData = boardlogo
+      ? (await getImageData(boardlogo, width, height)).data
+      : new ArrayBuffer(width * height * 4);
 
-        // First, read the old image pack.
-        const oldPack = mainfs.get(19, splashLogoTextImg!);
+    // First, read the old image pack.
+    const oldPack = mainfs.get(19, splashLogoImg);
 
-        // Then, pack the image and write it.
-        const imgInfoArr = [
-          {
-            src: imgBuffer,
-            width: 226,
-            height: 36,
-            bpp: 32,
-          },
-        ];
-        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
-        // saveAs(new Blob([newPack]), "imgpack");
-        mainfs.write(19, splashLogoTextImg!, newPack);
+    // Then, pack the image and write it.
+    const imgInfoArr = [
+      {
+        src: imgData,
+        width,
+        height,
+        bpp: 32,
+      },
+    ];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    // saveAs(new Blob([newPack]), "imgpack");
+    mainfs.write(19, splashLogoImg, newPack);
+  }
 
-        clearTimeout(failTimer);
-        resolve();
-      };
-      srcImage.src = board.otherbg.boardlogotext!;
-    });
+  /** Write the intro logo text image. */
+  async _writeBoardLogoTextImg(
+    board: IBoard,
+    boardInfo: IBoardInfo
+  ): Promise<void> {
+    const splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
+    if (!splashLogoTextImg) {
+      return;
+    }
+
+    const [width, height] = [226, 36];
+    const boardlogotext = board.otherbg.boardlogotext;
+    const imgData = boardlogotext
+      ? (await getImageData(boardlogotext, width, height)).data
+      : new ArrayBuffer(width * height * 4);
+
+    // First, read the old image pack.
+    const oldPack = mainfs.get(19, splashLogoTextImg);
+
+    // Then, pack the image and write it.
+    const imgInfoArr = [
+      {
+        src: imgData,
+        width,
+        height,
+        bpp: 32,
+      },
+    ];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    // saveAs(new Blob([newPack]), "imgpack");
+    mainfs.write(19, splashLogoTextImg, newPack);
+  }
+
+  /** Replace the medium board logo. This is shown on the board pause screen. */
+  async _writeBoardLogoMedium(
+    board: IBoard,
+    boardInfo: IBoardInfo
+  ): Promise<void> {
+    const pauseLogoImg = boardInfo.img.pauseLogoImg;
+    if (!pauseLogoImg) {
+      return;
+    }
+
+    const [width, height] = [150, 50];
+    const boardlogomedium = board.otherbg.boardlogomedium;
+    const imgData = boardlogomedium
+      ? (await getImageData(boardlogomedium, width, height)).data
+      : new ArrayBuffer(width * height * 4);
+
+    const oldPack = mainfs.get(19, pauseLogoImg);
+    const imgInfoArr = [
+      {
+        src: imgData,
+        width,
+        height,
+        bpp: 32,
+      },
+    ];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    mainfs.write(19, pauseLogoImg, newPack);
+  }
+
+  /** Replace the small board logo. This is shown on the game end details viewer. */
+  async _writeBoardLogoSmall(
+    board: IBoard,
+    boardInfo: IBoardInfo
+  ): Promise<void> {
+    const statsLogoImg = boardInfo.img.statsLogoImg;
+    if (!statsLogoImg) {
+      return;
+    }
+
+    const [width, height] = [100, 46];
+    const boardlogosmall = board.otherbg.boardlogosmall;
+    const imgData = boardlogosmall
+      ? (await getImageData(boardlogosmall, width, height)).data
+      : new ArrayBuffer(width * height * 4);
+
+    const oldPack = mainfs.get(statsLogoImg[0], statsLogoImg[1]);
+    const imgInfoArr = [
+      {
+        src: imgData,
+        width,
+        height,
+        bpp: 32,
+      },
+    ];
+    const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+    mainfs.write(statsLogoImg[0], statsLogoImg[1], newPack);
   }
 
   // Create generic skeleton key gate.

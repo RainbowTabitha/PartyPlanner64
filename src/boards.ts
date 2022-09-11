@@ -28,6 +28,8 @@ import defaultThemeBoardSelect from "./img/themes/default/boardselect.png";
 import defaultThemeBoardSelectIcon from "./img/themes/default/boardselecticon.png";
 import defaultThemeBoardLogo from "./img/themes/default/boardlogo.png";
 import defaultThemeBoardLogoText from "./img/themes/default/boardlogotext.png";
+import defaultThemeBoardLogoMedium from "./img/themes/default/boardlogomedium.png";
+import defaultThemeBoardLogoSmall from "./img/themes/default/boardlogosmall.png";
 import defaultThemeLargeScene from "./img/themes/default/largescene.png";
 import defaultThemeConversation from "./img/themes/default/conversation.png";
 import defaultThemeSplashscreen from "./img/themes/default/splashscreen.png";
@@ -81,6 +83,8 @@ const _themes = {
     boardselecticon: defaultThemeBoardSelectIcon,
     boardlogo: defaultThemeBoardLogo,
     boardlogotext: defaultThemeBoardLogoText,
+    boardlogomedium: defaultThemeBoardLogoMedium,
+    boardlogosmall: defaultThemeBoardLogoSmall,
     largescene: defaultThemeLargeScene,
     conversation: defaultThemeConversation,
     splashscreen: defaultThemeSplashscreen,
@@ -105,6 +109,8 @@ export interface IBoard {
     boardselecticon?: string;
     boardlogo?: string;
     boardlogotext?: string;
+    boardlogomedium?: string;
+    boardlogosmall?: string;
     largescene?: string;
     conversation?: string;
     splashscreen?: string;
@@ -281,6 +287,8 @@ export function _makeDefaultBoard(
         boardselect: true,
         boardlogo: true,
         boardlogotext: true,
+        boardlogomedium: true,
+        boardlogosmall: true,
         largescene: true,
       };
       break;
@@ -318,6 +326,10 @@ function applyTheme(board: IBoard, name: "default" = "default") {
   if (board.otherbg.boardlogo) board.otherbg.boardlogo = themeImages.boardlogo;
   if (board.otherbg.boardlogotext)
     board.otherbg.boardlogotext = themeImages.boardlogotext;
+  if (board.otherbg.boardlogomedium)
+    board.otherbg.boardlogomedium = themeImages.boardlogomedium;
+  if (board.otherbg.boardlogosmall)
+    board.otherbg.boardlogosmall = themeImages.boardlogosmall;
   if (board.otherbg.largescene)
     board.otherbg.largescene = themeImages.largescene;
   if (board.otherbg.conversation)
