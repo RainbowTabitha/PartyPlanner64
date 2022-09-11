@@ -781,6 +781,22 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
         const newPack = toPack(imgInfoArr, 16, 0, oldPack);
         mainfs.write(19, pauseLogoImg, newPack);
       }
+
+      // Blank the stats logo. (Small logo shown at end of game.)
+      const statsLogoImg = boardInfo.img.statsLogoImg;
+      if (statsLogoImg) {
+        const oldPack = mainfs.get(statsLogoImg[0], statsLogoImg[1]);
+        const imgInfoArr = [
+          {
+            src: new ArrayBuffer(100 * 46 * 4),
+            width: 100,
+            height: 46,
+            bpp: 32,
+          },
+        ];
+        const newPack = toPack(imgInfoArr, 16, 0, oldPack);
+        mainfs.write(statsLogoImg[0], statsLogoImg[1], newPack);
+      }
     });
   }
 

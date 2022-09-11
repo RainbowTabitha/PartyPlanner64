@@ -35,6 +35,7 @@ export interface IBoardInfo {
     boardSelectIconCoords?: number[];
     boardSelectIconMask?: number;
     pauseLogoImg?: number;
+    statsLogoImg?: [dir: number, file: number];
     introLogoImg?: number | number[];
     introLogoImgDimens?: number[];
     titleScreenImg?: number;

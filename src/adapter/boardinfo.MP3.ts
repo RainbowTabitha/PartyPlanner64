@@ -28,6 +28,7 @@ const MP3_CHILLY = createBoardInfo("MP3_CHILLY", {
     splashLogoImg: 22,
     splashLogoTextImg: 28,
     pauseLogoImg: 125,
+    statsLogoImg: [19, 105],
     gateImg: 354, // dir 19
   },
   sceneIndex: 0x48,
@@ -93,6 +94,7 @@ const MP3_BLOOBER = createBoardInfo("MP3_BLOOBER", {
     splashLogoImg: 23,
     splashLogoTextImg: 29,
     pauseLogoImg: 126,
+    statsLogoImg: [19, 106],
     gateImg: 359, // dir 19
   },
   sceneIndex: 0x49,
@@ -137,6 +139,7 @@ const MP3_SPINY = createBoardInfo("MP3_SPINY", {
     splashLogoImg: 24,
     splashLogoTextImg: 30,
     pauseLogoImg: 127,
+    statsLogoImg: [19, 107],
     gateImg: 366, // dir 19
   },
 
@@ -174,6 +177,7 @@ const MP3_WOODY = createBoardInfo("MP3_WOODY", {
     splashLogoImg: 25,
     splashLogoTextImg: 31,
     pauseLogoImg: 128,
+    statsLogoImg: [19, 108],
     gateImg: 373, // dir 19
   },
 
@@ -211,6 +215,7 @@ const MP3_CAVERN = createBoardInfo("MP3_CAVERN", {
     splashLogoImg: 26,
     splashLogoTextImg: 32,
     pauseLogoImg: 129,
+    statsLogoImg: [19, 109],
     gateImg: 383, // dir 19
   },
 
@@ -248,6 +253,7 @@ const MP3_WALUIGI = createBoardInfo("MP3_WALUIGI", {
     splashLogoImg: 27,
     splashLogoTextImg: 33,
     pauseLogoImg: 130,
+    statsLogoImg: [19, 110],
     gateImg: 387, // dir 19
   },
 
