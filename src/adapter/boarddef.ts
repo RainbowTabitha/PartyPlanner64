@@ -13,9 +13,9 @@ import { copyObject } from "../utils/obj";
 import { romhandler } from "../romhandler";
 
 export function parse(buffer: ArrayBuffer, board: Partial<IBoard>): IBoard {
-  let header = _parseHeader(buffer);
+  const header = _parseHeader(buffer);
   board.spaces = _parseSpaces(buffer, header);
-  let linkResult = _parseLinks(buffer, header);
+  const linkResult = _parseLinks(buffer, header);
   board.links = linkResult.links;
   (board as any)._chains = linkResult.chains; // We need this for event parsing.
   $$log(
@@ -34,8 +34,8 @@ interface IHeader {
 }
 
 function _parseHeader(buffer: ArrayBuffer): IHeader {
-  let board16View = new DataView(buffer);
-  let game = romhandler.getGameVersion();
+  const board16View = new DataView(buffer);
+  const game = romhandler.getGameVersion();
   switch (game) {
     case 1:
       return {
@@ -58,8 +58,8 @@ function _parseHeader(buffer: ArrayBuffer): IHeader {
 }
 
 function _parseSpaces(buffer: ArrayBuffer, header: IHeader) {
-  let spaceView = new DataView(buffer, header.spaceStartOffset);
-  let spaces = [];
+  const spaceView = new DataView(buffer, header.spaceStartOffset);
+  const spaces = [];
   let bufferIdx = 0;
   for (let i = 0; i < header.spaceCount; i++) {
     spaces.push({
@@ -75,21 +75,24 @@ function _parseSpaces(buffer: ArrayBuffer, header: IHeader) {
 }
 
 function _parseLinks(buffer: ArrayBuffer, header: IHeader) {
-  let chains = new Array(header.chainCount);
-  let links: any = {};
-  let linksView = new DataView(buffer, header.linkStartOffset);
+  const chains = new Array(header.chainCount);
+  const links: any = {};
+  const linksView = new DataView(buffer, header.linkStartOffset);
   for (let i = 0; i < header.chainCount; i++) {
-    let chainOffset = linksView.getUint16(i * 2);
-    let chainView = new DataView(buffer, header.linkStartOffset + chainOffset);
-    let chainLen = chainView.getUint16(0);
+    const chainOffset = linksView.getUint16(i * 2);
+    const chainView = new DataView(
+      buffer,
+      header.linkStartOffset + chainOffset
+    );
+    const chainLen = chainView.getUint16(0);
     chains[i] = [];
     if (chainLen === 1) {
       // The loop won't work.
       chains[i].push(chainView.getUint16(2));
     } else {
       for (let j = 1; j < chainLen; j++) {
-        let start = chainView.getUint16(j * 2);
-        let end = chainView.getUint16((j + 1) * 2);
+        const start = chainView.getUint16(j * 2);
+        const end = chainView.getUint16((j + 1) * 2);
         if (links.hasOwnProperty(start)) {
           if (!Array.isArray(links[start])) links[start] = [links[start]];
           if (links[start].indexOf(end) === -1) links[start].push(end);
@@ -107,7 +110,7 @@ function _parseLinks(buffer: ArrayBuffer, header: IHeader) {
 }
 
 export function create(board: IBoard, chains = determineChains(board)) {
-  let boardDefBuffer = new ArrayBuffer(_boardDefSize(board, chains));
+  const boardDefBuffer = new ArrayBuffer(_boardDefSize(board, chains));
   _writeHeader(boardDefBuffer, board, chains);
   _writeSpaces(boardDefBuffer, board.spaces);
   _writeChains(boardDefBuffer, chains);
@@ -116,13 +119,10 @@ export function create(board: IBoard, chains = determineChains(board)) {
 
 // Calculates the byte length needed to create a board def.
 function _boardDefSize(board: IBoard, chains: number[][]) {
-  let headerSize, spacesSize, chainsSize: number;
+  const headerSize = _boardDefHeaderSize();
+  const spacesSize = board.spaces.length * 16;
 
-  headerSize = _boardDefHeaderSize();
-
-  spacesSize = board.spaces.length * 16;
-
-  chainsSize = chains.length * 2; // The 16-bit offsets for each chain.
+  let chainsSize = chains.length * 2; // The 16-bit offsets for each chain.
   chains.forEach((chain) => {
     chainsSize += (chain.length + 1) * 2; // +1 for chain length short
   });
@@ -132,7 +132,7 @@ function _boardDefSize(board: IBoard, chains: number[][]) {
 
 function _boardDefHeaderSize() {
   let headerSize;
-  let game = romhandler.getGameVersion();
+  const game = romhandler.getGameVersion();
   switch (game) {
     case 1:
       headerSize = 12;
@@ -153,9 +153,9 @@ function _writeHeader(
   board: IBoard,
   chains: number[][]
 ) {
-  let boardDefView = new DataView(boardDefBuffer);
-  let game = romhandler.getGameVersion();
-  let chainOffset = _boardDefHeaderSize() + board.spaces.length * 16;
+  const boardDefView = new DataView(boardDefBuffer);
+  const game = romhandler.getGameVersion();
+  const chainOffset = _boardDefHeaderSize() + board.spaces.length * 16;
   switch (game) {
     case 1:
       boardDefView.setUint16(0, board.spaces.length);
@@ -175,7 +175,7 @@ function _writeHeader(
 }
 
 function _writeSpaces(boardDefBuffer: ArrayBuffer, spaces: ISpace[]) {
-  let boardDefView = new DataView(boardDefBuffer);
+  const boardDefView = new DataView(boardDefBuffer);
   let curOffset = _boardDefHeaderSize();
   spaces.forEach((space) => {
     boardDefView.setUint32(curOffset, space.type);
@@ -187,14 +187,13 @@ function _writeSpaces(boardDefBuffer: ArrayBuffer, spaces: ISpace[]) {
 }
 
 function _writeChains(boardDefBuffer: ArrayBuffer, chains: number[][]) {
-  let boardDefView = new DataView(boardDefBuffer);
+  const boardDefView = new DataView(boardDefBuffer);
 
-  let chainRegionOffset, offsetsOffset;
-  chainRegionOffset = offsetsOffset =
-    _parseHeader(boardDefBuffer).linkStartOffset; // Yuck!
+  let offsetsOffset = _parseHeader(boardDefBuffer).linkStartOffset; // Yuck!
+  const chainRegionOffset = offsetsOffset;
 
   let chainOffset = chains.length * 2;
-  for (var i = 0; i < chains.length; i++) {
+  for (let i = 0; i < chains.length; i++) {
     // Write the entry into the chain offsets.
     boardDefView.setUint16(offsetsOffset, chainOffset);
 
@@ -203,7 +202,7 @@ function _writeChains(boardDefBuffer: ArrayBuffer, chains: number[][]) {
     chainOffset += 2;
 
     // Write the chain indices.
-    for (var j = 0; j < chains[i].length; j++) {
+    for (let j = 0; j < chains[i].length; j++) {
       boardDefView.setUint16(chainRegionOffset + chainOffset, chains[i][j]);
       chainOffset += 2;
     }
@@ -217,13 +216,13 @@ type ISpaceInternal = ISpace & { _seen?: boolean };
 // Builds an array of arrays of space indices representing the board chains.
 export function determineChains(board: IBoard) {
   board = copyObject(board);
-  let spaces = board.spaces as ISpaceInternal[];
-  let links = board.links;
-  let chains: number[][] = [];
+  const spaces = board.spaces as ISpaceInternal[];
+  const links = board.links;
+  const chains: number[][] = [];
 
   // Recursive chain parsing function.
   function parseChain(startingSpaceIdx: number) {
-    let chain: number[] = []; // Given first space always goes in.
+    const chain: number[] = []; // Given first space always goes in.
     let curSpaceIdx = startingSpaceIdx;
     let nextSpaceIdx;
     while (!spaces[curSpaceIdx]._seen) {
@@ -266,12 +265,12 @@ export function determineChains(board: IBoard) {
   }
 
   // Build a reverse lookup of space to _pointing_ spaces.
-  var pointingMap: { [end: number]: number[] } = {};
+  const pointingMap: { [end: number]: number[] } = {};
   for (let s = 0; s < spaces.length; s++) {
     if (spaces[s]) pointingMap[s] = [];
   }
-  for (let startIdx in links) {
-    let ends = getConnections(parseInt(startIdx, 10), board)!;
+  for (const startIdx in links) {
+    const ends = getConnections(parseInt(startIdx, 10), board)!;
     ends.forEach((end) => {
       pointingMap[end].push(Number(startIdx));
     });
@@ -328,23 +327,23 @@ export function determineChains(board: IBoard) {
 // If we pad to at least 2-length chains, we guarantee to overwrite it, and
 // who knows if 1-length chains actually work anyways.
 export function padChains(board: IBoard, chains: number[][]) {
-  let spaces = board.spaces;
-  let links = board.links;
+  const spaces = board.spaces;
+  const links = board.links;
   for (let i = 0; i < chains.length; i++) {
-    let chain = chains[i];
+    const chain = chains[i];
     if (chain.length === 1) {
       // Padding is done by adding an extra transparent space in such a way that the player won't notice.
-      let lastSpaceIdx = chain[0];
-      let lastSpace = spaces[lastSpaceIdx];
-      let oldLinks = links[lastSpaceIdx];
+      const lastSpaceIdx = chain[0];
+      const lastSpace = spaces[lastSpaceIdx];
+      const oldLinks = links[lastSpaceIdx];
       let padX, padY;
       if (Array.isArray(oldLinks)) {
         if (oldLinks.length === 1) {
           // Shouldn't happen, but there was a bug where some boards might have these 1 length arrays.
           // CHAINMERGE
           // Just put it half way in between, who cares.
-          let nextSpace = spaces[oldLinks[0]];
-          let mid = midpoint(
+          const nextSpace = spaces[oldLinks[0]];
+          const mid = midpoint(
             lastSpace.x,
             lastSpace.y,
             nextSpace.x,
@@ -355,9 +354,9 @@ export function padChains(board: IBoard, chains: number[][]) {
         } else if (oldLinks.length === 2) {
           // CHAINSPLIT
           // TODO: Very precisely push it towards the split spaces, otherwise the player faces down always.
-          let nextLeft = spaces[oldLinks[0]];
-          let nextRight = spaces[oldLinks[1]];
-          let destMidpoint = midpoint(
+          const nextLeft = spaces[oldLinks[0]];
+          const nextRight = spaces[oldLinks[1]];
+          const destMidpoint = midpoint(
             nextLeft.x,
             nextLeft.y,
             nextRight.x,
@@ -365,13 +364,13 @@ export function padChains(board: IBoard, chains: number[][]) {
           );
           // padX = lastSpace.x + 0.01;
           // padY = ((destMidpoint.y - lastSpace.y) / (destMidpoint.x - lastSpace.x)) * (padX - lastSpace.x) + lastSpace.y;
-          let dist = distance(
+          const dist = distance(
             lastSpace.x,
             lastSpace.y,
             destMidpoint.x,
             destMidpoint.y
           );
-          let ratio = 0.01 / dist;
+          const ratio = 0.01 / dist;
           padX = (1 - ratio) * lastSpace.x + ratio * destMidpoint.x;
           padY = (1 - ratio) * lastSpace.y + ratio * destMidpoint.y;
           $$log(
@@ -385,14 +384,19 @@ export function padChains(board: IBoard, chains: number[][]) {
       } else if (typeof oldLinks === "number") {
         // CHAINMERGE
         // Just put it half way in between, who cares.
-        let nextSpace = spaces[oldLinks];
-        let mid = midpoint(lastSpace.x, lastSpace.y, nextSpace.x, nextSpace.y);
+        const nextSpace = spaces[oldLinks];
+        const mid = midpoint(
+          lastSpace.x,
+          lastSpace.y,
+          nextSpace.x,
+          nextSpace.y
+        );
         padX = mid.x;
         padY = mid.y;
       }
 
       if (typeof padX === "number" && typeof padY === "number") {
-        let newLink = addSpace(padX, padY, Space.OTHER, undefined, board);
+        const newLink = addSpace(padX, padY, Space.OTHER, undefined, board);
         chain.push(newLink);
 
         // CS classic, insert into linkedish list.

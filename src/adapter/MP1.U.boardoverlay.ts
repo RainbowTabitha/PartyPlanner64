@@ -18,7 +18,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const bowserIndices = getSpacesOfSubType(SpaceSubtype.BOWSER, board);
   const bowserIndex = (!bowserIndices.length ? getDeadSpaceIndex(board) : bowserIndices[0]);
 
-  let starIndices = [];
+  const starIndices = [];
   for (let i = 0; i < board.spaces.length; i++) {
     if (board.spaces[i].star)
       starIndices.push(i);
@@ -27,18 +27,18 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const show_next_star_fn = starIndices.length ? "show_next_star_spot" : "show_next_star_no_op";
   const shuffleData = getShuffleSeedData(starIndices.length);
 
-  let toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
-  let toadIndices = [];
+  const toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
+  const toadIndices = [];
 
   // Determine the toad spaces, using distance formula for now.
   for (let starIdx = 0; starIdx < starIndices.length; starIdx++) {
-    let starSpace = board.spaces[starIndices[starIdx]];
+    const starSpace = board.spaces[starIndices[starIdx]];
     let bestDistance = Number.MAX_VALUE;
     let bestToadIdx = starIndices[starIdx]; // By default, no toad spaces = put toad on star space for now.
     for (let t = 0; t < toadSpaces.length; t++) {
-      let toadIdx = toadSpaces[t];
-      let toadSpace = board.spaces[toadIdx];
-      let dist = distance(starSpace.x, starSpace.y, toadSpace.x, toadSpace.y);
+      const toadIdx = toadSpaces[t];
+      const toadSpace = board.spaces[toadIdx];
+      const dist = distance(starSpace.x, starSpace.y, toadSpace.x, toadSpace.y);
       if (dist < bestDistance) {
         bestDistance = dist;
         bestToadIdx = toadIdx;

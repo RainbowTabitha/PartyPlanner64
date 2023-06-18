@@ -17,7 +17,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const booIndices = getSpacesOfSubType(SpaceSubtype.BOO, board);
   const booIndex = (!booIndices.length ? getDeadSpaceIndex(board) : booIndices[0]);
   let booEventSpaces = getSpacesWithEvent(BooEvent.id, board);
-  let primaryBooEventSpace: number = -1;
+  let primaryBooEventSpace = -1;
   if (!booEventSpaces.length) {
     booEventSpaces = [getDeadSpaceIndex(board)];
   }
@@ -49,15 +49,15 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   const toadSpaces = getSpacesOfSubType(SpaceSubtype.TOAD, board);
 
   // Determine the toad spaces, using distance formula for now.
-  let toadIndices = [];
+  const toadIndices = [];
   for (let starIdx = 0; starIdx < starIndices.length; starIdx++) {
-    let starSpace = board.spaces[starIndices[starIdx]];
+    const starSpace = board.spaces[starIndices[starIdx]];
     let bestDistance = Number.MAX_VALUE;
     let bestToadIdx = starIndices[starIdx]; // By default, no toad spaces = put toad on star space for now.
     for (let t = 0; t < toadSpaces.length; t++) {
-      let toadIdx = toadSpaces[t];
-      let toadSpace = board.spaces[toadIdx];
-      let dist = distance(starSpace.x, starSpace.y, toadSpace.x, toadSpace.y);
+      const toadIdx = toadSpaces[t];
+      const toadSpace = board.spaces[toadIdx];
+      const dist = distance(starSpace.x, starSpace.y, toadSpace.x, toadSpace.y);
       if (dist < bestDistance) {
         bestDistance = dist;
         bestToadIdx = toadIdx;
@@ -80,9 +80,9 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
     let bestDistance = Number.MAX_VALUE;
     let bestBankIdx = getDeadSpaceIndex(board);
     for (let b = 0; b < bankSpaces.length; b++) {
-      let bankIdx = bankSpaces[b];
-      let bankSpace = board.spaces[bankIdx];
-      let dist = distance(eventSpace.x, eventSpace.y, bankSpace.x, bankSpace.y);
+      const bankIdx = bankSpaces[b];
+      const bankSpace = board.spaces[bankIdx];
+      const dist = distance(eventSpace.x, eventSpace.y, bankSpace.x, bankSpace.y);
       if (dist < bestDistance) {
         bestDistance = dist;
         bestBankIdx = bankIdx;
@@ -107,9 +107,9 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
     let bestDistance = Number.MAX_VALUE;
     let bestShopIdx = getDeadSpaceIndex(board);
     for (let b = 0; b < itemShopSpaces.length; b++) {
-      let shopIdx = itemShopSpaces[b];
-      let shopSpace = board.spaces[shopIdx];
-      let dist = distance(eventSpace.x, eventSpace.y, shopSpace.x, shopSpace.y);
+      const shopIdx = itemShopSpaces[b];
+      const shopSpace = board.spaces[shopIdx];
+      const dist = distance(eventSpace.x, eventSpace.y, shopSpace.x, shopSpace.y);
       if (dist < bestDistance) {
         bestDistance = dist;
         bestShopIdx = shopIdx;
@@ -186,7 +186,7 @@ export async function createBoardOverlay(board: IBoard, boardInfo: IBoardInfo, b
   }
   const addArrowAngleAddr = getSymbol(Game.MP3_USA, "AddArrowAngle");
   const totalArrowsToWrite = getArrowRotationLimit();
-  let arrowRotationInstructions = [];
+  const arrowRotationInstructions = [];
   const loopLimit = Math.min(totalArrowsToWrite, rotations.length);
   for (let i = 0; i < loopLimit; i++) {
     arrowRotationInstructions.push(`LUI A0 hi(${$$hex(getRawFloat32Format(rotations[i]))})`);

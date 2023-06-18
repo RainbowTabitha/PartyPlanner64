@@ -4,7 +4,7 @@ import { MP3 } from "./MP3";
 import { romhandler } from "../romhandler";
 
 export function getROMAdapter() {
-  let game = romhandler.getGameVersion();
+  const game = romhandler.getGameVersion();
   if (!game) return null;
 
   return getAdapter(game);
