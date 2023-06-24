@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022",
+    "lib": ["esnext"],
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -17,13 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "noErrorTruncation": true
   },
-  "include": [
-    "apps",
-    "packages",
-    "vite-env.d.ts"
-  ],
   "exclude": [
-    "node_modules",
-    "apps/cli"
+    "node_modules"
   ]
 }

@@ -455,7 +455,9 @@ async function _handleAction(action: Action) {
     case Action.ROM_SAVE:
       blockUI(true);
       setTimeout(() => {
-        romhandler.saveROM();
+        const newROMBuffer = romhandler.saveROM();
+        const romBlob = new Blob([newROMBuffer]);
+        saveAs(romBlob, `MyMarioParty${romhandler.getGameVersion()}.z64`);
         blockUI(false);
         _showEmulatorInstructionsNotification();
       }, 0);
@@ -568,10 +570,13 @@ function romSelected(event: any) {
     }
 
     const promise = romhandler.setROMBuffer(e.target.result, showMessage);
-    if (!promise) return; // The ROM handler showed a message, so we don't need to unblock UI
-
     promise.then(
       (value) => {
+        if (!value) {
+          // The ROM handler showed a message, so we don't need to unblock UI
+          return;
+        }
+
         romLoadedChanged();
         loadBoardsFromROM();
         blockUI(false);

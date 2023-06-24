@@ -59,10 +59,13 @@ export const romhandler = new (class RomHandler {
     animationfs.clearCache();
   }
 
-  setROMBuffer(buffer: ArrayBuffer | null, onError: (msg: string) => void) {
+  setROMBuffer(
+    buffer: ArrayBuffer | null,
+    onError: (msg: string) => void
+  ): Promise<boolean> {
     if (!buffer) {
       this.clear();
-      return false;
+      return Promise.resolve(false);
     }
 
     this._rom = buffer;
@@ -73,13 +76,13 @@ export const romhandler = new (class RomHandler {
     if (!this.romRecognized()) {
       onError("File is not recognized as any valid ROM.");
       this.clear();
-      return false;
+      return Promise.resolve(false);
     }
 
     if (!this.romSupported()) {
       onError("This ROM is not supported right now.");
       this.clear();
-      return false;
+      return Promise.resolve(false);
     }
 
     resetCheats();
@@ -100,10 +103,11 @@ export const romhandler = new (class RomHandler {
       // Now that we've extracted, shrink _rom to just be the initial part of the ROM.
       const ovlStart = scenes.getInfo(0);
       this._rom = this._rom!.slice(0, ovlStart.rom_start);
+      return true;
     });
   }
 
-  saveROM() {
+  saveROM(): ArrayBuffer {
     if (!this._rom) throw new Error("Cannot save ROM, buffer was not present");
 
     const gameVersion = this.getGameVersion();
@@ -187,8 +191,7 @@ export const romhandler = new (class RomHandler {
     this._rom = newROMBuffer.slice(0, initialLen);
     this._u8array = new Uint8Array(this._rom);
 
-    const romBlob = new Blob([newROMBuffer]);
-    saveAs(romBlob, `MyMarioParty${gameVersion}.z64`);
+    return newROMBuffer;
   }
 
   romIsLoaded() {
