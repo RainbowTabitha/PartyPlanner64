@@ -39,6 +39,126 @@ export const REG = {
   RA: 31,
 };
 
+const _methods = {
+  addiu: function _addiu(dst: number, reg: number, imm: number) {
+    let base = 0x24000000;
+    base = base | (reg << 21);
+    base = base | (dst << 16);
+    return base | (imm & 0xffff);
+  },
+
+  addu: function _addu(dst: number, reg1: number, reg2: number) {
+    let base = 0x00000021;
+    base = base | (reg1 << 21);
+    base = base | (reg2 << 16);
+    base = base | (dst << 11);
+    return base;
+  },
+
+  beq: function _beq(r1: number, r2: number, offset: number) {
+    let base = 0x10000000;
+    base = base | (r1 << 21);
+    base = base | (r2 << 16);
+    return base | ((offset >> 2) & 0xffff);
+  },
+
+  bne: function _bne(r1: number, r2: number, offset: number) {
+    let base = 0x14000000;
+    base = base | (r1 << 21);
+    base = base | (r2 << 16);
+    return base | ((offset >> 2) & 0xffff);
+  },
+
+  bgtz: function _bgtz(reg: number, offset: number) {
+    let base = 0x1c000000;
+    base = base | (reg << 21);
+    return base | ((offset >> 2) & 0xffff);
+  },
+
+  blez: function _blez(reg: number, offset: number) {
+    let base = 0x18000000;
+    base = base | (reg << 21);
+    return base | ((offset >> 2) & 0xffff);
+  },
+
+  j: function _j(addr: number) {
+    let base = 0x08000000;
+    return base | (addr >>> 2);
+  },
+
+  jr: function _jr(reg: number) {
+    let base = 0x00000008;
+    return base | (reg << 21);
+  },
+
+  jal: function _jal(addr: number) {
+    let base = 0x0c000000;
+    return base | (addr >>> 2);
+  },
+
+  // dst = MEM[reg + offset]
+  lb: function _lb(dst: number, reg: number, offset: number) {
+    let base = 0x80000000;
+    base = base | (reg << 21);
+    base = base | (dst << 16);
+    return base | (offset & 0xffff);
+  },
+
+  // MEM[dst + offset] = (0xff & src);
+  sb: function _sb(src: number, dst: number, offset: number) {
+    let base = 0xa0000000;
+    base = base | (dst << 21);
+    base = base | (src << 16);
+    return base | (offset & 0xffff);
+  },
+
+  // dst = MEM[reg + offset]
+  lh: function _lh(dst: number, reg: number, offset: number) {
+    let base = 0x84000000;
+    base = base | (reg << 21);
+    base = base | (dst << 16);
+    return base | (offset & 0xffff);
+  },
+
+  // MEM[dst + offset] = (0xffff & src);
+  sh: function _sh(src: number, dst: number, offset: number) {
+    let base = 0xa4000000;
+    base = base | (dst << 21);
+    base = base | (src << 16);
+    return base | (offset & 0xffff);
+  },
+
+  lui: function _lui(dst: number, imm: number) {
+    let base = 0x3c000000;
+    base = base | (dst << 16);
+    return base | (imm & 0xffff);
+  },
+
+  // dst = MEM[reg + offset]
+  lw: function _lw(dst: number, reg: number, offset: number) {
+    let base = 0x8c000000;
+    base = base | (reg << 21);
+    base = base | (dst << 16);
+    return base | (offset & 0xffff);
+  },
+
+  // MEM[reg + offset]
+  sw: function _sw(src: number, dst: number, offset: number) {
+    let base = 0xac000000;
+    base = base | (dst << 21);
+    base = base | (src << 16);
+    return base | (offset & 0xffff);
+  },
+
+  // r1 = r2 | imm
+  ori: function _ori(r1: number, r2: number, imm: number) {
+    let base = 0x34000000;
+    base = base | (r1 << 21);
+    base = base | (r2 << 16);
+    return base | (imm & 0xffff);
+  },
+};
+
 export function makeInst(inst: string, ...extras: any[]) {
   if (!arguments.length) return null;
 
@@ -46,8 +166,7 @@ export function makeInst(inst: string, ...extras: any[]) {
   let args = new Array(arguments.length - 1);
   for (let i = 1; i < arguments.length; i++) args[i - 1] = arguments[i];
 
-  const methodName = "_" + inst.toLowerCase();
-  const method = eval(methodName);
+  const method = (_methods as any)[inst.toLowerCase()];
   if (typeof method === "function") {
     return method.apply(null, args);
   }
@@ -130,122 +249,4 @@ export function findCallsInFunction(
     }
   }
   return calls;
-}
-
-function _addiu(dst: number, reg: number, imm: number) {
-  let base = 0x24000000;
-  base = base | (reg << 21);
-  base = base | (dst << 16);
-  return base | (imm & 0xffff);
-}
-
-function _addu(dst: number, reg1: number, reg2: number) {
-  let base = 0x00000021;
-  base = base | (reg1 << 21);
-  base = base | (reg2 << 16);
-  base = base | (dst << 11);
-  return base;
-}
-
-function _beq(r1: number, r2: number, offset: number) {
-  let base = 0x10000000;
-  base = base | (r1 << 21);
-  base = base | (r2 << 16);
-  return base | ((offset >> 2) & 0xffff);
-}
-
-function _bne(r1: number, r2: number, offset: number) {
-  let base = 0x14000000;
-  base = base | (r1 << 21);
-  base = base | (r2 << 16);
-  return base | ((offset >> 2) & 0xffff);
-}
-
-function _bgtz(reg: number, offset: number) {
-  let base = 0x1c000000;
-  base = base | (reg << 21);
-  return base | ((offset >> 2) & 0xffff);
-}
-
-function _blez(reg: number, offset: number) {
-  let base = 0x18000000;
-  base = base | (reg << 21);
-  return base | ((offset >> 2) & 0xffff);
-}
-
-function _j(addr: number) {
-  let base = 0x08000000;
-  return base | (addr >>> 2);
-}
-
-function _jr(reg: number) {
-  let base = 0x00000008;
-  return base | (reg << 21);
-}
-
-function _jal(addr: number) {
-  let base = 0x0c000000;
-  return base | (addr >>> 2);
-}
-
-// dst = MEM[reg + offset]
-function _lb(dst: number, reg: number, offset: number) {
-  let base = 0x80000000;
-  base = base | (reg << 21);
-  base = base | (dst << 16);
-  return base | (offset & 0xffff);
-}
-
-// MEM[dst + offset] = (0xff & src);
-function _sb(src: number, dst: number, offset: number) {
-  let base = 0xa0000000;
-  base = base | (dst << 21);
-  base = base | (src << 16);
-  return base | (offset & 0xffff);
-}
-
-// dst = MEM[reg + offset]
-function _lh(dst: number, reg: number, offset: number) {
-  let base = 0x84000000;
-  base = base | (reg << 21);
-  base = base | (dst << 16);
-  return base | (offset & 0xffff);
-}
-
-// MEM[dst + offset] = (0xffff & src);
-function _sh(src: number, dst: number, offset: number) {
-  let base = 0xa4000000;
-  base = base | (dst << 21);
-  base = base | (src << 16);
-  return base | (offset & 0xffff);
-}
-
-function _lui(dst: number, imm: number) {
-  let base = 0x3c000000;
-  base = base | (dst << 16);
-  return base | (imm & 0xffff);
-}
-
-// dst = MEM[reg + offset]
-function _lw(dst: number, reg: number, offset: number) {
-  let base = 0x8c000000;
-  base = base | (reg << 21);
-  base = base | (dst << 16);
-  return base | (offset & 0xffff);
-}
-
-// MEM[reg + offset]
-function _sw(src: number, dst: number, offset: number) {
-  let base = 0xac000000;
-  base = base | (dst << 21);
-  base = base | (src << 16);
-  return base | (offset & 0xffff);
-}
-
-// r1 = r2 | imm
-function _ori(r1: number, r2: number, imm: number) {
-  let base = 0x34000000;
-  base = base | (r1 << 21);
-  base = base | (r2 << 16);
-  return base | (imm & 0xffff);
 }
