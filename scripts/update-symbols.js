@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 
 const SYMBOLS_DIR = "symbols";
+const SYMBOLS_OUT_DIR = "packages/lib/symbols";
 
 exec("git submodule update --remote", (err, stdout, stderr) => {
   if (err || stderr) {
@@ -40,7 +41,7 @@ exec("git submodule update --remote", (err, stdout, stderr) => {
         const filename = path.basename(file);
         console.log("Writing " + filename + "...");
 
-        const outputfile = path.join("src/symbols/", filename + ".js");
+        const outputfile = path.join(SYMBOLS_OUT_DIR, filename + ".js");
         fs.writeFile(outputfile, symModule, (err) => {
           if (err) {
             console.error("Could not write symbol file: " + file + ": " + err);

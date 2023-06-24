@@ -17,6 +17,10 @@
     "noFallthroughCasesInSwitch": true,
     "noErrorTruncation": true
   },
-  "include": ["src"],
+  "include": [
+    "apps",
+    "packages",
+    "vite-env.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

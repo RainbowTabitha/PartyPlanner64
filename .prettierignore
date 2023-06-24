@@ -4,6 +4,6 @@ electron
 node_modules
 
 symbols
-src/adapter/*.boardoverlay.ts
-src/lib
-src/symbols
+packages/lib/adapter/*.boardoverlay.ts
+packages/lib/lib
+packages/lib/symbols
