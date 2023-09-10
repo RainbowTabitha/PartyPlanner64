@@ -54,6 +54,10 @@ To host a local copy of PartyPlanner64 clone the repository and do the following
 - `npm run start` will build a development version and run a local web server.
 - `npm run build` will build a production version and copy it into `build/`.
 
+### CLI Builds
+
+See the README.md under apps/cli.
+
 ### Electron Builds
 
 After setting up a local dev environment, run the following to create the various Electron builds.

@@ -24,3 +24,15 @@ Example:
 ```
 partyplanner64-cli-win.exe overwrite --rom-file "C:\MarioParty.z64" --target-board-index 0 --board-file "C:\board.json" --output-file "C:\MyMarioPartyCLI.z64"
 ```
+
+## Building
+
+To build the CLI scripts:
+
+    cd apps/cli
+    npm install
+    npm run build
+
+To create the executables:
+
+    npm run package
