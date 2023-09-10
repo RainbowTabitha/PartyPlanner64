@@ -12,7 +12,8 @@
     "url": "https://github.com/PartyPlanner64/PartyPlanner64.git"
   },
   "scripts": {
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "package": "pkg ./dist/out.js -t node16-linux,node16-win -o ./dist/pkg/partyplanner64-cli"
   },
   "dependencies": {
     "canvas-api-lite": "^1.0.0",
@@ -23,6 +24,7 @@
     "@types/command-line-args": "^5.2.0",
     "@types/command-line-usage": "^5.0.2",
     "esbuild": "^0.18.7",
-    "esbuild-plugin-inline-image": "^0.0.9"
+    "esbuild-plugin-inline-image": "^0.0.9",
+    "pkg": "^5.8.1"
   }
 }

@@ -5,6 +5,7 @@ import {
   setCreateImage,
 } from "../../packages/lib/utils/canvas";
 import { createCanvasNode, createImageNode } from "./CanvasImpl";
+import { version } from "./package.json";
 import { overwrite, OverwriteOptions } from "./commands/overwrite";
 import "../../packages/lib/events/builtin/events.include";
 
@@ -15,9 +16,11 @@ const mainDefinitions = [{ name: "command", defaultOption: true }];
 const mainOptions = cliArgs(mainDefinitions, { stopAtFirstUnknown: true });
 const argv = mainOptions._unknown || [];
 
+const startBanner = "PartyPlanner64 v" + version;
+
 const mainHelpSections: cliUsage.Section[] = [
   {
-    header: "PartyPlanner64",
+    header: startBanner,
     content: "Mario Party board editor CLI interface",
   },
   {
@@ -43,6 +46,7 @@ const mainHelpSections: cliUsage.Section[] = [
   switch (mainOptions.command) {
     case "overwrite":
       {
+        console.log(startBanner);
         const overwriteDefinitions = [
           { name: "rom-file", type: String },
           { name: "target-board-index", type: Number },

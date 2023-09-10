@@ -27,6 +27,7 @@ await esbuild.build({
   entryPoints: ["index.ts"],
   bundle: true,
   platform: "node",
+  target: "node16",
   // metafile: true,
   sourcemap: "linked",
   outfile: "dist/out.js",
