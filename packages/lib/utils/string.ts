@@ -28,7 +28,7 @@ export function toCharCodes(str: string) {
  * @param str String to bufferize
  */
 export function stringToArrayBuffer(str: string): ArrayBuffer {
-  if ("TextEncoder" in window) {
+  if (typeof TextEncoder !== "undefined") {
     return new TextEncoder().encode(str).buffer;
   }
 
@@ -43,7 +43,7 @@ export function stringToArrayBuffer(str: string): ArrayBuffer {
 }
 
 export function stringFromArrayBuffer(buffer: ArrayBuffer): string {
-  if ("TextDecoder" in window) {
+  if (typeof TextDecoder !== "undefined") {
     return new TextDecoder().decode(buffer);
   }
 

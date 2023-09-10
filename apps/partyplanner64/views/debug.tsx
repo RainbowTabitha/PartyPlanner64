@@ -28,6 +28,7 @@ import "../css/debug.scss";
 import { blockUI } from "../appControl";
 import { $$log } from "../../../packages/lib/utils/debug";
 import { showMessage } from "../appControl";
+import { $setting, get } from "./settings";
 
 interface IDebugViewState {
   sceneIndex: string;
@@ -379,7 +380,8 @@ export const DebugView = class DebugView extends React.Component<
 
   private findInMainFS(num: number): string {
     const mainfsOffset = mainfs.getROMOffset()!;
-    const mainfsSize = mainfs.getByteLength();
+    const writeDecompressed = !!get($setting.writeDecompressed);
+    const mainfsSize = mainfs.getByteLength(writeDecompressed);
     if (num > mainfsOffset && num < mainfsOffset + mainfsSize) {
       let currentOffset = mainfsOffset;
       const dirCount = mainfs.getDirectoryCount();
@@ -534,45 +536,3 @@ function dumpCreated(blob: Blob) {
   saveAs(blob, `mp${romhandler.getGameVersion()}-files.zip`);
   blockUI(false);
 }
-
-/* eslint-disable no-extend-native */
-
-// Don't allow bugs where undefined/null become silent 0 byte writes.
-const dataViewMethods = [
-  "setUint8",
-  "setInt8",
-  "setUint16",
-  "setInt16",
-  "setUint32",
-  "setInt32",
-  "setFloat32",
-  "setFloat64",
-];
-dataViewMethods.forEach((methodName) => {
-  const methodOrig = (DataView.prototype as any)[methodName];
-  (DataView.prototype as any)[methodName] = function (
-    offset: number,
-    value: number
-  ) {
-    if (typeof offset !== "number")
-      throw new Error(`Invalid offset in ${methodName}`);
-    if (typeof value !== "number")
-      throw new Error(`Invalid value in ${methodName}`);
-    methodOrig.apply(this, arguments);
-  };
-});
-
-// Don't support weird clamping behavior.
-// const arrayBufferSliceOrig = ArrayBuffer.prototype.slice;
-// ArrayBuffer.prototype.slice = function(begin, end): ArrayBuffer {
-//   if (begin > this.byteLength) {
-//     debugger;
-//     throw new Error(`Slicing buffer from ${begin} seems wrong`);
-//   }
-//   if (typeof end === "number" && end > this.byteLength) {
-//     debugger;
-//     throw new Error(`Slicing buffer until ${end} seems wrong`);
-//   }
-
-//   return arrayBufferSliceOrig.apply(this, arguments as any);
-// }

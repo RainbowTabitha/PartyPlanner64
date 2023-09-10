@@ -6,7 +6,6 @@ import {
   setAdditionalBackgroundCode,
   getAudioSelectCode,
   setAudioSelectCode,
-  _fixPotentiallyOldBoard,
   _makeDefaultBoard,
 } from "./boards";
 import * as React from "react";
@@ -35,16 +34,13 @@ import { Toolbar } from "./toolbar";
 import { SpaceProperties } from "./spaceproperties";
 import { BoardProperties } from "./boardproperties";
 import "../../packages/lib/utils/onbeforeunload";
-import "../../packages/lib/events/builtin/events.common";
-import "../../packages/lib/events/builtin/MP1/events.MP1";
-import "../../packages/lib/events/builtin/MP2/events.MP2";
-import "../../packages/lib/events/builtin/MP3/events.MP3";
+import "../../packages/lib/events/builtin/events.include";
 import "file-saver";
 import { DebugView } from "./views/debug";
 import { AudioViewer } from "./views/audio";
 import { BasicCodeEditorView } from "./views/basiccodeeditorview";
-import { IDecisionTreeNode } from "../../packages/lib/aitrees";
 import { DecisionTreeEditor } from "./aieditor";
+import { IDecisionTreeNode } from "../../packages/lib/ai/aitrees";
 import { isElectron } from "../../packages/lib/utils/electron";
 import {
   blockUI,
@@ -107,6 +103,9 @@ import {
   createCustomEvent,
   ICustomEvent,
 } from "../../packages/lib/events/customevents";
+import { setEventLibraryImplementation } from "../../packages/lib/events/EventLibrary";
+import { ReduxEventLibrary } from "./events/ReduxEventLibrary";
+import { fixPotentiallyOldBoard } from "../../packages/lib/boards";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
@@ -475,10 +474,12 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
 };
 
 function initializeState(): void {
+  setEventLibraryImplementation(new ReduxEventLibrary());
+
   let boards;
   const cachedBoards = getSavedBoards();
   if (cachedBoards && cachedBoards.length) {
-    boards = cachedBoards.map((board) => _fixPotentiallyOldBoard(board));
+    boards = cachedBoards.map((board) => fixPotentiallyOldBoard(board));
   } else {
     boards = [_makeDefaultBoard(1)];
   }

@@ -1,5 +1,6 @@
 import { store } from "./store";
 import { setImagesLoadedAction } from "./appState";
+import { createImage } from "../../packages/lib/utils/canvas";
 
 import toadImg from "./img/editor/toad.png";
 import mstarImg from "./img/editor/mstar.png";
@@ -163,7 +164,7 @@ addImage("targetImg", targetImg);
 
 function addImage(name: string, url: string) {
   _imageTemp![name] = url;
-  _images[name] = new Image();
+  _images[name] = createImage();
   _imagesToLoad = _imagesToLoad + 1;
   _images[name].onload = _onImageLoaded;
 }

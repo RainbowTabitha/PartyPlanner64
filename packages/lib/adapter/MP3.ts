@@ -15,7 +15,7 @@ import {
   getEventActivationTypeFromEditorType,
 } from "../types";
 import { $$log } from "../utils/debug";
-import { createEventInstance } from "../events/events";
+import { createEventInstance, EventMap } from "../events/events";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer } from "../utils/arrays";
 import { strings3 } from "../fs/strings3";
@@ -35,11 +35,11 @@ import { createBoardOverlay } from "./MP3.U.boardoverlay";
 import { getSoundEffectMapMP3 } from "./MP3.U.soundeffects";
 import { getImageData } from "../utils/img/getImageData";
 import { getEventsInLibrary } from "../events/EventLibrary";
-import { EventMap } from "../../../apps/partyplanner64/boardState";
 
 import genericgateImage from "../../../apps/partyplanner64/img/assets/genericgate.png";
+import { createImage } from "../utils/canvas";
 
-export const MP3 = new (class MP3Adapter extends AdapterBase {
+export class MP3Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 3;
 
   public nintendoLogoFSEntry: number[] = [17, 1];
@@ -681,7 +681,7 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
         return;
       }
 
-      const srcImage = new Image();
+      const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write board select for ${boardInfo.name}`),
         45000
@@ -1063,4 +1063,4 @@ export const MP3 = new (class MP3Adapter extends AdapterBase {
       0xff: "\u3015", // PAUSE
     };
   }
-})();
+}

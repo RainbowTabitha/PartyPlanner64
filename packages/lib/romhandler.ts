@@ -12,8 +12,6 @@ import { applyHook } from "./patches/gameshark/hook";
 import { fixChecksum } from "./utils/CIC";
 import { $$log } from "./utils/debug";
 import { getROMAdapter } from "./adapter/adapters";
-import { get, $setting } from "../../apps/partyplanner64/views/settings";
-import { saveAs } from "file-saver";
 import { resetCheats } from "./patches/gameshark/cheats";
 
 // The ROM Handler handles the ROM... it holds the ROM buffer reference and
@@ -61,6 +59,7 @@ export const romhandler = new (class RomHandler {
 
   setROMBuffer(
     buffer: ArrayBuffer | null,
+    skipSupportedCheck: boolean,
     onError: (msg: string) => void
   ): Promise<boolean> {
     if (!buffer) {
@@ -73,7 +72,7 @@ export const romhandler = new (class RomHandler {
 
     this.byteSwapIfNeeded();
 
-    if (!this.romRecognized()) {
+    if (!skipSupportedCheck && !this.romRecognized()) {
       onError("File is not recognized as any valid ROM.");
       this.clear();
       return Promise.resolve(false);
@@ -107,7 +106,7 @@ export const romhandler = new (class RomHandler {
     });
   }
 
-  saveROM(): ArrayBuffer {
+  saveROM(writeDecompressed: boolean): ArrayBuffer {
     if (!this._rom) throw new Error("Cannot save ROM, buffer was not present");
 
     const gameVersion = this.getGameVersion();
@@ -116,7 +115,10 @@ export const romhandler = new (class RomHandler {
 
     // Grab all the sizes of the different sections.
     const sceneLen = makeDivisibleBy(scenes.getByteLength(), 16);
-    const mainLen = makeDivisibleBy(mainfs.getByteLength(), 16);
+    const mainLen = makeDivisibleBy(
+      mainfs.getByteLength(writeDecompressed),
+      16
+    );
     let strsLen;
     if (gameVersion === 3)
       strsLen = makeDivisibleBy(strings3.getByteLength(), 16);
@@ -146,7 +148,7 @@ export const romhandler = new (class RomHandler {
 
     applyHook(newROMBuffer); // Before main fs is packed
 
-    mainfs.pack(newROMBuffer, initialLen + sceneLen);
+    mainfs.pack(newROMBuffer, writeDecompressed, initialLen + sceneLen);
     mainfs.setROMOffset(initialLen + sceneLen, newROMBuffer);
 
     if (gameVersion === 3) {
@@ -183,7 +185,7 @@ export const romhandler = new (class RomHandler {
     // Do this last, so that any patches made to scenes just prior take effect.
     scenes.pack(newROMBuffer, initialLen);
 
-    const adapter = getROMAdapter()!;
+    const adapter = getROMAdapter({})!;
     if (adapter.onAfterSave) adapter.onAfterSave(new DataView(newROMBuffer));
 
     fixChecksum(newROMBuffer);
@@ -247,7 +249,7 @@ export const romhandler = new (class RomHandler {
       case Game.MP3_USA:
         supported = true;
     }
-    return supported || !!get($setting.uiAllowAllRoms);
+    return supported;
   }
 
   byteSwapIfNeeded(): void {

@@ -15,7 +15,6 @@ import {
   IBoard,
   getConnections,
   getCurrentBoard,
-  forEachEventParameter,
   IEventInstance,
 } from "./boards";
 import {
@@ -51,6 +50,7 @@ import {
 } from "./boardState";
 import { isEmpty } from "../../packages/lib/utils/obj";
 import { getEventsInLibrary } from "../../packages/lib/events/EventLibrary";
+import { forEachEventParameter } from "../../packages/lib/boards";
 
 type Canvas = HTMLCanvasElement;
 type CanvasContext = CanvasRenderingContext2D;

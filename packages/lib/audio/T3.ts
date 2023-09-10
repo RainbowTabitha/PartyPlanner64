@@ -1,3 +1,4 @@
+import { $$log } from "../utils/debug";
 import { ALSoundSimple } from "./ALSoundSimple";
 
 /**
@@ -84,13 +85,12 @@ export class T3 {
         }
       }
       if (!sound.sampleRate) {
-        console.warn(`Unknown sample rate for raw sound ${i}, guessing...`);
+        $$log(`Unknown sample rate for raw sound ${i}, guessing...`);
         sound.sampleRate = 0x5622;
       }
 
       this.sounds.push(sound);
     }
-    console.log(this.sounds);
 
     const tblOffsetStart = view.getUint32(4 + soundFxCount * 8 + 0xc);
     const tblOffsetEnd =

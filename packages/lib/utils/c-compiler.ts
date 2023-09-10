@@ -1,6 +1,10 @@
 import SmallerC from "../lib/SmallerC/smlrc";
 import { preprocess } from "./c-preprocessor";
 
+// Web: This will be a URL pointing to the C compiler wasm file.
+// CLI: This will be a Uint8Array instance.
+import smlrcWasm from "../lib/SmallerC/smlrc.wasm?url";
+
 /**
  * Compiles C source to MIPS assembly.
  * @param source C source code string
@@ -28,10 +32,15 @@ export async function compile(source: string): Promise<string> {
     noInitialRun: true,
     locateFile: (path: string, scriptDirectory: string) => {
       if (path === "smlrc.wasm") {
-        return import.meta.env.BASE_URL + "smlrc.wasm";
+        // This will hit for both Web and CLI, but only web's return value matters.
+        if (typeof smlrcWasm === "string") {
+          return smlrcWasm;
+        }
       }
       return scriptDirectory + path; // Same as default in smlrc.js's locateFile
     },
+    wasmBinary:
+      typeof smlrcWasm === "object" ? (smlrcWasm as Uint8Array) : undefined,
     print: addError,
     printErr: addError,
   });

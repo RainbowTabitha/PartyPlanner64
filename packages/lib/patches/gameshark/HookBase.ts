@@ -14,7 +14,7 @@ export abstract class HookBase {
   }
 
   writeHookCode(romView: DataView) {
-    const adapter = getROMAdapter();
+    const adapter = getROMAdapter({});
     const MAINFS_READ_ADDR = adapter && adapter.MAINFS_READ_ADDR;
     if (!MAINFS_READ_ADDR) {
       throw new Error(

@@ -455,7 +455,8 @@ async function _handleAction(action: Action) {
     case Action.ROM_SAVE:
       blockUI(true);
       setTimeout(() => {
-        const newROMBuffer = romhandler.saveROM();
+        const writeDecompressed = !!get($setting.writeDecompressed);
+        const newROMBuffer = romhandler.saveROM(writeDecompressed);
         const romBlob = new Blob([newROMBuffer]);
         saveAs(romBlob, `MyMarioParty${romhandler.getGameVersion()}.z64`);
         blockUI(false);
@@ -569,7 +570,12 @@ function romSelected(event: any) {
       return;
     }
 
-    const promise = romhandler.setROMBuffer(e.target.result, showMessage);
+    const skipSupportedCheck = !!get($setting.uiAllowAllRoms);
+    const promise = romhandler.setROMBuffer(
+      e.target.result,
+      skipSupportedCheck,
+      showMessage
+    );
     promise.then(
       (value) => {
         if (!value) {
@@ -1103,7 +1109,9 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
     ) {
       this.props.closeCallback();
 
-      const adapter = getROMAdapter();
+      const adapter = getROMAdapter({
+        writeBranding: get($setting.writeBranding),
+      });
       if (!adapter) return;
 
       blockUI(true);

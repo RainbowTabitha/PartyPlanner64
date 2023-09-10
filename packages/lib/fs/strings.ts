@@ -80,7 +80,7 @@ export class StringTable {
   }
 
   _byteToStr(val: number) {
-    const map = getROMAdapter()!.getCharacterMap();
+    const map = getROMAdapter({})!.getCharacterMap();
     if (map.hasOwnProperty(val)) return map[val];
     return String.fromCharCode(val);
   }
@@ -186,7 +186,7 @@ export const strings = {
   StringTable: StringTable,
 
   _strToBytes(str: string): number[] {
-    const map = getROMAdapter()!.getCharacterMap();
+    const map = getROMAdapter({})!.getCharacterMap();
     const result = [];
     let curIdx = 0;
     const len = str.length;

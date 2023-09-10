@@ -6,7 +6,7 @@ import {
 } from "../../../apps/partyplanner64/boards";
 import { animationfs } from "../fs/animationfs";
 import { CostumeType, Space } from "../types";
-import { createEventInstance } from "../events/events";
+import { createEventInstance, EventMap } from "../events/events";
 import { strings } from "../fs/strings";
 import {
   arrayToArrayBuffer,
@@ -14,7 +14,7 @@ import {
   arrayBufferToImageData,
 } from "../utils/arrays";
 import { hvqfs } from "../fs/hvqfs";
-import { createContext } from "../utils/canvas";
+import { createContext, createImage } from "../utils/canvas";
 import { $$log } from "../utils/debug";
 import { toArrayBuffer, cutFromWhole } from "../utils/image";
 import { mainfs } from "../fs/mainfs";
@@ -22,12 +22,11 @@ import { toPack } from "../utils/img/ImgPack";
 import { IBoardInfo } from "./boardinfobase";
 import { BankEvent } from "../events/builtin/events.common";
 import { getImageData } from "../utils/img/getImageData";
-import { EventMap } from "../../../apps/partyplanner64/boardState";
 import { createBoardOverlay } from "./MP2.U.boardoverlay";
 
 import mp2boardselectblank1Image from "../../../apps/partyplanner64/img/details/mp2boardselectblank1.png";
 
-export const MP2 = new (class MP2Adapter extends AdapterBase {
+export class MP2Adapter extends AdapterBase {
   public gameVersion: 1 | 2 | 3 = 2;
 
   public nintendoLogoFSEntry: number[] = [9, 1];
@@ -600,7 +599,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
         return;
       }
 
-      const srcImage = new Image();
+      const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write board select for ${boardInfo.name}`),
         45000
@@ -669,16 +668,16 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       let blankBackImage: HTMLImageElement,
         newBoardSelectIconImage: HTMLImageElement;
 
-      const blankBackPromise = new Promise<void>(function (resolve, reject) {
-        blankBackImage = new Image();
+      const blankBackPromise = new Promise<void>(function (resolve) {
+        blankBackImage = createImage();
         blankBackImage.onload = function () {
           resolve();
         };
         blankBackImage.src = mp2boardselectblank1Image;
       });
 
-      const newIconPromise = new Promise<void>(function (resolve, reject) {
-        newBoardSelectIconImage = new Image();
+      const newIconPromise = new Promise<void>(function (resolve) {
+        newBoardSelectIconImage = createImage();
         newBoardSelectIconImage.onload = function () {
           resolve();
         };
@@ -687,7 +686,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
 
       const iconPromises = [blankBackPromise, newIconPromise];
       Promise.all(iconPromises).then(
-        (value) => {
+        () => {
           const bgInfo = this._readImgInfoFromMainFS(9, 15, 0); // Read the existing icon select thing
 
           // Draw the original onto a canvas
@@ -807,7 +806,7 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
         return;
       }
 
-      const srcImage = new Image();
+      const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write logos for ${boardInfo.name}`),
         45000
@@ -1048,4 +1047,4 @@ export const MP2 = new (class MP2Adapter extends AdapterBase {
       0xff: "\u3015", // PAUSE
     };
   }
-})();
+}

@@ -41,16 +41,16 @@ import {
   parse as parseEvent,
   getEvent,
   IEventWriteInfo,
+  EventMap,
 } from "../events/events";
 import { stringToArrayBuffer, stringFromArrayBuffer } from "../utils/string";
 import { distance } from "../utils/number";
 import { assemble } from "mips-assembler";
-import { createContext } from "../utils/canvas";
+import { createContext, createImage } from "../utils/canvas";
 import { toArrayBuffer } from "../utils/image";
 import { RGBA5551fromRGBA32 } from "../utils/img/RGBA5551";
 import { toPack, fromPack } from "../utils/img/ImgPack";
 import { arrayBufferToDataURL, dataUrlToArrayBuffer } from "../utils/arrays";
-import { get, $setting } from "../../../apps/partyplanner64/views/settings";
 import {
   makeGameSymbolLabels,
   prepSingleEventAsm,
@@ -66,7 +66,6 @@ import { isDebug } from "../../../apps/partyplanner64/debug";
 import { getImageData } from "../utils/img/getImageData";
 import { createGameMidi } from "../audio/midi";
 import { getEventsInLibrary } from "../events/EventLibrary";
-import { EventMap } from "../../../apps/partyplanner64/boardState";
 import {
   getBoardAdditionalBgHvqIndices,
   makeBgSymbolLabels,
@@ -74,6 +73,10 @@ import {
 import { makeAudioSymbolLabels } from "../events/getaudiochoice";
 
 import bootsplashImage from "../../../apps/partyplanner64/img/bootsplash.png";
+
+export interface IAdapterOptions {
+  writeBranding?: boolean;
+}
 
 export abstract class AdapterBase {
   /** The arbitrary upper bound size of the events ASM blob. */
@@ -99,6 +102,17 @@ export abstract class AdapterBase {
   public abstract MAINFS_READ_ADDR: number;
   public abstract TABLE_HYDRATE_ADDR: number;
   public abstract HEAP_FREE_ADDR: number;
+
+  protected options: IAdapterOptions;
+
+  public constructor(options: IAdapterOptions) {
+    this.options = options;
+
+    // Defaults
+    if (!("writeBranding" in this.options)) {
+      this.options.writeBranding = true;
+    }
+  }
 
   public loadBoards(): IBoard[] {
     const boards = [];
@@ -1502,7 +1516,7 @@ ${eventAsmCombinedString}
 
   _brandBootSplashscreen(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!get($setting.writeBranding)) {
+      if (!this.options.writeBranding) {
         resolve();
         return;
       }
@@ -1513,7 +1527,7 @@ ${eventAsmCombinedString}
         return;
       }
 
-      const srcImage = new Image();
+      const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to overwrite boot logo`),
         45000

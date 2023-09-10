@@ -769,7 +769,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
       case BoardAudioType.InGame:
         {
           let index = 0;
-          const audioNames = getAdapter(currentBoard.game)!.getAudioMap(0);
+          const audioNames = getAdapter(currentBoard.game, {})!.getAudioMap(0);
           const audioOptions = audioNames.map((song: string) => {
             const curIndex = index++;
             if (!song) return null;

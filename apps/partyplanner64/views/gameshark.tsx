@@ -1,46 +1,13 @@
 import { romSupportsCheats } from "../../../packages/lib/patches/gameshark/hook";
-import { copyRange } from "../../../packages/lib/utils/arrays";
 import * as React from "react";
 import { Parser } from "../../../packages/lib/patches/gameshark/parser";
 import { Compiler } from "../../../packages/lib/patches/gameshark/compiler";
 import { showMessage } from "../appControl";
-import {
-  currentCheats,
-  getCheatBuffer,
-} from "../../../packages/lib/patches/gameshark/cheats";
+import { currentCheats } from "../../../packages/lib/patches/gameshark/cheats";
 
 import "../css/patches.scss";
 
 // Example: show mem meter mp1 8105E418 2400
-
-// Joins all the cheat buffers into one
-// opts.endInsts - if given, an array of instructions to append
-export function getCheatRoutineBuffer(opts?: { endInsts?: number[] }) {
-  opts = opts || {};
-  const endInsts = opts.endInsts;
-
-  const allCheatsBuffer = getCheatBuffer();
-
-  const bufferLen =
-    allCheatsBuffer.byteLength + (endInsts ? endInsts.length * 4 : 0);
-  const fullBuffer = new ArrayBuffer(bufferLen);
-  const dataView = new DataView(fullBuffer);
-
-  let offset = 0;
-
-  // Write cheats
-  copyRange(fullBuffer, allCheatsBuffer, offset, 0, allCheatsBuffer.byteLength);
-  offset += allCheatsBuffer.byteLength;
-
-  if (endInsts) {
-    for (let i = 0; i < endInsts.length; i++) {
-      dataView.setUint32(offset, endInsts[i]);
-      offset += 4;
-    }
-  }
-
-  return fullBuffer;
-}
 
 export class GamesharkView extends React.Component {
   private inputEl: HTMLTextAreaElement | null = null;

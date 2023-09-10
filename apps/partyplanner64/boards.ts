@@ -12,8 +12,8 @@ import { copyObject } from "../../packages/lib/utils/obj";
 import { ICustomEvent } from "../../packages/lib/events/customevents";
 import {
   getEvent,
-  IEventParameter,
   EventParameterValues,
+  EventMap,
 } from "../../packages/lib/events/events";
 import { getAdapter, getROMAdapter } from "../../packages/lib/adapter/adapters";
 import {
@@ -47,7 +47,6 @@ import {
   clearBoardsFromROMAction,
   copyCurrentBoardAction,
   deleteBoardAction,
-  EventMap,
   excludeEventFromBoardAction,
   includeEventInBoardAction,
   removeAdditionalBackgroundAction,
@@ -74,8 +73,11 @@ import {
   setSpaceHostsStarAction,
   setSpaceRotationAction,
 } from "./boardState";
-import { assert } from "../../packages/lib/utils/debug";
 import { getEventsInLibrary } from "../../packages/lib/events/EventLibrary";
+import {
+  fixPotentiallyOldBoard,
+  forEachEvent,
+} from "../../packages/lib/boards";
 
 const _themes = {
   default: {
@@ -366,7 +368,7 @@ export function addBoard(
     board._rom = true;
   }
 
-  _fixPotentiallyOldBoard(board);
+  fixPotentiallyOldBoard(board);
 
   store.dispatch(addBoardAction({ board, rom: opts.rom }));
 
@@ -415,65 +417,6 @@ export function hasConnection(
     return board.links[startIdx] === endIdx;
   }
   return false;
-}
-
-interface ForEachEventCallback {
-  (
-    event: IEventInstance,
-    eventIndex: number,
-    space?: ISpace,
-    spaceIndex?: number
-  ): void;
-}
-
-export function forEachEvent(board: IBoard, fn: ForEachEventCallback) {
-  if (board.boardevents) {
-    // Reverse to allow deletion in callback.
-    for (let i = board.boardevents.length - 1; i >= 0; i--) {
-      const event = board.boardevents[i];
-      fn(event, i);
-    }
-  }
-
-  const spaces = board.spaces;
-  if (spaces && spaces.length) {
-    for (let s = 0; s < spaces.length; s++) {
-      const space = spaces[s];
-      if (space.events && space.events.length) {
-        for (let i = space.events.length - 1; i >= 0; i--) {
-          const event = space.events[i];
-          fn(event, i, space, s);
-        }
-      }
-    }
-  }
-}
-
-interface ForEachEventParameterCallback {
-  (
-    param: IEventParameter,
-    event: IEventInstance,
-    eventIndex: number,
-    space?: ISpace,
-    spaceIndex?: number
-  ): void;
-}
-
-export function forEachEventParameter(
-  board: IBoard,
-  eventLibrary: EventMap,
-  fn: ForEachEventParameterCallback
-) {
-  forEachEvent(board, (eventInstance, eventIndex, space, spaceIndex) => {
-    const event = getEvent(eventInstance.id, board, eventLibrary);
-    assert(!!event);
-    if (event.parameters) {
-      for (let p = 0; p < event.parameters.length; p++) {
-        const parameter = event.parameters[p];
-        fn(parameter, eventInstance, eventIndex, space, spaceIndex);
-      }
-    }
-  });
 }
 
 /** Adds an event to be executed during specific moments. */
@@ -658,127 +601,6 @@ export function getDeadEnds(board: IBoard) {
   return deadEnds;
 }
 
-export function _fixPotentiallyOldBoard(board: IBoard): IBoard {
-  if (!("game" in board)) {
-    board.game = 1;
-  }
-
-  if (!("type" in board)) {
-    board.type = BoardType.NORMAL;
-  }
-
-  if (!("events" in board)) {
-    board.events = {};
-  }
-
-  for (const eventId in board.events) {
-    const eventData = board.events[eventId];
-    if (typeof eventData === "string") {
-      board.events[eventId] = {
-        code: eventData,
-        language: EventCodeLanguage.MIPS,
-      };
-    }
-  }
-
-  if (typeof board.audioType === "undefined") {
-    board.audioType = BoardAudioType.InGame;
-  }
-
-  if (board.audioData && !Array.isArray(board.audioData)) {
-    board.audioData = [(board as any).audioData];
-  }
-
-  if (board.game === 2 && typeof board.costumeTypeIndex !== "number") {
-    board.costumeTypeIndex = CostumeType.NORMAL;
-  }
-
-  _migrateOldCustomEvents(board);
-
-  if (!("fov" in board.bg)) {
-    switch (board.game) {
-      case 3:
-        if (board.type === BoardType.DUEL) {
-          Object.assign(board.bg, {
-            fov: 15,
-            scaleFactor: 0.1,
-            cameraEyePosX: 0,
-            cameraEyePosY: 210,
-            cameraEyePosZ: 210,
-            lookatPointX: 0,
-            lookatPointY: 0,
-            lookatPointZ: 0,
-          });
-        } else {
-          Object.assign(board.bg, {
-            fov: 15,
-            scaleFactor: 0.1,
-            cameraEyePosX: 0,
-            cameraEyePosY: 300,
-            cameraEyePosZ: 300,
-            lookatPointX: 0,
-            lookatPointY: 0,
-            lookatPointZ: 0,
-          });
-        }
-        break;
-      case 2:
-        Object.assign(board.bg, {
-          fov: 3,
-          scaleFactor: 0.1,
-          cameraEyePosX: 0,
-          cameraEyePosY: 1570,
-          cameraEyePosZ: 1577,
-          lookatPointX: 0,
-          lookatPointY: 0,
-          lookatPointZ: 0,
-        });
-        break;
-      case 1:
-        Object.assign(board.bg, {
-          fov: 17,
-          scaleFactor: 1,
-          cameraEyePosX: 0,
-          cameraEyePosY: 1355,
-          cameraEyePosZ: 1780,
-          lookatPointX: 0,
-          lookatPointY: 0,
-          lookatPointZ: 0,
-        });
-        break;
-    }
-  }
-
-  return board;
-}
-
-function _migrateOldCustomEvents(board: IBoard) {
-  forEachEvent(board, (spaceEvent: IEventInstance) => {
-    // Unnecessary properties of space events.
-    if ("parameters" in spaceEvent) {
-      delete (spaceEvent as any).parameters;
-    }
-    if ("supportedGames" in spaceEvent) {
-      delete (spaceEvent as any).supportedGames;
-    }
-
-    // Move any asm into the single collection.
-    if ((spaceEvent as ICustomEvent).asm) {
-      spaceEvent.id = (spaceEvent as any).name;
-      if (
-        board.events[spaceEvent.id] &&
-        board.events[spaceEvent.id] !== (spaceEvent as ICustomEvent).asm
-      ) {
-        console.warn(
-          `When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`
-        );
-      }
-      board.events[spaceEvent.id] = (spaceEvent as ICustomEvent).asm;
-      delete (spaceEvent as any).asm;
-    }
-  });
-}
-
 export function getCurrentBoardIndex() {
   return selectCurrentBoardIndex(store.getState());
 }
@@ -921,7 +743,7 @@ export function addSpaceInternal(
 
   if (subtype !== undefined) newSpace.subtype = subtype;
 
-  const adapter = getAdapter(board.game || 1);
+  const adapter = getAdapter(board.game || 1, {});
   if (adapter) adapter.hydrateSpace(newSpace, board, eventLibrary);
 
   board.spaces.push(newSpace);
@@ -1077,7 +899,7 @@ export function addEventByIndex(
 }
 
 export function loadBoardsFromROM() {
-  const adapter = getROMAdapter();
+  const adapter = getROMAdapter({});
   if (!adapter) return;
 
   const gameBoards = adapter.loadBoards();

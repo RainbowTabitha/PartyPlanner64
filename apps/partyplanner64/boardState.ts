@@ -4,8 +4,6 @@ import {
   addEventToSpaceInternal,
   addSpaceInternal,
   BoardAudioType,
-  forEachEvent,
-  forEachEventParameter,
   getBoardEvent,
   IBoard,
   IBoardAudioChanges,
@@ -19,6 +17,7 @@ import {
   ICustomEvent,
 } from "../../packages/lib/events/customevents";
 import {
+  EventMap,
   EventParameterValue,
   IEvent,
   IEventParameter,
@@ -35,9 +34,9 @@ import { assert } from "../../packages/lib/utils/debug";
 import { lineDistance } from "../../packages/lib/utils/number";
 import { copyObject } from "../../packages/lib/utils/obj";
 import { RootState } from "./store";
+import { forEachEvent, forEachEventParameter } from "../../packages/lib/boards";
 
 export type SpaceIndexMap = { [index: number]: boolean };
-export type EventMap = { [id: string]: IEvent };
 
 export enum EventType {
   None,

@@ -55,7 +55,7 @@ let lastY = -1;
 let canvasRect: (ClientRect | DOMRect) | null = null;
 
 function onEditorMouseDown(event: MouseEvent) {
-  const canvas = event.currentTarget as HTMLCanvasElement;
+  const canvas = event.currentTarget as HTMLElement;
   _onEditorDown(canvas, event.clientX, event.clientY, event.ctrlKey);
 }
 
@@ -64,13 +64,13 @@ function onEditorTouchStart(event: TouchEvent) {
 
   const touch = event.touches[0];
 
-  const canvas = event.currentTarget as HTMLCanvasElement;
+  const canvas = event.currentTarget as HTMLElement;
   _onEditorDown(canvas, touch.clientX, touch.clientY, event.ctrlKey);
 }
 
 /** mousedown or touchstart */
 function _onEditorDown(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLElement,
   clientX: number,
   clientY: number,
   ctrlKey: boolean
@@ -614,7 +614,7 @@ function onEditorDrop(event: DragEvent) {
     return;
   }
 
-  const canvas = event.currentTarget as HTMLCanvasElement;
+  const canvas = event.currentTarget as HTMLElement;
   const [clickX, clickY] = getMouseCoordsOnCanvas(
     canvas,
     event.clientX,
@@ -1012,7 +1012,7 @@ function preventDefault(event: Event) {
   event.preventDefault();
 }
 
-export function attachToCanvas(canvas: HTMLCanvasElement) {
+export function attachToCanvas(canvas: HTMLElement) {
   canvas.addEventListener("contextmenu", onEditorRightClick, false);
   canvas.addEventListener("click", onEditorClick, false);
   canvas.addEventListener("mousedown", onEditorMouseDown, false);
@@ -1027,7 +1027,7 @@ export function attachToCanvas(canvas: HTMLCanvasElement) {
   canvas.addEventListener("keydown", onEditorKeyDown, false);
 }
 
-export function detachFromCanvas(canvas: HTMLCanvasElement) {
+export function detachFromCanvas(canvas: HTMLElement) {
   canvas.removeEventListener("contextmenu", onEditorRightClick);
   canvas.removeEventListener("click", onEditorClick);
   canvas.removeEventListener("mousedown", onEditorMouseDown);

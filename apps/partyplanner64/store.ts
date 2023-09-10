@@ -63,7 +63,9 @@ export const store = configureStore({
     }).concat(boardStateMiddleware),
 });
 
-(window as any)._pp64Store = store;
+if (typeof window !== "undefined") {
+  (window as any)._pp64Store = store;
+}
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;

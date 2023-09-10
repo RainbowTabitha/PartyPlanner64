@@ -4,7 +4,6 @@ import { arrayBuffersEqual, copyRange } from "../utils/arrays";
 import { makeDivisibleBy } from "../utils/number";
 import { Game } from "../types";
 import { romhandler } from "../romhandler";
-import { $setting, get } from "../../../apps/partyplanner64/views/settings";
 import { getRegSetUpperAndLower, getRegSetAddress } from "../utils/MIPS";
 import { isDebug } from "../../../apps/partyplanner64/debug";
 
@@ -186,7 +185,9 @@ export class mainfs {
 
   public static extract() {
     let t0, t1;
-    if (isDebug() && window.performance) t0 = performance.now();
+    if (isDebug() && typeof performance !== "undefined") {
+      t0 = performance.now();
+    }
 
     const dirCount = mainfs.getDirectoryCount();
     _mainfsCache = new Array(dirCount);
@@ -213,7 +214,11 @@ export class mainfs {
     });
   }
 
-  public static pack(buffer: ArrayBuffer, offset = 0) {
+  public static pack(
+    buffer: ArrayBuffer,
+    writeDecompressed: boolean,
+    offset = 0
+  ) {
     const view = new DataView(buffer, offset);
 
     const dirCount = mainfs.getDirectoryCount();
@@ -224,14 +229,24 @@ export class mainfs {
     for (let d = 0; d < dirCount; d++) {
       view.setUint32(curDirIndexOffset, curDirWriteOffset);
       curDirIndexOffset += 4;
-      curDirWriteOffset = mainfs._writeDir(d, view, curDirWriteOffset);
+      curDirWriteOffset = mainfs._writeDir(
+        d,
+        view,
+        curDirWriteOffset,
+        writeDecompressed
+      );
       curDirWriteOffset = makeDivisibleBy(curDirWriteOffset, 2);
     }
 
     return curDirWriteOffset;
   }
 
-  private static _writeDir(d: number, view: DataView, offset: number) {
+  private static _writeDir(
+    d: number,
+    view: DataView,
+    offset: number,
+    writeDecompressed: boolean
+  ) {
     const fileCount = mainfs.getFileCount(d);
     view.setUint32(offset, fileCount);
 
@@ -240,7 +255,13 @@ export class mainfs {
     for (let f = 0; f < fileCount; f++) {
       view.setUint32(curFileIndexOffset, curFileWriteOffset - offset);
       curFileIndexOffset += 4;
-      curFileWriteOffset = mainfs._writeFile(d, f, view, curFileWriteOffset);
+      curFileWriteOffset = mainfs._writeFile(
+        d,
+        f,
+        view,
+        curFileWriteOffset,
+        writeDecompressed
+      );
       curFileWriteOffset = makeDivisibleBy(curFileWriteOffset, 2);
     }
 
@@ -251,10 +272,10 @@ export class mainfs {
     d: number,
     f: number,
     view: DataView,
-    offset: number
+    offset: number,
+    writeDecompressed: boolean
   ) {
     const fileData = _mainfsCache![d][f];
-    const writeDecompressed = !!get($setting.writeDecompressed);
 
     if (!fileData) {
       view.setUint32(offset, 0); // No file, no size
@@ -308,7 +329,7 @@ export class mainfs {
     return fsView.getUint32(0);
   }
 
-  public static getFileCount(dir: number) {
+  public static getFileCount(dir: number): number {
     if (_mainfsCache && _mainfsCache[dir]) return _mainfsCache[dir].length;
 
     const buffer = romhandler.getROMBuffer()!;
@@ -319,9 +340,8 @@ export class mainfs {
     return dirView.getUint32(0);
   }
 
-  public static getByteLength() {
+  public static getByteLength(writeDecompressed: boolean): number {
     const dirCount = _mainfsCache!.length;
-    const writeDecompressed = !!get($setting.writeDecompressed);
 
     let byteLen = 0;
     byteLen += 4; // Count of directories

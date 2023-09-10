@@ -36,7 +36,7 @@ declare namespace Emscripten {
     noExitRuntime: boolean;
     logReadFiles: boolean;
     filePackagePrefixURL: string;
-    wasmBinary: ArrayBuffer;
+    wasmBinary: ArrayBuffer | Uint8Array;
 
     destroy(object: object): void;
     getPreloadedPackage(remotePackageName: string, remotePackageSize: number): ArrayBuffer;

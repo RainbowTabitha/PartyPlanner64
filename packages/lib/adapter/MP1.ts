@@ -6,7 +6,7 @@ import {
   getDeadSpaceIndex,
 } from "../../../apps/partyplanner64/boards";
 import { Space, SpaceSubtype, GameVersion } from "../types";
-import { createEventInstance } from "../events/events";
+import { createEventInstance, EventMap } from "../events/events";
 import { parse as parseInst } from "mips-inst";
 import { strings } from "../fs/strings";
 import { arrayToArrayBuffer, arrayBufferToDataURL } from "../utils/arrays";
@@ -25,10 +25,10 @@ import { StarChanceEvent } from "../events/builtin/MP1/U/StarChanceEvent1";
 import { getImageData } from "../utils/img/getImageData";
 import { getSoundEffectMapMP1 } from "./MP1.U.soundeffects";
 import { getEventsInLibrary } from "../events/EventLibrary";
-import { EventMap } from "../../../apps/partyplanner64/boardState";
 import { getAudioMapMP1 } from "./MP1.U.audio";
+import { createImage } from "../utils/canvas";
 
-export const MP1 = new (class MP1Adapter extends AdapterBase {
+export class MP1Adapter extends AdapterBase {
   public gameVersion: GameVersion = 1;
 
   public nintendoLogoFSEntry: number[] = [9, 110];
@@ -624,7 +624,7 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
       // We need to write the image onto a canvas to get the RGBA32 values.
       const [introWidth, introHeight] = boardInfo.img.introLogoImgDimens!;
 
-      const srcImage = new Image();
+      const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write logos for ${boardInfo.name}`),
         45000
@@ -773,4 +773,4 @@ export const MP1 = new (class MP1Adapter extends AdapterBase {
       0xff: "\u3015", // PAUSE
     };
   }
-})();
+}

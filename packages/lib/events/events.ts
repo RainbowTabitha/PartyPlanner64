@@ -19,14 +19,10 @@ import {
   writeCustomEvent,
   createCustomEvent,
 } from "./customevents";
-import {
-  getEventFromLibrary,
-  getEventsInLibrary,
-  useLibraryEvents,
-} from "./EventLibrary";
-import { useMemo } from "react";
+import { getEventFromLibrary, getEventsInLibrary } from "./EventLibrary";
 import { IBoardInfo } from "../adapter/boardinfobase";
-import { EventMap } from "../../../apps/partyplanner64/boardState";
+
+export type EventMap = { [id: string]: IEvent };
 
 export interface IEvent {
   readonly id: string;
@@ -168,18 +164,6 @@ export function getCustomEvents(): ICustomEvent[] {
   return events;
 }
 
-export function useCustomEvents(): ICustomEvent[] {
-  const libraryEvents = useLibraryEvents();
-  return useMemo(() => {
-    const events = [];
-    for (const id in libraryEvents) {
-      const event = libraryEvents[id];
-      if (event.custom) events.push(copyObject(event));
-    }
-    return events;
-  }, [libraryEvents]);
-}
-
 export interface IEventWriteInfo {
   boardIndex: number;
   board: IBoard;
@@ -220,7 +204,13 @@ export async function write(
       temp
     );
   } else {
-    result = getEventFromLibrary(event.id)!.write!(asmView, event, info, temp);
+    const libEvent = getEventFromLibrary(event.id);
+    if (!libEvent) {
+      throw new Error(
+        `Could not find/write ${event.id} for game ${info.gameVersion}`
+      );
+    }
+    result = libEvent.write!(asmView, event, info, temp);
   }
 
   if (result === false)

@@ -327,7 +327,9 @@ export const hvqfs = {
 
   extract() {
     let t0, t1;
-    if (isDebug() && window.performance) t0 = performance.now();
+    if (isDebug() && typeof performance !== "undefined") {
+      t0 = performance.now();
+    }
 
     const bgCount = this.getDirectoryCount();
     _hvqCache = new Array(bgCount);

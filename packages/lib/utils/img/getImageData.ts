@@ -1,4 +1,4 @@
-import { createContext } from "../canvas";
+import { createContext, createImage } from "../canvas";
 import resizeImageData from "resize-image-data";
 
 /**
@@ -13,7 +13,7 @@ export function getImageData(
   height: number
 ): Promise<ImageData> {
   return new Promise<ImageData>((resolve, reject) => {
-    const srcImage = new Image();
+    const srcImage = createImage();
     const failTimer = setTimeout(() => reject(`Failed to write image!`), 45000);
     srcImage.onload = () => {
       const imgHeight = srcImage.height;

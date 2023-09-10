@@ -1,5 +1,6 @@
 import { readFile, writeFile } from "fs/promises";
 import { getROMAdapter } from "../../../packages/lib/adapter/adapters";
+import { fixPotentiallyOldBoard } from "../../../packages/lib/boards";
 import { romhandler } from "../../../packages/lib/romhandler";
 
 export interface OverwriteOptions {
@@ -18,17 +19,22 @@ export async function overwrite({
   const romBuffer = await readFile(romFile);
   const romArrayBuffer = romBuffer.buffer;
 
-  const romLoadResult = await romhandler.setROMBuffer(romArrayBuffer, (err) => {
-    console.error(err);
-  });
+  const romLoadResult = await romhandler.setROMBuffer(
+    romArrayBuffer,
+    false,
+    (err) => {
+      console.error(err);
+    }
+  );
   if (!romLoadResult) {
     return;
   }
 
   const boardJson = await readFile(boardFile, { encoding: "utf-8" });
-  const board = JSON.parse(boardJson);
+  let board = JSON.parse(boardJson);
+  board = fixPotentiallyOldBoard(board);
 
-  const adapter = getROMAdapter();
+  const adapter = getROMAdapter({});
   if (!adapter) {
     console.error("Could not get ROM adapter");
     return;
@@ -43,6 +49,6 @@ export async function overwrite({
     return;
   }
 
-  const newROMArrayBuffer = romhandler.saveROM();
+  const newROMArrayBuffer = romhandler.saveROM(false);
   await writeFile(outputFile, Buffer.from(newROMArrayBuffer));
 }

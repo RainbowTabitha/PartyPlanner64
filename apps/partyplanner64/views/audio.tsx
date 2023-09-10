@@ -52,7 +52,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
     }
 
     const game = romhandler.getGameVersion()!;
-    const adapter = getAdapter(game)!;
+    const adapter = getAdapter(game, {})!;
 
     const advancedSetting = get($setting.uiAdvanced);
 

@@ -1,6 +1,6 @@
 import { View, EventCodeLanguage } from "../../../packages/lib/types";
 import * as React from "react";
-import { IEvent, useCustomEvents } from "../../../packages/lib/events/events";
+import { IEvent } from "../../../packages/lib/events/events";
 import {
   ICustomEvent,
   createCustomEvent,
@@ -20,6 +20,8 @@ import {
 } from "../../../packages/lib/events/EventLibrary";
 import { saveAs } from "file-saver";
 import { stringComparer } from "../../../packages/lib/utils/string";
+import { useCurrentBoard } from "../hooks";
+import { useCustomEvents } from "../events/EventHooks";
 
 import libraryImage from "../img/events/library.png";
 import deleteImage from "../img/events/delete.png";
@@ -32,7 +34,6 @@ import copytoboardImage from "../img/events/copytoboard.png";
 import copytoboard_destructiveImage from "../img/events/copytoboard_destructive.png";
 
 import "../css/events.scss";
-import { useCurrentBoard } from "../hooks";
 
 /** Custom events list view */
 export function EventsView() {
