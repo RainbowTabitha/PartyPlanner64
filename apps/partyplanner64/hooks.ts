@@ -53,6 +53,10 @@ export function useSelectedSpaces(): ISpace[] {
   }, [board, selectedSpaceMap]);
 }
 
+export function useSelectedSpaceCount(): number {
+  return Object.keys(useSelectedSpaceIndicesMap()).length;
+}
+
 /** Applies the given title to the browser tab. */
 export function useWindowTitle(title: string): void {
   useEffect(() => {

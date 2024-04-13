@@ -7,6 +7,7 @@ import {
   getAudioSelectCode,
   setAudioSelectCode,
   _makeDefaultBoard,
+  IBoard,
 } from "./boards";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -76,6 +77,7 @@ import {
   useAppDispatch,
   useAppSelector,
   useEditorThemeClass,
+  useSelectedSpaceCount,
   useWindowTitle,
 } from "./hooks";
 import {
@@ -317,16 +319,10 @@ function PP64AppInternal(props: PP64AppInternalProps) {
                 boardType={currentBoard.type}
               />
             </ToolWindow>
-            <ToolWindow
-              name="Space Properties"
-              position="BottomRight"
-              visible={currentView === View.EDITOR}
-            >
-              <SpaceProperties
-                gameVersion={currentBoard.game}
-                boardType={currentBoard.type}
-              />
-            </ToolWindow>
+            <SpacePropertiesToolWindow
+              currentView={currentView}
+              currentBoard={currentBoard}
+            />
             <ToolWindow
               name="Board Properties"
               position="BottomLeft"
@@ -351,6 +347,34 @@ function PP64AppInternal(props: PP64AppInternalProps) {
       </div>
       <PP64Blocker />
     </div>
+  );
+}
+
+interface ISpacePropertiesToolWindowProps {
+  currentView: View;
+  currentBoard: IBoard;
+}
+
+function SpacePropertiesToolWindow({
+  currentView,
+  currentBoard,
+}: ISpacePropertiesToolWindowProps) {
+  const selectedSpaceCount = useSelectedSpaceCount();
+  let title = "Space Properties";
+  if (selectedSpaceCount > 1) {
+    title += ` (${selectedSpaceCount} selected)`;
+  }
+  return (
+    <ToolWindow
+      name={title}
+      position="BottomRight"
+      visible={currentView === View.EDITOR}
+    >
+      <SpaceProperties
+        gameVersion={currentBoard.game}
+        boardType={currentBoard.type}
+      />
+    </ToolWindow>
   );
 }
 
