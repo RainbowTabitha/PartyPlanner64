@@ -756,6 +756,20 @@ export const boardStateSlice = createSlice({
         state.eventLibrary
       );
     },
+    addEventToSpacesAction: (
+      state,
+      action: PayloadAction<{
+        event: IEventInstance;
+        spaceIndices: number[];
+      }>
+    ) => {
+      const { event, spaceIndices } = action.payload;
+      const board = getCurrentBoard(state);
+      for (const spaceIndex of spaceIndices) {
+        const space = board.spaces[spaceIndex];
+        addEventToSpaceInternal(board, space, event, false, state.eventLibrary);
+      }
+    },
     removeEventFromSpaceAction: (
       state,
       action: PayloadAction<{
@@ -765,6 +779,23 @@ export const boardStateSlice = createSlice({
       const { eventIndex } = action.payload;
       const selectedSpace = getCurrentSingleSelectedSpace(state);
       removeEventFromSpace(selectedSpace, eventIndex);
+    },
+    removeEventsFromSpacesAction: (
+      state,
+      action: PayloadAction<{
+        eventIndices: number[];
+        spaceIndices: number[];
+      }>
+    ) => {
+      const { eventIndices, spaceIndices } = action.payload;
+      assert(eventIndices.length === spaceIndices.length);
+      const board = getCurrentBoard(state);
+      for (let i = 0; i < eventIndices.length; i++) {
+        const eventIndex = eventIndices[i];
+        const spaceIndex = spaceIndices[i];
+        const space = board.spaces[spaceIndex];
+        removeEventFromSpace(space, eventIndex);
+      }
     },
     setSpaceEventActivationTypeAction: (
       state,
@@ -777,6 +808,24 @@ export const boardStateSlice = createSlice({
       const selectedSpace = getCurrentSingleSelectedSpace(state);
       const eventInstance = selectedSpace.events![eventIndex];
       eventInstance.activationType = activationType;
+    },
+    setSpaceEventsActivationTypeAction: (
+      state,
+      action: PayloadAction<{
+        spaceIndices: number[];
+        eventIndices: number[];
+        activationType: EditorEventActivationType;
+      }>
+    ) => {
+      const { spaceIndices, eventIndices, activationType } = action.payload;
+      const board = getCurrentBoard(state);
+      for (let i = 0; i < eventIndices.length; i++) {
+        const eventIndex = eventIndices[i];
+        const spaceIndex = spaceIndices[i];
+        const space = board.spaces[spaceIndex];
+        const eventInstance = space.events![eventIndex];
+        eventInstance.activationType = activationType;
+      }
     },
     setSpaceEventEventParameterAction: (
       state,
@@ -793,6 +842,28 @@ export const boardStateSlice = createSlice({
         eventInstance.parameterValues = {};
       }
       eventInstance.parameterValues[name] = value;
+    },
+    setSpaceEventsEventParameterAction: (
+      state,
+      action: PayloadAction<{
+        spaceIndices: number[];
+        eventIndices: number[];
+        name: string;
+        value: EventParameterValue;
+      }>
+    ) => {
+      const { spaceIndices, eventIndices, name, value } = action.payload;
+      const board = getCurrentBoard(state);
+      for (let i = 0; i < eventIndices.length; i++) {
+        const eventIndex = eventIndices[i];
+        const spaceIndex = spaceIndices[i];
+        const space = board.spaces[spaceIndex];
+        const eventInstance = space.events![eventIndex];
+        if (!eventInstance.parameterValues) {
+          eventInstance.parameterValues = {};
+        }
+        eventInstance.parameterValues[name] = value;
+      }
     },
   },
 });
@@ -852,9 +923,13 @@ export const {
   setBoardEventEventParameterAction,
 
   addEventToSpaceAction,
+  addEventToSpacesAction,
   removeEventFromSpaceAction,
+  removeEventsFromSpacesAction,
   setSpaceEventActivationTypeAction,
+  setSpaceEventsActivationTypeAction,
   setSpaceEventEventParameterAction,
+  setSpaceEventsEventParameterAction,
 } = boardStateSlice.actions;
 
 export const selectData = (state: RootState) => state.data.present;

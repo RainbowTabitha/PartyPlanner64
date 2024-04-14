@@ -43,6 +43,7 @@ import {
   addConnectionAction,
   addEventToBoardAction,
   addEventToSpaceAction,
+  addEventToSpacesAction,
   addSpaceAction,
   clearBoardsFromROMAction,
   copyCurrentBoardAction,
@@ -53,6 +54,7 @@ import {
   removeAnimationBackgroundAction,
   removeEventFromBoardAction,
   removeEventFromSpaceAction,
+  removeEventsFromSpacesAction,
   removeSpaceAction,
   selectBoards,
   selectCurrentBoard,
@@ -433,6 +435,13 @@ export function addEventToSpace(event: IEventInstance, toStart?: boolean) {
   store.dispatch(addEventToSpaceAction({ event, toStart }));
 }
 
+export function addEventToSpaces(
+  event: IEventInstance,
+  spaceIndices: number[]
+) {
+  store.dispatch(addEventToSpacesAction({ event, spaceIndices }));
+}
+
 export function addEventToSpaceInternal(
   board: IBoard,
   space: ISpace,
@@ -458,6 +467,13 @@ export function addEventToSpaceInternal(
 
 export function removeEventFromSpace(eventIndex: number) {
   store.dispatch(removeEventFromSpaceAction({ eventIndex }));
+}
+
+export function removeEventsFromSpaces(
+  eventIndices: number[],
+  spaceIndices: number[]
+) {
+  store.dispatch(removeEventsFromSpacesAction({ eventIndices, spaceIndices }));
 }
 
 export function getBoardEvent(

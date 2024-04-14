@@ -13,6 +13,8 @@ import {
   getCurrentBoard,
   IEventInstance,
   setHostsStar,
+  addEventToSpaces,
+  removeEventsFromSpaces,
 } from "./boards";
 import { EventsList } from "./components/EventList";
 import { $setting, get } from "./views/settings";
@@ -20,7 +22,7 @@ import { makeKeyClick, useForceUpdate } from "./utils/react";
 import { IEvent, createEventInstance } from "../../packages/lib/events/events";
 import { changeDecisionTree, getValidSelectedSpaceIndices } from "./appControl";
 import { Button } from "./controls";
-import { $$log } from "../../packages/lib/utils/debug";
+import { $$log, assert } from "../../packages/lib/utils/debug";
 
 import blueImage from "./img/toolbar/blue.png";
 import blue3Image from "./img/toolbar/blue3.png";
@@ -67,11 +69,13 @@ import powerupImage from "./img/toolbar/powerup.png";
 import startblueImage from "./img/toolbar/startblue.png";
 import startredImage from "./img/toolbar/startred.png";
 import { SectionHeading } from "./propertiesshared";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useSelectedSpaceIndices, useSelectedSpaces } from "./hooks";
 import {
   setSpaceEventActivationTypeAction,
   setSpaceEventEventParameterAction,
+  setSpaceEventsActivationTypeAction,
+  setSpaceEventsEventParameterAction,
   setSpacePositionsAction,
   setSpaceTypeAction,
 } from "./boardState";
@@ -166,6 +170,13 @@ export function SpaceProperties(props: ISpacePropertiesProps) {
         <SpaceDecisionTreeButton space={curSpace} />
       </div>
       {!multipleSelections && <SpaceEventList selectedSpace={curSpace} />}
+      {multipleSelections && (
+        <MultipleSpacesEventList
+          key={selectedSpaceIndices.join(",")}
+          selectedSpaceIndices={selectedSpaceIndices}
+          selectedSpaces={spaces}
+        />
+      )}
     </div>
   );
 }
@@ -747,6 +758,122 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = (props) => {
       <div className="propertiesPadded">
         <EventsList
           events={props.selectedSpace.events}
+          board={getCurrentBoard()}
+          onEventAdded={onEventAdded}
+          onEventDeleted={onEventDeleted}
+          onEventActivationTypeToggle={onEventActivationTypeToggle}
+          onEventParameterSet={onEventParameterSet}
+        />
+      </div>
+    </>
+  );
+};
+
+interface AddedEventState {
+  /** The index into each selected space's event list where the added event was added. */
+  eventListIndices: number[];
+}
+
+interface IMultipleSpacesEventListProps {
+  selectedSpaceIndices: number[];
+  selectedSpaces: ISpace[];
+}
+
+const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
+  props
+) => {
+  const [addedEvents, setAddedEvents] = useState<AddedEventState[]>([]);
+
+  function onEventAdded(event: IEvent) {
+    const spaceEvent = createEventInstance(event, {
+      activationType: getDefaultActivationType(props.selectedSpaces[0]),
+    });
+    addEventToSpaces(spaceEvent, props.selectedSpaceIndices);
+
+    // We just added the event to each selected space. Take note of each index
+    // that it was added to in each space's events list.
+    const eventListIndices = [];
+    for (const spaceIndex of props.selectedSpaceIndices) {
+      const spaceEvents = getCurrentBoard().spaces[spaceIndex].events;
+      assert(!!spaceEvents);
+      eventListIndices.push(spaceEvents.length - 1);
+    }
+    setAddedEvents([...addedEvents, { eventListIndices }]);
+  }
+
+  function onEventDeleted(event: IEventInstance, eventIndex: number) {
+    const eventIndices = addedEvents[eventIndex].eventListIndices;
+    removeEventsFromSpaces(eventIndices, props.selectedSpaceIndices);
+
+    // Event indices lists beyond the removed one need to have values decreased.
+    for (let i = eventIndex + 1; i < addedEvents.length; i++) {
+      const addedEventState = addedEvents[i];
+      addedEventState.eventListIndices = addedEventState.eventListIndices.map(
+        (index) => index - 1
+      );
+    }
+    const mutatedArr = [...addedEvents];
+    mutatedArr.splice(eventIndex, 1);
+    setAddedEvents(mutatedArr);
+  }
+
+  function onEventActivationTypeToggle(
+    event: IEventInstance,
+    eventIndex: number
+  ) {
+    let activationType: EditorEventActivationType;
+    if (event.activationType === EditorEventActivationType.WALKOVER)
+      activationType = EditorEventActivationType.LANDON;
+    else activationType = EditorEventActivationType.WALKOVER;
+    store.dispatch(
+      setSpaceEventsActivationTypeAction({
+        eventIndices: addedEvents[eventIndex].eventListIndices,
+        spaceIndices: props.selectedSpaceIndices,
+        activationType,
+      })
+    );
+  }
+
+  function onEventParameterSet(
+    event: IEventInstance,
+    eventIndex: number,
+    name: string,
+    value: number | boolean
+  ) {
+    store.dispatch(
+      setSpaceEventsEventParameterAction({
+        eventIndices: addedEvents[eventIndex].eventListIndices,
+        spaceIndices: props.selectedSpaceIndices,
+        name,
+        value,
+      })
+    );
+  }
+
+  // Since each selected space should have the same events added, gather them
+  // from the first selected space for display.
+  const firstSelectedSpace = props.selectedSpaces[0];
+  const events: IEventInstance[] = addedEvents.map((addedEventState) => {
+    const firstSpaceAddedIndex = addedEventState.eventListIndices[0];
+    assert(typeof firstSpaceAddedIndex === "number");
+    const eventFromFirstSpace =
+      firstSelectedSpace.events?.[firstSpaceAddedIndex];
+    assert(!!eventFromFirstSpace);
+    return eventFromFirstSpace;
+  });
+
+  return (
+    <>
+      <SectionHeading text="Events" />
+      <div className="propertiesPadded">
+        <p className="propertiesMultipleEventsMessage">
+          Multiple spaces selected.
+        </p>
+        <p className="propertiesMultipleEventsMessage">
+          You may add and edit new events only.
+        </p>
+        <EventsList
+          events={events}
           board={getCurrentBoard()}
           onEventAdded={onEventAdded}
           onEventDeleted={onEventDeleted}
