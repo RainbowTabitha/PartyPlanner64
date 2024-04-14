@@ -37,7 +37,7 @@ export const blockerSlice = createSlice({
     },
     showMessageHTMLAction: (
       state,
-      action: PayloadAction<string | undefined>
+      action: PayloadAction<string | undefined>,
     ) => {
       const html = action.payload;
       state.blocked = !!html;
@@ -52,7 +52,7 @@ export const blockerSlice = createSlice({
       action: PayloadAction<{
         message: string;
         onConfirmed: (value?: string) => void;
-      }>
+      }>,
     ) => {
       const { message, onConfirmed } = action.payload;
       state.blocked = true;
@@ -67,7 +67,7 @@ export const blockerSlice = createSlice({
       action: PayloadAction<{
         message: string;
         onSubmit: (value?: string) => void;
-      }>
+      }>,
     ) => {
       const { message, onSubmit } = action.payload;
       state.blocked = true;

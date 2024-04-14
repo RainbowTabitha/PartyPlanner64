@@ -33,7 +33,7 @@ export const romhandler = new (class RomHandler {
       this._u8array![0x3b],
       this._u8array![0x3c],
       this._u8array![0x3d],
-      this._u8array![0x3e]
+      this._u8array![0x3e],
     ) as Game;
     return this._gameId;
   }
@@ -60,7 +60,7 @@ export const romhandler = new (class RomHandler {
   setROMBuffer(
     buffer: ArrayBuffer | null,
     skipSupportedCheck: boolean,
-    onError: (msg: string) => void
+    onError: (msg: string) => void,
   ): Promise<boolean> {
     if (!buffer) {
       this.clear();
@@ -117,7 +117,7 @@ export const romhandler = new (class RomHandler {
     const sceneLen = makeDivisibleBy(scenes.getByteLength(), 16);
     const mainLen = makeDivisibleBy(
       mainfs.getByteLength(writeDecompressed),
-      16
+      16,
     );
     let strsLen;
     if (gameVersion === 3)
@@ -141,7 +141,7 @@ export const romhandler = new (class RomHandler {
         strsLen +
         hvqLen +
         animationLen +
-        audioLen
+        audioLen,
     );
 
     copyRange(newROMBuffer, this._rom, 0, 0, initialLen);
@@ -165,21 +165,21 @@ export const romhandler = new (class RomHandler {
     if (gameVersion === 2) {
       animationfs.pack(
         newROMBuffer,
-        initialLen + sceneLen + mainLen + strsLen + hvqLen
+        initialLen + sceneLen + mainLen + strsLen + hvqLen,
       );
       animationfs.setROMOffset(
         initialLen + sceneLen + mainLen + strsLen + hvqLen,
-        newROMBuffer
+        newROMBuffer,
       );
     }
 
     audio.pack(
       newROMBuffer,
-      initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen
+      initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen,
     );
     audio.setROMOffset(
       initialLen + sceneLen + mainLen + strsLen + hvqLen + animationLen,
-      newROMBuffer
+      newROMBuffer,
     );
 
     // Do this last, so that any patches made to scenes just prior take effect.
@@ -206,7 +206,7 @@ export const romhandler = new (class RomHandler {
       return new DataView(
         this._rom,
         startingOffset,
-        endOffset - startingOffset
+        endOffset - startingOffset,
       );
     }
     return new DataView(this._rom, startingOffset);

@@ -34,7 +34,7 @@ export function parseDecisionTree(
   view: DataView,
   offset: number,
   base: number,
-  game: GameVersion
+  game: GameVersion,
 ): IDecisionTreeNode[] {
   const nodes: IDecisionTreeNode[] = [];
 
@@ -51,7 +51,7 @@ export function parseDecisionTree(
           view,
           (decision & 0x7fffffff) - base,
           base,
-          game
+          game,
         ),
       });
     } else {
@@ -69,7 +69,7 @@ export function parseDecisionTree(
 
 function parseDecisionTreeResult(
   res: number,
-  gameVersion: GameVersion
+  gameVersion: GameVersion,
 ): IDecisionTreeResult {
   if (gameVersion === 3) {
     // Decision, Super Hard, Hard, Normal, Easy

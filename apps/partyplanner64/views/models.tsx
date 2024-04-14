@@ -133,7 +133,7 @@ export class ModelViewer extends React.Component<
     const pieces = model.match(/^(\d+)\/(\d+)/);
     if (!pieces)
       throw new Error(
-        `Could not parse selected model string ${this.state.selectedModel}`
+        `Could not parse selected model string ${this.state.selectedModel}`,
       );
 
     const [, dir, file] = pieces;

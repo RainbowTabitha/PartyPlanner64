@@ -73,7 +73,7 @@ export class T3 {
     const tableEntriesOffset = 4 + soundFxCount * 8 + 0x2c;
     const ctlView = new DataView(
       view.buffer,
-      view.byteOffset + tableEntriesOffset
+      view.byteOffset + tableEntriesOffset,
     );
     for (let i = 0; i < rawSoundCount; i++) {
       const sound = new ALSoundSimple(ctlView, i * 16);
@@ -99,7 +99,7 @@ export class T3 {
     // Extract tbl buffer
     this.tbl = view.buffer.slice(
       view.byteOffset + tblOffsetStart,
-      view.byteOffset + tblOffsetEnd
+      view.byteOffset + tblOffsetEnd,
     );
 
     // Extract the sound effects list.

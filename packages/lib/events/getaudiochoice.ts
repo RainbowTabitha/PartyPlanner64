@@ -54,7 +54,7 @@ export function getDefaultGetAudioCode(language: EventCodeLanguage): string {
 export async function testGetAudioCodeAllGames(
   code: string,
   language: EventCodeLanguage,
-  board: IBoard
+  board: IBoard,
 ): Promise<string[]> {
   const possibleGameVersions = getGameVersionsToTestCompile(board);
 
@@ -62,14 +62,14 @@ export async function testGetAudioCodeAllGames(
 
   for (const game of possibleGameVersions) {
     failures = failures.concat(
-      await testGetAudioCodeWithGame(code, language, board, game)
+      await testGetAudioCodeWithGame(code, language, board, game),
     );
   }
 
   // If it doesn't fail all, that means it's OK for some game and that's good enough.
   if (failures.length === possibleGameVersions.length) {
     failures.unshift(
-      "All possible target game versions failed to compile/assemble."
+      "All possible target game versions failed to compile/assemble.",
     );
   } else {
     failures = [];
@@ -82,7 +82,7 @@ export async function testGetAudioCodeWithGame(
   code: string,
   language: EventCodeLanguage,
   board: IBoard,
-  game: Game
+  game: Game,
 ): Promise<string[]> {
   const failures: string[] = [];
 
@@ -99,7 +99,7 @@ export async function testGetAudioCodeWithGame(
       assemble(preppedAsm);
     } catch (e) {
       failures.push(
-        `Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`
+        `Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`,
       );
     }
   } else {
@@ -129,7 +129,7 @@ function getGameVersionsToTestCompile(board: IBoard): Game[] {
 
 export async function getAudioIndexAsmForOverlay(
   board: IBoard,
-  audioIndices: number[]
+  audioIndices: number[],
 ) {
   const audioSelectCode = getAudioSelectCode(board);
   if (!audioSelectCode) {
@@ -149,7 +149,7 @@ export async function getAudioIndexAsmForOverlay(
         .align 4
         .endfile
       `,
-        true
+        true,
       );
     }
     case EventCodeLanguage.MIPS:
@@ -157,7 +157,7 @@ export async function getAudioIndexAsmForOverlay(
 
     default:
       throw new Error(
-        `Unrecognized event code language ${audioSelectCode.language}`
+        `Unrecognized event code language ${audioSelectCode.language}`,
       );
   }
 }
@@ -173,7 +173,7 @@ export function prepGetAudioAsm(asm: string, audioIndices: number[]): string {
     .align 4
     .endfile
   `,
-    true
+    true,
   );
 }
 
@@ -203,7 +203,7 @@ ${code}
 
 /** Creates defines for music tracks. */
 export function makeAudioDefines(
-  audioIndices: number[] | null | undefined
+  audioIndices: number[] | null | undefined,
 ): string[] {
   if (!audioIndices) {
     return [];

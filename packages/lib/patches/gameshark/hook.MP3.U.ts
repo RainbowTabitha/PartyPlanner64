@@ -45,7 +45,7 @@ export const MP3UHook = new (class MP3UHook extends HookBase {
     mainfs.write(
       this.MAINFS_CHEAT_FILE[0],
       this.MAINFS_CHEAT_FILE[1],
-      cheatRoutine
+      cheatRoutine,
     );
   }
 })();

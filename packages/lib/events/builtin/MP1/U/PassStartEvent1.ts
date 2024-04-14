@@ -34,7 +34,7 @@ export const PassStart: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     return `
       addiu SP, SP, -0x18

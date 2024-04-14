@@ -35,7 +35,7 @@ export const GateClose3: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // Most of the code still lives in the overlay.
     const gateIndex = event.parameterValues!.gateIndex as number;

@@ -221,7 +221,7 @@ export class CreateCEventView
   /** Ensures the C text includes the discrete properties. */
   syncTextToStateVars = (
     newState: ICreateEventViewState,
-    existingCode: string
+    existingCode: string,
   ) => {
     let newCode = __clearDiscreteProperties(existingCode, [
       "NAME",
@@ -235,22 +235,22 @@ export class CreateCEventView
       "PARAM",
       newState.parameters.map((param) => {
         return `${param.type}|${param.name}`;
-      })
+      }),
     );
     newCode = __writeDiscreteProperty(
       newCode,
       "EXECUTION",
-      getExecutionTypeName(newState.executionType)
+      getExecutionTypeName(newState.executionType),
     );
     newCode = __writeDiscreteProperty(
       newCode,
       "GAMES",
-      newState.supportedGames.map(getGameName).join(",")
+      newState.supportedGames.map(getGameName).join(","),
     );
     newCode = __writeDiscreteProperty(
       newCode,
       "NAME",
-      newState.eventName.trim()
+      newState.eventName.trim(),
     );
 
     if (newCode !== existingCode) {
@@ -286,7 +286,7 @@ export class CreateCEventView
     const oldAsm = this.state.originalCode;
     if (!oldAsm || oldAsm !== code) {
       return await confirmFromUser(
-        "Are you sure you want to exit without saving the event?"
+        "Are you sure you want to exit without saving the event?",
       );
     }
     return true;
@@ -326,7 +326,7 @@ export class CreateCEventView
               this.state.parameters,
               {
                 game: event.supportedGames[0], // Pick one game randomly I guess
-              }
+              },
             )) as string;
           } catch (e: any) {
             showMessage(e.toString());
@@ -350,7 +350,7 @@ function __clearDiscreteProperties(code: string, properties: string[]) {
 function __writeDiscreteProperty(
   code: string,
   propName: string,
-  value: string
+  value: string,
 ) {
   return CustomAsmHelper.writeDiscreteProperty(code, propName, value, "//");
 }
@@ -358,13 +358,13 @@ function __writeDiscreteProperty(
 function __writeDiscretePropertyArray(
   code: string,
   propName: string,
-  values: string[]
+  values: string[],
 ) {
   return CustomAsmHelper.writeDiscretePropertyArray(
     code,
     propName,
     values,
-    "//"
+    "//",
   );
 }
 

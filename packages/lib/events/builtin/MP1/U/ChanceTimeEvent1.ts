@@ -30,7 +30,7 @@ export const ChanceTime: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     return `
       ADDIU SP SP 0xFFE0

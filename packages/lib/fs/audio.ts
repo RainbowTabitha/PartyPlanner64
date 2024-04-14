@@ -223,7 +223,7 @@ export const audio = {
           throw new Error(`AudioFS.getROMOffset patch offset ${subsection}/${oIndex} seems wrong:
           offset: ${$$hex(offset)} vs ${$$hex(anotherOffset)}
           reading upper: ${$$hex(anotherUpperReadOffset)}, lower: ${$$hex(
-            anotherLowerReadOffset
+            anotherLowerReadOffset,
           )}`);
       });
     }
@@ -371,11 +371,11 @@ export const audio = {
           {
             const s2Offset = this.getROMOffset(i)!;
             const s2 = (_parsedCache[i] = new S2(
-              romhandler.getDataView(s2Offset)
+              romhandler.getDataView(s2Offset),
             ));
             _bufferCache[i] = buffer.slice(
               s2Offset,
-              s2Offset + s2.getByteLength()
+              s2Offset + s2.getByteLength(),
             );
           }
           break;
@@ -386,7 +386,7 @@ export const audio = {
             const t3Offset = this.getROMOffset(i)!;
             _bufferCache[i] = buffer.slice(
               t3Offset,
-              t3Offset + info.byteLength
+              t3Offset + info.byteLength,
             );
             _parsedCache[i] = new T3(romhandler.getDataView(t3Offset));
           }
@@ -396,11 +396,11 @@ export const audio = {
           {
             const mbf0Offset = this.getROMOffset(i)!;
             const mbf0 = (_parsedCache[i] = new MBF0(
-              romhandler.getDataView(mbf0Offset)
+              romhandler.getDataView(mbf0Offset),
             ));
             _bufferCache[i] = buffer.slice(
               mbf0Offset,
-              mbf0Offset + mbf0.getByteLength()
+              mbf0Offset + mbf0.getByteLength(),
             );
           }
           break;
@@ -411,7 +411,7 @@ export const audio = {
             const sbf0Offset = this.getROMOffset(i)!;
             _bufferCache[i] = buffer.slice(
               sbf0Offset,
-              sbf0Offset + info.byteLength
+              sbf0Offset + info.byteLength,
             );
             _parsedCache[i] = new SBF0(romhandler.getDataView(sbf0Offset));
           }
@@ -423,7 +423,7 @@ export const audio = {
             const fxd0Offset = this.getROMOffset(i)!;
             _bufferCache[i] = buffer.slice(
               fxd0Offset,
-              fxd0Offset + info.byteLength
+              fxd0Offset + info.byteLength,
             );
             _parsedCache[i] = new FXD0(romhandler.getDataView(fxd0Offset));
           }
@@ -486,7 +486,7 @@ export const audio = {
             _bufferCache[i]!,
             currentOffset,
             0,
-            _bufferCache[i]!.byteLength
+            _bufferCache[i]!.byteLength,
           );
           currentOffset += info.byteLength;
           break;

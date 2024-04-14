@@ -49,7 +49,7 @@ export class MP1Adapter extends AdapterBase {
         space,
         createEventInstance(ChanceTime),
         false,
-        eventLibrary
+        eventLibrary,
       );
     }
   }
@@ -66,7 +66,7 @@ export class MP1Adapter extends AdapterBase {
     board: IBoard,
     boardInfo: IBoardInfo,
     boardIndex: number,
-    audioIndices: number[]
+    audioIndices: number[],
   ) {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
@@ -75,7 +75,7 @@ export class MP1Adapter extends AdapterBase {
     romView: DataView,
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ): void {
     // this._writeKoopa(board, boardInfo);
     // this._writeBowser(board, boardInfo);
@@ -131,7 +131,7 @@ export class MP1Adapter extends AdapterBase {
   onOverwritePromises(
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ) {
     const bgIndex = boardInfo.bgDir;
     let bgPromises = [
@@ -142,7 +142,7 @@ export class MP1Adapter extends AdapterBase {
         bgIndex,
         board.bg.src,
         board.bg.width,
-        board.bg.height
+        board.bg.height,
       ),
       this._writeBackground(boardInfo.pauseBgDir!, board.bg.src, 320, 240), // Overview map
       this._writeAdditionalBackgrounds(board),
@@ -155,19 +155,19 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 1,
             board.otherbg.largescene!,
             320,
-            240
+            240,
           ), // Game start, end
           this._writeBackground(
             bgIndex + 2,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation
           this._writeBackground(
             bgIndex + 3,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Treasure thing...
           // Pause bg
           this._writeBackground(bgIndex + 5, board.bg.src, 320, 240), // End game overview map
@@ -175,7 +175,7 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 6,
             board.otherbg.splashscreen!,
             320,
-            240
+            240,
           ), // Splashscreen bg
         ]);
         break;
@@ -186,37 +186,37 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 1,
             board.otherbg.largescene!,
             320,
-            240
+            240,
           ), // Game start, end
           this._writeBackground(
             bgIndex + 2,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Mini-Game results, Boo?
           this._writeBackground(
             bgIndex + 3,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation
           this._writeBackground(
             bgIndex + 4,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Visit Toad
           this._writeBackground(
             bgIndex + 5,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ),
           this._writeBackground(
             bgIndex + 6,
             board.otherbg.largescene!,
             320,
-            240
+            240,
           ), // Third end game cutscene bg
           // Pause bg
           this._writeBackground(bgIndex + 8, board.bg.src, 320, 240), // First end game cutscene bg
@@ -225,7 +225,7 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 10,
             board.otherbg.splashscreen!,
             320,
-            240
+            240,
           ), // Splashscreen
         ]);
         break;
@@ -237,31 +237,31 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 1 /* 19 */,
             board.otherbg.largescene!,
             320,
-            240
+            240,
           ), // Game start, end
           this._writeBackground(
             bgIndex + 2 /* 20 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation, Boo, Koopa
           this._writeBackground(
             bgIndex + 3 /* 21 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation
           this._writeBackground(
             bgIndex + 4 /* 22 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation, Toad
           this._writeBackground(
             bgIndex + 5 /* 23 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation, Bowser
           this._writeBackground(bgIndex + 6 /* 24 */, board.bg.src, 320, 240), //
           // 25: Pause bg
@@ -269,7 +269,7 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 8 /* 26 */,
             board.otherbg.splashscreen!,
             320,
-            240
+            240,
           ), // Splashscreen
         ]);
         break;
@@ -281,57 +281,57 @@ export class MP1Adapter extends AdapterBase {
             bgIndex + 1 /* 28 */,
             board.otherbg.largescene!,
             320,
-            240
+            240,
           ), // Game start, end
           this._writeBackground(
             bgIndex + 2 /* 29 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation, Koopa
           this._writeBackground(
             bgIndex + 3 /* 30 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation, Bowser, Boo
           this._writeBackground(
             bgIndex + 4 /* 31 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), //
           this._writeBackground(
             bgIndex + 5 /* 32 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), // Conversation, Bowser, Toad
           this._writeBackground(bgIndex + 6 /* 33 */, board.bg.src, 320, 240), //
           this._writeBackground(
             bgIndex + 7 /* 34 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), //
           this._writeBackground(
             bgIndex + 8 /* 35 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), //
           // 36: Pause bg
           this._writeBackground(
             bgIndex + 10 /* 37 */,
             board.otherbg.conversation!,
             320,
-            240
+            240,
           ), //
           this._writeBackground(
             bgIndex + 11 /* 38 */,
             board.otherbg.splashscreen!,
             320,
-            240
+            240,
           ), // Splashscreen
         ]);
         break;
@@ -355,7 +355,7 @@ export class MP1Adapter extends AdapterBase {
           space,
           createEventInstance(StarChanceEvent),
           false,
-          getEventsInLibrary()
+          getEventsInLibrary(),
         );
     }
   }
@@ -363,7 +363,7 @@ export class MP1Adapter extends AdapterBase {
   onWriteEventAsmHook(
     romView: DataView,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ) {}
 
   onParseStrings(board: IBoard, boardInfo: IBoardInfo) {
@@ -413,7 +413,7 @@ export class MP1Adapter extends AdapterBase {
         bytes = bytes.concat(strings._strToBytes(" "));
         bytes.push(0x3e); // Little x
         bytes = bytes.concat(
-          strings._strToBytes(" " + board.difficulty.toString())
+          strings._strToBytes(" " + board.difficulty.toString()),
         );
       } else {
         for (let i = 0; i < board.difficulty; i++) bytes.push(star);
@@ -438,13 +438,13 @@ export class MP1Adapter extends AdapterBase {
       let bytes: number[] = [];
       bytes = bytes.concat(
         strings._strToBytes(
-          "Welcome, everybody!\nI am your guide,\nKoopa Troopa."
-        )
+          "Welcome, everybody!\nI am your guide,\nKoopa Troopa.",
+        ),
       );
       bytes.push(0xff); // PAUSE
       bytes.push(0x0b); // Clear?
       bytes = bytes.concat(
-        strings._strToBytes("Now then,\nlet's decide turn order.")
+        strings._strToBytes("Now then,\nlet's decide turn order."),
       );
       bytes.push(0xff); // PAUSE
       bytes.push(0x00); // Null byte
@@ -458,8 +458,8 @@ export class MP1Adapter extends AdapterBase {
       let bytes: number[] = [];
       bytes = bytes.concat(
         strings._strToBytes(
-          "Good luck!\nWith enough stars, you\ncould be the superstar!"
-        )
+          "Good luck!\nWith enough stars, you\ncould be the superstar!",
+        ),
       );
       bytes.push(0xff); // PAUSE
       bytes.push(0x00); // Null byte
@@ -555,7 +555,7 @@ export class MP1Adapter extends AdapterBase {
 
   async onWriteBoardSelectImg(
     board: IBoard,
-    boardInfo: IBoardInfo
+    boardInfo: IBoardInfo,
   ): Promise<void> {
     const boardSelectIndex = boardInfo.img.boardSelectImg;
     if (!boardSelectIndex) {
@@ -567,7 +567,7 @@ export class MP1Adapter extends AdapterBase {
     const imgData = await getImageData(
       board.otherbg.boardselect!,
       width,
-      height
+      height,
     );
 
     // First, turn the image back into 4 BMP tiles
@@ -576,7 +576,7 @@ export class MP1Adapter extends AdapterBase {
       2,
       2,
       (width / 2) * 4,
-      height / 2
+      height / 2,
     );
     const boardSelectBmps = boardSelectImgTiles.map((tile) => {
       return BMPfromRGBA(tile, 32, 8);
@@ -608,7 +608,7 @@ export class MP1Adapter extends AdapterBase {
     board.otherbg.boardlogo = this._readImgFromMainFS(
       10,
       boardInfo.img.pauseLogoImg,
-      0
+      0,
     );
   }
 
@@ -627,7 +627,7 @@ export class MP1Adapter extends AdapterBase {
       const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write logos for ${boardInfo.name}`),
-        45000
+        45000,
       );
       srcImage.onload = () => {
         // Write the intro logo images.

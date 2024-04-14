@@ -25,7 +25,7 @@ interface IRefs {
  */
 export function parseGameMidi(
   inView: DataView,
-  inputSize: number
+  inputSize: number,
 ): ArrayBuffer {
   // TODO: inputs?
   let usePitchBendSensitity: boolean = false;
@@ -669,7 +669,7 @@ export function parseGameMidi(
                       trackEventsSub[j + 1].contents = null;
                     }
                     trackEventsSub[j + 1].contents = new Array(
-                      trackEventsSub[j].contentSize
+                      trackEventsSub[j].contentSize,
                     );
                     for (let r = 0; r < trackEventsSub[j].contentSize; r++) {
                       trackEventsSub[j + 1].contents![r] =
@@ -694,7 +694,7 @@ export function parseGameMidi(
                   trackEventsSub[e].durationTime = 0;
 
                   trackEventsSub[e].contents = new Array(
-                    trackEventsSub[e].contentSize
+                    trackEventsSub[e].contentSize,
                   );
                   trackEventsSub[e].contents![0] =
                     trackEventsSub[eventCount].contents![0];
@@ -718,7 +718,7 @@ export function parseGameMidi(
                     trackEventsSub[e + 1].contents = null;
                   }
                   trackEventsSub[e + 1].contents = new Array(
-                    trackEventsSub[e].contentSize
+                    trackEventsSub[e].contentSize,
                   );
                   for (let r = 0; r < trackEventsSub[e].contentSize; r++) {
                     trackEventsSub[e + 1].contents![r] =
@@ -741,7 +741,7 @@ export function parseGameMidi(
                   trackEventsSub[e].durationTime = 0;
 
                   trackEventsSub[e].contents = new Array(
-                    trackEventsSub[e].contentSize
+                    trackEventsSub[e].contentSize,
                   );
                   trackEventsSub[e].contents![0] =
                     trackEventsSub[eventCount].contents![0];
@@ -764,7 +764,7 @@ export function parseGameMidi(
                 trackEventsSub[eventCount + 1].contents = null;
               }
               trackEventsSub[eventCount + 1].contents = new Array(
-                trackEventsSub[eventCount].contentSize
+                trackEventsSub[eventCount].contentSize,
               );
               for (let r = 0; r < trackEventsSub[eventCount].contentSize; r++) {
                 trackEventsSub[eventCount + 1].contents![r] =
@@ -795,7 +795,7 @@ export function parseGameMidi(
                 trackEventsSub[eventCount].contentSize;
               trackEventsSub[eventCount].durationTime = 0;
               trackEventsSub[eventCount].contents = new Array(
-                trackEventsSub[eventCount].contentSize
+                trackEventsSub[eventCount].contentSize,
               );
               trackEventsSub[eventCount].contents![0] =
                 trackEventsSub[eventCount].contents![0];
@@ -824,7 +824,7 @@ export function parseGameMidi(
           timeOffset += trackEvent.deltaTime;
         } else {
           let [timeDelta, lengthTimeDelta] = _returnVLBytes(
-            trackEvent.deltaTime + timeOffset
+            trackEvent.deltaTime + timeOffset,
           );
           timeOffset = 0;
 
@@ -855,7 +855,7 @@ export function parseGameMidi(
           timeOffset += trackEvent.deltaTime;
         } else {
           let [timeDelta, lengthTimeDelta] = _returnVLBytes(
-            trackEvent.deltaTime + timeOffset
+            trackEvent.deltaTime + timeOffset,
           );
           timeOffset = 0;
           outPos = _writeVLBytes(
@@ -863,7 +863,7 @@ export function parseGameMidi(
             outPos,
             timeDelta,
             lengthTimeDelta,
-            true
+            true,
           );
 
           if (
@@ -913,7 +913,7 @@ interface ICreateGameMidiOptions {
  */
 export function createGameMidi(
   midiFile: ArrayBuffer,
-  options?: ICreateGameMidiOptions
+  options?: ICreateGameMidiOptions,
 ): ArrayBuffer | null {
   const loop = options?.loop || false;
   const loopPoint = 0;
@@ -1552,7 +1552,7 @@ export function createGameMidi(
       for (let j = 0; j < trackEventCount[i]; j++) {
         const trackEvent = trackEvents[i][j];
         let [timeDelta, lengthTimeDelta] = _returnVLBytes(
-          trackEvent.deltaTime + timeOffset
+          trackEvent.deltaTime + timeOffset,
         );
 
         if (trackEvent.obsoleteEvent) {
@@ -1590,7 +1590,7 @@ export function createGameMidi(
 
           if (trackEvent.type >= 0x90 && trackEvent.type < 0xa0) {
             let [duration, lengthDurationBytes] = _returnVLBytes(
-              trackEvent.durationTime
+              trackEvent.durationTime,
             );
 
             sizeData += lengthDurationBytes;
@@ -1623,7 +1623,7 @@ export function createGameMidi(
           timeOffset += trackEvent.deltaTime;
         } else {
           let [timeDelta, lengthTimeDelta] = _returnVLBytes(
-            trackEvent.deltaTime + timeOffset
+            trackEvent.deltaTime + timeOffset,
           );
           timeOffset = 0;
           outPos = _writeVLBytes(
@@ -1631,7 +1631,7 @@ export function createGameMidi(
             outPos,
             timeDelta,
             lengthTimeDelta,
-            false
+            false,
           );
 
           if (
@@ -1647,20 +1647,20 @@ export function createGameMidi(
             trackEvent.contents!,
             outPos,
             0,
-            trackEvent.contentSize
+            trackEvent.contentSize,
           );
           outPos += trackEvent.contentSize;
 
           if (trackEvent.type >= 0x90 && trackEvent.type < 0xa0) {
             let [duration, lengthDurationBytes] = _returnVLBytes(
-              trackEvent.durationTime
+              trackEvent.durationTime,
             );
             outPos = _writeVLBytes(
               outView,
               outPos,
               duration,
               lengthDurationBytes,
-              false
+              false,
             );
           }
 
@@ -1745,7 +1745,7 @@ function _getTrackCount(inView: DataView): number {
 function _writeMidiHeader(
   outView: DataView,
   trackCount: number,
-  division: number
+  division: number,
 ): void {
   // Write magic "MThd"
   outView.setUint32(0, 0x4d546864);
@@ -1835,7 +1835,7 @@ function _getVLBytes(inView: DataView, refs: IRefs, includeFERepeats: boolean) {
 function _readMidiByte(
   inView: DataView,
   refs: IRefs,
-  includeFERepeats: boolean
+  includeFERepeats: boolean,
 ) {
   let returnByte: number;
   if (refs.altPattern !== null) {
@@ -1898,7 +1898,7 @@ function _writeVLBytes(
   outPos: number,
   value: number,
   len: number,
-  includeFERepeats: boolean
+  includeFERepeats: boolean,
 ) {
   let tempByte: number;
   if (len === 1) {

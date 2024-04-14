@@ -73,7 +73,7 @@ function _onEditorDown(
   canvas: HTMLElement,
   clientX: number,
   clientY: number,
-  ctrlKey: boolean
+  ctrlKey: boolean,
 ) {
   canvasRect = canvas.getBoundingClientRect();
 
@@ -85,7 +85,7 @@ function _onEditorDown(
   const clickedSpaceIndex = _getClickedSpace(lastX, lastY);
   $$log(
     `Clicked space: ${$$hex(clickedSpaceIndex)} (${clickedSpaceIndex})`,
-    getCurrentBoard().spaces[clickedSpaceIndex]
+    getCurrentBoard().spaces[clickedSpaceIndex],
   );
 
   const spaceWasClicked = clickedSpaceIndex !== -1;
@@ -338,7 +338,7 @@ function _onEditorMove(clickX: number, clickY: number) {
             space.x,
             space.y,
             clickX,
-            clickY
+            clickY,
           );
           const angleYAxisRad = (Math.PI * 1.5 + angleXAxisRad) % (Math.PI * 2);
           const angleYAxisDeg = radiansToDegrees(angleYAxisRad);
@@ -423,7 +423,7 @@ function _onEditorMove(clickX: number, clickY: number) {
               setSpacePositionsAction({
                 spaceIndices: indicesToUpdate,
                 coords: coordsToUpdate,
-              })
+              }),
             );
           }
 
@@ -618,7 +618,7 @@ function onEditorDrop(event: DragEvent) {
   const [clickX, clickY] = getMouseCoordsOnCanvas(
     canvas,
     event.clientX,
-    event.clientY
+    event.clientY,
   );
   canvasRect = canvas.getBoundingClientRect();
   const droppedOnSpaceIdx = _getClickedSpace(clickX, clickY);
@@ -632,7 +632,7 @@ function onEditorDrop(event: DragEvent) {
         clickY,
         droppedOnSpaceIdx,
         false,
-        false
+        false,
       );
     } else if (data.isEventParamDrop) {
       const handler = getEventParamDropHandler();
@@ -696,7 +696,7 @@ function onEditorKeyDown(event: KeyboardEvent) {
             setSpaceSubtypeAction({
               spaceIndices: selectedSpaceIndices,
               subtype: undefined,
-            })
+            }),
           );
         } else {
           const spaceIndicesToRemove: number[] = [];
@@ -707,7 +707,7 @@ function onEditorKeyDown(event: KeyboardEvent) {
           });
           if (spaceIndicesToRemove.length > 0) {
             store.dispatch(
-              removeSpacesAction({ spaceIndices: spaceIndicesToRemove })
+              removeSpacesAction({ spaceIndices: spaceIndicesToRemove }),
             );
           }
 
@@ -794,7 +794,7 @@ function _addSpace(
   y: number,
   clickedSpaceIndex: number,
   moved?: boolean,
-  ctrlKey?: boolean
+  ctrlKey?: boolean,
 ) {
   const clickedSpace = getCurrentBoard().spaces[clickedSpaceIndex];
 
@@ -809,14 +809,14 @@ function _addSpace(
           setSpaceSubtypeAction({
             spaceIndices: [clickedSpaceIndex],
             subtype: undefined,
-          })
+          }),
         );
       } else if (_canSetSubtypeOnSpaceType(clickedSpace.type, spaceSubType)) {
         store.dispatch(
           setSpaceSubtypeAction({
             spaceIndices: [clickedSpaceIndex],
             subtype: spaceSubType,
-          })
+          }),
         );
       }
 
@@ -838,7 +838,7 @@ function _addSpace(
 
 function _canSetSubtypeOnSpaceType(
   type: Space,
-  subtype: SpaceSubtype
+  subtype: SpaceSubtype,
 ): boolean {
   if (type !== Space.OTHER && subtype === SpaceSubtype.GATE) {
     // Don't add gate to non-invisible space.
@@ -856,7 +856,7 @@ type SpaceCoordUpdater = (space: ISpace) => {
 function _updateSpaceCoords(
   spaceIndices: number[],
   board: IBoard,
-  updater: SpaceCoordUpdater
+  updater: SpaceCoordUpdater,
 ) {
   const indicesToUpdate = [];
   const coordsToUpdate = [];
@@ -872,7 +872,7 @@ function _updateSpaceCoords(
       setSpacePositionsAction({
         spaceIndices: indicesToUpdate,
         coords: coordsToUpdate,
-      })
+      }),
     );
   }
 }
@@ -995,12 +995,12 @@ function _setSelectionBox(
   startX: number,
   startY: number,
   curX: number,
-  curY: number
+  curY: number,
 ): void {
   store.dispatch(
     setSelectionBoxCoordsAction({
       selectionCoords: [startX, startY, curX, curY],
-    })
+    }),
   );
 }
 

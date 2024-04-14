@@ -48,7 +48,7 @@ export const CustomAsmHelper = {
     properties.forEach((propertyName) => {
       const regex = new RegExp(
         "^\\s*[;\\/]+\\s*" + propertyName + ":.*[\r\n]*",
-        "gim"
+        "gim",
       );
       asm = asm.replace(regex, "");
     });
@@ -59,7 +59,7 @@ export const CustomAsmHelper = {
     asm: string,
     propName: string,
     value: string,
-    commentChar: string
+    commentChar: string,
   ) {
     return `${commentChar} ${propName}: ${value}\n` + asm;
   },
@@ -68,7 +68,7 @@ export const CustomAsmHelper = {
     asm: string,
     propName: string,
     values: string[],
-    commentChar: string
+    commentChar: string,
   ) {
     for (let i = values.length - 1; i >= 0; i--) {
       asm = `${commentChar} ${propName}: ${values[i]}\n` + asm;
@@ -128,11 +128,11 @@ export const CustomAsmHelper = {
         throw new Error("An event parameter didn't have a type");
       if (!parameter.name.match(CustomAsmHelper.validParameterNameRegex))
         throw new Error(
-          `Event parameter name '${parameter.name}' is not valid`
+          `Event parameter name '${parameter.name}' is not valid`,
         );
       if (EventParameterTypes.indexOf(parameter.type) === -1)
         throw new Error(
-          `Event parameter type ${parameter.type} is not recognized`
+          `Event parameter type ${parameter.type} is not recognized`,
         );
     });
   },
@@ -141,7 +141,7 @@ export const CustomAsmHelper = {
     lang: EventCodeLanguage,
     code: string,
     parameters?: IEventParameter[],
-    info: Partial<IEventWriteInfo> = {}
+    info: Partial<IEventWriteInfo> = {},
   ) {
     switch (lang) {
       case EventCodeLanguage.MIPS:
@@ -159,7 +159,7 @@ export const CustomAsmHelper = {
   testAssemble: function (
     asm: string,
     parameters?: IEventParameter[],
-    info: Partial<IEventWriteInfo> = {}
+    info: Partial<IEventWriteInfo> = {},
   ): ArrayBuffer {
     const parameterValues = _makeFakeParameterValues(parameters);
 
@@ -178,8 +178,8 @@ export const CustomAsmHelper = {
           },
           testCompile: true,
         },
-        info
-      ) as IEventWriteInfo
+        info,
+      ) as IEventWriteInfo,
     );
     const bytes = assemble(preppedAsm) as ArrayBuffer;
     return bytes;
@@ -188,7 +188,7 @@ export const CustomAsmHelper = {
   testCompile: async function (
     code: string,
     parameters?: IEventParameter[],
-    info: Partial<IEventWriteInfo> = {}
+    info: Partial<IEventWriteInfo> = {},
   ) {
     const parameterValues = _makeFakeParameterValues(parameters);
 
@@ -205,7 +205,7 @@ export const CustomAsmHelper = {
           additionalbg: createFilledArray("", 50),
         },
         ...(info as any),
-      } as IEventWriteInfo
+      } as IEventWriteInfo,
     );
     $$log(preppedC);
 
@@ -225,8 +225,8 @@ export const CustomAsmHelper = {
             additionalbg: createFilledArray("", 50),
           },
         },
-        info
-      ) as IEventWriteInfo
+        info,
+      ) as IEventWriteInfo,
     );
     assemble(preppedAsm);
 
@@ -281,7 +281,7 @@ export function createCustomEvent(language: EventCodeLanguage, code: string) {
 }
 
 export async function validateCustomEvent(
-  event: ICustomEvent
+  event: ICustomEvent,
 ): Promise<boolean> {
   const { language, parameters, supportedGames } = event;
 
@@ -319,7 +319,7 @@ export async function writeCustomEvent(
   info: IEventWriteInfo,
   lang: EventCodeLanguage,
   code: string,
-  temp: any
+  temp: any,
 ) {
   $$log("Writing custom event", spaceEvent, info);
 

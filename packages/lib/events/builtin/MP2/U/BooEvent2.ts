@@ -23,7 +23,7 @@ export const BooEvent2: Partial<IEvent> = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // Code still lives in the board overlay.
     return `

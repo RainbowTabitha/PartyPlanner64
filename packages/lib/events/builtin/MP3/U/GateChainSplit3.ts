@@ -55,7 +55,7 @@ export const GateChainSplit: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // It's all in ChainSplit3.
     throw new Error(`${GateChainSplit.id} not implemented`);

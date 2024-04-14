@@ -39,7 +39,7 @@ int PickBackground() {
 }`;
 
 export function getDefaultAdditionalBgCode(
-  language: EventCodeLanguage
+  language: EventCodeLanguage,
 ): string {
   switch (language) {
     case EventCodeLanguage.C:
@@ -62,7 +62,7 @@ function makeFakeBgSyms(board: IBoard): number[] {
 export async function testAdditionalBgCodeAllGames(
   code: string,
   language: EventCodeLanguage,
-  board: IBoard
+  board: IBoard,
 ): Promise<string[]> {
   const possibleGameVersions = getGameVersionsToTestCompile(board);
 
@@ -70,14 +70,14 @@ export async function testAdditionalBgCodeAllGames(
 
   for (const game of possibleGameVersions) {
     failures = failures.concat(
-      await testAdditionalBgCodeWithGame(code, language, board, game)
+      await testAdditionalBgCodeWithGame(code, language, board, game),
     );
   }
 
   // If it doesn't fail all, that means it's OK for some game and that's good enough.
   if (failures.length === possibleGameVersions.length) {
     failures.unshift(
-      "All possible target game versions failed to compile/assemble."
+      "All possible target game versions failed to compile/assemble.",
     );
   } else {
     failures = [];
@@ -90,7 +90,7 @@ export async function testAdditionalBgCodeWithGame(
   code: string,
   language: EventCodeLanguage,
   board: IBoard,
-  game: Game
+  game: Game,
 ): Promise<string[]> {
   const failures: string[] = [];
 
@@ -107,7 +107,7 @@ export async function testAdditionalBgCodeWithGame(
       assemble(preppedAsm);
     } catch (e) {
       failures.push(
-        `Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`
+        `Failed test compile/assemble for ${getGameName(game)}:\n${e}\n`,
       );
     }
   } else {
@@ -138,14 +138,14 @@ function getGameVersionsToTestCompile(board: IBoard): Game[] {
 export async function getAdditionalBgAsmForOverlay(
   board: IBoard,
   bgDir: number,
-  additionalBgIndices: number[] | undefined | null
+  additionalBgIndices: number[] | undefined | null,
 ) {
   const bgCode = getAdditionalBackgroundCode(board);
   if (!bgCode) {
     return prepAdditionalBgAsm(
       defaultAdditionalBgAsm,
       bgDir,
-      additionalBgIndices
+      additionalBgIndices,
     );
   }
 
@@ -154,7 +154,7 @@ export async function getAdditionalBgAsmForOverlay(
       const cWithDefines = prepAdditionalBgC(
         bgCode.code,
         bgDir,
-        additionalBgIndices
+        additionalBgIndices,
       );
       const game = romhandler.getROMGame()!;
       const preppedC = prepGenericC(cWithDefines, game);
@@ -166,7 +166,7 @@ export async function getAdditionalBgAsmForOverlay(
         .align 4
         .endfile
       `,
-        true
+        true,
       );
     }
     case EventCodeLanguage.MIPS:
@@ -181,7 +181,7 @@ export async function getAdditionalBgAsmForOverlay(
 export function prepAdditionalBgAsm(
   asm: string,
   defaultBgIndex: number,
-  additionalBgIndices?: number[] | null
+  additionalBgIndices?: number[] | null,
 ): string {
   return scopeLabelsStaticByDefault(
     `
@@ -192,13 +192,13 @@ export function prepAdditionalBgAsm(
     .align 4
     .endfile
   `,
-    true
+    true,
   );
 }
 
 export function makeBgSymbolLabels(
   defaultBgIndex: number,
-  additionalBgIndices?: number[] | null
+  additionalBgIndices?: number[] | null,
 ): string[] {
   const syms = [`.definelabel DEFAULT_BG,${defaultBgIndex}`];
 
@@ -215,7 +215,7 @@ export function makeBgSymbolLabels(
 export function prepAdditionalBgC(
   code: string,
   defaultBgIndex: number,
-  additionalBgIndices?: number[] | null
+  additionalBgIndices?: number[] | null,
 ): string {
   return `
 #define PickBackground __PP64_INTERNAL_ADDITIONAL_BG_CHOICE
@@ -227,7 +227,7 @@ ${code}
 /** Creates defines for additional bg symbols. */
 export function makeAdditionalBgDefines(
   defaultBgIndex: number,
-  additionalBgIndices?: number[] | null
+  additionalBgIndices?: number[] | null,
 ): string[] {
   const syms = [`#define DEFAULT_BG ${defaultBgIndex}`];
 
@@ -242,7 +242,7 @@ export function makeAdditionalBgDefines(
 
 /** Assumes a call before the HVQ additional bgs have been written. */
 export function getBoardAdditionalBgHvqIndices(
-  board: IBoard | undefined | null
+  board: IBoard | undefined | null,
 ): number[] | null {
   if (board?.additionalbg) {
     return board.additionalbg.map((bg, i) => {

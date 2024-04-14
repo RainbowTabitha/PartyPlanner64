@@ -345,7 +345,7 @@ class BackgroundListEntry extends React.Component<IBackgroundListEntryProps> {
     event.stopPropagation();
     if (!animationPlaying()) {
       this.props.onSetOverrideBackground(
-        this.props.showing ? null : this.props.bg
+        this.props.showing ? null : this.props.bg,
       );
     }
   };
@@ -513,7 +513,7 @@ class FindSpace extends React.Component<{}> {
 }
 
 function getAvailableBoardActivationTypes(
-  board: IBoard
+  board: IBoard,
 ): EditorEventActivationType[] {
   if (board.game === 3) {
     return [
@@ -562,20 +562,20 @@ const BoardEventList: React.FC<IBoardEventListProps> = (props) => {
 
   function onEventActivationTypeToggle(
     event: IEventInstance,
-    eventIndex: number
+    eventIndex: number,
   ) {
     const availableTypes = getAvailableBoardActivationTypes(props.board);
     const curTypeIndex = availableTypes.indexOf(event.activationType);
     if (curTypeIndex === -1) {
       throw new Error(
-        `Unexpected board event activation type ${event.activationType}`
+        `Unexpected board event activation type ${event.activationType}`,
       );
     }
 
     const activationType =
       availableTypes[(curTypeIndex + 1) % availableTypes.length];
     store.dispatch(
-      setBoardEventActivationTypeAction({ eventIndex, activationType })
+      setBoardEventActivationTypeAction({ eventIndex, activationType }),
     );
   }
 
@@ -583,10 +583,10 @@ const BoardEventList: React.FC<IBoardEventListProps> = (props) => {
     event: IEventInstance,
     eventIndex: number,
     name: string,
-    value: number | boolean
+    value: number | boolean,
   ) {
     store.dispatch(
-      setBoardEventEventParameterAction({ eventIndex, name, value })
+      setBoardEventEventParameterAction({ eventIndex, name, value }),
     );
   }
 

@@ -17,13 +17,13 @@ export class BasicEventLibrary implements IEventLibrary {
   public removeEventFromLibrary(eventId: string): void {
     if (!this._events[eventId]) {
       throw new Error(
-        `Cannot remove event ${eventId}, as it isn't in the event library`
+        `Cannot remove event ${eventId}, as it isn't in the event library`,
       );
     }
 
     if (!this._events[eventId].custom) {
       throw new Error(
-        `Cannot remove event ${eventId}, as it is a built-in event`
+        `Cannot remove event ${eventId}, as it is a built-in event`,
       );
     }
   }
@@ -40,7 +40,7 @@ export class BasicEventLibrary implements IEventLibrary {
 let _eventLibrary: IEventLibrary = new BasicEventLibrary();
 
 export function setEventLibraryImplementation(
-  eventLibrary: IEventLibrary
+  eventLibrary: IEventLibrary,
 ): void {
   // In the web app, we may have added events to the BasicEventLibrary
   // before this call, and need to transfer them over.

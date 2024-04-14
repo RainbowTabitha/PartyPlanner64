@@ -136,14 +136,14 @@ export class mainfs {
       decompressed: decompress(
         compression_type,
         fileStartView,
-        decompressed_size
+        decompressed_size,
       ),
     };
     if (isDebug()) {
       // Assert decompressedSize matches
       if (decompressed_size !== result.decompressed.byteLength)
         throw new Error(
-          `MainFS Dir: ${dir}, File: ${file} decompressed size mismatch`
+          `MainFS Dir: ${dir}, File: ${file} decompressed size mismatch`,
         );
     }
     if (all) {
@@ -151,7 +151,7 @@ export class mainfs {
       const compressedSize = (result.decompressed as any).compressedSize;
       result.compressed = buffer.slice(
         fileStartOffset,
-        fileStartOffset + compressedSize
+        fileStartOffset + compressedSize,
       );
     }
     return result;
@@ -217,7 +217,7 @@ export class mainfs {
   public static pack(
     buffer: ArrayBuffer,
     writeDecompressed: boolean,
-    offset = 0
+    offset = 0,
   ) {
     const view = new DataView(buffer, offset);
 
@@ -233,7 +233,7 @@ export class mainfs {
         d,
         view,
         curDirWriteOffset,
-        writeDecompressed
+        writeDecompressed,
       );
       curDirWriteOffset = makeDivisibleBy(curDirWriteOffset, 2);
     }
@@ -245,7 +245,7 @@ export class mainfs {
     d: number,
     view: DataView,
     offset: number,
-    writeDecompressed: boolean
+    writeDecompressed: boolean,
   ) {
     const fileCount = mainfs.getFileCount(d);
     view.setUint32(offset, fileCount);
@@ -260,7 +260,7 @@ export class mainfs {
         f,
         view,
         curFileWriteOffset,
-        writeDecompressed
+        writeDecompressed,
       );
       curFileWriteOffset = makeDivisibleBy(curFileWriteOffset, 2);
     }
@@ -273,7 +273,7 @@ export class mainfs {
     f: number,
     view: DataView,
     offset: number,
-    writeDecompressed: boolean
+    writeDecompressed: boolean,
   ) {
     const fileData = _mainfsCache![d][f];
 
@@ -290,7 +290,7 @@ export class mainfs {
     } else {
       view.setUint32(
         offset,
-        fileData.decompressedSize || fileData.decompressed.byteLength
+        fileData.decompressedSize || fileData.decompressed.byteLength,
       );
 
       const compressionType = writeDecompressed ? 0 : fileData.compressionType;
@@ -301,7 +301,7 @@ export class mainfs {
         // Duplicate decompressed size
         view.setUint32(
           offset + 8,
-          fileData.decompressedSize || fileData.decompressed.byteLength
+          fileData.decompressedSize || fileData.decompressed.byteLength,
         );
         fileStartOffset += 4;
       }
@@ -314,7 +314,7 @@ export class mainfs {
         bytesToWrite,
         fileStartOffset,
         0,
-        bytesToWrite.byteLength
+        bytesToWrite.byteLength,
       );
 
       return fileStartOffset + bytesToWrite.byteLength;
@@ -362,7 +362,7 @@ export class mainfs {
         } else {
           // Decompressed size, compression type, and perhaps duplicated decompressed size.
           byteLen += _getFileHeaderSize(
-            writeDecompressed ? 0 : fileData.compressionType
+            writeDecompressed ? 0 : fileData.compressionType,
           );
 
           if (fileData.compressed && !writeDecompressed)

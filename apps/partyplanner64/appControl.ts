@@ -116,7 +116,7 @@ export function highlightSpaces(spaceIndices: number[]): void {
 
 export function drawConnection(x1: number, y1: number, x2: number, y2: number) {
   store.dispatch(
-    setTemporaryUIConnections({ connections: [[x1, y1, x2, y2]] })
+    setTemporaryUIConnections({ connections: [[x1, y1, x2, y2]] }),
   );
 }
 
@@ -129,7 +129,7 @@ export function changeCurrentEvent(eventId: string | null, isBoard?: boolean) {
     changeCurrentEventAction({
       id: eventId,
       type: eventType,
-    })
+    }),
   );
 }
 
@@ -143,7 +143,7 @@ export function getCurrentEventIsBoardEvent(): boolean {
 
 export function setHoveredBoardEvent(hoveredBoardEventIndex: number) {
   store.dispatch(
-    setHoveredBoardEventIndexAction({ eventIndex: hoveredBoardEventIndex })
+    setHoveredBoardEventIndexAction({ eventIndex: hoveredBoardEventIndex }),
   );
 }
 
@@ -174,7 +174,7 @@ export function confirmFromUser(message: string): Promise<boolean> {
       onConfirmed: (value?: string) => {
         resolveFunction(value !== undefined);
       },
-    })
+    }),
   );
   return promise;
 }
@@ -197,7 +197,7 @@ export function refresh() {
 }
 
 export function addNotification(
-  notification: React.ReactElement<Notification>
+  notification: React.ReactElement<Notification>,
 ) {
   store.dispatch(addNotificationAction({ notification: notification as any }));
 }

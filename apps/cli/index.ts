@@ -68,7 +68,7 @@ const mainHelpSections: cliUsage.Section[] = [
           break;
         }
         console.log(
-          `Overwriting board ${overwriteOptions.targetBoardIndex} in ${overwriteOptions.romFile} with ${overwriteOptions.boardFile}`
+          `Overwriting board ${overwriteOptions.targetBoardIndex} in ${overwriteOptions.romFile} with ${overwriteOptions.boardFile}`,
         );
         await overwrite(overwriteOptions as OverwriteOptions);
         console.log(`Wrote ${overwriteOptions.outputFile}`);

@@ -225,15 +225,15 @@ export const About = class About extends React.Component {
       const ipcRenderer = (window as any).require("electron").ipcRenderer;
       ipcRenderer.removeListener(
         "update-check-checking",
-        this._onUpdateCheckStarted
+        this._onUpdateCheckStarted,
       );
       ipcRenderer.removeListener(
         "update-check-noupdate",
-        this._onUpdateCheckNoUpdate
+        this._onUpdateCheckNoUpdate,
       );
       ipcRenderer.removeListener(
         "update-check-hasupdate",
-        this._onUpdateCheckHasUpdate
+        this._onUpdateCheckHasUpdate,
       );
     }
   }

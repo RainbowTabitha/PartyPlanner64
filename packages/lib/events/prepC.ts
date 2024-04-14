@@ -15,13 +15,13 @@ export function prepC(
   code: string,
   event: IEvent,
   spaceEvent: IEventInstance,
-  info: IEventWriteInfo
+  info: IEventWriteInfo,
 ) {
   const parameterDefines = makeParameterSymbolDefines(event, spaceEvent, info);
   const audioDefines = makeAudioDefines(info.audioIndices);
   const bgDefines = makeAdditionalBgDefines(
     info.boardInfo.bgDir,
-    getBoardAdditionalBgHvqIndices(info.board)
+    getBoardAdditionalBgHvqIndices(info.board),
   );
   const codeWithDefines = [
     ...parameterDefines,
@@ -51,7 +51,7 @@ export function prepGenericC(code: string, game: Game) {
 export function makeParameterSymbolDefines(
   event: IEvent,
   spaceEvent: IEventInstance,
-  info: IEventWriteInfo
+  info: IEventWriteInfo,
 ): string[] {
   const parameterSymbols: string[] = [];
   const parameters = event.parameters;
@@ -62,7 +62,7 @@ export function makeParameterSymbolDefines(
       switch (parameter.type) {
         case EventParameterType.Boolean:
           parameterSymbols.push(
-            `#define ${parameter.name} ${parameterValue ? 1 : 0}`
+            `#define ${parameter.name} ${parameterValue ? 1 : 0}`,
           );
           break;
 
@@ -70,7 +70,7 @@ export function makeParameterSymbolDefines(
         case EventParameterType.PositiveNumber:
           if (typeof parameterValue === "number") {
             parameterSymbols.push(
-              `#define ${parameter.name} ${parameterValue}`
+              `#define ${parameter.name} ${parameterValue}`,
             );
           } else {
             parameterSymbols.push(`#define ${parameter.name} 0`);
@@ -85,22 +85,22 @@ export function makeParameterSymbolDefines(
             parameterSymbols.push(`#define ${parameter.name} 0`);
             parameterSymbols.push(`#define ${parameter.name}_chain_index 0`);
             parameterSymbols.push(
-              `#define ${parameter.name}_chain_space_index 0`
+              `#define ${parameter.name}_chain_space_index 0`,
             );
           } else {
             parameterSymbols.push(
-              `#define ${parameter.name} ${parameterValue}`
+              `#define ${parameter.name} ${parameterValue}`,
             );
             if (info.chains) {
               const indices = getChainIndexValuesFromAbsoluteIndex(
                 info.chains,
-                parameterValue as number
+                parameterValue as number,
               );
               parameterSymbols.push(
-                `#define ${parameter.name}_chain_index ${indices[0]}`
+                `#define ${parameter.name}_chain_index ${indices[0]}`,
               );
               parameterSymbols.push(
-                `#define ${parameter.name}_chain_space_index ${indices[1]}`
+                `#define ${parameter.name}_chain_space_index ${indices[1]}`,
               );
             }
           }
@@ -112,31 +112,31 @@ export function makeParameterSymbolDefines(
             parameterSymbols.push(`#define ${parameter.name}_length 1`);
             parameterSymbols.push(`#define ${parameter.name}_chain_indices 0`);
             parameterSymbols.push(
-              `#define ${parameter.name}_chain_space_indices 0`
+              `#define ${parameter.name}_chain_space_indices 0`,
             );
           } else {
             const spaceArr = (parameterValue as number[]) || [];
             parameterSymbols.push(
-              `#define ${parameter.name} ${spaceArr.join(",")}`
+              `#define ${parameter.name} ${spaceArr.join(",")}`,
             );
             parameterSymbols.push(
-              `#define ${parameter.name}_length ${spaceArr.length}`
+              `#define ${parameter.name}_length ${spaceArr.length}`,
             );
 
             const allIndices = spaceArr.map((s) =>
-              getChainIndexValuesFromAbsoluteIndex(info.chains, s)
+              getChainIndexValuesFromAbsoluteIndex(info.chains, s),
             );
             const chainIndices = allIndices.map((x) => x[0]);
             const chainSpaceIndices = allIndices.map((x) => x[1]);
             parameterSymbols.push(
               `#define ${parameter.name}_chain_indices ${chainIndices.join(
-                ","
-              )}`
+                ",",
+              )}`,
             );
             parameterSymbols.push(
               `#define ${
                 parameter.name
-              }_chain_space_indices ${chainSpaceIndices.join(",")}`
+              }_chain_space_indices ${chainSpaceIndices.join(",")}`,
             );
           }
           break;
@@ -147,7 +147,7 @@ export function makeParameterSymbolDefines(
             parameterValue !== null
           ) {
             parameterSymbols.push(
-              `#define ${parameter.name} ${parameterValue}`
+              `#define ${parameter.name} ${parameterValue}`,
             );
           }
           break;

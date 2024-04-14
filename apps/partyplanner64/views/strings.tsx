@@ -33,7 +33,8 @@ export class StringsViewer extends React.Component<{}, IStringsViewerState> {
     const strs = [];
     let strCount;
     const game = romhandler.getGameVersion();
-    if (game === 3) strCount = strings3.getStringCount("en", 0); // TODO
+    if (game === 3)
+      strCount = strings3.getStringCount("en", 0); // TODO
     else strCount = strings.getStringCount();
     for (let s = 0; s < strCount; s++) {
       strs.push(<StringEditWrapper strIndex={s} />);

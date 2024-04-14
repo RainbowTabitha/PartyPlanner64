@@ -22,7 +22,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
   const gameMidiBuffer = seqTable.midis[index].buffer;
   const midi = parseGameMidi(
     new DataView(gameMidiBuffer),
-    gameMidiBuffer.byteLength
+    gameMidiBuffer.byteLength,
   );
   $$log(midi);
 
@@ -125,7 +125,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
     const sampleInfo = findSampleToPlay(midiData[inst], event.noteNumber);
     if (!sampleInfo) {
       console.warn(
-        `No note for channel ${channel} instrument ${inst} note number ${event.noteNumber}`
+        `No note for channel ${channel} instrument ${inst} note number ${event.noteNumber}`,
       );
       return;
     }
@@ -136,14 +136,14 @@ export function playMidi(table: number, index: number): AudioPlayerController {
         playingNode.stop();
       } else {
         console.warn(
-          `There wasn't a node to stop playing for channel ${channel} track ${track} note number ${event.noteNumber}`
+          `There wasn't a node to stop playing for channel ${channel} track ${track} note number ${event.noteNumber}`,
         );
       }
       activeNodes[channel][track][event.noteNumber] = null;
     } else {
       if (playingNode) {
         console.warn(
-          `There was a previous node playing for ${channel} note number ${event.noteNumber}`
+          `There was a previous node playing for ${channel} note number ${event.noteNumber}`,
         );
       }
 
@@ -151,7 +151,7 @@ export function playMidi(table: number, index: number): AudioPlayerController {
         sampleInfo,
         event.noteNumber,
         event.velocity,
-        channelVolumes[channel]
+        channelVolumes[channel],
       );
       newPlayingNode.start(0);
       activeNodes[channel][track][event.noteNumber] = newPlayingNode;
@@ -190,7 +190,7 @@ type SampleInfo = {
 
 function findSampleToPlay(
   infos: SampleInfo[],
-  noteNumber: number
+  noteNumber: number,
 ): SampleInfo | null {
   for (const info of infos) {
     if (noteNumber >= info.keymap.keyMin && noteNumber <= info.keymap.keyMax) {
@@ -206,7 +206,7 @@ function createAudioNode(
   sampleInfo: SampleInfo,
   targetNoteNumber: number,
   targetVelocity: number,
-  channelVelocity: number
+  channelVelocity: number,
 ): AudioBufferSourceNode {
   const audioContext = getAudioContext();
   const node = audioContext.createBufferSource();

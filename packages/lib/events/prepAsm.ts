@@ -17,13 +17,13 @@ export function prepAsm(
   asm: string,
   event: IEvent,
   spaceEvent: IEventInstance,
-  info: IEventWriteInfo
+  info: IEventWriteInfo,
 ) {
   const parameterSymbols = makeParameterSymbolLabels(event, spaceEvent, info);
   const audioSymbols = makeAudioSymbolLabels(info.audioIndices);
   const bgSymbols = makeBgSymbolLabels(
     info.boardInfo.bgDir,
-    getBoardAdditionalBgHvqIndices(info.board)
+    getBoardAdditionalBgHvqIndices(info.board),
   );
   const asmWithParamSyms = [
     ...parameterSymbols,
@@ -57,7 +57,7 @@ export function prepSingleEventAsm(
   spaceEvent: IEventInstance,
   info: IEventWriteInfo,
   keepStatic: boolean,
-  eventNum: number
+  eventNum: number,
 ): string {
   // We either define a label at the top, or an alias to the main: label if present.
   const hasMainEntry = asm
@@ -77,13 +77,13 @@ export function prepSingleEventAsm(
     .align 4
     .endfile
   `,
-    keepStatic
+    keepStatic,
   );
 }
 
 export function makeGameSymbolLabels(
   game: Game,
-  needOverlayStubs: boolean
+  needOverlayStubs: boolean,
 ): string[] {
   const symbols = getSymbols(game);
   const syms = symbols.map((symbol) => {
@@ -97,7 +97,7 @@ export function makeGameSymbolLabels(
         syms.push(".definelabel GetBoardAudioIndex,0");
       } else {
         syms.push(
-          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`
+          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`,
         );
       }
       break;
@@ -109,10 +109,10 @@ export function makeGameSymbolLabels(
       } else {
         syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
         syms.push(
-          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`
+          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`,
         );
         syms.push(
-          ".definelabel GetRandPromptSelection,__PP64_INTERNAL_RAND_MESSAGE_CHOICE"
+          ".definelabel GetRandPromptSelection,__PP64_INTERNAL_RAND_MESSAGE_CHOICE",
         );
       }
       break;
@@ -124,11 +124,11 @@ export function makeGameSymbolLabels(
         syms.push(".definelabel GetBoardAudioIndex,0");
       } else {
         syms.push(
-          ".definelabel GetBasicPromptSelection,__PP64_INTERNAL_BASIC_MESSAGE_CHOICE"
+          ".definelabel GetBasicPromptSelection,__PP64_INTERNAL_BASIC_MESSAGE_CHOICE",
         );
         syms.push(".definelabel ViewBoardMap,__PP64_INTERNAL_VIEW_MAP");
         syms.push(
-          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`
+          `.definelabel GetBoardAudioIndex,__PP64_INTERNAL_GET_BOARD_AUDIO_INDEX`,
         );
       }
       break;
@@ -180,7 +180,7 @@ export function makeGenericSymbolsForAddresses(asm: string): string[] {
 export function makeParameterSymbolLabels(
   event: IEvent,
   spaceEvent: IEventInstance,
-  info: IEventWriteInfo
+  info: IEventWriteInfo,
 ): string[] {
   const parameterSymbols: string[] = [];
   const parameters = event.parameters;
@@ -191,14 +191,14 @@ export function makeParameterSymbolLabels(
       switch (parameter.type) {
         case EventParameterType.Boolean:
           parameterSymbols.push(
-            `.definelabel ${parameter.name},${parameterValue ? 1 : 0}`
+            `.definelabel ${parameter.name},${parameterValue ? 1 : 0}`,
           );
           break;
 
         case EventParameterType.Number:
           if (typeof parameterValue === "number") {
             parameterSymbols.push(
-              `.definelabel ${parameter.name},${parameterValue}`
+              `.definelabel ${parameter.name},${parameterValue}`,
             );
           }
           break;
@@ -208,26 +208,26 @@ export function makeParameterSymbolLabels(
 
         case EventParameterType.Space:
           parameterSymbols.push(
-            `.definelabel ${parameter.name},${parameterValue}`
+            `.definelabel ${parameter.name},${parameterValue}`,
           );
           if (info.chains) {
             const indices = getChainIndexValuesFromAbsoluteIndex(
               info.chains,
-              parameterValue as number
+              parameterValue as number,
             );
             parameterSymbols.push(
-              `.definelabel ${parameter.name}_chain_index,${indices[0]}`
+              `.definelabel ${parameter.name}_chain_index,${indices[0]}`,
             );
             parameterSymbols.push(
-              `.definelabel ${parameter.name}_chain_space_index,${indices[1]}`
+              `.definelabel ${parameter.name}_chain_space_index,${indices[1]}`,
             );
           } else {
             // Mostly for testAssemble
             parameterSymbols.push(
-              `.definelabel ${parameter.name}_chain_index,-1`
+              `.definelabel ${parameter.name}_chain_index,-1`,
             );
             parameterSymbols.push(
-              `.definelabel ${parameter.name}_chain_space_index,-1`
+              `.definelabel ${parameter.name}_chain_space_index,-1`,
             );
           }
           break;
@@ -238,29 +238,29 @@ export function makeParameterSymbolLabels(
             parameterSymbols.push(`${parameter.name}_length equ 1`);
             parameterSymbols.push(`${parameter.name}_chain_indices equ 0`);
             parameterSymbols.push(
-              `${parameter.name}_chain_space_indices equ 0`
+              `${parameter.name}_chain_space_indices equ 0`,
             );
           } else {
             const spaceArr = (parameterValue as number[]) || [];
             parameterSymbols.push(
-              `${parameter.name} equ ${spaceArr.join(",")}`
+              `${parameter.name} equ ${spaceArr.join(",")}`,
             );
             parameterSymbols.push(
-              `${parameter.name}_length equ ${spaceArr.length}`
+              `${parameter.name}_length equ ${spaceArr.length}`,
             );
 
             const allIndices = spaceArr.map((s) =>
-              getChainIndexValuesFromAbsoluteIndex(info.chains, s)
+              getChainIndexValuesFromAbsoluteIndex(info.chains, s),
             );
             const chainIndices = allIndices.map((x) => x[0]);
             const chainSpaceIndices = allIndices.map((x) => x[1]);
             parameterSymbols.push(
-              `${parameter.name}_chain_indices equ ${chainIndices.join(",")}`
+              `${parameter.name}_chain_indices equ ${chainIndices.join(",")}`,
             );
             parameterSymbols.push(
               `${
                 parameter.name
-              }_chain_space_indices equ ${chainSpaceIndices.join(",")}`
+              }_chain_space_indices equ ${chainSpaceIndices.join(",")}`,
             );
           }
           break;
@@ -271,7 +271,7 @@ export function makeParameterSymbolLabels(
             parameterValue !== null
           ) {
             parameterSymbols.push(
-              `.definelabel ${parameter.name},${parameterValue}`
+              `.definelabel ${parameter.name},${parameterValue}`,
             );
           }
           break;
@@ -287,7 +287,7 @@ export function makeParameterSymbolLabels(
  */
 export function scopeLabelsStaticByDefault(
   asm: string,
-  keepStatic: boolean
+  keepStatic: boolean,
 ): string {
   const lines = asm.split("\n").map((line) => line.trim());
 
@@ -378,7 +378,7 @@ function labelShouldBeScoped(label: string): boolean {
 
 function removeStaticSections(
   lines: string[],
-  keepingStatics: boolean
+  keepingStatics: boolean,
 ): string[] {
   let withinStatic = false;
   const filteredLines = [];
@@ -430,7 +430,7 @@ function replaceStaticRegionDirectives(lines: string[]): string {
 
 export function createEventInstanceLabel(
   spaceIndex: number,
-  eventNumber: number
+  eventNumber: number,
 ): string {
   const strIndex = spaceIndex < 0 ? "minus" + Math.abs(spaceIndex) : spaceIndex;
   return `__PP64_INTERNAL_EVENT_${strIndex}_${eventNumber}`;

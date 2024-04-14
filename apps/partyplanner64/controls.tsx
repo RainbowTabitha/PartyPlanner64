@@ -90,7 +90,7 @@ export interface IToggleGroupProps<Tid = number | string> {
 }
 
 export function ToggleGroup<Tid extends number | string>(
-  props: IToggleGroupProps<Tid>
+  props: IToggleGroupProps<Tid>,
 ) {
   const items = props.items;
   const toggles = items.map((item) => {

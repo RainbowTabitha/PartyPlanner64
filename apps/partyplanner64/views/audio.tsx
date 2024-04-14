@@ -68,7 +68,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
             <td colSpan={2}>
               <hr />
             </td>
-          </tr>
+          </tr>,
         );
       }
 
@@ -159,7 +159,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
                 </div>
               </>
             }
-          />
+          />,
         );
       }
     }
@@ -173,7 +173,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
             <td colSpan={2}>
               <hr />
             </td>
-          </tr>
+          </tr>,
         );
       }
 
@@ -227,7 +227,7 @@ export class AudioViewer extends React.Component<{}, IAudioViewerState> {
                 Download .wav
               </Button>
             }
-          />
+          />,
         );
       }
     }
@@ -398,7 +398,7 @@ function _exportMidi(table: number, index: number, name?: string): void {
   const gameMidiBuffer = seqTable.midis[index].buffer;
   const midi = parseGameMidi(
     new DataView(gameMidiBuffer),
-    gameMidiBuffer.byteLength
+    gameMidiBuffer.byteLength,
   );
   saveAs(new Blob([midi]), `${name}.mid`);
 }
@@ -436,13 +436,13 @@ function _replaceMidi(table: number, index: number): void {
 
 async function _changeSoundbankIndex(
   table: number,
-  midiIndex: number
+  midiIndex: number,
 ): Promise<boolean> {
   const seqTable = audio.getSequenceTable(table)!;
   const bankCount = seqTable.soundbanks.banks.length;
 
   return await promptUser(
-    `Enter new soundbank index (0 through ${bankCount - 1}):`
+    `Enter new soundbank index (0 through ${bankCount - 1}):`,
   ).then((value) => {
     if (!value) {
       return false;

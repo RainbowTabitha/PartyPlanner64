@@ -18,7 +18,7 @@ export const StarEvent2: Partial<IEvent> = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // Most of the code lives in the overlay.
     return `

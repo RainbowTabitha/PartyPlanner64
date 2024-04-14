@@ -445,7 +445,7 @@ function _processImage(id: string, buffer: ArrayBuffer) {
       Object.keys(colors4).length > 256
     ) {
       showMessage(
-        `Sorry, but the palette limit for this image is 256 unique colors. For now, the image has been reduced to 8-bit, but most image editors should be able to reduce the palette for you with higher quality.`
+        `Sorry, but the palette limit for this image is 256 unique colors. For now, the image has been reduced to 8-bit, but most image editors should be able to reduce the palette for you with higher quality.`,
       );
       make8Bit(rgba32, 128, 64);
     }
@@ -608,7 +608,7 @@ class DetailsImage extends React.Component<IDetailsImageProps> {
       const imgData = await getImageData(
         reader.result as string,
         width,
-        height
+        height,
       );
       let rgba32 = imgData.data.buffer;
 
@@ -735,7 +735,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
     return await promptUser(
       `Enter new soundbank index${
         upperBound ? ` (0 through ${upperBound})` : ""
-      }:`
+      }:`,
     ).then((value) => {
       if (!value) {
         return;
@@ -818,7 +818,7 @@ class DetailsAudio extends React.Component<IDetailsAudioProps> {
             onSoundbankIndexPrompt={() =>
               this.onSoundbankIndexPrompt(currentBoard.audioData!.length)
             }
-          />
+          />,
         );
         break;
     }
@@ -982,7 +982,7 @@ class DetailsDifficulty extends React.Component<
           focusedLevel={this.state.focusedLevel}
           onDifficultyLevelSelected={this.onSelection}
           onDifficultyFocused={this.onDifficultyFocused}
-        />
+        />,
       );
     }
 

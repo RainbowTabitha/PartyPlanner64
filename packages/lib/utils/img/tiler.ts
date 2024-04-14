@@ -6,7 +6,7 @@ export function fromTiles(
   tileXCount: number,
   tileYCount: number,
   tileXWidth: number,
-  tileYWidth: number
+  tileYWidth: number,
 ) {
   const width = tileXCount * tileXWidth;
   const height = tileYCount * tileYWidth;
@@ -30,7 +30,7 @@ export function fromTiles(
       //try {
       outView.setUint32(
         outIndex,
-        tileViews[tileViewIndex].getUint32(tileIndex)
+        tileViews[tileViewIndex].getUint32(tileIndex),
       );
       //} catch(e) {
       //console.log("Failed Reading Tile #" + tileViewIndex + "[" + tileIndex + "]");
@@ -48,7 +48,7 @@ export function toTiles(
   tileXCount: number,
   tileYCount: number,
   tileXWidth: number,
-  tileYWidth: number
+  tileYWidth: number,
 ) {
   const width = tileXCount * tileXWidth;
   const height = tileYCount * tileYWidth;

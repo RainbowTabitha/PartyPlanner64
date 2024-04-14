@@ -16,11 +16,11 @@ export const BooEvent1: Partial<IEvent> = {
     if (
       hashEqual(
         [dataView.buffer, info.offset + 0x1c, 0x18],
-        hashes.METHOD_END
+        hashes.METHOD_END,
       ) &&
       hashEqual(
         [dataView.buffer, info.offset, 0x14],
-        hashes.PLAYER_DIRECTION_CHANGE
+        hashes.PLAYER_DIRECTION_CHANGE,
       )
     ) {
       // Check whether this points to the Boo scene.
@@ -29,11 +29,11 @@ export const BooEvent1: Partial<IEvent> = {
     } else if (
       hashEqual(
         [dataView.buffer, info.offset + 0x54, 0x18],
-        hashes.METHOD_END
+        hashes.METHOD_END,
       ) &&
       hashEqual(
         [dataView.buffer, info.offset, 0x28],
-        hashes.DK_TWOBOO_METHOD_START
+        hashes.DK_TWOBOO_METHOD_START,
       )
     ) {
       return true; // We know this is stock DK board.
@@ -45,7 +45,7 @@ export const BooEvent1: Partial<IEvent> = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     return `
       addiu SP, SP, -0x18

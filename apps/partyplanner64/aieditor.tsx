@@ -158,7 +158,7 @@ interface IDecisionTreeResultDifficultyProps {
 }
 
 function DecisionTreeResultDifficulty(
-  props: IDecisionTreeResultDifficultyProps
+  props: IDecisionTreeResultDifficultyProps,
 ) {
   return (
     <>

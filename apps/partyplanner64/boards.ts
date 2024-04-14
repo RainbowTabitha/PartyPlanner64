@@ -190,7 +190,7 @@ export interface IEventInstance {
 
 export function _makeDefaultBoard(
   gameVersion: 1 | 2 | 3 = 1,
-  type: BoardType = BoardType.NORMAL
+  type: BoardType = BoardType.NORMAL,
 ): IBoard {
   const board: any = {
     name: "Untitled",
@@ -361,7 +361,7 @@ function applyTheme(board: IBoard, name: "default" = "default") {
  */
 export function addBoard(
   board?: IBoard | null,
-  opts: { rom?: boolean; game?: 1 | 2 | 3; type?: BoardType } = {}
+  opts: { rom?: boolean; game?: 1 | 2 | 3; type?: BoardType } = {},
 ) {
   if (!board)
     board = _makeDefaultBoard(opts.game || 1, opts.type || BoardType.NORMAL);
@@ -408,7 +408,7 @@ export function boardIsROM(board: IBoard) {
 export function hasConnection(
   startIdx: number,
   endIdx: number | "*",
-  board: IBoard = getCurrentBoard()
+  board: IBoard = getCurrentBoard(),
 ) {
   if (Array.isArray(board.links[startIdx])) {
     if (endIdx === "*" || endIdx === undefined) return true; // Asking if any connections exist out of startIdx
@@ -437,7 +437,7 @@ export function addEventToSpace(event: IEventInstance, toStart?: boolean) {
 
 export function addEventToSpaces(
   event: IEventInstance,
-  spaceIndices: number[]
+  spaceIndices: number[],
 ) {
   store.dispatch(addEventToSpacesAction({ event, spaceIndices }));
 }
@@ -447,7 +447,7 @@ export function addEventToSpaceInternal(
   space: ISpace,
   event: IEventInstance,
   toStart: boolean,
-  eventLibrary: EventMap
+  eventLibrary: EventMap,
 ) {
   space.events = space.events || [];
   if (event) {
@@ -458,7 +458,7 @@ export function addEventToSpaceInternal(
       const customEvent = getEvent(
         event.id,
         board,
-        eventLibrary
+        eventLibrary,
       ) as ICustomEvent;
       includeEventInBoardInternal(board, customEvent);
     }
@@ -471,14 +471,14 @@ export function removeEventFromSpace(eventIndex: number) {
 
 export function removeEventsFromSpaces(
   eventIndices: number[],
-  spaceIndices: number[]
+  spaceIndices: number[],
 ) {
   store.dispatch(removeEventsFromSpacesAction({ eventIndices, spaceIndices }));
 }
 
 export function getBoardEvent(
   board: IBoard,
-  eventId: string
+  eventId: string,
 ): IBoardEvent | null {
   if (board.events) {
     const boardEvent = board.events[eventId];
@@ -497,11 +497,11 @@ export function includeEventInBoard(event: ICustomEvent) {
 
 export function includeEventInBoardInternal(
   board: IBoard,
-  event: ICustomEvent
+  event: ICustomEvent,
 ) {
   if (!event.asm)
     throw new Error(
-      `Attempting to add event ${event.name} but it doesn't have code`
+      `Attempting to add event ${event.name} but it doesn't have code`,
     );
   board.events[event.name] = {
     language: event.language!,
@@ -527,7 +527,7 @@ export function getAdditionalBackgroundCode(board: IBoard): IBoardEvent | null {
 
 export function setAdditionalBackgroundCode(
   code: string,
-  language: EventCodeLanguage
+  language: EventCodeLanguage,
 ): void {
   store.dispatch(setAdditionalBackgroundCodeAction({ code, language }));
 }
@@ -538,7 +538,7 @@ export function getAudioSelectCode(board: IBoard): IBoardEvent | null {
 
 export function setAudioSelectCode(
   code: string,
-  language: EventCodeLanguage
+  language: EventCodeLanguage,
 ): void {
   store.dispatch(setAudioSelectCodeAction({ code, language }));
 }
@@ -668,7 +668,7 @@ export function supportsAdditionalBackgrounds(board: IBoard): boolean {
 export function addDecisionTree(
   board: IBoard,
   spaceIndex: number,
-  tree: IDecisionTreeNode[]
+  tree: IDecisionTreeNode[],
 ): void {
   // board.spaces[spaceIndex].aiTree = tree;
 }
@@ -702,7 +702,7 @@ export function setBoardCostumeTypeIndex(costumeType: CostumeType): void {
 
 export function setBoardOtherBackground(
   name: keyof IBoard["otherbg"],
-  value: string
+  value: string,
 ): void {
   store.dispatch(setBoardOtherBgAction({ name, value }));
 }
@@ -730,7 +730,7 @@ export function addSpace(
   y: number,
   type: Space,
   subtype?: SpaceSubtype,
-  board?: IBoard
+  board?: IBoard,
 ): number {
   // Hack for callers not editing redux state.
   if (board) {
@@ -748,7 +748,7 @@ export function addSpaceInternal(
   type: Space,
   subtype: SpaceSubtype | undefined,
   board: IBoard,
-  eventLibrary: EventMap
+  eventLibrary: EventMap,
 ): number {
   const newSpace: any = {
     x,
@@ -785,7 +785,7 @@ export function getStartSpaceIndex(board: IBoard) {
 
 export function getSpacesOfType(
   type: Space,
-  board: IBoard = getCurrentBoard()
+  board: IBoard = getCurrentBoard(),
 ): number[] {
   const spaces = board.spaces;
   const typeSpaces = [];
@@ -798,7 +798,7 @@ export function getSpacesOfType(
 
 export function getSpacesOfSubType(
   subtype: SpaceSubtype,
-  board: IBoard = getCurrentBoard()
+  board: IBoard = getCurrentBoard(),
 ): number[] {
   const spaces = board.spaces;
   const subtypeSpaces = [];
@@ -812,7 +812,7 @@ export function getSpacesOfSubType(
 /** Returns array of space indices of spaces with a given event. */
 export function getSpacesWithEvent(
   eventName: string,
-  board: IBoard = getCurrentBoard()
+  board: IBoard = getCurrentBoard(),
 ): number[] {
   const eventSpaces: number[] = [];
   forEachEvent(board, (event, eventIndex, space, spaceIndex) => {
@@ -833,7 +833,7 @@ export function getDeadSpaceIndex(board: IBoard): number {
     board.bg.height + 100,
     Space.OTHER,
     undefined,
-    board
+    board,
   );
   board._deadSpace = deadSpaceIndex;
   return deadSpaceIndex;
@@ -847,7 +847,7 @@ export function getDeadSpace(board: IBoard): ISpace {
 // Returns array of space indices connected to from a space.
 export function getConnections(
   spaceIndex: number,
-  board: IBoard = getCurrentBoard()
+  board: IBoard = getCurrentBoard(),
 ) {
   if (spaceIndex < 0) return null;
 
@@ -867,7 +867,7 @@ export function getConnections(
 export function addConnectionInternal(
   startSpaceIndex: number,
   endSpaceIndex: number,
-  board: IBoard
+  board: IBoard,
 ): void {
   if (
     startSpaceIndex === endSpaceIndex ||
@@ -889,7 +889,7 @@ export function addConnectionInternal(
 export function addConnection(
   startSpaceIndex: number,
   endSpaceIndex: number,
-  board?: IBoard
+  board?: IBoard,
 ) {
   if (board) {
     // Hack: the places that do pass a board aren't modifying the redux store.
@@ -908,7 +908,7 @@ export function addEventByIndex(
   spaceIdx: number,
   event: any,
   toStart: boolean,
-  eventLibrary: EventMap
+  eventLibrary: EventMap,
 ) {
   const space = board.spaces[spaceIdx];
   addEventToSpaceInternal(board, space, event, toStart, eventLibrary);

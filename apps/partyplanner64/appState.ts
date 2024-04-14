@@ -41,7 +41,7 @@ export const appStateSlice = createSlice({
       state,
       action: PayloadAction<{
         notification: React.ReactElement<Notification>;
-      }>
+      }>,
     ) => {
       const { notification } = action.payload;
       if (!state.notifications.find((jsx) => jsx.key === notification.key)) {
@@ -52,11 +52,11 @@ export const appStateSlice = createSlice({
       state,
       action: PayloadAction<{
         notificationKey: string;
-      }>
+      }>,
     ) => {
       const { notificationKey } = action.payload;
       state.notifications = state.notifications.filter(
-        (jsx) => jsx.key !== notificationKey
+        (jsx) => jsx.key !== notificationKey,
       );
     },
     setOverrideBgAction: (state, action: PayloadAction<string | null>) => {

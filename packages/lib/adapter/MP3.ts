@@ -61,7 +61,7 @@ export class MP3Adapter extends AdapterBase {
     board: IBoard,
     boardInfo: IBoardInfo,
     boardIndex: number,
-    audioIndices: number[]
+    audioIndices: number[],
   ) {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
@@ -70,7 +70,7 @@ export class MP3Adapter extends AdapterBase {
     romView: DataView,
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ): void {
     // Patch game to use all 8MB.
     romView.setUint16(0x360ee, 0x8040); // Main heap now starts at 0x80400000
@@ -112,7 +112,7 @@ export class MP3Adapter extends AdapterBase {
   onOverwritePromises(
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ) {
     const bgIndex = boardInfo.bgDir;
     const bgPromises = [
@@ -120,7 +120,7 @@ export class MP3Adapter extends AdapterBase {
         bgIndex,
         board.bg.src,
         board.bg.width,
-        board.bg.height
+        board.bg.height,
       ),
       this._writeBackground(bgIndex + 1, board.otherbg.largescene!, 320, 240), // Game start, end
       this._writeBackground(bgIndex + 2, board.bg.src, 320, 240), // Overview map
@@ -153,7 +153,7 @@ export class MP3Adapter extends AdapterBase {
 
   protected onAddDefaultBoardEvents(
     editorActivationType: EditorEventActivationType,
-    list: SpaceEventList
+    list: SpaceEventList,
   ): void {
     if (editorActivationType === EditorEventActivationType.BEFORE_DICE_ROLL) {
       const activationType =
@@ -163,12 +163,12 @@ export class MP3Adapter extends AdapterBase {
       list.add(
         activationType,
         EventExecutionType.DIRECT,
-        "__PP64_INTERNAL_CURSE_POISON_DICEROLL_EVENT"
+        "__PP64_INTERNAL_CURSE_POISON_DICEROLL_EVENT",
       );
       list.add(
         activationType,
         EventExecutionType.DIRECT,
-        "__PP64_INTERNAL_REVERSAL_DICEROLL_EVENT"
+        "__PP64_INTERNAL_REVERSAL_DICEROLL_EVENT",
       );
     }
   }
@@ -180,7 +180,7 @@ export class MP3Adapter extends AdapterBase {
         space,
         createEventInstance(BankEvent),
         false,
-        eventLibrary
+        eventLibrary,
       );
     }
   }
@@ -552,7 +552,7 @@ export class MP3Adapter extends AdapterBase {
         bytes = bytes.concat(strings._strToBytes(" "));
         bytes.push(0x3e); // Little x
         bytes = bytes.concat(
-          strings._strToBytes(" " + board.difficulty.toString())
+          strings._strToBytes(" " + board.difficulty.toString()),
         );
       } else {
         for (let i = 0; i < board.difficulty; i++) bytes.push(star);
@@ -589,8 +589,8 @@ export class MP3Adapter extends AdapterBase {
       bytes.push(0x0b); // ?
       bytes = bytes.concat(
         strings._strToBytes(
-          "Now, before we begin, we need\nto determine the turn order."
-        )
+          "Now, before we begin, we need\nto determine the turn order.",
+        ),
       );
       bytes.push(0x19); // ?
       bytes.push(0xff); // ?
@@ -601,7 +601,7 @@ export class MP3Adapter extends AdapterBase {
         "en",
         strs.boardGreeting[0],
         strs.boardGreeting[1],
-        strBuffer
+        strBuffer,
       );
     }
 
@@ -615,7 +615,7 @@ export class MP3Adapter extends AdapterBase {
       bytes = bytes.concat(this._createBoardGreetingBase(board.name));
       bytes.push(0x0b); // ?
       bytes = bytes.concat(
-        strings._strToBytes("And just as promised, if you win here...")
+        strings._strToBytes("And just as promised, if you win here..."),
       );
       bytes.push(0x19); // ?
       bytes.push(0xff); // ?
@@ -626,7 +626,7 @@ export class MP3Adapter extends AdapterBase {
         "en",
         strs.boardGreetingDuel[0],
         strs.boardGreetingDuel[1],
-        strBuffer
+        strBuffer,
       );
     }
 
@@ -656,7 +656,7 @@ export class MP3Adapter extends AdapterBase {
     bytes.push(0xff); // ?
     bytes.push(0x0b); // ?
     bytes = bytes.concat(
-      strings._strToBytes("Here, you'll battle to become\nthe Superstar.")
+      strings._strToBytes("Here, you'll battle to become\nthe Superstar."),
     );
     bytes.push(0x19); // ?
     bytes.push(0xff); // ?
@@ -669,7 +669,7 @@ export class MP3Adapter extends AdapterBase {
     board.otherbg.boardselect = this._readImgFromMainFS(
       20,
       boardInfo.img.boardSelectImg,
-      0
+      0,
     );
   }
 
@@ -684,7 +684,7 @@ export class MP3Adapter extends AdapterBase {
       const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write board select for ${boardInfo.name}`),
-        45000
+        45000,
       );
       srcImage.onload = () => {
         const imgBuffer = toArrayBuffer(srcImage, 64, 64);
@@ -718,18 +718,18 @@ export class MP3Adapter extends AdapterBase {
     board.otherbg.boardlogo = this._readImgFromMainFS(
       19,
       boardInfo.img.splashLogoImg,
-      0
+      0,
     );
     board.otherbg.boardlogotext = this._readImgFromMainFS(
       19,
       boardInfo.img.splashLogoTextImg!,
-      0
+      0,
     );
   }
 
   async onWriteBoardLogoImg(
     board: IBoard,
-    boardInfo: IBoardInfo
+    boardInfo: IBoardInfo,
   ): Promise<void> {
     await Promise.all([
       this._writeBoardLogoLarge(board, boardInfo),
@@ -741,7 +741,7 @@ export class MP3Adapter extends AdapterBase {
 
   async _writeBoardLogoLarge(
     board: IBoard,
-    boardInfo: IBoardInfo
+    boardInfo: IBoardInfo,
   ): Promise<void> {
     const splashLogoImg = boardInfo.img && boardInfo.img.splashLogoImg;
     if (!splashLogoImg) {
@@ -774,7 +774,7 @@ export class MP3Adapter extends AdapterBase {
   /** Write the intro logo text image. */
   async _writeBoardLogoTextImg(
     board: IBoard,
-    boardInfo: IBoardInfo
+    boardInfo: IBoardInfo,
   ): Promise<void> {
     const splashLogoTextImg = boardInfo.img && boardInfo.img.splashLogoTextImg;
     if (!splashLogoTextImg) {
@@ -807,7 +807,7 @@ export class MP3Adapter extends AdapterBase {
   /** Replace the medium board logo. This is shown on the board pause screen. */
   async _writeBoardLogoMedium(
     board: IBoard,
-    boardInfo: IBoardInfo
+    boardInfo: IBoardInfo,
   ): Promise<void> {
     const pauseLogoImg = boardInfo.img.pauseLogoImg;
     if (!pauseLogoImg) {
@@ -836,7 +836,7 @@ export class MP3Adapter extends AdapterBase {
   /** Replace the small board logo. This is shown on the game end details viewer. */
   async _writeBoardLogoSmall(
     board: IBoard,
-    boardInfo: IBoardInfo
+    boardInfo: IBoardInfo,
   ): Promise<void> {
     const statsLogoImg = boardInfo.img.statsLogoImg;
     if (!statsLogoImg) {

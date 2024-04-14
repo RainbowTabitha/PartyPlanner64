@@ -10,7 +10,7 @@ import resizeImageData from "resize-image-data";
 export function getImageData(
   src: string,
   width: number,
-  height: number
+  height: number,
 ): Promise<ImageData> {
   return new Promise<ImageData>((resolve, reject) => {
     const srcImage = createImage();
@@ -29,7 +29,7 @@ export function getImageData(
         imgData = resizeImageData(
           imgData,
           width,
-          height
+          height,
         ) as unknown as ImageData;
       }
 

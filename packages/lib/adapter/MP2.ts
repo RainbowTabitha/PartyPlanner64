@@ -52,7 +52,7 @@ export class MP2Adapter extends AdapterBase {
     board: IBoard,
     boardInfo: IBoardInfo,
     boardIndex: number,
-    audioIndices: number[]
+    audioIndices: number[],
   ) {
     return createBoardOverlay(board, boardInfo, boardIndex, audioIndices);
   }
@@ -61,7 +61,7 @@ export class MP2Adapter extends AdapterBase {
     romView: DataView,
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ): void {
     // Patch game to use all 8MB.
     romView.setUint16(0x41602, 0x8040); // Main heap now starts at 0x80400000
@@ -80,7 +80,7 @@ export class MP2Adapter extends AdapterBase {
   onOverwritePromises(
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ) {
     const bgIndex = boardInfo.bgDir;
     const bgPromises = [
@@ -88,14 +88,14 @@ export class MP2Adapter extends AdapterBase {
         bgIndex,
         board.bg.src,
         board.bg.width,
-        board.bg.height
+        board.bg.height,
       ),
       this._writeAnimationBackgrounds(
         boardInfo.animBgSet!,
         board.bg.width,
         board.bg.height,
         board.bg.src,
-        board.animbg
+        board.animbg,
       ),
       this._writeBackground(bgIndex + 2, board.otherbg.largescene!, 320, 240), // Game start, end
       this._writeOverviewBackground(bgIndex + 6, board.bg.src), // Overview map
@@ -117,7 +117,7 @@ export class MP2Adapter extends AdapterBase {
         space,
         createEventInstance(BankEvent),
         false,
-        eventLibrary
+        eventLibrary,
       );
     }
   }
@@ -171,7 +171,7 @@ export class MP2Adapter extends AdapterBase {
         bytes = bytes.concat(strings._strToBytes(" "));
         bytes.push(0x3e); // Little x
         bytes = bytes.concat(
-          strings._strToBytes(" " + board.difficulty.toString())
+          strings._strToBytes(" " + board.difficulty.toString()),
         );
       } else {
         for (let i = 0; i < board.difficulty; i++) bytes.push(star);
@@ -226,7 +226,7 @@ export class MP2Adapter extends AdapterBase {
       bytes = [];
       bytes.push(0x0b);
       bytes = bytes.concat(
-        strings._strToBytes("Now, before this adventure begins,")
+        strings._strToBytes("Now, before this adventure begins,"),
       );
       bytes.push(0x0a); // \n
       bytes = bytes.concat(strings._strToBytes("we must decide turn order."));
@@ -345,7 +345,7 @@ export class MP2Adapter extends AdapterBase {
   _writeCostumeType(
     romView: DataView,
     board: IBoard,
-    boardIndex: number
+    boardIndex: number,
   ): void {
     const costumeModelMap = {
       [CostumeType.NORMAL]: {
@@ -473,13 +473,13 @@ export class MP2Adapter extends AdapterBase {
       // Table at ROM 0xCDA28 has list of 2d model renders of themed characters.
       romView.setUint32(
         0xcda28 + boardIndex * 6 * 4 + i * 4,
-        costumeInfo.player2d[i]
+        costumeInfo.player2d[i],
       );
 
       // Table at ROM 0xCDAE8 has list of themed bowser suits.
       romView.setUint32(
         0xcdae8 + boardIndex * 6 * 4 + i * 4,
-        costumeInfo.bowser2d[i]
+        costumeInfo.bowser2d[i],
       );
     }
 
@@ -523,7 +523,7 @@ export class MP2Adapter extends AdapterBase {
       boardInfo.animBgSet,
       mainBgImgData,
       board.bg.width,
-      board.bg.height
+      board.bg.height,
     );
     if (animBgs && animBgs.length) board.animbg = animBgs;
   }
@@ -533,7 +533,7 @@ export class MP2Adapter extends AdapterBase {
     width: number,
     height: number,
     mainBgSrc: string,
-    animSources?: string[]
+    animSources?: string[],
   ): Promise<void> {
     if (isNaN(setIndex) || !animSources || !animSources.length) {
       return;
@@ -574,7 +574,7 @@ export class MP2Adapter extends AdapterBase {
         mainBgImgData!,
         animImgData[i],
         width,
-        height
+        height,
       );
     }
     $$log("Wrote animations");
@@ -587,7 +587,7 @@ export class MP2Adapter extends AdapterBase {
     board.otherbg.boardselect = this._readImgFromMainFS(
       9,
       boardInfo.img.boardSelectImg,
-      0
+      0,
     );
   }
 
@@ -602,7 +602,7 @@ export class MP2Adapter extends AdapterBase {
       const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write board select for ${boardInfo.name}`),
-        45000
+        45000,
       );
       srcImage.onload = () => {
         const imgBuffer = toArrayBuffer(srcImage, 64, 48);
@@ -642,7 +642,7 @@ export class MP2Adapter extends AdapterBase {
       x,
       y,
       32,
-      32
+      32,
     );
     const dataUrl = arrayBufferToDataURL(icon, 32, 32);
     board.otherbg.boardselecticon = dataUrl;
@@ -662,7 +662,7 @@ export class MP2Adapter extends AdapterBase {
 
       const failTimer = setTimeout(
         () => reject(`Failed to write board select icon for ${boardInfo.name}`),
-        45000
+        45000,
       );
 
       let blankBackImage: HTMLImageElement,
@@ -694,7 +694,7 @@ export class MP2Adapter extends AdapterBase {
           const origImageData = arrayBufferToImageData(
             bgInfo.src!,
             bgInfo.width,
-            bgInfo.height
+            bgInfo.height,
           );
           canvasCtx.putImageData(origImageData, 0, 0);
 
@@ -708,7 +708,7 @@ export class MP2Adapter extends AdapterBase {
             0,
             0,
             bgInfo.width,
-            bgInfo.height
+            bgInfo.height,
           ).data.buffer;
 
           // Read the old image pack.
@@ -729,7 +729,7 @@ export class MP2Adapter extends AdapterBase {
           // Write the hover mask for the new image
           if (boardInfo.img.boardSelectIconMask) {
             const mask = this._createBoardSelectIconHoverMask(
-              newBoardSelectIconImage
+              newBoardSelectIconImage,
             );
 
             const oldPack = mainfs.get(9, boardInfo.img.boardSelectIconMask);
@@ -754,7 +754,7 @@ export class MP2Adapter extends AdapterBase {
         (reason) => {
           $$log(`Error writing board select icon: ${reason}`);
           reject();
-        }
+        },
       );
     });
   }
@@ -794,7 +794,7 @@ export class MP2Adapter extends AdapterBase {
     board.otherbg.boardlogo = this._readImgFromMainFS(
       10,
       boardInfo.img.introLogoImg as number,
-      0
+      0,
     );
   }
 
@@ -809,7 +809,7 @@ export class MP2Adapter extends AdapterBase {
       const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to write logos for ${boardInfo.name}`),
-        45000
+        45000,
       );
       srcImage.onload = () => {
         // Write the intro logo images.

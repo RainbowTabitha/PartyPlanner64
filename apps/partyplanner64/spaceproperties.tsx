@@ -99,11 +99,11 @@ export function SpaceProperties(props: ISpacePropertiesProps) {
           spaceIndices: selectedSpaceIndices,
           type,
           subtype,
-        })
+        }),
       );
       forceUpdate();
     },
-    [selectedSpaceIndices, forceUpdate]
+    [selectedSpaceIndices, forceUpdate],
   );
 
   const onStarCheckChanged = useCallback(
@@ -111,7 +111,7 @@ export function SpaceProperties(props: ISpacePropertiesProps) {
       setHostsStar(getValidSelectedSpaceIndices(), !!checked);
       forceUpdate();
     },
-    [forceUpdate]
+    [forceUpdate],
   );
 
   if (!spaces || !spaces.length) {
@@ -203,7 +203,7 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
             x: isBlank ? 0 : newX,
           },
         ],
-      })
+      }),
     );
     this.forceUpdate();
   };
@@ -222,7 +222,7 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
             y: isBlank ? 0 : newY,
           },
         ],
-      })
+      }),
     );
     this.forceUpdate();
   };
@@ -251,7 +251,7 @@ class SpaceCoords extends React.Component<ISpaceCoordsProps, any> {
             y: this.props.space.y || 0,
           },
         ],
-      })
+      }),
     );
     this.setState({ oldX: undefined, oldY: undefined, oldRot: undefined });
     this.forceUpdate();
@@ -725,7 +725,7 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = (props) => {
 
   function onEventActivationTypeToggle(
     event: IEventInstance,
-    eventIndex: number
+    eventIndex: number,
   ) {
     let activationType: EditorEventActivationType;
     if (event.activationType === EditorEventActivationType.WALKOVER)
@@ -733,7 +733,7 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = (props) => {
     else activationType = EditorEventActivationType.WALKOVER;
 
     store.dispatch(
-      setSpaceEventActivationTypeAction({ eventIndex, activationType })
+      setSpaceEventActivationTypeAction({ eventIndex, activationType }),
     );
   }
 
@@ -741,14 +741,14 @@ const SpaceEventList: React.FC<ISpaceEventListProps> = (props) => {
     event: IEventInstance,
     eventIndex: number,
     name: string,
-    value: number | boolean
+    value: number | boolean,
   ) {
     store.dispatch(
       setSpaceEventEventParameterAction({
         eventIndex,
         name,
         value,
-      })
+      }),
     );
   }
 
@@ -780,7 +780,7 @@ interface IMultipleSpacesEventListProps {
 }
 
 const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
-  props
+  props,
 ) => {
   const [addedEvents, setAddedEvents] = useState<AddedEventState[]>([]);
 
@@ -809,7 +809,7 @@ const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
     for (let i = eventIndex + 1; i < addedEvents.length; i++) {
       const addedEventState = addedEvents[i];
       addedEventState.eventListIndices = addedEventState.eventListIndices.map(
-        (index) => index - 1
+        (index) => index - 1,
       );
     }
     const mutatedArr = [...addedEvents];
@@ -819,7 +819,7 @@ const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
 
   function onEventActivationTypeToggle(
     event: IEventInstance,
-    eventIndex: number
+    eventIndex: number,
   ) {
     let activationType: EditorEventActivationType;
     if (event.activationType === EditorEventActivationType.WALKOVER)
@@ -830,7 +830,7 @@ const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
         eventIndices: addedEvents[eventIndex].eventListIndices,
         spaceIndices: props.selectedSpaceIndices,
         activationType,
-      })
+      }),
     );
   }
 
@@ -838,7 +838,7 @@ const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
     event: IEventInstance,
     eventIndex: number,
     name: string,
-    value: number | boolean
+    value: number | boolean,
   ) {
     store.dispatch(
       setSpaceEventsEventParameterAction({
@@ -846,7 +846,7 @@ const MultipleSpacesEventList: React.FC<IMultipleSpacesEventListProps> = (
         spaceIndices: props.selectedSpaceIndices,
         name,
         value,
-      })
+      }),
     );
   }
 

@@ -33,7 +33,7 @@ export const StarChanceEvent: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     return `
       addiu SP, SP, -0x20

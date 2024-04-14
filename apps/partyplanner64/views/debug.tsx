@@ -315,7 +315,7 @@ export const DebugView = class DebugView extends React.Component<
           const diff = num - info.rom_start;
           result = `RAM: ${$$hex(info.ram_start + diff, "")}\n`;
           result += `Overlay ${i} (${$$hex(i)}) offset +${diff} (+${$$hex(
-            diff
+            diff,
           )})`;
           break;
         }
@@ -394,7 +394,7 @@ export const DebugView = class DebugView extends React.Component<
             const diff = num - (currentOffset - compressedSize);
             let result = `RAM: N/A\n`;
             result += `MainFS ${d}/${f} (${$$hex(d)}/${$$hex(
-              f
+              f,
             )}) offset +${diff} (+${$$hex(diff)})`;
             return result;
           }

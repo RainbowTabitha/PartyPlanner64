@@ -101,7 +101,7 @@ class NewBoardVersionSelect extends React.Component<INewBoardVersionSelectProps>
         <span className="newBoardVersion" title="Mario Party 2">
           MP2
         </span>
-      </ToggleButton>
+      </ToggleButton>,
     );
     gameVersions.push(
       <ToggleButton
@@ -114,7 +114,7 @@ class NewBoardVersionSelect extends React.Component<INewBoardVersionSelectProps>
         <span className="newBoardVersion" title="Mario Party 3">
           MP3
         </span>
-      </ToggleButton>
+      </ToggleButton>,
     );
     return (
       <div className="newBoardVersionSelect">

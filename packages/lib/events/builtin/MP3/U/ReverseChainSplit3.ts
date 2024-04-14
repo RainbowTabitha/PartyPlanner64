@@ -32,7 +32,7 @@ export const ReverseChainSplit: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // It's all in ChainSplit3.
     throw new Error(`${ReverseChainSplit.id} not implemented`);

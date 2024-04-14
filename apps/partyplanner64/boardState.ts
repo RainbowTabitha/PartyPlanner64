@@ -86,7 +86,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         boards: IBoard[]; // ref ok
-      }>
+      }>,
     ) => {
       const { boards } = action.payload;
 
@@ -97,7 +97,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         board: IBoard; // ref ok
         rom?: boolean;
-      }>
+      }>,
     ) => {
       const { board, rom } = action.payload;
 
@@ -108,7 +108,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         boardIndex: number;
-      }>
+      }>,
     ) => {
       const { boardIndex } = action.payload;
 
@@ -146,7 +146,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         index: number;
         rom: boolean;
-      }>
+      }>,
     ) => {
       const { index, rom } = action.payload;
 
@@ -173,7 +173,7 @@ export const boardStateSlice = createSlice({
     },
     copyCurrentBoardAction: (
       state,
-      action: PayloadAction<{ makeCurrent?: boolean }>
+      action: PayloadAction<{ makeCurrent?: boolean }>,
     ) => {
       const source = getCurrentBoard(state);
 
@@ -199,7 +199,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         name: string;
-      }>
+      }>,
     ) => {
       const currentBoard = getCurrentBoard(state);
       currentBoard.name = action.payload.name;
@@ -208,7 +208,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         description: string;
-      }>
+      }>,
     ) => {
       const currentBoard = getCurrentBoard(state);
       currentBoard.description = action.payload.description;
@@ -217,7 +217,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         difficulty: number;
-      }>
+      }>,
     ) => {
       const currentBoard = getCurrentBoard(state);
       currentBoard.difficulty = action.payload.difficulty;
@@ -226,7 +226,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         costumeType: CostumeType;
-      }>
+      }>,
     ) => {
       const currentBoard = getCurrentBoard(state);
       currentBoard.costumeTypeIndex = action.payload.costumeType;
@@ -235,7 +235,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         bg: string;
-      }>
+      }>,
     ) => {
       const { bg } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -246,7 +246,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         name: keyof IBoard["otherbg"];
         value: string;
-      }>
+      }>,
     ) => {
       const { name, value } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -256,7 +256,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         bg: string;
-      }>
+      }>,
     ) => {
       const { bg } = action.payload;
       const board = getCurrentBoard(state);
@@ -267,7 +267,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         index: number;
-      }>
+      }>,
     ) => {
       const { index } = action.payload;
       const board = getCurrentBoard(state);
@@ -279,7 +279,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         bg: string;
-      }>
+      }>,
     ) => {
       const { bg } = action.payload;
       const board = getCurrentBoard(state);
@@ -290,7 +290,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         index: number;
-      }>
+      }>,
     ) => {
       const { index } = action.payload;
       const board = getCurrentBoard(state);
@@ -308,7 +308,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         code: string;
         language: EventCodeLanguage;
-      }>
+      }>,
     ) => {
       const { code, language } = action.payload;
       const board = getCurrentBoard(state);
@@ -326,7 +326,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         code: string;
         language: EventCodeLanguage;
-      }>
+      }>,
     ) => {
       const { code, language } = action.payload;
       const board = getCurrentBoard(state);
@@ -343,7 +343,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         audioChanges: IBoardAudioChanges;
-      }>
+      }>,
     ) => {
       const { audioChanges } = action.payload;
       const board = getCurrentBoard(state);
@@ -400,7 +400,7 @@ export const boardStateSlice = createSlice({
         y: number;
         type: Space;
         subtype?: SpaceSubtype;
-      }>
+      }>,
     ) => {
       const { x, y, type, subtype } = action.payload;
       const board = getCurrentBoard(state);
@@ -410,7 +410,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         index: number;
-      }>
+      }>,
     ) => {
       const { index } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -420,7 +420,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         spaceIndices: number[];
-      }>
+      }>,
     ) => {
       const { spaceIndices } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -442,7 +442,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         startSpaceIndex: number;
         endSpaceIndex: number;
-      }>
+      }>,
     ) => {
       const { startSpaceIndex, endSpaceIndex } = action.payload;
       const board = getCurrentBoard(state);
@@ -457,7 +457,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         x: number;
         y: number;
-      }>
+      }>,
     ) => {
       const { x, y } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -467,7 +467,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         connections: Coords[] | null;
-      }>
+      }>,
     ) => {
       const { connections } = action.payload;
       state.temporaryConnections = connections;
@@ -478,7 +478,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         spaceIndices: number[];
         coords: { x?: number; y?: number; z?: number }[];
-      }>
+      }>,
     ) => {
       const { spaceIndices, coords } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -502,7 +502,7 @@ export const boardStateSlice = createSlice({
         spaceIndices: number[];
         type: Space;
         subtype: SpaceSubtype | undefined;
-      }>
+      }>,
     ) => {
       const { spaceIndices, type, subtype } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -523,7 +523,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         spaceIndices: number[];
         subtype: SpaceSubtype | undefined;
-      }>
+      }>,
     ) => {
       const { spaceIndices, subtype } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -541,7 +541,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         spaceIndices: number[];
         hostsStar: boolean;
-      }>
+      }>,
     ) => {
       const { spaceIndices, hostsStar } = action.payload;
       const currentBoard = getCurrentBoard(state);
@@ -559,7 +559,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         spaceIndex: number;
         angleYAxisDeg: number;
-      }>
+      }>,
     ) => {
       const { spaceIndex, angleYAxisDeg } = action.payload;
       assertNotROMBoard(state);
@@ -596,7 +596,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         spaceIndices: number[] | null;
-      }>
+      }>,
     ) => {
       const { spaceIndices } = action.payload;
       state.highlightedSpaceIndices = spaceIndices;
@@ -606,7 +606,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         selectionCoords: Coords | null;
-      }>
+      }>,
     ) => {
       const { selectionCoords } = action.payload;
       state.selectionBoxCoords = selectionCoords;
@@ -617,7 +617,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         id: string | null;
         type: EventType;
-      }>
+      }>,
     ) => {
       const { id, type } = action.payload;
       state.currentEventId = id;
@@ -627,7 +627,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         event: IEvent; // ref ok
-      }>
+      }>,
     ) => {
       const { event } = action.payload;
       state.eventLibrary[event.id] = event;
@@ -636,17 +636,17 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         eventId: string;
-      }>
+      }>,
     ) => {
       const { eventId } = action.payload;
       if (!state.eventLibrary[eventId])
         throw new Error(
-          `Cannot remove event ${eventId}, as it isn't in the event library`
+          `Cannot remove event ${eventId}, as it isn't in the event library`,
         );
 
       if (!state.eventLibrary[eventId].custom)
         throw new Error(
-          `Cannot remove event ${eventId}, as it is a built-in event`
+          `Cannot remove event ${eventId}, as it is a built-in event`,
         );
 
       delete state.eventLibrary[eventId];
@@ -655,7 +655,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         event: IEventInstance; // ref ok
-      }>
+      }>,
     ) => {
       const { event } = action.payload;
       const board = getCurrentBoard(state);
@@ -674,7 +674,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         eventIndex: number;
-      }>
+      }>,
     ) => {
       const { eventIndex } = action.payload;
       const board = getCurrentBoard(state);
@@ -684,7 +684,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         event: ICustomEvent; // ref ok
-      }>
+      }>,
     ) => {
       const { event } = action.payload;
       const board = getCurrentBoard(state);
@@ -694,7 +694,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         eventId: string;
-      }>
+      }>,
     ) => {
       const { eventId } = action.payload;
       const board = getCurrentBoard(state);
@@ -704,7 +704,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         eventIndex: number;
-      }>
+      }>,
     ) => {
       const { eventIndex } = action.payload;
       state.hoveredBoardEventIndex = eventIndex;
@@ -714,7 +714,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         eventIndex: number;
         activationType: EditorEventActivationType;
-      }>
+      }>,
     ) => {
       const { eventIndex, activationType } = action.payload;
       const board = getCurrentBoard(state);
@@ -727,7 +727,7 @@ export const boardStateSlice = createSlice({
         eventIndex: number;
         name: string;
         value: EventParameterValue;
-      }>
+      }>,
     ) => {
       const { eventIndex, name, value } = action.payload;
       const board = getCurrentBoard(state);
@@ -743,7 +743,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         event: IEventInstance; // ref ok
         toStart?: boolean;
-      }>
+      }>,
     ) => {
       const { event, toStart } = action.payload;
       const board = getCurrentBoard(state);
@@ -753,7 +753,7 @@ export const boardStateSlice = createSlice({
         selectedSpace,
         event,
         toStart || false,
-        state.eventLibrary
+        state.eventLibrary,
       );
     },
     addEventToSpacesAction: (
@@ -761,7 +761,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         event: IEventInstance;
         spaceIndices: number[];
-      }>
+      }>,
     ) => {
       const { event, spaceIndices } = action.payload;
       const board = getCurrentBoard(state);
@@ -774,7 +774,7 @@ export const boardStateSlice = createSlice({
       state,
       action: PayloadAction<{
         eventIndex: number;
-      }>
+      }>,
     ) => {
       const { eventIndex } = action.payload;
       const selectedSpace = getCurrentSingleSelectedSpace(state);
@@ -785,7 +785,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         eventIndices: number[];
         spaceIndices: number[];
-      }>
+      }>,
     ) => {
       const { eventIndices, spaceIndices } = action.payload;
       assert(eventIndices.length === spaceIndices.length);
@@ -802,7 +802,7 @@ export const boardStateSlice = createSlice({
       action: PayloadAction<{
         eventIndex: number;
         activationType: EditorEventActivationType;
-      }>
+      }>,
     ) => {
       const { eventIndex, activationType } = action.payload;
       const selectedSpace = getCurrentSingleSelectedSpace(state);
@@ -815,7 +815,7 @@ export const boardStateSlice = createSlice({
         spaceIndices: number[];
         eventIndices: number[];
         activationType: EditorEventActivationType;
-      }>
+      }>,
     ) => {
       const { spaceIndices, eventIndices, activationType } = action.payload;
       const board = getCurrentBoard(state);
@@ -833,7 +833,7 @@ export const boardStateSlice = createSlice({
         eventIndex: number;
         name: string;
         value: EventParameterValue;
-      }>
+      }>,
     ) => {
       const { eventIndex, name, value } = action.payload;
       const selectedSpace = getCurrentSingleSelectedSpace(state);
@@ -850,7 +850,7 @@ export const boardStateSlice = createSlice({
         eventIndices: number[];
         name: string;
         value: EventParameterValue;
-      }>
+      }>,
     ) => {
       const { spaceIndices, eventIndices, name, value } = action.payload;
       const board = getCurrentBoard(state);
@@ -1029,7 +1029,7 @@ function removeSpace(state: BoardState, board: IBoard, index: number): boolean {
             event.parameterValues.hasOwnProperty(parameter.name)
           ) {
             event.parameterValues[parameter.name] = _adjust(
-              event.parameterValues[parameter.name]
+              event.parameterValues[parameter.name],
             );
           }
           break;
@@ -1044,7 +1044,7 @@ function removeSpace(state: BoardState, board: IBoard, index: number): boolean {
           }
           break;
       }
-    }
+    },
   );
 
   return true;
@@ -1102,7 +1102,7 @@ function _shouldEraseLine(
   startSpace: ISpace,
   endSpace: ISpace,
   targetX: number,
-  targetY: number
+  targetY: number,
 ) {
   if (targetX > startSpace.x && targetX > endSpace.x) return false;
   if (targetX < startSpace.x && targetX < endSpace.x) return false;
@@ -1115,7 +1115,7 @@ function _shouldEraseLine(
       startSpace.x,
       startSpace.y,
       endSpace.x,
-      endSpace.y
+      endSpace.y,
     ) <= 4
   );
 }
@@ -1123,7 +1123,7 @@ function _shouldEraseLine(
 function _removeAssociations(
   spaceIdx: number,
   board: IBoard,
-  eventLibrary: EventMap
+  eventLibrary: EventMap,
 ) {
   forEachEventParameter(
     board,
@@ -1146,13 +1146,13 @@ function _removeAssociations(
             const parameterValue = event.parameterValues?.[parameter.name];
             if (event.parameterValues && Array.isArray(parameterValue)) {
               event.parameterValues[parameter.name] = parameterValue.filter(
-                (s) => s !== spaceIdx
+                (s) => s !== spaceIdx,
               );
             }
           }
           break;
       }
-    }
+    },
   );
 }
 
@@ -1166,7 +1166,7 @@ function getCurrentBoard(state: BoardState): IBoard {
 
 function getCurrentSingleSelectedSpace(state: BoardState): ISpace {
   const selectedSpaceIndices = Object.keys(state.selectedSpaceIndices).map(
-    (k) => parseInt(k, 10)
+    (k) => parseInt(k, 10),
   );
   assert(selectedSpaceIndices.length === 1);
   const space = getCurrentBoard(state).spaces[selectedSpaceIndices[0]];
@@ -1212,7 +1212,7 @@ function removeEventFromSpace(space: ISpace, eventIndex: number) {
 export function getEvent(
   state: BoardState,
   eventId: string,
-  board: IBoard
+  board: IBoard,
 ): IEvent | undefined {
   if (board && board.events && !!getBoardEvent(board, eventId)) {
     const boardEvent = getBoardEvent(board, eventId);

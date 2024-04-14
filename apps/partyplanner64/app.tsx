@@ -174,7 +174,7 @@ export class PP64App extends React.Component<{}, IPP64AppState> {
         const ipcRenderer = (window as any).require("electron").ipcRenderer;
         ipcRenderer.removeListener(
           "update-check-hasupdate",
-          this._onUpdateCheckHasUpdate
+          this._onUpdateCheckHasUpdate,
         );
       } catch (e) {
         console.error("Auto update failed in componentWillUnmount: ", e);
@@ -392,7 +392,7 @@ function usePP64Hotkeys(): void {
     {
       enabled: allowUndoRedo,
       enableOnTags: ["INPUT", "SELECT"],
-    }
+    },
   );
 
   useHotkeys(
@@ -403,7 +403,7 @@ function usePP64Hotkeys(): void {
     {
       enabled: allowUndoRedo,
       enableOnTags: ["INPUT", "SELECT"],
-    }
+    },
   );
 }
 
@@ -425,7 +425,7 @@ function PP64NotificationBar() {
   }, [dispatch]);
 
   const updateHideNotification = useAppSelector(
-    (state) => state.app.updateHideNotification
+    (state) => state.app.updateHideNotification,
   );
 
   const updateExists = useAppSelector(selectUpdateExists);
@@ -442,7 +442,7 @@ function PP64NotificationBar() {
         <NotificationButton onClick={onUpdateNotificationInstallClicked}>
           Install
         </NotificationButton>
-      </Notification>
+      </Notification>,
     );
   }
 
@@ -517,7 +517,7 @@ function initializeState(): void {
         const customEventObj = eventObj as ICustomEvent;
         const customEvent = createCustomEvent(
           customEventObj.language || EventCodeLanguage.MIPS,
-          customEventObj.asm
+          customEventObj.asm,
         );
         store.dispatch(addEventToLibraryAction({ event: customEvent }));
       } catch (e) {
@@ -535,13 +535,13 @@ const root = createRoot(body!);
 root.render(
   <Provider store={store}>
     <PP64App ref={(app) => ((window as any)._PP64instance = app)} />
-  </Provider>
+  </Provider>,
 );
 
 function _onError(
   app: PP64App,
   error: Error,
-  errorInfo: React.ErrorInfo | null
+  errorInfo: React.ErrorInfo | null,
 ) {
   app.setState({
     error,

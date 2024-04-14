@@ -96,7 +96,7 @@ export const ChainMerge: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     const asm = `
       ADDIU SP, SP, -0x18

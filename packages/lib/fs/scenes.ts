@@ -60,7 +60,7 @@ export const scenes = new (class Scenes {
     return new DataView(
       this._overlays![index],
       startAddr - ramStart,
-      endAddr - startAddr
+      endAddr - startAddr,
     );
   }
 
@@ -145,11 +145,11 @@ export const scenes = new (class Scenes {
   replace(
     index: number,
     buffer: ArrayBuffer,
-    newInfoValues?: Partial<ISceneInfo>
+    newInfoValues?: Partial<ISceneInfo>,
   ) {
     if (buffer.byteLength % 16) {
       throw new Error(
-        "Cannot have overlay byte length that is not divisible by 16"
+        "Cannot have overlay byte length that is not divisible by 16",
       );
     }
 
@@ -181,7 +181,7 @@ export const scenes = new (class Scenes {
       `Replaced overlay ${$$hex(index)} with new buffer of length ${
         buffer.byteLength
       }`,
-      newInfoValues
+      newInfoValues,
     );
   }
 })();

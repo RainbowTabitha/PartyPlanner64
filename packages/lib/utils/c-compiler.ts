@@ -141,7 +141,7 @@ function convertToNamedRegisters(assembly: string): string {
   for (let i = regNames.length - 1; i >= 0; i--) {
     assembly = assembly.replace(
       new RegExp("\\" + regNames[i][1], "g"),
-      regNames[i][0]
+      regNames[i][0],
     );
   }
   return assembly;

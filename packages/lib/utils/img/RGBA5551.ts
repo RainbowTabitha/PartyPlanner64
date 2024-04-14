@@ -3,7 +3,7 @@
 export function RGBA5551toRGBA32(
   buffer: ArrayBuffer,
   width: number,
-  height: number
+  height: number,
 ) {
   const outBuffer = new ArrayBuffer(width * height * 4);
   const outView = new Uint8Array(outBuffer);
@@ -25,7 +25,7 @@ export function RGBA5551toRGBA32(
 export function RGBA5551fromRGBA32(
   buffer: ArrayBuffer,
   width: number,
-  height: number
+  height: number,
 ) {
   const outBuffer = new ArrayBuffer(width * height * 2);
   const outView = new DataView(outBuffer);

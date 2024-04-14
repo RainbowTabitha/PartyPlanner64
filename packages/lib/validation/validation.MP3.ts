@@ -29,7 +29,7 @@ export function getValidationRules(gameID: Game) {
   rules.push(getRule("TOOMANYGATES", { limit: 2 }));
 
   rules.push(
-    getRule("BADSTARCOUNT", { low: 0, high: 8, disallowed: { 1: true } })
+    getRule("BADSTARCOUNT", { low: 0, high: 8, disallowed: { 1: true } }),
   );
   rules.push(getRule("WARNNOSTARSPACES"));
 

@@ -102,7 +102,7 @@ export class BasicCodeEditorView extends React.Component<
     if (
       !this.codeHasChanged({ fromDefaultOnly: true }) ||
       (await confirmFromUser(
-        "Are you sure you want to switch languages? The current code will not be kept."
+        "Are you sure you want to switch languages? The current code will not be kept.",
       ))
     ) {
       this.setState({
@@ -130,7 +130,7 @@ export class BasicCodeEditorView extends React.Component<
   promptExit = async () => {
     if (this.codeHasChanged()) {
       return await confirmFromUser(
-        "Are you sure you want to exit without saving your code?"
+        "Are you sure you want to exit without saving your code?",
       );
     }
     return true;

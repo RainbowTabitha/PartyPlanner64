@@ -63,7 +63,7 @@ export function isFontPack(buffer: ArrayBuffer): boolean {
 function findMatchingSizeConfig(
   imagesOffset: number,
   charsOffset: number,
-  byteLength: number
+  byteLength: number,
 ): SizeConfig | null {
   for (const config of SIZE_CONFIGS) {
     const CHAR_PIXELS = config.w * config.h;
@@ -90,7 +90,7 @@ function findMatchingSizeConfig(
 export function isKnownFontPack(
   game: Game,
   dir: number,
-  file: number
+  file: number,
 ): boolean {
   // switch (game) {
   //   case Game.MP1_USA:
@@ -122,7 +122,7 @@ export function fontPackToRGBA32(buffer: ArrayBuffer): IFontPack {
   const config = findMatchingSizeConfig(
     imagesOffset,
     charsOffset,
-    view.byteLength
+    view.byteLength,
   );
   if (!config) {
     throw new Error("Unrecongized font size");
@@ -154,7 +154,7 @@ export function fontPackToRGBA32(buffer: ArrayBuffer): IFontPack {
         new DataView(buffer, curImageOffset, CHAR_PIXELS),
         palette5551,
         8,
-        16
+        16,
       );
       const rgba32 = RGBA5551toRGBA32(rgba5551, config.w, config.h);
       pack.images.push(rgba32);
@@ -175,7 +175,7 @@ export function fontPackToRGBA32(buffer: ArrayBuffer): IFontPack {
       new DataView(buffer, curCharOffset, CHAR_PIXELS / 2),
       fakePalette,
       4,
-      32
+      32,
     );
     pack.chars.push(rgba32);
 

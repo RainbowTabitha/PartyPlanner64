@@ -98,21 +98,21 @@ export const animationfs = {
     mainImgData: ImageData,
     animImgData: ImageData,
     width: number,
-    height: number
+    height: number,
   ) {
     $$log(
-      `AnimationFS.writeAnimationBackground, set: ${set}, entry: ${entry}, img is ${width}x${height}`
+      `AnimationFS.writeAnimationBackground, set: ${set}, entry: ${entry}, img is ${width}x${height}`,
     );
 
     const orderedMainTiles = animationfs._createOrderedTiles(
       mainImgData,
       width,
-      height
+      height,
     );
     const orderedAnimTiles = animationfs._createOrderedTiles(
       animImgData,
       width,
-      height
+      height,
     );
 
     animationfs.clearSetEntry(set, entry);
@@ -139,13 +139,13 @@ export const animationfs = {
     entry: number,
     orderedMainTiles: ArrayBuffer[],
     width: number,
-    height: number
+    height: number,
   ) {
     let orderedAnimBgTiles = [];
     for (let i = 0; i < orderedMainTiles.length; i++) {
       if (_animfsCache![set][entry].hasOwnProperty(i + 1))
         orderedAnimBgTiles.push(
-          new DataView(_animfsCache![set][entry][i + 1].decompressed)
+          new DataView(_animfsCache![set][entry][i + 1].decompressed),
         );
       else orderedAnimBgTiles.push(new DataView(orderedMainTiles[i]));
     }
@@ -158,7 +158,7 @@ export const animationfs = {
     orderedAnimBgTiles = animationfs._unorderTiles(
       orderedAnimBgTiles,
       tileXCount,
-      tileYCount
+      tileYCount,
     );
 
     const bgBufferRGBA16 = fromTiles(
@@ -166,7 +166,7 @@ export const animationfs = {
       tileXCount,
       tileYCount,
       tileWidth * 2,
-      tileHeight
+      tileHeight,
     );
     const bgBufferRGBA32 = RGBA5551toRGBA32(bgBufferRGBA16, width, height);
     const bgArr = new Uint8Array(bgBufferRGBA32);
@@ -186,14 +186,14 @@ export const animationfs = {
     set: number,
     mainImgData: ImageData,
     width: number,
-    height: number
+    height: number,
   ) {
     const entries = animationfs.getSetEntryCount(set);
 
     const orderedMainTiles = animationfs._createOrderedTiles(
       mainImgData,
       width,
-      height
+      height,
     );
 
     const bgs = [];
@@ -204,8 +204,8 @@ export const animationfs = {
           entry,
           orderedMainTiles,
           width,
-          height
-        )
+          height,
+        ),
       );
     }
 
@@ -278,19 +278,19 @@ export const animationfs = {
     const compressedSize = getCompressedSize(
       compressionType,
       fileStartView,
-      decompressedSize
+      decompressedSize,
     )!; // TODO perf
     return {
       index,
       compressionType,
       compressed: buffer.slice(
         fileStartOffset,
-        fileStartOffset + compressedSize
+        fileStartOffset + compressedSize,
       ),
       decompressed: decompress(
         compressionType,
         fileStartView,
-        decompressedSize
+        decompressedSize,
       ),
     };
   },
@@ -328,7 +328,7 @@ export const animationfs = {
         s,
         e,
         view,
-        curSetEntryWriteOffset
+        curSetEntryWriteOffset,
       );
       curSetEntryWriteOffset = makeDivisibleBy(curSetEntryWriteOffset, 4);
     }
@@ -352,7 +352,7 @@ export const animationfs = {
         e,
         t,
         view,
-        curTileWriteOffset
+        curTileWriteOffset,
       );
       curTileWriteOffset = makeDivisibleBy(curTileWriteOffset, 4);
     }
@@ -372,7 +372,7 @@ export const animationfs = {
       tile.compressed!,
       offset + 12,
       0,
-      tile.compressed!.byteLength
+      tile.compressed!.byteLength,
     );
     return offset + 12 + tile.compressed!.byteLength;
   },

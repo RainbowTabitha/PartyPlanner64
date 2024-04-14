@@ -200,11 +200,11 @@ export const strings3 = {
         romView.setUint16(patchOffsets[i].lower, lower);
       }
       $$log(
-        `Strings3.setROMOffset[${locale}] -> ${$$hex((upper << 16) | lower)}`
+        `Strings3.setROMOffset[${locale}] -> ${$$hex((upper << 16) | lower)}`,
       );
       curOffset += makeDivisibleBy(
         _strFsInstances![locale].getByteLength(),
-        16
+        16,
       );
     }
   },

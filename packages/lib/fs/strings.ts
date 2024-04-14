@@ -55,7 +55,7 @@ export class StringTable {
     const strSize = entryView.getUint16(0);
     return view.buffer.slice(
       view.byteOffset + entryOffset + 2,
-      view.byteOffset + entryOffset + 2 + strSize
+      view.byteOffset + entryOffset + 2 + strSize,
     );
   }
 

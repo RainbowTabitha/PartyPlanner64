@@ -110,7 +110,7 @@ const DetailsMP1BoardStats: React.FC<{ counts: SpaceCountMap }> = ({
             Space.CHANCE,
             Space.MINIGAME,
             Space.SHROOM,
-            Space.BOWSER
+            Space.BOWSER,
           )}
         />
         <DetailsStatsSpaceCountCell count={count(counts)} />
@@ -171,7 +171,7 @@ const DetailsMP2BoardStats: React.FC<{ counts: SpaceCountMap }> = ({
             Space.ITEM,
             Space.BATTLE,
             Space.BANK,
-            Space.BOWSER
+            Space.BOWSER,
           )}
         />
         <DetailsStatsSpaceCountCell count={count(counts)} />
@@ -230,7 +230,7 @@ const DetailsMP3BoardStats: React.FC<{ counts: SpaceCountMap }> = ({
             Space.BATTLE,
             Space.BANK,
             Space.GAMEGUY,
-            Space.BOWSER
+            Space.BOWSER,
           )}
         />
         <DetailsStatsSpaceCountCell count={count(counts)} />

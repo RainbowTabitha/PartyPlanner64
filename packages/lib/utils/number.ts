@@ -16,7 +16,7 @@ export function lineDistance(
   x1: number,
   y1: number,
   x2: number,
-  y2: number
+  y2: number,
 ) {
   return (
     Math.abs((y2 - y1) * tx - (x2 - x1) * ty + x2 * y1 - y2 * x1) /
@@ -34,7 +34,7 @@ export function pointFallsWithin(
   xs: number,
   ys: number,
   xf: number,
-  yf: number
+  yf: number,
 ) {
   const [minX, maxX] = [Math.min(xs, xf), Math.max(xs, xf)];
   const [minY, maxY] = [Math.min(ys, yf), Math.max(ys, yf)];
@@ -61,7 +61,7 @@ export function determineAngle(
   xOrigin: number,
   yOrigin: number,
   x: number,
-  y: number
+  y: number,
 ) {
   const deltaX = x - xOrigin;
   const deltaY = y - yOrigin;

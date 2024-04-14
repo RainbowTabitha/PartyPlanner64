@@ -11,7 +11,7 @@ export function cutFromWhole(
   x: number,
   y: number,
   width: number,
-  height: number
+  height: number,
 ) {
   const pieceWidth = width * (bpp / 8);
   const outBuffer = new ArrayBuffer(pieceWidth * height);
@@ -40,7 +40,7 @@ export function cutFromWhole(
 export function toArrayBuffer(
   image: HTMLImageElement,
   width: number,
-  height: number
+  height: number,
 ) {
   const imgWidth = image.width;
   const imgHeight = image.height;

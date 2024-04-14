@@ -98,7 +98,7 @@ export function fromPack(buffer: ArrayBuffer) {
         rawImgBuffer,
         imgWidth,
         imgHeight,
-        bitCount
+        bitCount,
       );
     }
     output.push(imgInfo);
@@ -116,7 +116,7 @@ export function toPack(
   imgInfoArr: IImgInfo[],
   outBpp: number,
   bmpBpp: number,
-  oldPack?: ArrayBuffer
+  oldPack?: ArrayBuffer,
 ) {
   let newPackSize = getByteLength(imgInfoArr, outBpp);
 
@@ -142,7 +142,7 @@ export function toPack(
   if (palette) {
     newView.setUint32(
       0xc,
-      newPackSize - palette.colors.length * (outBpp / bmpBpp)
+      newPackSize - palette.colors.length * (outBpp / bmpBpp),
     ); // Palette offset
   } else {
     newView.setUint32(0xc, newPackSize); // Palette offset
@@ -201,7 +201,7 @@ function _writeEntry(
   curOffset: number,
   imgInfo: IImgInfo,
   outBpp: number,
-  oldView?: DataView
+  oldView?: DataView,
 ) {
   newView.setUint32(curOffset, curOffset + 0xc); // Absolute offset of image data.
   newView.setUint16((curOffset += 4), imgInfo.width);
@@ -225,12 +225,12 @@ function _writeEntry(
     const rgba16 = RGBA5551fromRGBA32(
       imgInfo.src!,
       imgInfo.width,
-      imgInfo.height
+      imgInfo.height,
     );
     srcView = new DataView(rgba16);
   } else {
     throw new Error(
-      `Cannot create ImgPack (yet) with inBpp=${imgInfo.bpp} and outBpp=${outBpp}.`
+      `Cannot create ImgPack (yet) with inBpp=${imgInfo.bpp} and outBpp=${outBpp}.`,
     );
   }
 

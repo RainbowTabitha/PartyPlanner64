@@ -37,7 +37,7 @@ export class SpaceEventTable {
         dataView,
         currentOffset,
         parseInt(spaceIndex),
-        this._entries[spaceIndex] as number
+        this._entries[spaceIndex] as number,
       );
       currentOffset += 8;
     }
@@ -62,13 +62,13 @@ export class SpaceEventTable {
     dataView: DataView,
     currentOffset: number,
     spaceIndex: number,
-    address: number
+    address: number,
   ) {
     dataView.setUint16(currentOffset, spaceIndex);
     dataView.setUint16(currentOffset + 2, 0); // Just to be sure
     if (!address && spaceIndex !== 0xffff)
       throw new Error(
-        `Tried to write null address from SpaceEventTable at space index ${spaceIndex}.`
+        `Tried to write null address from SpaceEventTable at space index ${spaceIndex}.`,
       );
     dataView.setUint32(currentOffset + 4, address);
   }

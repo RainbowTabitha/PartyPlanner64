@@ -18,7 +18,7 @@ export abstract class HookBase {
     const MAINFS_READ_ADDR = adapter && adapter.MAINFS_READ_ADDR;
     if (!MAINFS_READ_ADDR) {
       throw new Error(
-        "Cheats were being applied, but the ROM adapter had no MAINFS_READ_ADDR"
+        "Cheats were being applied, but the ROM adapter had no MAINFS_READ_ADDR",
       );
     }
 
@@ -41,11 +41,11 @@ export abstract class HookBase {
     // Check if the cached cheat routine address is legit. If not, this is the first execution and we need to get it
     romView.setUint32(
       (offset += 4),
-      parse(`LUI A2 ${this.HOOK_CACHE_DEFAULT_VALUE >>> 16}`)
+      parse(`LUI A2 ${this.HOOK_CACHE_DEFAULT_VALUE >>> 16}`),
     ); // A2 = 0x76650000 "ve"
     romView.setUint32(
       (offset += 4),
-      parse(`ADDIU A2 A2 ${this.HOOK_CACHE_DEFAULT_VALUE & 0xffff}`)
+      parse(`ADDIU A2 A2 ${this.HOOK_CACHE_DEFAULT_VALUE & 0xffff}`),
     ); // A2 = 0x76657221 "ver!"
     romView.setUint32((offset += 4), parse(`BNE A1 A2 11`)); // Jump to the JR A1
 
@@ -57,18 +57,18 @@ export abstract class HookBase {
     // Read from MainFS if we don't have cheat buffer (only happens once)
     romView.setUint32(
       (offset += 4),
-      parse(`LUI A0 ${this.MAINFS_CHEAT_FILE[0]}`)
+      parse(`LUI A0 ${this.MAINFS_CHEAT_FILE[0]}`),
     ); // A0 <= [The dir index]xxxx
     romView.setUint32((offset += 4), parse(`JAL ${MAINFS_READ_ADDR}`));
     romView.setUint32(
       (offset += 4),
-      parse(`ADDIU A0 A0 ${this.MAINFS_CHEAT_FILE[1]}`)
+      parse(`ADDIU A0 A0 ${this.MAINFS_CHEAT_FILE[1]}`),
     ); // A0 = [dir index][file index]
 
     // Cache off the cheat location
     romView.setUint32(
       (offset += 4),
-      parse(`LUI A1 ${0x8000 | cachedReadLocs[0]}`)
+      parse(`LUI A1 ${0x8000 | cachedReadLocs[0]}`),
     ); // A1 = 0x800C
     romView.setUint32((offset += 4), parse(`ADDIU A1 A1 ${cachedReadLocs[1]}`)); // A1 = 0x800CA900
     romView.setUint32((offset += 4), parse("SW V0 0(A1)"));

@@ -76,7 +76,7 @@ export const ChainMerge3: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // TODO: Could just use "prevSpace" etc below, the definelabels should work...
     return `

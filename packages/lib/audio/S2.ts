@@ -54,7 +54,7 @@ export class S2 {
     const tblOffsetEnd = view.getUint32(4); // First midi offset
     this.tbl = view.buffer.slice(
       view.byteOffset + tblOffsetStart,
-      view.byteOffset + tblOffsetEnd
+      view.byteOffset + tblOffsetEnd,
     );
 
     // Extract B1 structure
@@ -65,7 +65,7 @@ export class S2 {
     this.soundbanks = new B1(B1view);
     this._rawB1 = view.buffer.slice(
       view.byteOffset + B1offsetStart,
-      view.byteOffset + B1offsetStart + B1length
+      view.byteOffset + B1offsetStart + B1length,
     );
   }
 
@@ -124,7 +124,7 @@ export class S2 {
         midiInfo.buffer,
         currentOffset,
         0,
-        midiInfo.buffer.byteLength
+        midiInfo.buffer.byteLength,
       );
       currentOffset += makeDivisibleBy(midiInfo.buffer.byteLength, 8);
     }

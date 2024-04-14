@@ -2,7 +2,7 @@ export function GrayscaleToRGBA32(
   buffer: ArrayBuffer,
   width: number,
   height: number,
-  bpp: number
+  bpp: number,
 ) {
   const outBuffer = new ArrayBuffer(width * height * 4);
   const outView = new Uint8Array(outBuffer);
@@ -34,7 +34,7 @@ export function GrayscaleFromRGBA32(
   buffer: ArrayBuffer,
   width: number,
   height: number,
-  bpp: number
+  bpp: number,
 ) {
   throw new Error("Grayscale.fromRGBA32 not implemented");
 }

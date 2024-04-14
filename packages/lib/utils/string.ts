@@ -61,7 +61,7 @@ export function splice(
   value: string,
   start: number,
   delCount: number,
-  newSubStr: string
+  newSubStr: string,
 ) {
   return (
     value.slice(0, start) + newSubStr + value.slice(start + Math.abs(delCount))

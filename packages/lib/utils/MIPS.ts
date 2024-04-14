@@ -177,7 +177,7 @@ export function makeInst(inst: string, ...extras: any[]) {
 export function getJALAddr(word: number) {
   if ((word & 0x0c000000) !== 0x0c000000)
     throw new Error(
-      `MIPS.getJALAddr: ${word.toString(16)} is not a JAL instruction.`
+      `MIPS.getJALAddr: ${word.toString(16)} is not a JAL instruction.`,
     );
 
   return (word & 0x03ffffff) << 2;
@@ -235,7 +235,7 @@ export function findCalls(dataView: DataView, jalAddr: number) {
 export function findCallsInFunction(
   dataView: DataView,
   startOffset: number,
-  jalAddr: number
+  jalAddr: number,
 ) {
   const jalInst = parse(`JAL ${jalAddr}`);
   const calls = [];

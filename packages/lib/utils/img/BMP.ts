@@ -9,7 +9,7 @@ export function BMPtoRGBA(
   buffer: ArrayBuffer | DataView,
   palette: number[],
   inBpp: number,
-  outBpp: number
+  outBpp: number,
 ) {
   let inView = buffer;
   if (!(inView instanceof DataView)) inView = new DataView(inView);
@@ -27,7 +27,7 @@ export function BMPtoRGBA(
       paletteIdx = inView.getUint8(inIdx);
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       inIdx += 1;
       outIndex += outPixelByteCount;
@@ -35,14 +35,14 @@ export function BMPtoRGBA(
       paletteIdx = (inView.getUint8(inIdx) & 0xf0) >> 4;
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       outIndex += outPixelByteCount;
 
       paletteIdx = inView.getUint8(inIdx) & 0x0f;
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       outIndex += outPixelByteCount;
 
@@ -51,28 +51,28 @@ export function BMPtoRGBA(
       paletteIdx = (inView.getUint8(inIdx) & 0xc0) >> 6;
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       outIndex += outPixelByteCount;
 
       paletteIdx = (inView.getUint8(inIdx) & 0x30) >> 4;
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       outIndex += outPixelByteCount;
 
       paletteIdx = (inView.getUint8(inIdx) & 0x0c) >> 2;
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       outIndex += outPixelByteCount;
 
       paletteIdx = inView.getUint8(inIdx) & 0x03;
       (outView as any)[outSetUintFn](
         outIndex,
-        getPaletteEntry(palette, paletteIdx)
+        getPaletteEntry(palette, paletteIdx),
       );
       outIndex += outPixelByteCount;
 
@@ -86,7 +86,7 @@ export function BMPtoRGBA(
 export function BMPfromRGBA(
   buffer: ArrayBuffer | DataView,
   inBpp: number,
-  outBpp: number
+  outBpp: number,
 ): [ArrayBuffer, IPaletteInfo] {
   let pixelView = buffer;
   if (!(pixelView instanceof DataView)) pixelView = new DataView(pixelView);
@@ -118,7 +118,7 @@ export function BMPfromRGBA(
 
   // Now write the bitmap itself.
   const bmpBuffer = new ArrayBuffer(
-    (buffer.byteLength / pixelByteCount) * (outBpp / 8)
+    (buffer.byteLength / pixelByteCount) * (outBpp / 8),
   );
   const bmpView = new DataView(bmpBuffer);
   const outSetUintFn = "setUint" + outBpp;
@@ -145,7 +145,7 @@ export function BMPfromRGBA(
 function getPaletteEntry(palette: number[], index: number): number {
   if (index >= palette.length) {
     throw new Error(
-      `Invalid palette access (index ${index} of palette length ${palette.length})`
+      `Invalid palette access (index ${index} of palette length ${palette.length})`,
     );
   }
   return palette[index];

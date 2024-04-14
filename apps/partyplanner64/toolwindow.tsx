@@ -77,7 +77,7 @@ export class ToolWindow extends React.Component<
 
   shouldComponentUpdate(
     nextProps: IToolWindowProps,
-    nextState: IToolWindowState
+    nextState: IToolWindowState,
   ) {
     return !this.tryUpdatePosition(nextState);
   }
@@ -229,7 +229,7 @@ function _mouseend(event: MouseEvent) {
 
 function _keepInBounds(
   toolwindow: ToolWindow,
-  newState: Partial<IToolWindowState>
+  newState: Partial<IToolWindowState>,
 ): IToolWindowState {
   if (newState.left! < 0) newState.left = 0;
   else {

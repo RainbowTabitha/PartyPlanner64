@@ -251,8 +251,8 @@ export const FORM = class FORM {
               obj,
               FORM._parseOBJ1Transforms(
                 rawView,
-                objectOffset + 2 + 2 * subObjCount
-              )
+                objectOffset + 2 + 2 * subObjCount,
+              ),
             );
           }
           break;
@@ -265,7 +265,7 @@ export const FORM = class FORM {
           };
           Object.assign(
             obj,
-            FORM._parseOBJ1Transforms(rawView, objectOffset + 5)
+            FORM._parseOBJ1Transforms(rawView, objectOffset + 5),
           );
           break;
 
@@ -275,7 +275,7 @@ export const FORM = class FORM {
           };
           Object.assign(
             obj,
-            FORM._parseOBJ1Transforms(rawView, objectOffset + 2)
+            FORM._parseOBJ1Transforms(rawView, objectOffset + 2),
           );
           break;
 
@@ -564,7 +564,7 @@ export const FORM = class FORM {
       }
       if (!palette) {
         throw new Error(
-          `Could not locate palette at global index ${paletteGlobalIndex}`
+          `Could not locate palette at global index ${paletteGlobalIndex}`,
         );
       }
 
@@ -596,7 +596,7 @@ export const FORM = class FORM {
             src: RGBA5551toRGBA32(
               raw.slice(0xd, 0xd + imageByteLength),
               width,
-              height
+              height,
             ),
           };
 
@@ -677,7 +677,7 @@ export const FORM = class FORM {
         out1byte |= inByte & 0xf0;
         outView.setUint32(
           outLoc,
-          (out1byte << 24) | (out1byte << 16) | (out1byte << 8) | 0xff
+          (out1byte << 24) | (out1byte << 16) | (out1byte << 8) | 0xff,
         );
         outLoc += 4;
 
@@ -685,7 +685,7 @@ export const FORM = class FORM {
         out2byte |= out2byte << 4;
         outView.setUint32(
           outLoc,
-          (out2byte << 24) | (out2byte << 16) | (out2byte << 8) | 0xff
+          (out2byte << 24) | (out2byte << 16) | (out2byte << 8) | 0xff,
         );
         outLoc += 4;
       }
@@ -715,7 +715,7 @@ export const FORM = class FORM {
     formObj: IFormObj,
     bmpIndex: number,
     buffer: ArrayBuffer,
-    palette: any
+    palette: any,
   ) {
     // FIXME?: For now, this assumes that the new BMP has the same properties basically.
     // Also look at the huge blob at the bottom LOL get this thing done!
@@ -726,10 +726,10 @@ export const FORM = class FORM {
     // Write the palette, which needs some care.
     formObj.PAL1[bmpIndex].parsed = palette;
     const oldPalGlobalIndex = new DataView(
-      formObj.PAL1[bmpIndex].raw
+      formObj.PAL1[bmpIndex].raw,
     ).getUint16(0);
     const newRaw = (formObj.PAL1[bmpIndex].raw = new ArrayBuffer(
-      4 + palette.colors.length * 4
+      4 + palette.colors.length * 4,
     ));
     const newPaletteView = new DataView(newRaw);
     newPaletteView.setUint16(0, oldPalGlobalIndex);
@@ -766,7 +766,7 @@ export const FORM = class FORM {
   static getByGlobalIndex(
     form: IFormObj,
     section: IFormObjType,
-    globalIndex: number
+    globalIndex: number,
   ): any {
     if (!form[section]) return null;
 
@@ -791,7 +791,7 @@ export const FORM = class FORM {
 
           if (!val.hasOwnProperty("globalIndex"))
             throw new Error(
-              `globalIndex is not a property of the searched ${section} array in getByGlobalIndex`
+              `globalIndex is not a property of the searched ${section} array in getByGlobalIndex`,
             );
 
           if (val.globalIndex === globalIndex) values.push(val);

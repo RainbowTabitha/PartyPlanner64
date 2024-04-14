@@ -21,7 +21,7 @@ export function parse(buffer: ArrayBuffer, board: Partial<IBoard>): IBoard {
   $$log(
     `Parsing board def, ${$$hex(header.spaceCount)} (${
       header.spaceCount
-    }) spaces`
+    }) spaces`,
   );
   return board as IBoard;
 }
@@ -82,7 +82,7 @@ function _parseLinks(buffer: ArrayBuffer, header: IHeader) {
     const chainOffset = linksView.getUint16(i * 2);
     const chainView = new DataView(
       buffer,
-      header.linkStartOffset + chainOffset
+      header.linkStartOffset + chainOffset,
     );
     const chainLen = chainView.getUint16(0);
     chains[i] = [];
@@ -151,7 +151,7 @@ function _boardDefHeaderSize() {
 function _writeHeader(
   boardDefBuffer: ArrayBuffer,
   board: IBoard,
-  chains: number[][]
+  chains: number[][],
 ) {
   const boardDefView = new DataView(boardDefBuffer);
   const game = romhandler.getGameVersion();
@@ -243,8 +243,8 @@ export function determineChains(board: IBoard) {
       if (typeof nextSpaceIdx !== "number") {
         console.warn(
           `determineChains.parseChain hit a dead end at ${$$hex(
-            curSpaceIdx
-          )} (${curSpaceIdx})`
+            curSpaceIdx,
+          )} (${curSpaceIdx})`,
         );
         chains.push(chain);
         return;
@@ -347,7 +347,7 @@ export function padChains(board: IBoard, chains: number[][]) {
             lastSpace.x,
             lastSpace.y,
             nextSpace.x,
-            nextSpace.y
+            nextSpace.y,
           );
           padX = mid.x;
           padY = mid.y;
@@ -360,7 +360,7 @@ export function padChains(board: IBoard, chains: number[][]) {
             nextLeft.x,
             nextLeft.y,
             nextRight.x,
-            nextRight.y
+            nextRight.y,
           );
           // padX = lastSpace.x + 0.01;
           // padY = ((destMidpoint.y - lastSpace.y) / (destMidpoint.x - lastSpace.x)) * (padX - lastSpace.x) + lastSpace.y;
@@ -368,13 +368,13 @@ export function padChains(board: IBoard, chains: number[][]) {
             lastSpace.x,
             lastSpace.y,
             destMidpoint.x,
-            destMidpoint.y
+            destMidpoint.y,
           );
           const ratio = 0.01 / dist;
           padX = (1 - ratio) * lastSpace.x + ratio * destMidpoint.x;
           padY = (1 - ratio) * lastSpace.y + ratio * destMidpoint.y;
           $$log(
-            `Padding branch x: ${lastSpace.x}, y: ${lastSpace.y}, padX: ${padX}, padY: ${padY}`
+            `Padding branch x: ${lastSpace.x}, y: ${lastSpace.y}, padX: ${padX}, padY: ${padY}`,
           );
         } else {
           // FIXME when multi-split works.
@@ -389,7 +389,7 @@ export function padChains(board: IBoard, chains: number[][]) {
           lastSpace.x,
           lastSpace.y,
           nextSpace.x,
-          nextSpace.y
+          nextSpace.y,
         );
         padX = mid.x;
         padY = mid.y;
@@ -417,7 +417,7 @@ export function trimChains(board: IBoard, chains: number[][]) {
  */
 export function getChainIndexValuesFromAbsoluteIndex(
   chains: number[][],
-  absSpaceIndex: number
+  absSpaceIndex: number,
 ) {
   for (let c = 0; c < chains.length; c++) {
     const chain = chains[c];

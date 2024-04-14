@@ -23,7 +23,7 @@ export const Bowser: IEvent = {
     if (
       hashEqual(
         [dataView.buffer, info.offset, 0x14],
-        hashes.PLAYER_DIRECTION_CHANGE
+        hashes.PLAYER_DIRECTION_CHANGE,
       ) &&
       hashEqual([dataView.buffer, info.offset + 0x1c, 0x1c], hashes.METHOD_END)
     ) {
@@ -40,7 +40,7 @@ export const Bowser: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // Any of these "work" but only the corresponding one has the right background.
     const bowserSceneNum = [0x48, 0x49, 0x4f, 0x53, 0x54, 0x5b, 0x5d][

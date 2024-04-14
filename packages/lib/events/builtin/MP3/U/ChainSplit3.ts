@@ -66,7 +66,7 @@ export const ChainSplit3: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     const spaceIndexArgs = event.parameterValues!["spaceIndexArgs"] as number[];
     const chainArgs = event.parameterValues!["chainArgs"] as number[];

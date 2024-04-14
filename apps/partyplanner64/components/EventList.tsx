@@ -50,7 +50,7 @@ interface IEventsListProps {
     event: IEventInstance,
     eventIndex: number,
     name: string,
-    value: any
+    value: any,
   ): void;
   onEventMouseEnter?(event: IEventInstance, eventIndex: number): void;
   onEventMouseLeave?(event: IEventInstance, eventIndex: number): void;
@@ -128,7 +128,7 @@ interface IEventEntryProps {
     event: IEventInstance,
     eventIndex: number,
     name: string,
-    value: number
+    value: number,
   ): void;
   onEventMouseEnter?(event: IEventInstance, eventIndex: number): void;
   onEventMouseLeave?(event: IEventInstance, eventIndex: number): void;
@@ -156,7 +156,7 @@ const EventEntry: React.FC<IEventEntryProps> = (props) => {
       props.onEventParameterSet(props.event, props.eventIndex, name, value);
       forceUpdate();
     },
-    [props.onEventParameterSet, props.event, props.eventIndex, forceUpdate]
+    [props.onEventParameterSet, props.event, props.eventIndex, forceUpdate],
   ); // eslint-disable-line
 
   const onEventMouseEnter = useCallback(() => {
@@ -224,7 +224,7 @@ interface IEventParameterButtonsProps {
 }
 
 const EventParameterButtons: React.FC<IEventParameterButtonsProps> = (
-  props
+  props,
 ) => {
   const { parameters, eventInstance, onEventParameterSet } = props;
   const colorQueue = makeColorQueue();
@@ -295,7 +295,7 @@ const EventParameterButtons: React.FC<IEventParameterButtonsProps> = (
                 parameterArrayIndex={nodes.length}
                 colorQueue={colorQueue}
                 onEventParameterSet={onEventParameterSet}
-              />
+              />,
             );
             return nodes;
           }
@@ -427,7 +427,7 @@ class EventNumberParameterButton extends React.Component<IEventNumberParameterBu
     const userValue = await promptUser(
       `Enter a${
         positiveOnly ? " positive " : " "
-      }numeric value for the ${name} parameter:`
+      }numeric value for the ${name} parameter:`,
     );
     if (!userValue) {
       return; // Enter nothing, ignore response.
@@ -577,7 +577,7 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
       "text",
       JSON.stringify({
         isEventParamDrop: true,
-      })
+      }),
     );
   };
 
@@ -610,7 +610,7 @@ class EventSpaceParameterButton extends React.Component<IEventSpaceParameterButt
 
   onParameterClicked = () => {
     showMessage(
-      "To associate a space with this event parameter, click and drag from this list entry and release over the target space."
+      "To associate a space with this event parameter, click and drag from this list entry and release over the target space.",
     );
   };
 }
@@ -620,7 +620,7 @@ interface IEventParameterArrayDeleteButtonProps {
 }
 
 function EventParameterArrayDeleteButton(
-  props: IEventParameterArrayDeleteButtonProps
+  props: IEventParameterArrayDeleteButtonProps,
 ) {
   return (
     <div
@@ -702,7 +702,7 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
               </option>
             );
           })}
-        </optgroup>
+        </optgroup>,
       );
     }
 
@@ -717,7 +717,7 @@ class EventAdd extends React.Component<IEventAddProps, IEventAddState> {
             </option>
           );
         })}
-      </optgroup>
+      </optgroup>,
     );
 
     return (

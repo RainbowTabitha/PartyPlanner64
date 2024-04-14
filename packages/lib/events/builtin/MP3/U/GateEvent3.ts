@@ -55,7 +55,7 @@ export const Gate3: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // const {
     //   gateEntryIndex,

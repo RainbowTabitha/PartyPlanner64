@@ -68,7 +68,7 @@ export class MBF0 {
       view,
       0,
       8,
-      this._headerContents.byteLength
+      this._headerContents.byteLength,
     );
 
     const tableEntriesOffset = MBF0_HEADER_SIZE;
@@ -91,7 +91,7 @@ export class MBF0 {
       } else {
         buffer = view.buffer.slice(
           view.byteOffset + midiOffset,
-          view.byteOffset + midiOffset + midiSize
+          view.byteOffset + midiOffset + midiSize,
         );
         buffersMap.set(midiOffset, buffer);
       }
@@ -107,7 +107,7 @@ export class MBF0 {
       assert(view.getUint8(tableEntryOffset + 3) === 0);
       assert(
         view.getUint32(tableEntryOffset + 4) === 0x07000000 ||
-          view.getUint32(tableEntryOffset + 4) === 0
+          view.getUint32(tableEntryOffset + 4) === 0,
       );
     }
 
@@ -121,21 +121,21 @@ export class MBF0 {
     // Extract tbl buffer
     this.tbl = view.buffer.slice(
       view.byteOffset + tblOffsetStart,
-      view.byteOffset + tblOffsetEnd
+      view.byteOffset + tblOffsetEnd,
     );
 
     // Extract B1 structure
     const B1view = new DataView(
       view.buffer,
       view.byteOffset + B1offset,
-      B1size
+      B1size,
     );
     this.soundbanks = new B1(B1view);
 
     // Workaround until B1 can measure itself.
     this._soundbackBuffer = view.buffer.slice(
       view.byteOffset + B1offset,
-      view.byteOffset + B1offset + B1size
+      view.byteOffset + B1offset + B1size,
     );
   }
 
@@ -150,7 +150,7 @@ export class MBF0 {
       this._headerContents,
       8,
       0,
-      this._headerContents.byteLength
+      this._headerContents.byteLength,
     );
     currentOffset += MBF0_HEADER_SIZE;
 
@@ -172,7 +172,7 @@ export class MBF0 {
         midiInfo.buffer,
         currentOffset,
         0,
-        midiInfo.buffer.byteLength
+        midiInfo.buffer.byteLength,
       );
 
       currentOffset += makeDivisibleBy(midiInfo.buffer.byteLength, 8);
@@ -200,13 +200,13 @@ export class MBF0 {
       dataView.setUint8(currentOffset, midiInfo.mystery0 || 0);
       dataView.setUint8(
         currentOffset + 1,
-        typeof midiInfo.mystery1 === "number" ? midiInfo.mystery1 : 0x6f
+        typeof midiInfo.mystery1 === "number" ? midiInfo.mystery1 : 0x6f,
       );
       dataView.setUint8(currentOffset + 2, midiInfo.soundbankIndex);
       dataView.setUint8(currentOffset + 3, 0);
       dataView.setUint32(
         currentOffset + 4,
-        typeof midiInfo.mystery4 === "number" ? midiInfo.mystery4 : 0x07000000
+        typeof midiInfo.mystery4 === "number" ? midiInfo.mystery4 : 0x07000000,
       );
       dataView.setUint32(currentOffset + 8, buffersMap.get(midiInfo.buffer)!);
       dataView.setUint32(currentOffset + 12, midiInfo.buffer.byteLength);

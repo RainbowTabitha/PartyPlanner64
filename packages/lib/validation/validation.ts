@@ -70,7 +70,7 @@ function _getRulesForGame(gameID: Game): IValidationRule[] {
 /** Returns any validation rules specific to a particular game + board. */
 function _getRulesForBoard(
   gameID: Game,
-  boardIndex: number
+  boardIndex: number,
 ): IValidationRule[] {
   let rules: IValidationRule[] = [];
 
@@ -93,7 +93,7 @@ export interface IValidationResult {
 }
 
 export async function validateCurrentBoardForOverwrite(
-  skipValidation?: boolean
+  skipValidation?: boolean,
 ): Promise<IValidationResult[] | null> {
   const gameID = romhandler.getROMGame()!;
   if (!gameID) return null;

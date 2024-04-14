@@ -20,7 +20,7 @@ export function SpriteView() {
 
   const onSelectedSpriteChanged = useCallback(
     (sprite: MainFSPair) => setSelectedSprite(sprite),
-    []
+    [],
   );
 
   if (!spriteFsEntries.length) {
@@ -80,7 +80,7 @@ function SpriteSelect(props: ISpriteSelectProps) {
         onChange={(e) => {
           const [d, f] = e.target.value.split("/").map((val) => parseInt(val));
           const selected = props.spriteFsEntries.find(
-            (s) => s[0] === d && s[1] === f
+            (s) => s[0] === d && s[1] === f,
           );
           if (selected) {
             props.onSelectedSpriteChanged(selected);
@@ -107,7 +107,7 @@ function SpriteDisplay(props: ISpriteDisplayProps) {
     const dataUri = arrayBufferToDataURL(
       imgInfo.src!,
       imgInfo.width,
-      imgInfo.height
+      imgInfo.height,
     );
     return (
       <SpriteImage

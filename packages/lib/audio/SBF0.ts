@@ -77,7 +77,7 @@ export class SBF0 {
     // Extract sounds
     const ctlView = new DataView(
       view.buffer,
-      view.byteOffset + tableEntriesOffset
+      view.byteOffset + tableEntriesOffset,
     );
     for (let i = 0; i < soundCount; i++) {
       this.sounds.push(new ALSoundSimple(ctlView, i * 16));
@@ -89,7 +89,7 @@ export class SBF0 {
     // Extract tbl buffer
     this.tbl = view.buffer.slice(
       view.byteOffset + tblOffsetStart,
-      view.byteOffset + tblOffsetEnd
+      view.byteOffset + tblOffsetEnd,
     );
 
     // Extract the sound effects list.
@@ -109,19 +109,19 @@ export class SBF0 {
 
           let rawSoundIndex: number;
           const soundFxInfoType = view.getUint8(
-            soundFxListOffset + soundFxInfoOffset
+            soundFxListOffset + soundFxInfoOffset,
           );
           switch (soundFxInfoType) {
             case 0x92:
             case 0x93:
               rawSoundIndex = view.getUint16(
-                soundFxListOffset + soundFxInfoOffset + 1
+                soundFxListOffset + soundFxInfoOffset + 1,
               );
               break;
             case 0x12:
             case 0x13:
               rawSoundIndex = view.getUint16(
-                soundFxListOffset + soundFxInfoOffset + 2
+                soundFxListOffset + soundFxInfoOffset + 2,
               );
               break;
             case 0x01:
@@ -132,7 +132,9 @@ export class SBF0 {
                 "Unrecongized soundFxInfoType " +
                   $$hex(soundFxInfoType) +
                   " at " +
-                  $$hex(view.byteOffset + soundFxListOffset + soundFxInfoOffset)
+                  $$hex(
+                    view.byteOffset + soundFxListOffset + soundFxInfoOffset,
+                  ),
               );
           }
           details += `\n${$$hex(i)}: ${$$hex(rawSoundIndex)}`;

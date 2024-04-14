@@ -76,7 +76,7 @@ const MP2_WESTERN = createBoardInfo("MP2_WESTERN", {
     bytes = bytes.concat(strings._strToBytes("Don't listen to Toad!"));
     bytes.push(0x0a); // \n
     bytes = bytes.concat(
-      strings._strToBytes("I've got the results. Follow me!")
+      strings._strToBytes("I've got the results. Follow me!"),
     );
     bytes.push(0x00); // Null byte
     strings.write(697, arrayToArrayBuffer(bytes));

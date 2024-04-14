@@ -24,7 +24,7 @@ export class spaces {
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    radius: number
+    radius: number,
   ) {
     ctx.save();
     ctx.beginPath();
@@ -97,7 +97,7 @@ export class spaces {
   static drawMiniGameDuel3(
     ctx: CanvasRenderingContext2D,
     x: number,
-    y: number
+    y: number,
   ) {
     ctx.save();
     ctx.drawImage(getImage("spaceMiniGameDuel3"), x - 14, y - 14);
@@ -130,7 +130,7 @@ export class spaces {
   static drawHappeningDuel3(
     ctx: CanvasRenderingContext2D,
     x: number,
-    y: number
+    y: number,
   ) {
     ctx.save();
     ctx.drawImage(getImage("spaceHappeningDuel3"), x - 14, y - 14);
@@ -149,7 +149,7 @@ export class spaces {
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    radius: number
+    radius: number,
   ) {
     ctx.save();
     // Transparent base circle
@@ -222,7 +222,7 @@ export class spaces {
   static drawStartDuelBlue(
     ctx: CanvasRenderingContext2D,
     x: number,
-    y: number
+    y: number,
   ) {
     spaces._drawStart(ctx, x, y, 12, "blue");
   }
@@ -232,7 +232,7 @@ export class spaces {
     x: number,
     y: number,
     radius: number,
-    color: string
+    color: string,
   ) {
     ctx.save();
     ctx.beginPath();
@@ -380,7 +380,7 @@ export class spaces {
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    game: number
+    game: number,
   ) {
     ctx.save();
     ctx.beginPath();
@@ -459,7 +459,7 @@ export class spaces {
     y: number,
     r: number,
     numPoints: number,
-    radiusInsetFraction: number
+    radiusInsetFraction: number,
   ) {
     ctx.save();
     ctx.beginPath();

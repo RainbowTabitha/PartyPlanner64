@@ -49,7 +49,7 @@ export const MP2UHook = new (class MP2UHook extends HookBase {
     mainfs.write(
       this.MAINFS_CHEAT_FILE[0],
       this.MAINFS_CHEAT_FILE[1],
-      cheatRoutine
+      cheatRoutine,
     );
   }
 })();

@@ -667,7 +667,7 @@ class ToolbarButton extends React.Component<IToolbarButtonProps> {
       "text",
       JSON.stringify({
         action: this.props.action,
-      })
+      }),
     );
   };
 

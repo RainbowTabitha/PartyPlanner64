@@ -17,7 +17,7 @@ export interface IValidationRule<TContext = unknown> {
   level: ValidationLevel;
   fails(
     context: IValidationContext,
-    args?: TContext
+    args?: TContext,
   ): ValidationReturnType | Promise<ValidationReturnType>;
 }
 
@@ -27,7 +27,7 @@ const ValidationRuleBase: IValidationRule = {
   level: ValidationLevel.ERROR,
   fails: function (
     context,
-    args
+    args,
   ): ValidationReturnType | Promise<ValidationReturnType> {
     throw new Error("fails not implemented");
   },
@@ -36,7 +36,7 @@ const ValidationRuleBase: IValidationRule = {
 export function createRule<TContext = unknown>(
   id: string,
   name: string,
-  level: ValidationLevel
+  level: ValidationLevel,
 ): IValidationRule<TContext> {
   const rule = Object.create(ValidationRuleBase);
   rule.id = id;

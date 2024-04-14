@@ -32,7 +32,7 @@ export interface IEvent {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) => [number, number, number] | string | false;
   readonly activationType: EditorEventActivationType;
   readonly executionType: EventExecutionType;
@@ -80,7 +80,7 @@ function _supportedGamesMatch(supportedGames: Game[], gameVersion: number) {
 export function getEvent(
   eventId: string,
   board: IBoard,
-  eventLibrary: EventMap
+  eventLibrary: EventMap,
 ): IEvent | undefined {
   if (board && board.events && !!getBoardEvent(board, eventId)) {
     const boardEvent = getBoardEvent(board, eventId);
@@ -92,7 +92,7 @@ export function getEvent(
 /** Creates an event instance (the object stored in the board json for a given event) */
 export function createEventInstance(
   event: IEvent,
-  args?: Partial<IEventInstance>
+  args?: Partial<IEventInstance>,
 ): IEventInstance {
   const spaceEvent = Object.assign(
     {
@@ -100,7 +100,7 @@ export function createEventInstance(
       activationType: event.activationType,
       executionType: event.executionType,
     },
-    args
+    args,
   );
   if (event.custom) spaceEvent.custom = true;
 
@@ -184,7 +184,7 @@ export async function write(
   buffer: ArrayBuffer,
   event: IEventInstance,
   info: IEventWriteInfo,
-  temp: any
+  temp: any,
 ) {
   const asmView = new DataView(buffer, info.offset);
 
@@ -193,7 +193,7 @@ export async function write(
     const boardEvent = getBoardEvent(info.board, event.id)!;
     if (!boardEvent)
       throw new Error(
-        `A space had the ${event.id} custom event, but its code wasn't in the board file`
+        `A space had the ${event.id} custom event, but its code wasn't in the board file`,
       );
     result = await writeCustomEvent(
       asmView,
@@ -201,13 +201,13 @@ export async function write(
       info,
       boardEvent.language,
       boardEvent.code,
-      temp
+      temp,
     );
   } else {
     const libEvent = getEventFromLibrary(event.id);
     if (!libEvent) {
       throw new Error(
-        `Could not find/write ${event.id} for game ${info.gameVersion}`
+        `Could not find/write ${event.id} for game ${info.gameVersion}`,
       );
     }
     result = libEvent.write!(asmView, event, info, temp);

@@ -29,7 +29,7 @@ export async function takeScreeny(opts: ITakeScreenyOpts = {}) {
   const bgImage = await getImageData(
     bgImageSrc,
     curBoard.bg.width,
-    curBoard.bg.height
+    curBoard.bg.height,
   );
   screenCtx.putImageData(bgImage, 0, 0);
 

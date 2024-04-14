@@ -23,8 +23,8 @@ export class FXD0 {
       this.hunks.push(
         view.buffer.slice(
           view.byteOffset + currentOffset,
-          view.byteOffset + hunkOffsetEnd
-        )
+          view.byteOffset + hunkOffsetEnd,
+        ),
       );
     }
   }

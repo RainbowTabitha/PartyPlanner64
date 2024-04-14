@@ -57,8 +57,8 @@ const MP1_USA_DK = createBoardInfo("MP1_USA_DK", {
     let bytes: number[] = [];
     bytes = bytes.concat(
       strings._strToBytes(
-        "You're looking for Stars?\nHow about this instead..."
-      )
+        "You're looking for Stars?\nHow about this instead...",
+      ),
     );
     bytes.push(0xff); // PAUSE
     bytes.push(0x00); // Null byte
@@ -108,13 +108,13 @@ const MP1_USA_PEACH = createBoardInfo("MP1_USA_PEACH", {
 
   onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(
-      MP1_USA_PEACH.bgDir + 1
+      MP1_USA_PEACH.bgDir + 1,
     ).src;
     board.otherbg.conversation = hvqfs.readBackground(
-      MP1_USA_PEACH.bgDir + 2
+      MP1_USA_PEACH.bgDir + 2,
     ).src;
     board.otherbg.splashscreen = hvqfs.readBackground(
-      MP1_USA_PEACH.bgDir + 10
+      MP1_USA_PEACH.bgDir + 10,
     ).src;
   },
 
@@ -158,13 +158,13 @@ const MP1_USA_YOSHI = createBoardInfo("MP1_USA_YOSHI", {
 
   onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(
-      MP1_USA_YOSHI.bgDir + 1
+      MP1_USA_YOSHI.bgDir + 1,
     ).src;
     board.otherbg.conversation = hvqfs.readBackground(
-      MP1_USA_YOSHI.bgDir + 2
+      MP1_USA_YOSHI.bgDir + 2,
     ).src;
     board.otherbg.splashscreen = hvqfs.readBackground(
-      MP1_USA_YOSHI.bgDir + 8
+      MP1_USA_YOSHI.bgDir + 8,
     ).src;
   },
 
@@ -216,13 +216,13 @@ const MP1_USA_WARIO = createBoardInfo("MP1_USA_WARIO", {
 
   onLoad: function (board: IBoard) {
     board.otherbg.largescene = hvqfs.readBackground(
-      MP1_USA_WARIO.bgDir + 1
+      MP1_USA_WARIO.bgDir + 1,
     ).src;
     board.otherbg.conversation = hvqfs.readBackground(
-      MP1_USA_WARIO.bgDir + 2
+      MP1_USA_WARIO.bgDir + 2,
     ).src;
     board.otherbg.splashscreen = hvqfs.readBackground(
-      MP1_USA_WARIO.bgDir + 11
+      MP1_USA_WARIO.bgDir + 11,
     ).src;
   },
 

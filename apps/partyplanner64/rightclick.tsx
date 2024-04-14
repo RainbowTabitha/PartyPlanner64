@@ -141,7 +141,7 @@ export class RightClickMenu extends React.Component<
             x: isBlank ? 0 : newX,
           },
         ],
-      })
+      }),
     );
     this.forceUpdate();
   };
@@ -160,7 +160,7 @@ export class RightClickMenu extends React.Component<
             y: isBlank ? 0 : newY,
           },
         ],
-      })
+      }),
     );
     this.forceUpdate();
   };
@@ -175,7 +175,7 @@ export class RightClickMenu extends React.Component<
             y: this.props.space!.y || 0,
           },
         ],
-      })
+      }),
     );
     this.setState({ oldX: undefined, oldY: undefined });
     this.forceUpdate();

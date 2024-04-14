@@ -37,7 +37,7 @@ dataViewMethods.forEach((methodName) => {
   const methodOrig = (DataView.prototype as any)[methodName];
   (DataView.prototype as any)[methodName] = function (
     offset: number,
-    value: number
+    value: number,
   ) {
     if (typeof offset !== "number" || Number.isNaN(offset))
       throw new Error(`Invalid offset in ${methodName}`);

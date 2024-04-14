@@ -126,7 +126,7 @@ function _migrateOldCustomEvents(board: IBoard) {
         board.events[spaceEvent.id] !== (spaceEvent as ICustomEvent).asm
       ) {
         console.warn(
-          `When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`
+          `When updating the format of ${board.name}, event ${spaceEvent.id} had multiple versions. Only one will be kept.`,
         );
       }
       board.events[spaceEvent.id] = (spaceEvent as ICustomEvent).asm;
@@ -140,7 +140,7 @@ interface ForEachEventCallback {
     event: IEventInstance,
     eventIndex: number,
     space?: ISpace,
-    spaceIndex?: number
+    spaceIndex?: number,
   ): void;
 }
 
@@ -173,14 +173,14 @@ interface ForEachEventParameterCallback {
     event: IEventInstance,
     eventIndex: number,
     space?: ISpace,
-    spaceIndex?: number
+    spaceIndex?: number,
   ): void;
 }
 
 export function forEachEventParameter(
   board: IBoard,
   eventLibrary: EventMap,
-  fn: ForEachEventParameterCallback
+  fn: ForEachEventParameterCallback,
 ) {
   forEachEvent(board, (eventInstance, eventIndex, space, spaceIndex) => {
     const event = getEvent(eventInstance.id, board, eventLibrary);

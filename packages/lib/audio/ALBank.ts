@@ -22,7 +22,7 @@ export class ALBank {
       throw new Error(
         `Need to parse percussion at bank offset 0x${(
           B1view.byteOffset + bankOffset
-        ).toString(16)}`
+        ).toString(16)}`,
       );
 
     const instrumentCount = B1view.getUint16(bankOffset);

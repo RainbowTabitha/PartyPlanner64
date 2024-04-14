@@ -26,26 +26,26 @@ export class MTNX {
 
     const dsView = new DataView(
       mtnxView.buffer,
-      mtnxView.byteOffset + dsOffset
+      mtnxView.byteOffset + dsOffset,
     );
     const keyframesView = new DataView(
       mtnxView.buffer,
-      mtnxView.byteOffset + keyframesOffset
+      mtnxView.byteOffset + keyframesOffset,
     );
     const dataView = new DataView(
       mtnxView.buffer,
-      mtnxView.byteOffset + dataOffset
+      mtnxView.byteOffset + dataOffset,
     );
 
     for (let i = 0; i < totalTracks; i++) {
       const trackOffset = mtnxView.getUint32(0x18 + i * 4);
       const trackView = new DataView(
         mtnxView.buffer,
-        mtnxView.byteOffset + trackOffset
+        mtnxView.byteOffset + trackOffset,
       );
 
       mtnxObj.tracks.push(
-        MTNX.parseTrack(trackView, i, dsView, keyframesView, dataView)
+        MTNX.parseTrack(trackView, i, dsView, keyframesView, dataView),
       );
     }
 
@@ -57,7 +57,7 @@ export class MTNX {
     trackIndex: number,
     dsView: DataView,
     keyframesView: DataView,
-    dataView: DataView
+    dataView: DataView,
   ) {
     const trackObj: ITrack = Object.create(null);
 
@@ -89,19 +89,19 @@ export class MTNX {
   static parseData(
     dataView: DataView,
     dataIndex: number,
-    keyframeIndex: number
+    keyframeIndex: number,
   ) {
     const SIZEOF_FRAME_DATA = 3 * 4;
 
     const data: IKeyframe = Object.create(null);
     data.value1 = dataView.getFloat32(
-      dataIndex * 4 + keyframeIndex * SIZEOF_FRAME_DATA
+      dataIndex * 4 + keyframeIndex * SIZEOF_FRAME_DATA,
     );
     data.value2 = dataView.getFloat32(
-      dataIndex * 4 + keyframeIndex * SIZEOF_FRAME_DATA + 4
+      dataIndex * 4 + keyframeIndex * SIZEOF_FRAME_DATA + 4,
     );
     data.value3 = dataView.getFloat32(
-      dataIndex * 4 + keyframeIndex * SIZEOF_FRAME_DATA + 8
+      dataIndex * 4 + keyframeIndex * SIZEOF_FRAME_DATA + 8,
     );
 
     return data;

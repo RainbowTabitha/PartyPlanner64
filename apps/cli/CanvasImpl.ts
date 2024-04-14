@@ -2,7 +2,7 @@ import { HTMLCanvasElement, Image } from "canvas-api-lite";
 
 export function createCanvasNode(
   width: number,
-  height: number
+  height: number,
 ): HTMLCanvasElement {
   return new HTMLCanvasElement(width, height);
 }

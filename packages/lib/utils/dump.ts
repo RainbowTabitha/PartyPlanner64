@@ -59,7 +59,7 @@ export function load(buffer: ArrayBuffer, onError: (error: unknown) => void) {
     },
     (error: any) => {
       onError(error);
-    }
+    },
   );
 }
 
@@ -85,12 +85,12 @@ export function images() {
                 const dataUri = arrayBufferToDataURL(
                   bmpEntry.parsed.src,
                   bmpEntry.parsed.width,
-                  bmpEntry.parsed.height
+                  bmpEntry.parsed.height,
                 );
                 dirFolder.file(
                   `${f}.${idx}.png`,
                   dataUri.substr(dataUri.indexOf(",") + 1),
-                  { base64: true }
+                  { base64: true },
                 );
               });
             }
@@ -114,12 +114,12 @@ export function images() {
               const dataUri = arrayBufferToDataURL(
                 charImg,
                 charWidth,
-                charHeight
+                charHeight,
               );
               dirFolder.file(
                 `${f}.${idx}.png`,
                 dataUri.substr(dataUri.indexOf(",") + 1),
-                { base64: true }
+                { base64: true },
               );
               idx++;
             });
@@ -128,7 +128,7 @@ export function images() {
               dirFolder.file(
                 `${f}.${idx}.png`,
                 dataUri.substr(dataUri.indexOf(",") + 1),
-                { base64: true }
+                { base64: true },
               );
               idx++;
             });
@@ -141,17 +141,17 @@ export function images() {
               dataViews.length,
               1,
               charWidth * 4,
-              charHeight
+              charHeight,
             );
             const tilesUrl = arrayBufferToDataURL(
               tilesBuf,
               charWidth * dataViews.length,
-              charHeight
+              charHeight,
             );
             dirFolder.file(
               `${f}.all.png`,
               tilesUrl.substr(tilesUrl.indexOf(",") + 1),
-              { base64: true }
+              { base64: true },
             );
 
             continue;
@@ -164,12 +164,12 @@ export function images() {
           const dataUri = arrayBufferToDataURL(
             imgInfo.src!,
             imgInfo.width,
-            imgInfo.height
+            imgInfo.height,
           );
           dirFolder.file(
             `${f}.${idx}.png`,
             dataUri.substr(dataUri.indexOf(",") + 1),
-            { base64: true }
+            { base64: true },
           );
         });
         if (imgs.length > 1) {
@@ -178,17 +178,17 @@ export function images() {
             imgs.length,
             1,
             imgs[0].width * 4,
-            imgs[0].height
+            imgs[0].height,
           );
           const tilesUrl = arrayBufferToDataURL(
             tilesBuf,
             imgs[0].width * imgs.length,
-            imgs[0].height
+            imgs[0].height,
           );
           dirFolder.file(
             `${f}.all.png`,
             tilesUrl.substr(tilesUrl.indexOf(",") + 1),
-            { base64: true }
+            { base64: true },
           );
         }
       } catch (e) {}
@@ -236,7 +236,7 @@ export function formImages() {
             const dataUri = arrayBufferToDataURL(
               bmpEntry.parsed.src,
               bmpEntry.parsed.width,
-              bmpEntry.parsed.height
+              bmpEntry.parsed.height,
             );
             console.log(`${d}/${f}:`);
             console.log(dataUri);
@@ -329,7 +329,7 @@ export function writeDaisy(character = 6) {
 export function searchForPatchLocations(offset: number) {
   if (!offset)
     throw new Error(
-      "Please pass a ROM offset the game tries to read at runtime"
+      "Please pass a ROM offset the game tries to read at runtime",
     );
 
   const upper = (offset & 0xffff0000) >>> 16;
@@ -365,8 +365,8 @@ export function searchForPatchLocations(offset: number) {
     ) {
       console.log(
         `Found ${$$hex(i)}, ${$$hex(last)} (${last - i}) Lower inst: ${$$hex(
-          romView.getUint16(last - 2)
-        )}`
+          romView.getUint16(last - 2),
+        )}`,
       );
       found++;
     }
@@ -416,18 +416,18 @@ export function printSceneN64Split() {
 
     strings.push(
       `   - [${$$hex(info.rom_start)}, ${$$hex(
-        info.rom_start + (info.code_end - info.code_start)
-      )}, "asm", "overlay${i}_main", ${$$hex(info.code_start)}]`
+        info.rom_start + (info.code_end - info.code_start),
+      )}, "asm", "overlay${i}_main", ${$$hex(info.code_start)}]`,
     );
     strings.push(
       `   - [${$$hex(
-        info.rom_start + (info.rodata_start - info.code_start)
+        info.rom_start + (info.rodata_start - info.code_start),
       )}, ${$$hex(
-        info.rom_start + (info.rodata_end - info.code_start)
-      )}, "bin", "overlay${i}_rodata_bin"]`
+        info.rom_start + (info.rodata_end - info.code_start),
+      )}, "bin", "overlay${i}_rodata_bin"]`,
     );
     strings.push(
-      `   # overlay${i} bss: ${$$hex(info.bss_start)} - ${$$hex(info.bss_end)}`
+      `   # overlay${i} bss: ${$$hex(info.bss_start)} - ${$$hex(info.bss_end)}`,
     );
   }
 
@@ -455,8 +455,8 @@ export function printSceneN64Splat() {
     strings.push(`      - [${$$hex(info.rom_start)}, "asm"]`);
     strings.push(
       `      - [${$$hex(
-        info.rom_start + (info.rodata_start - info.code_start)
-      )}, "bin"] # rodata`
+        info.rom_start + (info.rodata_start - info.code_start),
+      )}, "bin"] # rodata`,
     );
     strings.push("");
   }
@@ -516,25 +516,25 @@ export function printSceneAsm(sceneIndex: number) {
       "D_" +
         $$hex(currentAsmAddr, "") +
         ": " +
-        pad($$hex(roDataView.getUint32(i), ""), 8, "0")
+        pad($$hex(roDataView.getUint32(i), ""), 8, "0"),
     );
     lines.push(
       "D_" +
         $$hex(currentAsmAddr + 4, "") +
         ": " +
-        pad($$hex(roDataView.getUint32(i + 4), ""), 8, "0")
+        pad($$hex(roDataView.getUint32(i + 4), ""), 8, "0"),
     );
     lines.push(
       "D_" +
         $$hex(currentAsmAddr + 8, "") +
         ": " +
-        pad($$hex(roDataView.getUint32(i + 8), ""), 8, "0")
+        pad($$hex(roDataView.getUint32(i + 8), ""), 8, "0"),
     );
     lines.push(
       "D_" +
         $$hex(currentAsmAddr + 12, "") +
         ": " +
-        pad($$hex(roDataView.getUint32(i + 12), ""), 8, "0")
+        pad($$hex(roDataView.getUint32(i + 12), ""), 8, "0"),
     );
     currentAsmAddr += 16;
     i += 16;

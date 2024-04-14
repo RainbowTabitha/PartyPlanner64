@@ -574,7 +574,7 @@ function romSelected(event: any) {
     const promise = romhandler.setROMBuffer(
       e.target.result,
       skipSupportedCheck,
-      showMessage
+      showMessage,
     );
     promise.then(
       (value) => {
@@ -591,7 +591,7 @@ function romSelected(event: any) {
       (reason) => {
         console.error(reason);
         showMessage(`Error loading the ROM file.\n\n${reason}`);
-      }
+      },
     );
   };
   reader.readAsArrayBuffer(file);
@@ -659,7 +659,7 @@ function getCodeLanguageFromFileName(name: string): EventCodeLanguage {
   }
 
   throw new Error(
-    `Only .s or .c file extensions are recongized. (Saw ${name})`
+    `Only .s or .c file extensions are recongized. (Saw ${name})`,
   );
 }
 
@@ -713,7 +713,7 @@ function _showEmulatorInstructionsNotification() {
       <NotificationButton onClick={removeNotificationHandler}>
         Got it
       </NotificationButton>
-    </Notification>
+    </Notification>,
   );
 }
 
@@ -752,7 +752,7 @@ export const Header = class Header extends React.Component<
     const actions = getActions(
       this.props.view,
       this.props.board,
-      this.props.romLoaded
+      this.props.romLoaded,
     );
     this.setState({
       actions: actions,
@@ -810,7 +810,7 @@ export const Header = class Header extends React.Component<
     const newActions = getActions(
       this.props.view,
       this.props.board,
-      this.props.romLoaded
+      this.props.romLoaded,
     );
 
     if (!equal(this.state.totalActions, newActions)) {
@@ -1047,9 +1047,9 @@ const HeaderOverwriteBoardDropdown: React.FC<
         console.error(e);
         showMessage(
           "An error occurred during board validation, please submit an issue.\n\n" +
-            e.toString()
+            e.toString(),
         );
-      }
+      },
     );
   }, [resultsPromise, onClose]);
 
@@ -1060,7 +1060,7 @@ const HeaderOverwriteBoardDropdown: React.FC<
     <>
       {validationResults.map(function (
         result: IValidationResult,
-        index: number
+        index: number,
       ) {
         return (
           <HeaderOverwriteBoardDropdownEntry
@@ -1165,7 +1165,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
       failNodes.push(
         <div className="overwriteBoardMessage" key="unavailable">
           Board cannot be overwritten currently.
-        </div>
+        </div>,
       );
     } else {
       if (this.props.forcedDisabled) {
@@ -1173,7 +1173,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
         failNodes.push(
           <div className="overwriteBoardMessage" key="unavailable">
             Current issues must be resolved.
-          </div>
+          </div>,
         );
       }
 
@@ -1191,7 +1191,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
                 <span dangerouslySetInnerHTML={{ __html: fail }}></span>
               </div>
             );
-          })
+          }),
         );
       }
       if (this.hasWarnings()) {
@@ -1207,7 +1207,7 @@ const HeaderOverwriteBoardDropdownEntry = class HeaderOverwriteBoardDropdownEntr
                 <span dangerouslySetInnerHTML={{ __html: fail }}></span>
               </div>
             );
-          })
+          }),
         );
       }
     }

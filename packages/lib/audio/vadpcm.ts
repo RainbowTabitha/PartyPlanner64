@@ -19,7 +19,7 @@ export function decodeVADPCM(
   outRawData: ArrayBuffer,
   len: number,
   book: ALADPCMBook,
-  decode8Only: boolean
+  decode8Only: boolean,
 ): number {
   const lastsmp = new Int16Array(8); // signed short[8]
 
@@ -60,7 +60,7 @@ export function decodeVADPCM(
         index,
         preds,
         pred1Index,
-        lastsmp
+        lastsmp,
       );
       inIndex += 4;
       _len -= 4;
@@ -74,7 +74,7 @@ export function decodeVADPCM(
         index,
         preds,
         pred1Index,
-        lastsmp
+        lastsmp,
       );
       inIndex += 4;
       _len -= 4;
@@ -106,7 +106,7 @@ export function decodeVADPCM(
         index,
         preds,
         pred1Index,
-        lastsmp
+        lastsmp,
       );
       inIndex += 2;
       _len -= 2;
@@ -120,7 +120,7 @@ export function decodeVADPCM(
         index,
         preds,
         pred1Index,
-        lastsmp
+        lastsmp,
       );
       inIndex += 2;
       _len -= 2;
@@ -141,7 +141,7 @@ function decode8(
   index: number,
   preds: Int16Array,
   pred1Index: number,
-  lastsmp: Int16Array
+  lastsmp: Int16Array,
 ) {
   const tmp = new Int16Array(8); // signed short tmp[8];
   let total = 0; // signed long
@@ -198,7 +198,7 @@ function decode8Half(
   index: number,
   preds: Int16Array,
   pred1Index: number,
-  lastsmp: Int16Array
+  lastsmp: Int16Array,
 ) {
   const tmp = new Int16Array(8); // signed short tmp[8];
   let total = 0; // signed long

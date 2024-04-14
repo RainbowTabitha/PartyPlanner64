@@ -18,7 +18,7 @@ export function decode(hvqView: DataView) {
     const buffer = hvqView.buffer;
     return buffer.slice(
       hvqView.byteOffset,
-      hvqView.byteOffset + hvqView.byteLength
+      hvqView.byteOffset + hvqView.byteLength,
     );
   }
 

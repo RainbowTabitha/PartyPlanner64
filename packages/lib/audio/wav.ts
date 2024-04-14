@@ -20,7 +20,7 @@ export function extractWavSound(
   tbl: ArrayBuffer,
   bank: ALBank,
   instrumentIndex: number,
-  soundIndex: number
+  soundIndex: number,
 ): ArrayBuffer {
   if (instrumentIndex >= bank.instruments.length || !bank.instruments.length) {
     throw new Error("Invalid bank instrument index" + instrumentIndex);
@@ -39,7 +39,7 @@ export function extractWavSound(
 export function extractWavFromSound(
   tbl: ArrayBuffer,
   sound: ISound,
-  samplingRate: number
+  samplingRate: number,
 ): ArrayBuffer {
   const wave = sound.wave;
   const tblView = new DataView(tbl, wave.waveBase);
@@ -158,14 +158,14 @@ export function extractWavFromSound(
     }
 
     const outRawData = new ArrayBuffer(
-      wave.waveLen * 4 * 2 /* sizeof(signed short) */
+      wave.waveLen * 4 * 2 /* sizeof(signed short) */,
     );
     const numSamples = decodeVADPCM(
       tblView,
       outRawData,
       wave.waveLen,
       adpcmWave.book,
-      (wave.flags & 0x30) === 0x30
+      (wave.flags & 0x30) === 0x30,
     );
 
     //0x2C + (numSamples * 2) + 0x44;

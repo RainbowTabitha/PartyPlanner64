@@ -41,7 +41,7 @@ export const ChainSplit2: IEvent = {
       //hashEqual([dataView.buffer, info.offset + 0x30, 0x18], hashes.METHOD_MID1) &&
       hashEqual(
         [dataView.buffer, info.offset + 0x4c, 0x1c],
-        hashes.METHOD_MID2
+        hashes.METHOD_MID2,
       ) &&
       hashEqual([dataView.buffer, info.offset + 0xf0, 0x28], hashes.METHOD_END)
     ) {
@@ -63,7 +63,7 @@ export const ChainSplit2: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: { helper1addr: number; helper2addr: number }
+    temp: { helper1addr: number; helper2addr: number },
   ) {
     const chains = event.parameterValues!["chains"] as number[];
     return `

@@ -67,7 +67,7 @@ export function useWindowTitle(title: string): void {
 /** Hook that returns the current editor theme. */
 export function useEditorTheme(): EditorThemes {
   const [theme, setTheme] = useState(
-    getSetting($setting.uiTheme) || EditorThemes.Classic
+    getSetting($setting.uiTheme) || EditorThemes.Classic,
   );
 
   const onSettingChanged = useCallback((settingName: $setting) => {

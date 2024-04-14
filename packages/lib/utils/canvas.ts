@@ -17,7 +17,7 @@ export function setCreateCanvas(createCanvasImpl: CreateCanvas): void {
 
 export function createContext(
   width: number,
-  height: number
+  height: number,
 ): CanvasRenderingContext2D {
   const canvas = _createCanvas(width, height);
   return canvas.getContext("2d")!;
@@ -45,7 +45,7 @@ export function createImage(): HTMLImageElement {
 export function getMouseCoordsOnCanvas(
   canvas: HTMLElement,
   clientX: number,
-  clientY: number
+  clientY: number,
 ): [number, number] {
   const canvasRect = canvas.getBoundingClientRect();
   clientX = Math.round(clientX);

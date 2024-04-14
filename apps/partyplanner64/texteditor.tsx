@@ -99,7 +99,7 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
       () => ({
         focus,
       }),
-      [focus]
+      [focus],
     );
 
     const plaintextRef = useRef<string | undefined>(props.value);
@@ -113,7 +113,7 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
     }, [props.value]);
 
     const [editorStateValue, setEditorStateValue] = useState(
-      createEditorStateFromProps
+      createEditorStateFromProps,
     );
 
     // Compute effective state, based on whether component is controlled or not.
@@ -144,7 +144,7 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
         newEditorState,
         {
           theme,
-        }
+        },
       );
       plaintextRef.current = newStringValue;
 
@@ -211,13 +211,13 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
         (contentState, color) => {
           return Modifier.removeInlineStyle(contentState, selection, color);
         },
-        prevContentState
+        prevContentState,
       );
 
       let nextEditorState = EditorState.push(
         editorState,
         nextContentState,
-        "change-inline-style"
+        "change-inline-style",
       );
 
       const currentStyle = editorState.getCurrentInlineStyle();
@@ -233,7 +233,7 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
       if (!currentStyle.has(toggledColor)) {
         nextEditorState = RichUtils.toggleInlineStyle(
           nextEditorState,
-          toggledColor
+          toggledColor,
         );
       }
 
@@ -247,13 +247,13 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
       const nextContentState = Modifier.replaceText(
         editorState.getCurrentContent(),
         selection,
-        char
+        char,
       );
 
       const nextEditorState = EditorState.push(
         editorState,
         nextContentState,
-        "insert-characters"
+        "insert-characters",
       );
 
       onChange(nextEditorState);
@@ -309,14 +309,14 @@ export const MPEditor = forwardRef<IMPEditorRef, IMPEditorProps>(
         {toolbarPlacement === MPEditorToolbarPlacement.Bottom && toolbar}
       </div>
     );
-  }
+  },
 );
 MPEditor.displayName = "MPEditor";
 
 function imageStrategy(
   contentBlock: Draft.ContentBlock,
   callback: any,
-  contentState: unknown
+  contentState: unknown,
 ) {
   const text = contentBlock.getText();
   for (let i = 0; i < text.length; i++) {
@@ -704,7 +704,7 @@ class MPEditorToolbarSeparator extends React.Component {
 export const MPEditorStringAdapter = new (class MPEditorStringAdapter {
   editorStateToString(
     editorState: Draft.EditorState,
-    args: { theme: MPEditorTheme }
+    args: { theme: MPEditorTheme },
   ) {
     const contentState = editorState.getCurrentContent();
     const textBlocks: string[] = [];
@@ -738,7 +738,7 @@ export const MPEditorStringAdapter = new (class MPEditorStringAdapter {
           if (!colorChanged) return; // Avoid always starting strings with color, or repeating same color over again.
 
           changes[start] = "<" + currentColor + ">";
-        }
+        },
       );
 
       let currentIndexOffset = 0;
@@ -791,14 +791,14 @@ export const MPEditorStringAdapter = new (class MPEditorStringAdapter {
           (contentState, color) => {
             return Modifier.removeInlineStyle(contentState, selection, color);
           },
-          contentState
+          contentState,
         );
 
         // Apply the new tag.
         contentState = Modifier.applyInlineStyle(
           contentState,
           selection,
-          styleTag as string
+          styleTag as string,
         );
 
         contentBlocks = contentState.getBlocksAsArray();

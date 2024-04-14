@@ -7,7 +7,7 @@ export function copyRange(
   inArr: ArrayBuffer | DataView | number[],
   outOffset: number,
   inOffset: number,
-  len: number
+  len: number,
 ) {
   if (outArr instanceof ArrayBuffer) outArr = new DataView(outArr);
   if (inArr instanceof ArrayBuffer) inArr = new DataView(inArr);
@@ -45,7 +45,7 @@ export function hashEqual(hashArgs: any, expected: string) {
 export function toHexString(
   buffer: ArrayBuffer | DataView,
   len: number = buffer.byteLength,
-  lineLen: number = 0
+  lineLen: number = 0,
 ) {
   let output = "";
   let view: DataView;
@@ -62,14 +62,14 @@ export function toHexString(
 export function print(
   buffer: ArrayBuffer | DataView,
   len = buffer.byteLength,
-  lineLen = 0
+  lineLen = 0,
 ) {
   console.log(toHexString(buffer, len, lineLen));
 }
 
 export function readBitAtOffset(
   buffer: ArrayBuffer | DataView,
-  bitOffset: number
+  bitOffset: number,
 ) {
   let bufView = buffer;
   if (bufView instanceof ArrayBuffer) bufView = new DataView(bufView);
@@ -82,7 +82,7 @@ export function readBitAtOffset(
 
 export function readByteAtBitOffset(
   buffer: ArrayBuffer | DataView,
-  bitOffset: number
+  bitOffset: number,
 ) {
   let bufView = buffer;
   if (bufView instanceof ArrayBuffer) bufView = new DataView(bufView);
@@ -96,7 +96,7 @@ export function readByteAtBitOffset(
 export function arrayBufferToImageData(
   buffer: ArrayBuffer,
   width: number,
-  height: number
+  height: number,
 ) {
   const canvasCtx = createContext(width, height);
   const bgImageData = canvasCtx.createImageData(width, height);
@@ -112,7 +112,7 @@ export function arrayBufferToImageData(
 export function arrayBufferToDataURL(
   buffer: ArrayBuffer,
   width: number,
-  height: number
+  height: number,
 ) {
   const bgImageData = arrayBufferToImageData(buffer, width, height);
   const canvasCtx = createContext(width, height);
@@ -180,7 +180,7 @@ export function equal(a: any[], b: any[]) {
 export function intersection(
   a: any[],
   b: any[],
-  equalityFn = (a: any, b: any) => a === b
+  equalityFn = (a: any, b: any) => a === b,
 ) {
   const output = [];
 

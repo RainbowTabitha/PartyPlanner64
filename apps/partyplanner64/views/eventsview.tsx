@@ -63,7 +63,7 @@ export function EventsView() {
   const onDeleteBoardEvent = async (event: IEvent) => {
     if (
       await confirmFromUser(
-        `Are you sure you want to delete ${event.name} from the board?`
+        `Are you sure you want to delete ${event.name} from the board?`,
       )
     ) {
       excludeEventFromBoard(event.id);
@@ -72,12 +72,12 @@ export function EventsView() {
 
   const onCopyToBoard = async (
     event: ICustomEvent,
-    isDestructiveCopy: boolean
+    isDestructiveCopy: boolean,
   ) => {
     let proceed = true;
     if (isDestructiveCopy) {
       proceed = await confirmFromUser(
-        `Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`
+        `Are you sure you want to overwrite the board's copy of ${event.id}? The two copies are different.`,
       );
     }
     if (proceed) {
@@ -87,12 +87,12 @@ export function EventsView() {
 
   const onCopyToLibrary = async (
     event: ICustomEvent,
-    isDestructiveCopy: boolean
+    isDestructiveCopy: boolean,
   ) => {
     let proceed = true;
     if (isDestructiveCopy) {
       proceed = await confirmFromUser(
-        `Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`
+        `Are you sure you want to overwrite the library's copy of ${event.id}? The two copies are different.`,
       );
     }
     if (proceed) {
@@ -139,11 +139,11 @@ export function EventsView() {
         onDeleteEvent={onDeleteBoardEvent}
         isDestructiveCopy={isDestructive}
         onCopyToLibrary={isUnchanged ? undefined : onCopyToLibrary}
-      />
+      />,
     );
   }
   boardEvents = boardEvents.sort((a, b) =>
-    stringComparer(a.key as string, b.key as string)
+    stringComparer(a.key as string, b.key as string),
   );
 
   return (
@@ -164,7 +164,7 @@ export function EventsView() {
 }
 
 function _getViewForEventLanguage(
-  language: EventCodeLanguage | undefined
+  language: EventCodeLanguage | undefined,
 ): View {
   switch (language) {
     case EventCodeLanguage.C:
@@ -181,7 +181,7 @@ function EventEntryTable(props: { listing: any }) {
 
 function _copyToBoardWillOverwrite(
   customEvent: ICustomEvent,
-  board: IBoard
+  board: IBoard,
 ): boolean {
   if (!board.events || !(customEvent.id in board.events)) return false;
   return board.events[customEvent.id] !== customEvent.asm;
@@ -194,7 +194,7 @@ function _copyToLibraryWillOverwrite(customEvent: ICustomEvent): boolean {
 
 function _boardAndLibraryEventAreInSync(
   customEvent: ICustomEvent,
-  board: IBoard
+  board: IBoard,
 ): boolean {
   if (!board.events || !(customEvent.id in board.events)) return false;
   const libEvent = getEventFromLibrary(customEvent.id) as ICustomEvent;
@@ -228,7 +228,7 @@ class EventRow extends React.Component<IEventRowProps> {
             onClick={() =>
               this.props.onCopyToLibrary!(
                 this.props.event,
-                this.props.isDestructiveCopy
+                this.props.isDestructiveCopy,
               )
             }
           />
@@ -248,7 +248,7 @@ class EventRow extends React.Component<IEventRowProps> {
             onClick={() =>
               this.props.onCopyToBoard!(
                 this.props.event,
-                this.props.isDestructiveCopy
+                this.props.isDestructiveCopy,
               )
             }
           />

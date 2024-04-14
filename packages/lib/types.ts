@@ -205,7 +205,7 @@ export enum EditorEventActivationType {
 }
 
 export function getEventActivationTypeFromEditorType(
-  editorType: EditorEventActivationType
+  editorType: EditorEventActivationType,
 ): EventActivationType {
   switch (editorType) {
     case EditorEventActivationType.LANDON:
@@ -243,7 +243,7 @@ export function getExecutionTypeName(executionType: EventExecutionType) {
 }
 
 export function getExecutionTypeByName(
-  name: string
+  name: string,
 ): EventExecutionType | null {
   switch (name) {
     case "Direct":

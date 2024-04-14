@@ -146,7 +146,7 @@ export abstract class AdapterBase {
         };
         const boardBuffer = mainfs.get(
           this.boardDefDirectory,
-          boardInfo.boardDefFile
+          boardInfo.boardDefFile,
         );
         newBoard = parseBoardDef(boardBuffer, partialBoard);
         const chains: number[][] = (newBoard as any)._chains;
@@ -192,13 +192,13 @@ export abstract class AdapterBase {
   protected abstract onLoad?(
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardWasStashed: boolean
+    boardWasStashed: boolean,
   ): void;
   protected abstract onAfterOverwrite?(
     romView: DataView,
     boardCopy: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ): void;
   protected abstract onWriteEvents?(board: IBoard): void;
 
@@ -225,7 +225,7 @@ export abstract class AdapterBase {
       boardCopy,
       boardInfo,
       boardIndex,
-      audioIndices
+      audioIndices,
     );
 
     this.onWriteStrings(boardCopy, boardInfo);
@@ -241,7 +241,7 @@ export abstract class AdapterBase {
       boardIndex,
       chains,
       eventSyms,
-      audioIndices
+      audioIndices,
     );
 
     this._clearOtherBoardNames(boardIndex);
@@ -262,13 +262,13 @@ export abstract class AdapterBase {
     board: IBoard,
     boardInfo: IBoardInfo,
     boardIndex: number,
-    audioIndices: number[]
+    audioIndices: number[],
   ): Promise<string> {
     const overlayAsm = await this.onCreateBoardOverlay(
       board,
       boardInfo,
       boardIndex,
-      audioIndices
+      audioIndices,
     );
     const game = romhandler.getROMGame()!;
     const asm = `
@@ -288,7 +288,7 @@ export abstract class AdapterBase {
     const sceneInfo = scenes.getInfo(boardInfo.sceneIndex!);
     const eventSyms: string = this._makeSymbolsForEventAssembly(
       outSyms,
-      sceneInfo
+      sceneInfo,
     );
 
     // Replace the overlay. We actually have enough info to accurately define
@@ -307,7 +307,7 @@ export abstract class AdapterBase {
     board: IBoard,
     boardInfo: IBoardInfo,
     boardIndex: number,
-    audioIndices: number[]
+    audioIndices: number[],
   ): Promise<string> {
     throw new Error("Adapter does not implement onCreateBoardOverlay");
   }
@@ -317,7 +317,7 @@ export abstract class AdapterBase {
   onOverwritePromises(
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ): Promise<any> {
     throw new Error("Adapter does not implement onOverwritePromises");
   }
@@ -342,7 +342,7 @@ export abstract class AdapterBase {
       bg.fov,
       width / height,
       1,
-      10000
+      10000,
     );
     if (board.game === 1) {
       camera.position.set(bg.cameraEyePosX, bg.cameraEyePosY, bg.cameraEyePosZ);
@@ -353,11 +353,11 @@ export abstract class AdapterBase {
       camera.position.set(
         bg.cameraEyePosX / 1.2,
         bg.cameraEyePosY / 1.2,
-        bg.cameraEyePosZ / 1.2
+        bg.cameraEyePosZ / 1.2,
       );
     }
     camera.lookAt(
-      new THREE.Vector3(bg.lookatPointX, bg.lookatPointY, bg.lookatPointZ)
+      new THREE.Vector3(bg.lookatPointX, bg.lookatPointY, bg.lookatPointZ),
     );
     camera.scale.y = -1;
     camera.updateMatrix();
@@ -390,7 +390,7 @@ export abstract class AdapterBase {
       bg.fov,
       width / height,
       1,
-      10000
+      10000,
     );
 
     if (board.game === 1) {
@@ -402,11 +402,11 @@ export abstract class AdapterBase {
       camera.position.set(
         bg.cameraEyePosX / 1.2,
         bg.cameraEyePosY / 1.2,
-        bg.cameraEyePosZ / 1.2
+        bg.cameraEyePosZ / 1.2,
       );
     }
     camera.lookAt(
-      new THREE.Vector3(bg.lookatPointX, bg.lookatPointY, bg.lookatPointZ)
+      new THREE.Vector3(bg.lookatPointX, bg.lookatPointY, bg.lookatPointZ),
     );
     camera.scale.y = -1;
     camera.updateMatrix();
@@ -419,7 +419,7 @@ export abstract class AdapterBase {
       const vec2d = new THREE.Vector3(
         (space.x / width) * 2 - 1,
         -(space.y / height) * 2 + 1,
-        0.5
+        0.5,
       );
 
       vec2d.unproject(camera);
@@ -444,7 +444,7 @@ export abstract class AdapterBase {
     x: number,
     y: number,
     z: number,
-    board: IBoard
+    board: IBoard,
   ) {
     $$log("Adapter does not implement onGetGameCoordsFromBoardCoords");
     return [x, y, z];
@@ -452,13 +452,13 @@ export abstract class AdapterBase {
 
   onChangeBoardSpaceTypesFromGameSpaceTypes(board: IBoard, chains: number[][]) {
     $$log(
-      "Adapter does not implement onChangeBoardSpaceTypesFromGameSpaceTypes"
+      "Adapter does not implement onChangeBoardSpaceTypesFromGameSpaceTypes",
     );
   }
 
   onChangeGameSpaceTypesFromBoardSpaceTypes(board: IBoard) {
     $$log(
-      "Adapter does not implement onChangeGameSpaceTypesFromBoardSpaceTypes"
+      "Adapter does not implement onChangeGameSpaceTypesFromBoardSpaceTypes",
     );
   }
 
@@ -551,10 +551,10 @@ export abstract class AdapterBase {
       const tableAddr = getRegSetAddress(upper, lower);
       const tableOffset = this._addrToOffsetBase(
         tableAddr,
-        sceneInfo.ram_start
+        sceneInfo.ram_start,
       );
       $$log(
-        `Found event table ${$$hex(tableAddr)} (ROM ${$$hex(tableOffset)})`
+        `Found event table ${$$hex(tableAddr)} (ROM ${$$hex(tableOffset)})`,
       );
       spaceEventTables.push({ tableOffset });
     }
@@ -564,7 +564,7 @@ export abstract class AdapterBase {
     boardInfo: IBoardInfo,
     board: IBoard,
     boardIndex: number,
-    chains: number[][]
+    chains: number[][],
   ) {
     if (!boardInfo.spaceEventTables || !boardInfo.sceneIndex) return;
 
@@ -622,7 +622,7 @@ export abstract class AdapterBase {
       else
         curInfoOffset = this._addrToOffsetBase(
           curInfoAddr,
-          sceneInfo.ram_start
+          sceneInfo.ram_start,
         );
       const boardList = new SpaceEventList();
       boardList.parse(buffer!, curInfoOffset);
@@ -660,7 +660,7 @@ export abstract class AdapterBase {
             curSpaceIndex,
             eventInfo,
             false,
-            getEventsInLibrary()
+            getEventsInLibrary(),
           );
 
           //console.log(`Found event 0x${asmOffset.toString(16)} (${eventInfo.name})`);
@@ -677,10 +677,10 @@ export abstract class AdapterBase {
           )
             $$log(
               `Unknown event activation type ${$$hex(
-                listEntry.activationType
+                listEntry.activationType,
               )}, boardIndex: ${boardIndex}, spaceIndex: ${$$hex(
-                curSpaceIndex
-              )}`
+                curSpaceIndex,
+              )}`,
             );
         }
       });
@@ -703,7 +703,7 @@ export abstract class AdapterBase {
         });
         if (links.length > 2) {
           throw new Error(
-            `Encountered branch with ${links.length} directions, only 2 are supported currently`
+            `Encountered branch with ${links.length} directions, only 2 are supported currently`,
           );
         }
         event = createEventInstance(
@@ -714,7 +714,7 @@ export abstract class AdapterBase {
               right_space: links[1],
               chains: endpoints,
             },
-          }
+          },
         );
       } else if (links.length > 0) {
         event = createEventInstance(ChainMerge, {
@@ -753,7 +753,7 @@ export abstract class AdapterBase {
           space,
           createEventInstance(StarEvent),
           false,
-          getEventsInLibrary()
+          getEventsInLibrary(),
         );
     }
   }
@@ -805,14 +805,14 @@ export abstract class AdapterBase {
         entrySpace,
         gateEvent,
         false,
-        getEventsInLibrary()
+        getEventsInLibrary(),
       );
       addEventToSpaceInternal(
         board,
         exitSpace,
         gateEvent,
         false,
-        getEventsInLibrary()
+        getEventsInLibrary(),
       );
 
       // Need an additional event to close the gate.
@@ -825,7 +825,7 @@ export abstract class AdapterBase {
           },
         }),
         false,
-        getEventsInLibrary()
+        getEventsInLibrary(),
       );
 
       // There is also a listing of the entry/exit spaces, probably used by the gate animation.
@@ -872,7 +872,7 @@ export abstract class AdapterBase {
     boardIndex: number,
     chains: number[][],
     eventSyms: string,
-    audioIndices: number[]
+    audioIndices: number[],
   ) {
     if (boardInfo.mainfsEventFile) {
       await this._writeEventsNew2(
@@ -881,7 +881,7 @@ export abstract class AdapterBase {
         boardIndex,
         chains,
         eventSyms,
-        audioIndices
+        audioIndices,
       );
     }
   }
@@ -892,11 +892,11 @@ export abstract class AdapterBase {
     boardIndex: number,
     chains: number[][],
     eventSyms: string,
-    audioIndices: number[]
+    audioIndices: number[],
   ) {
     if (!boardInfo.mainfsEventFile)
       throw new Error(
-        `No MainFS file specified to place board ASM for board ${boardIndex}.`
+        `No MainFS file specified to place board ASM for board ${boardIndex}.`,
       );
 
     const game = romhandler.getROMGame()!;
@@ -914,12 +914,12 @@ export abstract class AdapterBase {
       for (let e = 0; e < space.events.length; e++) {
         const eventInstance = space.events[e];
         const activationType = getEventActivationTypeFromEditorType(
-          eventInstance.activationType
+          eventInstance.activationType,
         );
         eventList.add(
           activationType,
           eventInstance.executionType || (eventInstance as any).mystery,
-          0
+          0,
         );
 
         const temp = eventTemp[eventInstance.id] || {};
@@ -939,13 +939,13 @@ export abstract class AdapterBase {
           new ArrayBuffer(0),
           eventInstance,
           info,
-          temp
+          temp,
         );
         eventTemp[eventInstance.id] = temp;
 
         if (!(typeof eventAsm === "string")) {
           throw new Error(
-            `Event ${eventInstance.id} did not return a string to assemble`
+            `Event ${eventInstance.id} did not return a string to assemble`,
           );
         }
 
@@ -958,8 +958,8 @@ export abstract class AdapterBase {
             eventInstance,
             info,
             !staticsWritten[eventInstance.id],
-            e
-          )
+            e,
+          ),
         );
 
         staticsWritten[eventInstance.id] = true;
@@ -989,7 +989,7 @@ export abstract class AdapterBase {
     for (const { index, list, type } of boardEventTypeInfos) {
       const events = _getEventsWithActivationType(
         board.boardevents || [],
-        type
+        type,
       );
       const activationType = getEventActivationTypeFromEditorType(type); // Always SPECIAL
       for (let e = 0; e < events.length; e++) {
@@ -1013,13 +1013,13 @@ export abstract class AdapterBase {
           new ArrayBuffer(0),
           eventInstance,
           info,
-          temp
+          temp,
         );
         eventTemp[eventInstance.id] = temp;
 
         if (!(typeof eventAsm === "string")) {
           throw new Error(
-            `Event ${eventInstance.id} did not return a string to assemble`
+            `Event ${eventInstance.id} did not return a string to assemble`,
           );
         }
 
@@ -1032,8 +1032,8 @@ export abstract class AdapterBase {
             eventInstance,
             info,
             !staticsWritten[eventInstance.id],
-            e
-          )
+            e,
+          ),
         );
 
         staticsWritten[eventInstance.id] = true;
@@ -1049,7 +1049,7 @@ export abstract class AdapterBase {
 
     const eventAsmCombinedString = eventAsms.join("\n");
     const genericAddrSymbols = makeGenericSymbolsForAddresses(
-      eventAsmCombinedString
+      eventAsmCombinedString,
     );
 
     const asm = `
@@ -1064,7 +1064,7 @@ ${eventSyms}
 ${makeGameSymbolLabels(game, false).join("\n")}
 ${makeBgSymbolLabels(
   boardInfo.bgDir,
-  getBoardAdditionalBgHvqIndices(board)
+  getBoardAdditionalBgHvqIndices(board),
 ).join("\n")}
 ${makeAudioSymbolLabels(audioIndices).join("\n")}
 ${genericAddrSymbols.join("\n")}
@@ -1091,7 +1091,7 @@ ${eventAsmCombinedString}
 
     if (buffer.byteLength > this.EVENT_MEM_SIZE) {
       throw new Error(
-        `Event code exceeded available memory space (${buffer.byteLength}/${this.EVENT_MEM_SIZE})`
+        `Event code exceeded available memory space (${buffer.byteLength}/${this.EVENT_MEM_SIZE})`,
       );
     }
 
@@ -1108,7 +1108,7 @@ ${eventAsmCombinedString}
 
   _makeSymbolsForEventAssembly(
     syms: { [symbol: string]: number },
-    sceneInfo: ISceneInfo
+    sceneInfo: ISceneInfo,
   ): string {
     let result = "";
     for (const symName in syms) {
@@ -1116,7 +1116,7 @@ ${eventAsmCombinedString}
         result += `.definelabel ${symName},${$$hex(syms[symName])}\n`;
       } else if (symName.indexOf("__PP64_INTERNAL") === 0) {
         result += `.definelabel ${symName},${$$hex(
-          sceneInfo.ram_start + syms[symName]
+          sceneInfo.ram_start + syms[symName],
         )}\n`;
       }
     }
@@ -1126,7 +1126,7 @@ ${eventAsmCombinedString}
   onWriteEventAsmHook(
     romView: DataView,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ) {
     throw new Error("Adapter does not implement onWriteEventAsmHook");
   }
@@ -1137,7 +1137,7 @@ ${eventAsmCombinedString}
    */
   protected onAddDefaultBoardEvents(
     editorActivationType: EditorEventActivationType,
-    list: SpaceEventList
+    list: SpaceEventList,
   ): void {}
 
   _extractStarGuardians(board: IBoard, boardInfo: IBoardInfo) {
@@ -1218,7 +1218,7 @@ ${eventAsmCombinedString}
               starSpace.x,
               starSpace.y,
               toadSpace.x,
-              toadSpace.y
+              toadSpace.y,
             );
             if (dist < bestDistance) {
               bestDistance = dist;
@@ -1254,7 +1254,7 @@ ${eventAsmCombinedString}
       const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
       const booSpacesOffset = this._addrToOffsetBase(
         booRelativeAddr,
-        sceneInfo.ram_start
+        sceneInfo.ram_start,
       );
       for (let i = 0; i < booCount; i++) {
         booSpace = sceneView.getUint16(booSpacesOffset + 2 * i);
@@ -1308,7 +1308,7 @@ ${eventAsmCombinedString}
       const sceneInfo = scenes.getInfo(boardInfo.sceneIndex);
       const booSpacesOffset = this._addrToOffsetBase(
         booRelativeAddr,
-        sceneInfo.ram_start
+        sceneInfo.ram_start,
       );
 
       for (let i = 0; i < booCount; i++) {
@@ -1455,7 +1455,7 @@ ${eventAsmCombinedString}
     bgIndex: number,
     src: string,
     width: number,
-    height: number
+    height: number,
   ): Promise<void> {
     const imgData = await getImageData(src, width, height);
     hvqfs.writeBackground(bgIndex, imgData, width, height);
@@ -1491,7 +1491,7 @@ ${eventAsmCombinedString}
         imgData,
         width,
         height,
-        board.bg
+        board.bg,
       );
     }
   }
@@ -1530,7 +1530,7 @@ ${eventAsmCombinedString}
       const srcImage = createImage();
       const failTimer = setTimeout(
         () => reject(`Failed to overwrite boot logo`),
-        45000
+        45000,
       );
       srcImage.onload = () => {
         this._combineSplashcreenLogos();
@@ -1539,7 +1539,7 @@ ${eventAsmCombinedString}
         const pp64Splash16Buffer = RGBA5551fromRGBA32(
           pp64Splash32Buffer,
           320,
-          240
+          240,
         );
 
         // Then, pack the image and write it.
@@ -1556,7 +1556,7 @@ ${eventAsmCombinedString}
         mainfs.write(
           this.hudsonLogoFSEntry![0],
           this.hudsonLogoFSEntry![1],
-          newPack
+          newPack,
         );
 
         clearTimeout(failTimer);
@@ -1569,13 +1569,13 @@ ${eventAsmCombinedString}
   _combineSplashcreenLogos() {
     const nintendoPack = mainfs.get(
       this.nintendoLogoFSEntry![0],
-      this.nintendoLogoFSEntry![1]
+      this.nintendoLogoFSEntry![1],
     ); // (NINTENDO) logo
     if (new Uint8Array(nintendoPack)[0x1a] !== 0x20) return; // We already replaced the splashscreen.
 
     const hudsonPack = mainfs.get(
       this.hudsonLogoFSEntry![0],
-      this.hudsonLogoFSEntry![1]
+      this.hudsonLogoFSEntry![1],
     ); // Hudson logo
 
     const nintendoImgInfo = fromPack(nintendoPack)[0];
@@ -1602,7 +1602,7 @@ ${eventAsmCombinedString}
     const combo16Buffer = RGBA5551fromRGBA32(
       comboImageData.data.buffer,
       320,
-      240
+      240,
     );
     const imgInfoArr = [
       {
@@ -1617,7 +1617,7 @@ ${eventAsmCombinedString}
     mainfs.write(
       this.nintendoLogoFSEntry![0],
       this.nintendoLogoFSEntry![1],
-      newPack
+      newPack,
     );
   }
 
@@ -1669,7 +1669,7 @@ ${eventAsmCombinedString}
   onWriteAudio(
     board: IBoard,
     boardInfo: IBoardInfo,
-    boardIndex: number
+    boardIndex: number,
   ): number[] {
     let audioIndices: number[] = [];
     switch (board.audioType) {
@@ -1716,7 +1716,7 @@ ${eventAsmCombinedString}
 
 function _getEventsWithActivationType(
   events: IEventInstance[],
-  activationType: EditorEventActivationType
+  activationType: EditorEventActivationType,
 ): IEventInstance[] {
   return events.filter((e) => e.activationType === activationType);
 }

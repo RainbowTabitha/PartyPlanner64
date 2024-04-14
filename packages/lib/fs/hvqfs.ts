@@ -245,7 +245,7 @@ export const hvqfs = {
             $$hex(anotherUpper >>> 16) + $$hex(anotherLower, "")
           }
           reading upper: ${$$hex(anotherUpperReadOffset)}, lower: ${$$hex(
-            anotherLowerReadOffset
+            anotherLowerReadOffset,
           )}`);
       }
     }
@@ -544,7 +544,7 @@ export const hvqfs = {
     const height = tile_height * tile_y_count;
 
     $$log(
-      `HVQFS.readBackground, dir: ${dir}, tiles: ${tileCount}, board is ${width}x${height}`
+      `HVQFS.readBackground, dir: ${dir}, tiles: ${tileCount}, board is ${width}x${height}`,
     );
 
     // if (dir === 39) { // _boardLocData[4].bgNum) { // FIXME: Save away the black tile until HVQ is ready.
@@ -575,7 +575,7 @@ export const hvqfs = {
       tile_x_count,
       tile_y_count,
       tile_width * 2,
-      tile_height
+      tile_height,
     );
     const bgBufferRGBA32 = RGBA5551toRGBA32(bgBufferRGBA16, width, height);
     const bgArr = new Uint8Array(bgBufferRGBA32);
@@ -608,7 +608,7 @@ export const hvqfs = {
     imgData: ImageData,
     width: number,
     height: number,
-    metadata?: Partial<IHVQMetadata>
+    metadata?: Partial<IHVQMetadata>,
   ) {
     const tileXCount = width / 64;
     const tileYCount = height / 48;
@@ -621,7 +621,7 @@ export const hvqfs = {
       tileXCount,
       tileYCount,
       64 * 4,
-      48
+      48,
     );
     const rgba16tiles = rgba32tiles.map((tile32) => {
       return RGBA5551fromRGBA32(tile32, 64, 48);

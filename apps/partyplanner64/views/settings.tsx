@@ -158,7 +158,7 @@ function _getSetting<TKey extends keyof SettingTypeMap>(id: TKey) {
   });
 }
 function _getSettingDefault<TKey extends keyof SettingTypeMap>(
-  id: TKey
+  id: TKey,
 ): SettingValueTypeForKey<TKey> | undefined {
   const setting = _getSetting(id);
   if (setting && setting.type !== "section")
@@ -176,7 +176,7 @@ class SettingsManager {
   }
 
   getSetting<TKey extends keyof SettingTypeMap>(
-    name: TKey
+    name: TKey,
   ): SettingValueTypeForKey<TKey> | undefined {
     // Allow changing settings for at least the session without cookies.
     if (this._tempSettings.hasOwnProperty(name)) {
@@ -201,7 +201,7 @@ class SettingsManager {
 
   setSetting<TKey extends keyof SettingTypeMap>(
     name: TKey,
-    value: SettingValueTypeForKey<TKey>
+    value: SettingValueTypeForKey<TKey>,
   ): void {
     this._tempSettings[name] = value;
     if (Cookies.enabled) {
@@ -229,7 +229,7 @@ const _settingsManager = new SettingsManager();
 setDebug(_settingsManager.getSetting($setting.uiDebug));
 
 function _getValue<TKey extends keyof SettingTypeMap>(
-  id?: TKey
+  id?: TKey,
 ): SettingValueTypeForKey<TKey> | undefined {
   if (id) return _settingsManager.getSetting(id);
   return undefined;
@@ -237,7 +237,7 @@ function _getValue<TKey extends keyof SettingTypeMap>(
 
 function _setValue<TKey extends keyof SettingTypeMap>(
   id: TKey,
-  value: SettingValueTypeForKey<TKey>
+  value: SettingValueTypeForKey<TKey>,
 ) {
   _settingsManager.setSetting(id, value);
   if (id === $setting.uiDebug) {
@@ -301,7 +301,7 @@ export const Settings = class Settings extends React.Component {
 
   onSettingChanged = <TKey extends keyof SettingTypeMap>(
     id: TKey,
-    value: SettingValueTypeForKey<TKey>
+    value: SettingValueTypeForKey<TKey>,
   ) => {
     _setValue(id, value);
     this.forceUpdate(); // Trigger refresh
@@ -407,13 +407,13 @@ function ThemeOption(props: IThemeOptionProps<EditorThemes>) {
 }
 
 export function get<TKey extends keyof SettingTypeMap>(
-  id: TKey
+  id: TKey,
 ): SettingValueTypeForKey<TKey> | undefined {
   return _settingsManager.getSetting(id);
 }
 export function set<TKey extends keyof SettingTypeMap>(
   id: TKey,
-  value: SettingValueTypeForKey<TKey>
+  value: SettingValueTypeForKey<TKey>,
 ): void {
   return _settingsManager.setSetting(id, value);
 }
@@ -424,14 +424,14 @@ interface SettingChangedListener {
 
 /** Adds a callback that will be raised when a setting changes. */
 export function addSettingChangedListener(
-  callback: SettingChangedListener
+  callback: SettingChangedListener,
 ): void {
   _settingsManager.listeners.add(callback);
 }
 
 /** Removes a callback added by addSettingChangedListener. */
 export function removeSettingChangedListener(
-  callback: SettingChangedListener
+  callback: SettingChangedListener,
 ): void {
   _settingsManager.listeners.delete(callback);
 }

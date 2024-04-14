@@ -39,7 +39,7 @@ export class FormToThreeJs {
     const childObjs = this._parseFormObj(form, materials, 0);
     if (childObjs.length !== 1)
       console.warn(
-        `Expected 1 return object from _parseForm, got ${childObjs.length}`
+        `Expected 1 return object from _parseForm, got ${childObjs.length}`,
       );
     return childObjs[0];
   }
@@ -47,7 +47,7 @@ export class FormToThreeJs {
   _parseFormObj(
     form: IFormObj,
     materials: THREE.MeshBasicMaterial[],
-    objIndex: number
+    objIndex: number,
   ) {
     let objs = FORM.getByGlobalIndex(form, "OBJ1", objIndex);
     if (objs === null) {
@@ -78,7 +78,7 @@ export class FormToThreeJs {
           const childObjs = this._parseFormObj(
             form,
             materials,
-            obj.children[i]
+            obj.children[i],
           );
           if (childObjs && childObjs.length) {
             childObjs.forEach((childObj) => {
@@ -124,7 +124,7 @@ export class FormToThreeJs {
           });
           const wireframe = new THREE.LineSegments(
             new THREE.EdgesGeometry(bufferGeometry),
-            wireframeMaterial
+            wireframeMaterial,
           );
           newObj.add(wireframe);
         }
@@ -133,7 +133,7 @@ export class FormToThreeJs {
           const normalsHelper = new VertexNormalsHelper(
             new THREE.Mesh(bufferGeometry, materials),
             8,
-            0x00ff00
+            0x00ff00,
           );
           newObj.add(normalsHelper);
         }
@@ -186,7 +186,7 @@ export class FormToThreeJs {
   _parseFormSkl(
     form: IFormObj,
     materials: THREE.MeshBasicMaterial[],
-    skl1GlobalIndex: number
+    skl1GlobalIndex: number,
   ) {
     const sklMatch = FORM.getByGlobalIndex(form, "SKL1", skl1GlobalIndex);
     if (sklMatch === null || Array.isArray(sklMatch))
@@ -199,7 +199,7 @@ export class FormToThreeJs {
     form: IFormObj,
     materials: THREE.MeshBasicMaterial[],
     skls: any,
-    index: number
+    index: number,
   ) {
     const skl = skls[index];
     const sklObj = this._createObject3DFromOBJ1Entry(skl);
@@ -220,7 +220,7 @@ export class FormToThreeJs {
           form,
           materials,
           skls,
-          currentChildIndex
+          currentChildIndex,
         );
         sklObj.add(childSklObj);
 
@@ -238,7 +238,7 @@ export class FormToThreeJs {
   _populateGeometryWithFace(
     form: IFormObj,
     geometry: Geometry,
-    face: IFAC1Parsed
+    face: IFAC1Parsed,
   ) {
     if (!face.vtxEntries.length) return;
 
@@ -268,7 +268,7 @@ export class FormToThreeJs {
         form,
         face,
         [vtxIndices[0], vtxIndices[1], vtxIndices[2]],
-        [vtxEntries[0], vtxEntries[1], vtxEntries[2]]
+        [vtxEntries[0], vtxEntries[1], vtxEntries[2]],
       );
     } else if (vtxEntries.length === 4) {
       this._addFace(
@@ -276,7 +276,7 @@ export class FormToThreeJs {
         form,
         face,
         [vtxIndices[0], vtxIndices[1], vtxIndices[2]],
-        [vtxEntries[0], vtxEntries[1], vtxEntries[2]]
+        [vtxEntries[0], vtxEntries[1], vtxEntries[2]],
       );
 
       this._addFace(
@@ -284,7 +284,7 @@ export class FormToThreeJs {
         form,
         face,
         [vtxIndices[3], vtxIndices[4], vtxIndices[5]],
-        [vtxEntries[0], vtxEntries[2], vtxEntries[3]]
+        [vtxEntries[0], vtxEntries[2], vtxEntries[3]],
       );
     }
   }
@@ -294,14 +294,14 @@ export class FormToThreeJs {
     form: IFormObj,
     face: IFAC1Parsed,
     indices: number[],
-    vtxEntries: IFAC1VertexEntry[]
+    vtxEntries: IFAC1VertexEntry[],
   ) {
     const tri = new Face3(indices[0], indices[1], indices[2]);
     tri.vertexNormals = this._makeVertexNormals(
       form,
       vtxEntries[0].vertexIndex,
       vtxEntries[1].vertexIndex,
-      vtxEntries[2].vertexIndex
+      vtxEntries[2].vertexIndex,
     );
     tri.materialIndex = this._getMaterialIndex(face)!;
     tri.color = new THREE.Color(this._getColorBytes(form, face));
@@ -310,11 +310,11 @@ export class FormToThreeJs {
       face,
       vtxEntries[0],
       vtxEntries[1],
-      vtxEntries[2]
+      vtxEntries[2],
     );
 
     geometry.faceVertexUvs[0].push(
-      this._makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2])
+      this._makeVertexUVs(vtxEntries[0], vtxEntries[1], vtxEntries[2]),
     );
     geometry.faces.push(tri);
   }
@@ -391,7 +391,7 @@ export class FormToThreeJs {
     form: IFormObj,
     vtxIndex1: number,
     vtxIndex2: number,
-    vtxIndex3: number
+    vtxIndex3: number,
   ) {
     return [
       this._makeVertexNormal(form, vtxIndex1),
@@ -405,7 +405,7 @@ export class FormToThreeJs {
     const normalVector = new THREE.Vector3(
       vtx.normalX / (127 + (vtx.normalX < 0 ? 1 : 0)),
       vtx.normalY / (127 + (vtx.normalY < 0 ? 1 : 0)),
-      vtx.normalZ / (127 + (vtx.normalZ < 0 ? 1 : 0))
+      vtx.normalZ / (127 + (vtx.normalZ < 0 ? 1 : 0)),
     );
     normalVector.normalize();
     return normalVector;
@@ -414,7 +414,7 @@ export class FormToThreeJs {
   _makeVertexUVs(
     vtxEntry1: IFAC1VertexEntry,
     vtxEntry2: IFAC1VertexEntry,
-    vtxEntry3: IFAC1VertexEntry
+    vtxEntry3: IFAC1VertexEntry,
   ) {
     return [
       this._makeVertexUV(vtxEntry1),
@@ -462,7 +462,7 @@ export class FormToThreeJs {
     }
 
     console.warn(
-      `Could not find color ${colorIndex} specified by material ${materialIndex}`
+      `Could not find color ${colorIndex} specified by material ${materialIndex}`,
     );
     return 0xfffc00; // Puke green
   }
@@ -472,7 +472,7 @@ export class FormToThreeJs {
     face: IFAC1Parsed,
     vtxEntry1: IFAC1VertexEntry,
     vtxEntry2: IFAC1VertexEntry,
-    vtxEntry3: IFAC1VertexEntry
+    vtxEntry3: IFAC1VertexEntry,
   ) {
     if (face.mystery3 !== 0x37) return [];
 
@@ -486,7 +486,7 @@ export class FormToThreeJs {
   _makeVertexColor(form: IFormObj, vtxEntry: IFAC1VertexEntry) {
     if (vtxEntry.materialIndex < 0) return null;
     return new THREE.Color(
-      this._getColorFromMaterial(form, vtxEntry.materialIndex)
+      this._getColorFromMaterial(form, vtxEntry.materialIndex),
     );
   }
 
@@ -500,14 +500,14 @@ export class FormToThreeJs {
         camera.position.set(
           cameraEyeObj.posX,
           cameraEyeObj.posY,
-          cameraEyeObj.posZ
+          cameraEyeObj.posZ,
         );
         camera.lookAt(
           new THREE.Vector3(
             cameraInterestObj.posX,
             cameraInterestObj.posY,
-            cameraInterestObj.posZ
-          )
+            cameraInterestObj.posZ,
+          ),
         );
         return camera;
       } else {

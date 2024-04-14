@@ -46,7 +46,7 @@ export class SpaceEventList {
         currentOffset,
         entry.activationType,
         entry.executionType,
-        entry.address
+        entry.address,
       );
       currentOffset += 8;
     });
@@ -76,7 +76,7 @@ export class SpaceEventList {
     currentOffset: number,
     activationType: EventActivationType | 0,
     executionType: EventExecutionType | 0,
-    address = 0
+    address = 0,
   ) {
     dataView.setUint16(currentOffset, activationType);
     dataView.setUint16(currentOffset + 2, executionType);
@@ -88,10 +88,10 @@ export class SpaceEventList {
   public add(
     activationType: EventActivationType,
     executionType: EventExecutionType,
-    address: number | string = 0
+    address: number | string = 0,
   ) {
     this._entries.push(
-      new SpaceEventListEntry(activationType, executionType, address)
+      new SpaceEventListEntry(activationType, executionType, address),
     );
   }
 
@@ -125,7 +125,7 @@ export class SpaceEventListEntry {
   constructor(
     activationType: EventActivationType,
     executionType: EventExecutionType,
-    address: number | string
+    address: number | string,
   ) {
     this.activationType = activationType;
     this.executionType = executionType;

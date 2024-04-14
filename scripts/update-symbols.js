@@ -13,7 +13,7 @@ const SYMBOLS_OUT_DIR = "packages/lib/symbols";
 exec("git submodule update --remote", (err, stdout, stderr) => {
   if (err || stderr) {
     process.stderr.write(
-      "Error updating symbols repository! " + err + ", " + stderr
+      "Error updating symbols repository! " + err + ", " + stderr,
     );
   } else {
     console.log("Updating symbols repository...");

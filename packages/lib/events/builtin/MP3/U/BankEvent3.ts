@@ -18,7 +18,7 @@ export const BankEvent3: Partial<IEvent> = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // Code still lives in the overlay itself.
     return `

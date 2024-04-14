@@ -107,7 +107,7 @@ export class Parser {
   static printCodes(codes: ICode[]) {
     for (let i = 0; i < codes.length; i++) {
       console.log(
-        `${codes[i].opcode} ${$$hex(codes[i].addr)} ${$$hex(codes[i].value)}`
+        `${codes[i].opcode} ${$$hex(codes[i].addr)} ${$$hex(codes[i].value)}`,
       );
     }
   }

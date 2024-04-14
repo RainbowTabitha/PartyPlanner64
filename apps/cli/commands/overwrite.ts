@@ -24,7 +24,7 @@ export async function overwrite({
     false,
     (err) => {
       console.error(err);
-    }
+    },
   );
   if (!romLoadResult) {
     return;

@@ -29,7 +29,7 @@ export const StarEvent1: IEvent = {
       hashEqual([dataView.buffer, info.offset, 0x14], hashes.METHOD_START) &&
       hashEqual(
         [dataView.buffer, info.offset + 0x18, 0x10],
-        hashes.METHOD_MID
+        hashes.METHOD_MID,
       ) &&
       hashEqual([dataView.buffer, info.offset + 0x30, 0x34], hashes.METHOD_END)
     ) {
@@ -42,7 +42,7 @@ export const StarEvent1: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     return `
       addiu SP, SP, -0x18

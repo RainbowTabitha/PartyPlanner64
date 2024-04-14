@@ -195,7 +195,7 @@ export class CreateASMEventView
   /** Ensures the ASM text includes the discrete properties. */
   syncTextToStateVars = (
     newState: ICreateEventViewState,
-    existingAsm: string
+    existingAsm: string,
   ) => {
     let newAsm = __clearDiscreteProperties(existingAsm, [
       "NAME",
@@ -209,17 +209,17 @@ export class CreateASMEventView
       "PARAM",
       newState.parameters.map((param) => {
         return `${param.type}|${param.name}`;
-      })
+      }),
     );
     newAsm = __writeDiscreteProperty(
       newAsm,
       "EXECUTION",
-      getExecutionTypeName(newState.executionType)
+      getExecutionTypeName(newState.executionType),
     );
     newAsm = __writeDiscreteProperty(
       newAsm,
       "GAMES",
-      newState.supportedGames.map(getGameName).join(",")
+      newState.supportedGames.map(getGameName).join(","),
     );
     newAsm = __writeDiscreteProperty(newAsm, "NAME", newState.eventName.trim());
 
@@ -256,7 +256,7 @@ export class CreateASMEventView
     const oldAsm = this.state.originalAsm;
     if (!oldAsm || oldAsm !== asm) {
       return await confirmFromUser(
-        "Are you sure you want to exit without saving the event?"
+        "Are you sure you want to exit without saving the event?",
       );
     }
     return true;
@@ -274,7 +274,7 @@ function __writeDiscreteProperty(asm: string, propName: string, value: string) {
 function __writeDiscretePropertyArray(
   asm: string,
   propName: string,
-  values: string[]
+  values: string[],
 ) {
   return CustomAsmHelper.writeDiscretePropertyArray(asm, propName, values, ";");
 }

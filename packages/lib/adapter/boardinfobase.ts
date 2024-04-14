@@ -80,7 +80,7 @@ const BoardInfoBase = {};
 
 export function createBoardInfo(
   id: string,
-  props?: Partial<IBoardInfo>
+  props?: Partial<IBoardInfo>,
 ): IBoardInfo {
   if (_boardInfos[id])
     throw new Error(`Cannot create an already existing BoardInfo ${id}.`);

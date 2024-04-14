@@ -25,7 +25,7 @@ export const ItemShopEvent3: Partial<IEvent> = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     // Most of the event remains in the overlay.
     return `

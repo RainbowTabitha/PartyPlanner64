@@ -43,7 +43,7 @@ export const BooEvent: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     switch (info.gameVersion) {
       case 1:
@@ -77,7 +77,7 @@ export const StarEvent: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     switch (info.gameVersion) {
       case 1:
@@ -113,7 +113,7 @@ export const BankEvent: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     switch (info.gameVersion) {
       case 1:
@@ -149,7 +149,7 @@ export const ItemShopEvent: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     switch (info.gameVersion) {
       case 1:
@@ -189,7 +189,7 @@ export const Gate: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     switch (info.gameVersion) {
       case 1:
@@ -231,7 +231,7 @@ export const GateClose: IEvent = {
     dataView: DataView,
     event: IEventInstance,
     info: IEventWriteInfo,
-    temp: any
+    temp: any,
   ) {
     switch (info.gameVersion) {
       case 1:

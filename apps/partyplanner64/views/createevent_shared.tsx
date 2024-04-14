@@ -36,7 +36,7 @@ export interface ICreateEventView {
 let _createEventViewInstance: ICreateEventView | null = null;
 
 export function updateCreateEventViewInstance(
-  instance: ICreateEventView | null
+  instance: ICreateEventView | null,
 ): void {
   _createEventViewInstance = instance;
 }
@@ -54,7 +54,7 @@ export async function saveEvent(): Promise<void> {
   const existingEvent = getEventFromLibrary(eventName);
   if (existingEvent && !existingEvent.custom) {
     showMessage(
-      "The event name collides with a reserved event name from the original boards."
+      "The event name collides with a reserved event name from the original boards.",
     );
     return;
   }
