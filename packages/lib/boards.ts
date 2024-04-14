@@ -15,15 +15,15 @@ import { assert } from "./utils/debug";
  * @returns Given board.
  */
 export function fixPotentiallyOldBoard(board: IBoard): IBoard {
-  if (!("game" in board)) {
+  if (!("game" in (board as Partial<IBoard>))) {
     board.game = 1;
   }
 
-  if (!("type" in board)) {
+  if (!("type" in (board as Partial<IBoard>))) {
     board.type = BoardType.NORMAL;
   }
 
-  if (!("events" in board)) {
+  if (!("events" in (board as Partial<IBoard>))) {
     board.events = {};
   }
 

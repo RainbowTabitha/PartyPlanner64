@@ -74,8 +74,8 @@ export class SpaceEventList {
   _writeEntry(
     dataView: DataView,
     currentOffset: number,
-    activationType: EventActivationType,
-    executionType: EventExecutionType,
+    activationType: EventActivationType | 0,
+    executionType: EventExecutionType | 0,
     address = 0
   ) {
     dataView.setUint16(currentOffset, activationType);

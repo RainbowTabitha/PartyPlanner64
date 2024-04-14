@@ -42,14 +42,10 @@ See the [emulator setup](https://github.com/PartyPlanner64/PartyPlanner64/wiki/E
 
 To host a local copy of PartyPlanner64 clone the repository and do the following.
 
-- Install Node.js and a package manager (npm or yarn).
+- Install Node.js and a package manager (npm).
 - Retrieve the dependencies for the editor and development.
 
   - `npm install --dev`
-
-    or
-
-  - `yarn install`
 
 - `npm run start` will build a development version and run a local web server.
 - `npm run build` will build a production version and copy it into `build/`.
