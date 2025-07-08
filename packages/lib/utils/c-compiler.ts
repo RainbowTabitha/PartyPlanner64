@@ -1,12 +1,12 @@
-import SmallerC from "../lib/SmallerC/smlrc";
+import BoxedWineGCC, { BoxedWineGCCModule } from "../lib/gcc/boxedwine-gcc";
 import { preprocess } from "./c-preprocessor";
 
-// Web: This will be a URL pointing to the C compiler wasm file.
+// Web: This will be a URL pointing to the BoxedWine GCC wasm file.
 // CLI: This will be a Uint8Array instance.
-import smlrcWasm from "../lib/SmallerC/smlrc.wasm?url";
+import boxedwineWasm from "../lib/gcc/boxedwine-gcc.wasm?url";
 
 /**
- * Compiles C source to MIPS assembly.
+ * Compiles C source to MIPS assembly using BoxedWine GCC.
  * @param source C source code string
  */
 export async function compile(source: string): Promise<string> {
@@ -20,7 +20,7 @@ export async function compile(source: string): Promise<string> {
     throw e;
   }
 
-  let _smallerCInstance: EmscriptenModule;
+  let _boxedWineInstance: BoxedWineGCCModule;
 
   const errors: string[] = [];
   const addError = (text: string) => {
@@ -28,46 +28,68 @@ export async function compile(source: string): Promise<string> {
     errors.push(text);
   };
 
-  const _smallerCPromiseLike: PromiseLike<EmscriptenModule> = SmallerC({
+  const _boxedWinePromiseLike: PromiseLike<BoxedWineGCCModule> = BoxedWineGCC({
     noInitialRun: true,
     locateFile: (path: string, scriptDirectory: string) => {
-      if (path === "smlrc.wasm") {
+      if (path === "boxedwine-gcc.wasm") {
         // This will hit for both Web and CLI, but only web's return value matters.
-        if (typeof smlrcWasm === "string") {
-          return smlrcWasm;
+        if (typeof boxedwineWasm === "string") {
+          return boxedwineWasm;
         }
       }
-      return scriptDirectory + path; // Same as default in smlrc.js's locateFile
+      return scriptDirectory + path; // Same as default in boxedwine-gcc.js's locateFile
     },
     wasmBinary:
-      typeof smlrcWasm === "object" ? (smlrcWasm as Uint8Array) : undefined,
+      typeof boxedwineWasm === "object" ? (boxedwineWasm as Uint8Array) : undefined,
     print: addError,
     printErr: addError,
+    // BoxedWine specific options
+    winePrefix: '/home/wineuser/.wine',
+    gccPath: 'C:\\MinGW\\bin\\gcc.exe',
+    tempDir: '/tmp/gcc_compile',
+    mountPoints: [
+      { host: '/tmp', wine: 'Z:\\tmp' },
+      { host: '/gcc', wine: 'C:\\gcc' }
+    ]
   });
 
-  const smallerCPromise = new Promise<void>((resolve) => {
-    _smallerCPromiseLike.then((Module) => {
-      _smallerCInstance = Module;
+  const boxedWinePromise = new Promise<void>((resolve) => {
+    _boxedWinePromiseLike.then((Module) => {
+      _boxedWineInstance = Module;
       resolve();
     });
   });
-  await smallerCPromise;
+  await boxedWinePromise;
 
-  _smallerCInstance!.FS.writeFile("/input.c", source, { flags: "w+" });
+  // Write source file to BoxedWine file system
+  const inputFile = "/tmp/input.c";
+  const outputFile = "/tmp/output.s";
+  _boxedWineInstance!.writeFile(inputFile, source);
 
-  const outputFile = "/output.s";
-  const argv = ["./smallerc", "/input.c", outputFile];
-  const args = [argv.length, str2ptrs(_smallerCInstance!, argv)];
-
+  // Run GCC compilation command
+  const gccCommand = `wine ${_boxedWineInstance!.gccPath} -S -march=mips32 -mabi=32 -O2 -o ${outputFile} ${inputFile}`;
+  
   try {
-    _smallerCInstance!.ccall("main", "number", ["number", "number"], args);
+    const exitCode = _boxedWineInstance!.runWineCommand(gccCommand);
+    
+    if (exitCode !== 0) {
+      const wineError = _boxedWineInstance!.getWineError();
+      if (wineError) {
+        errors.push(wineError);
+      }
+      throw new Error("Error during event compile:\n" + errors.join("\n"));
+    }
   } catch (e) {
     throw new Error("Error during event compile:\n" + errors.join("\n"));
   }
 
-  let result = _smallerCInstance!.FS.readFile(outputFile, {
-    encoding: "utf8",
-  }) as string;
+  // Read the compiled assembly
+  let result = _boxedWineInstance!.readFile(outputFile);
+  
+  // Clean up temporary files
+  _boxedWineInstance!.deleteFile(inputFile);
+  _boxedWineInstance!.deleteFile(outputFile);
+  
   result = fuseSections(result);
   result = convertToNamedRegisters(result);
   result = includeFloatHelpers(result);
