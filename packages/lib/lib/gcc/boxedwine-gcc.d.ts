@@ -1,4 +1,14 @@
-/// <reference path="./emscripten.d.ts" />
+// Define EmscriptenModule interface for TypeScript
+interface EmscriptenModule {
+  _malloc: (size: number) => number;
+  setValue: (ptr: number, value: number, type: string) => void;
+  getValue: (ptr: number, type: string) => number;
+  FS: {
+    writeFile: (path: string, data: string) => void;
+    readFile: (path: string, options?: { encoding: string }) => string;
+    mkdir: (path: string) => void;
+  };
+}
 
 export interface BoxedWineGCCModule extends EmscriptenModule {
   // BoxedWine specific methods
@@ -20,6 +30,10 @@ export interface BoxedWineGCCModule extends EmscriptenModule {
   tempDir: string;
 }
 
+export interface BoxedWineGCCCompiler {
+  compile(filename: string, source: string): Promise<string>;
+}
+
 export interface BoxedWineGCCOptions extends Partial<BoxedWineGCCModule> {
   // BoxedWine specific options
   winePrefix?: string;
@@ -28,4 +42,4 @@ export interface BoxedWineGCCOptions extends Partial<BoxedWineGCCModule> {
   mountPoints?: Array<{ host: string; wine: string }>;
 }
 
-export default function BoxedWineGCC(opts?: BoxedWineGCCOptions): Promise<BoxedWineGCCModule>; 
+export default function BoxedWineGCC(opts?: BoxedWineGCCOptions): Promise<BoxedWineGCCCompiler>; 

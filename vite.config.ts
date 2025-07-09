@@ -8,20 +8,15 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: "copy-gcc-assets",
-      writeBundle() {
-        // Copy GCC-related assets to the build output
-        Promise.all([
-          copy(
-            resolve(__dirname, "packages/lib/lib/gcc/boxedwine-gcc.wasm"),
-            resolve(__dirname, "build/packages/lib/lib/gcc/boxedwine-gcc.wasm")
-          ),
-          copy(
-            resolve(__dirname, "packages/lib/lib/gcc/boxedwine-runtime.js"),
-            resolve(__dirname, "build/packages/lib/lib/gcc/boxedwine-runtime.js")
-          ),
-        ]).catch(console.error);
-      },
+      name: 'serve-wasm-as-js',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.endsWith('boxedwine-gcc.wasm')) {
+            res.setHeader('Content-Type', 'application/wasm');
+          }
+          next();
+        });
+      }
     },
   ],
   build: {
@@ -31,6 +26,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
       },
     },
+    assetsInlineLimit: 0, // Don't inline WASM files
   },
   define: {
     global: "window",

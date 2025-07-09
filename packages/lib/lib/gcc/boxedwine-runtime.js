@@ -647,7 +647,7 @@ function createExportWrapper(name, nargs) {
 var wasmBinaryFile;
 
 function findWasmBinary() {
-    return locateFile('./packages/lib/lib/gcc/boxedwine-gcc.wasm');
+    return locateFile('./boxedwine-gcc.wasm');
 }
 
 function getBinarySync(file) {
@@ -708,13 +708,7 @@ async function instantiateAsync(binary, binaryFile, imports) {
       var response = fetch(binaryFile, { credentials: 'same-origin' });
       var instantiationResult = await WebAssembly.instantiateStreaming(response, imports);
       return instantiationResult;
-    } catch (reason) {
-      // We expect the most common failure cause to be a bad MIME type for the binary,
-      // in which case falling back to ArrayBuffer instantiation should work.
-      err(`wasm streaming compile failed: ${reason}`);
-      err('falling back to ArrayBuffer instantiation');
-      // fall back of instantiateArrayBuffer below
-    };
+    } catch (reason) {};
   }
   return instantiateArrayBuffer(binaryFile, imports);
 }

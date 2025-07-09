@@ -1,9 +1,18 @@
-import BoxedWineGCC, { BoxedWineGCCModule } from "../lib/gcc/boxedwine-gcc";
+import BoxedWineGCC from "../lib/gcc/boxedwine-gcc";
+
 import { preprocess } from "./c-preprocessor";
 
-// Web: This will be a URL pointing to the BoxedWine GCC wasm file.
-// CLI: This will be a Uint8Array instance.
-import boxedwineWasm from "../lib/gcc/boxedwine-gcc.wasm?url";
+// Define EmscriptenModule interface for TypeScript
+interface EmscriptenModule {
+  _malloc: (size: number) => number;
+  setValue: (ptr: number, value: number, type: string) => void;
+  getValue: (ptr: number, type: string) => number;
+  FS: {
+    writeFile: (path: string, data: string) => void;
+    readFile: (path: string, options?: { encoding: string }) => string;
+    mkdir: (path: string) => void;
+  };
+}
 
 /**
  * Compiles C source to MIPS assembly using BoxedWine GCC.
@@ -20,7 +29,7 @@ export async function compile(source: string): Promise<string> {
     throw e;
   }
 
-  let _boxedWineInstance: BoxedWineGCCModule;
+
 
   const errors: string[] = [];
   const addError = (text: string) => {
@@ -28,22 +37,8 @@ export async function compile(source: string): Promise<string> {
     errors.push(text);
   };
 
-  const _boxedWinePromiseLike: PromiseLike<BoxedWineGCCModule> = BoxedWineGCC({
-    noInitialRun: true,
-    locateFile: (path: string, scriptDirectory: string) => {
-      if (path === "boxedwine-gcc.wasm") {
-        // This will hit for both Web and CLI, but only web's return value matters.
-        if (typeof boxedwineWasm === "string") {
-          return boxedwineWasm;
-        }
-      }
-      return scriptDirectory + path; // Same as default in boxedwine-gcc.js's locateFile
-    },
-    wasmBinary:
-      typeof boxedwineWasm === "object" ? (boxedwineWasm as Uint8Array) : undefined,
-    print: addError,
-    printErr: addError,
-    // BoxedWine specific options
+  // Initialize BoxedWine GCC
+  const boxedWineGCC = await BoxedWineGCC({
     winePrefix: '/home/wineuser/.wine',
     gccPath: 'C:\\MinGW\\bin\\gcc.exe',
     tempDir: '/tmp/gcc_compile',
@@ -53,42 +48,13 @@ export async function compile(source: string): Promise<string> {
     ]
   });
 
-  const boxedWinePromise = new Promise<void>((resolve) => {
-    _boxedWinePromiseLike.then((Module) => {
-      _boxedWineInstance = Module;
-      resolve();
-    });
-  });
-  await boxedWinePromise;
-
-  // Write source file to BoxedWine file system
-  const inputFile = "/tmp/input.c";
-  const outputFile = "/tmp/output.s";
-  _boxedWineInstance!.writeFile(inputFile, source);
-
-  // Run GCC compilation command
-  const gccCommand = `wine ${_boxedWineInstance!.gccPath} -S -march=mips32 -mabi=32 -O2 -o ${outputFile} ${inputFile}`;
-  
+  // Compile the source code
+  let result: string;
   try {
-    const exitCode = _boxedWineInstance!.runWineCommand(gccCommand);
-    
-    if (exitCode !== 0) {
-      const wineError = _boxedWineInstance!.getWineError();
-      if (wineError) {
-        errors.push(wineError);
-      }
-      throw new Error("Error during event compile:\n" + errors.join("\n"));
-    }
+    result = await boxedWineGCC.compile("input.c", source);
   } catch (e) {
-    throw new Error("Error during event compile:\n" + errors.join("\n"));
+    throw new Error("Error during event compile:\n" + (e instanceof Error ? e.message : String(e)));
   }
-
-  // Read the compiled assembly
-  let result = _boxedWineInstance!.readFile(outputFile);
-  
-  // Clean up temporary files
-  _boxedWineInstance!.deleteFile(inputFile);
-  _boxedWineInstance!.deleteFile(outputFile);
   
   result = fuseSections(result);
   result = convertToNamedRegisters(result);
